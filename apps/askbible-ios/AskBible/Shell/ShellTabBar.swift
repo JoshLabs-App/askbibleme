@@ -16,116 +16,106 @@ enum ShellTab: String, CaseIterable, Identifiable {
         case .explore: return MI.explore
         }
     }
-}
 
-/// 底栏。几何逐值搬自 `shellTabBarStyles.ts`：
-/// row maxWidth 400 / paddingH 12，左右两组各 flex 2 且 space-between，
-/// 中间 account-voice FAB 60×60 marginH 8，tabBtn 高 52，图标 36。
-/// 按这套算出的图标中心是 48.8 / 120.8 / 195 / 267 / 339（390pt 宽），与真机截图一致。
-struct ShellTabBar: View {
-    @Binding var selection: ShellTab
-    var onCenterTap: () -> Void = {}
-
-    var body: some View {
-        HStack(spacing: 0) {
-            HStack(spacing: 0) {
-                tabButton(.home)
-                tabButton(.music)
-            }
-            .frame(maxWidth: .infinity)
-
-            centerFab
-                .padding(.horizontal, ShellMetrics.fabMarginH)
-
-            HStack(spacing: 0) {
-                tabButton(.read)
-                tabButton(.explore)
-            }
-            .frame(maxWidth: .infinity)
+    /// 原生 Tab 用的 SF Symbol。Josh 2026-09-15 批准 iOS 端换 SF Symbols（四端图标语言在 iOS 上分叉）：
+    /// 系统 Tab Bar 只认 SF Symbol 才能拿到 Liquid Glass 的选中形变与正确的度量。
+    var symbol: String {
+        switch self {
+        case .home: return "house.fill"
+        case .music: return "music.note"
+        case .plan: return "person.wave.2.fill"
+        case .read: return "book.fill"
+        case .explore: return "safari"
         }
-        .padding(.horizontal, ShellMetrics.tabRowPaddingH)
-        .frame(maxWidth: ShellMetrics.tabRowMaxWidth)
-        .frame(maxWidth: .infinity)
     }
 
-    private func tabButton(_ tab: ShellTab) -> some View {
-        Button {
-            selection = tab
-        } label: {
-            MaterialIcon(glyph: tab.glyph, size: ShellMetrics.tabIconSize,
-                         color: selection == tab ? Brand.logo : Brand.tabBarIcon)
-                .frame(maxWidth: .infinity)
-                .frame(height: ShellMetrics.tabButtonHeight)
-                .shellIconShadow()
-                // 不补 contentShape 的话只有字形笔画能点中（Josh 2026-09-11 在底栏上撞到）
-                .contentShape(Rectangle())
+    /// 底栏文字。原来是纯图标栏（RN 同构），换原生栏后必须有标签 —— 系统要用它做无障碍与形变布局。
+    func label(_ locale: AppLocale) -> String {
+        switch (self, locale) {
+        case (.home, .en): return "Home"
+        case (.home, .zhTW): return "首頁"
+        case (.home, _): return "首页"
+        case (.music, .en): return "Music"
+        case (.music, .zhTW): return "音樂"
+        case (.music, _): return "音乐"
+        case (.plan, .en): return "Plan"
+        case (.plan, .zhTW): return "讀經"
+        case (.plan, _): return "读经"
+        case (.read, .en): return "Bible"
+        case (.read, .zhTW): return "聖經"
+        case (.read, _): return "圣经"
+        case (.explore, .en): return "Explore"
+        case (.explore, .zhTW): return "探索"
+        case (.explore, _): return "探索"
         }
-        .buttonStyle(.plain)
-    }
-
-    /// 中央键只负责切到读经计划页，不负责播放 —— 与 `ShellScripturePlayFab` 一致；停在计划页时同其它 Tab 一样点亮 LOGO 黄
-    private var centerFab: some View {
-        Button(action: onCenterTap) {
-            // RN ShellScripturePlayFab：MaterialCommunityIcons account-voice 30，白 .92
-            MaterialIcon(glyph: MCI.accountVoice, size: ShellMetrics.fabIconSize,
-                         color: selection == .plan ? Brand.logo : Color.white.opacity(0.92), community: true)
-                .frame(width: ShellMetrics.fabSize, height: ShellMetrics.fabSize)
-                .shellIconShadow()
-        }
-        .buttonStyle(.plain)
     }
 }
 
-/// 把底栏钉在屏幕底部。内容自己 ignoresSafeArea 铺满，底栏留在 safe area 内 ——
-/// 系统给出的底部安全区就是 RN 版 `paddingBottom: max(insets.bottom, 8)` 的等价物。
+/// 壳层。DECISIONS 2026-09-15 第二轮：底栏交给系统。
 ///
-/// 内容不被底栏遮挡靠各屏 ScrollView 的 `.shellBottomInset()`，不靠在底栏后面铺遮罩：
-/// 用 Color 做 background 会无限扩张，把滚动内容整片盖掉。
-struct ShellTabBarHost<Content: View>: View {
+/// 原来是自绘的 5 位栏（36pt Material 字形 + 60pt 中央 FAB + 双层黑影），现在是原生 `TabView`：
+/// iOS 26 下这就是系统的 Liquid Glass Tab Bar（滚动时自动收拢、选中有形变、安全区由系统给），
+/// 读经坞走 `tabViewBottomAccessory` 真正挂进 TabView，而不是我们自己在 ZStack 里浮一块。
+/// iOS 17–25 拿到的是系统旧样式的栏 + 坞铺在栏上方 —— 同一套结构，两种材质，不是两套设计。
+///
+/// 中央「读经计划」不再是 FAB（Josh 2026-09-15 批准）：它就是第三个普通 Tab，
+/// 切到它时由调用方 `onEnterPlan` 打开今日读经，行为与原来点 FAB 一致。
+struct AskTabShell<Screen: View, Dock: View>: View {
+    @Environment(\.parchment) private var theme
     @Binding var selection: ShellTab
-    /// 羊皮卷各页要给底栏铺不透明底挡住滚过的内容；首页和音乐页是整屏视觉，透出背景
-    var parchmentBar: Bool = false
-    /// 中央键：进今日读经计划（RN ShellScripturePlayFab → plan-play）
-    var onCenterTap: () -> Void = {}
-    /// 读经坞是否真的在显示（dock 闭包总是给的，空坞也算「有」，得另给一个明确的开关）
+    var locale: AppLocale
+    /// 坞是否真的在显示（空坞也算「给了」，得另给一个明确的开关）
     var dockActive: Bool = false
-    /// 独立子页（读经计划目录 / 详情 / 今日读经）不放底栏：Josh「独立页下面无需放图标」，靠左上返回键回来
+    /// 独立子页（读经计划目录 / 详情）与登录页不放底栏
     var showTabBar: Bool = true
-    @ViewBuilder var content: () -> Content
-    var dock: (() -> AnyView)? = nil
+    var onEnterPlan: () -> Void = {}
+    @ViewBuilder var screen: (ShellTab) -> Screen
+    @ViewBuilder var dock: () -> Dock
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            content()
+        base
+            .onChange(of: selection) { _, tab in
+                if tab == .plan { onEnterPlan() }
+            }
+    }
 
-            // 底铺在整个「坞 + 间隙 + 底栏」外面：只铺底栏的话，坞和底栏之间 6pt 的间隙会透出滚过的经文
-            if showTabBar {
-            VStack(spacing: ShellMetrics.tabBarDockGap) {
-                if let dock { dock() }
-                ShellTabBar(selection: $selection, onCenterTap: onCenterTap)
-                    .frame(height: ShellMetrics.tabRowHeight)
-            }
-            .background {
-                // RN：只有读经坞出现时才在坞 + 底栏后面铺羊皮（scriptureDockParchmentHost，整屏图钉在屏幕底，与页面底图像素重合）；
-                // 其余羊皮页底栏透明，正文靠 scroll mask 在底栏前渐隐 —— 之前这里整块铺一层会在坞顶露出一条硬边
-                if parchmentBar, dockActive {
-                    ParchmentPinnedBottom()
-                        .ignoresSafeArea(edges: .bottom)
-                }
-            }
+    @ViewBuilder private var base: some View { tabs }
+
+    private var tabs: some View {
+        TabView(selection: $selection) {
+            ForEach(ShellTab.allCases) { tab in
+                screen(tab)
+                    .toolbar(showTabBar ? .visible : .hidden, for: .tabBar)
+                    // 坞是我们自己的一块玻璃卡，不走 `tabViewBottomAccessory`（系统 accessory 只给一行高，
+                    // 装不下封面 + 章名 + 进度 + 倒计时 + 大播放键 + 下一章那版布局）。
+                    //
+                    // **用 overlay 而不是 safeAreaInset**：safeAreaInset 会把滚动视图的可见范围压小，
+                    // 经文被裁在坞的上边缘 —— 玻璃底下永远只有一片空白纸，于是怎么调材质都是「一块底色」
+                    // （Josh 2026-09-16 连问三轮的就是这个）。改成浮层之后经文照常从坞底下穿过去，
+                    // 玻璃才有东西可折射；滚动长度由各页的 `shellBottomInset()`（content margin）保证。
+                    .overlay(alignment: .bottom) {
+                        if dockActive {
+                            dock()
+                                .askGlassRect(tone: .light, radius: AskCorner.sheet)
+                                .askFloatingShadow()
+                                .padding(.horizontal, AskGlassMetrics.capsuleInset)
+                                .padding(.bottom, 4)
+                        }
+                    }
+                    .tabItem { Label(tab.label(locale), systemImage: tab.symbol) }
+                    .tag(tab)
             }
         }
+        // 选中态用琥珀（不是品牌黄）：系统栏是浅玻璃，#FFB101 在上面对比不够
+        .tint(theme.isDark ? Brand.logo : theme.accentOt)
     }
 }
 
 extension View {
-    /// 让滚动内容在底栏（+ 播放坞）上方结束
+    /// 给滚动内容留出坞的高度 —— 用 **content margin**，不是 safeAreaInset：
+    /// content margin 只加长滚动内容、不压小滚动视图，所以经文能滚到玻璃坞底下并透出来。
+    /// 系统底栏那一截仍由系统自己计入安全区，这里只管坞。
     func shellBottomInset(hasDock: Bool = false) -> some View {
-        safeAreaInset(edge: .bottom) {
-            Color.clear.frame(
-                height: ShellMetrics.tabRowHeight + ShellMetrics.tabBarDockGap
-                    + (hasDock ? ShellMetrics.dockContentHeight : 0)
-            )
-        }
+        contentMargins(.bottom, hasDock ? ShellMetrics.glassDockHeight : 0, for: .scrollContent)
     }
 }

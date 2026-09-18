@@ -64,8 +64,8 @@ struct ChapterFlowParagraph: UIViewRepresentable {
         /// 划过一段：节号 + 节内字符区间
         var onPaint: (Int, ClosedRange<Int>) -> Void = { _, _ in }
         static let activeFill = UIColor(red: 1, green: 0.694, blue: 0.012, alpha: 1)
-        static let bookmarkFill = UIColor(Parchment.light.verseBookmarkMarker)
-        static let searchFocusFill = UIColor(Parchment.light.verseSearchFocusBg)
+        static let bookmarkFill = UIColor { t in UIColor((t.userInterfaceStyle == .dark ? Parchment.dark : Parchment.light).verseBookmarkMarker) }
+        static let searchFocusFill = UIColor { t in UIColor((t.userInterfaceStyle == .dark ? Parchment.dark : Parchment.light).verseSearchFocusBg) }
 
         override init(frame: CGRect) {
             super.init(frame: frame)

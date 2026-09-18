@@ -77,8 +77,8 @@ struct MarkdownBody: View {
     var size: ReadSize = .default
     let theme: Parchment
 
-    static let accent = Color(rgb: 0xA56A2D)
-    private static let quoteInk = Color(rgb: 0x8C562A)
+    static let accent = Color(parchment: 0xA56A2D)
+    private static let quoteInk = Color(parchment: 0x8C562A)
     /// RN postReadingTheme.mdBody：rgba(28,20,16,.82)（探索文章与读后两版同一套正文色）
     static let bodyInk = Color(red: 28 / 255, green: 20 / 255, blue: 16 / 255, opacity: 0.82)
 

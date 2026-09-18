@@ -1,7 +1,15 @@
 import SwiftUI
 
-/// 首次打开的欢迎页，对齐 RN `/welcome`（OnboardingDevotionIntro）：选语言 + 登录 / 注册，右上「略过」。
-/// RN 那一版中间还有「每日读经提醒」，原生还没有本地通知，这一段先不做。
+/// 首次打开的欢迎页。
+///
+/// Josh 2026-09-18（与 ChatGPT 过了一轮版面评审后定）：这一页不再是登录页。
+/// App 的主场景排序是 灵修 → 每日读经 → 圣经目录，登录只是「同步进度」的附属能力，
+/// 所以首屏只承担一件事：告诉用户这是什么，并让他立刻开始今日灵修（= 首页）。
+///
+/// 于是原来的「选语言 + Google/Apple + 邮箱密码 + 登录/注册」全部让位：
+/// - 语言收到右上角轻量菜单（仍在首屏，因为它联动译本与首页金句，第一次进来选一次比藏进设置合理）
+/// - 登录整套收进 sheet，邮箱密码再折叠一层，Apple 在 Google 之前（iOS 习惯）
+/// - 「注册」降成文字链接，不再与「登录」并排等重
 struct WelcomeView: View {
     @ObservedObject var auth: MemberAuthStore
     let locale: AppLocale
@@ -9,107 +17,164 @@ struct WelcomeView: View {
     var onSetLocale: (AppLocale?) -> Void = { _ in }
     var onDone: () -> Void = {}
 
-    @State private var email = ""
-    @State private var password = ""
-    /// nil = 没在提交；否则是正在跑的那个动作
-    @State private var pendingAction: Action?
-    @State private var error: String?
-    /// 点了「注册」先展开昵称，再点一次才提交（RN OnboardingWelcomeLoginPanel 的做法）
-    @State private var registering = false
-    @State private var name = ""
-    @StateObject private var social = SocialSignInState()
+    @State private var showSignIn = false
 
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
 
     var body: some View {
         ZStack {
             ParchmentBackground(theme: theme).ignoresSafeArea()
+            // 留白不均分：品牌落在视线上三分之一，主按钮留在拇指区，中间那段空是「呼吸区」
             GeometryReader { geo in
                 VStack(spacing: 0) {
-                    HStack {
-                        Spacer()
-                        Button(action: onDone) {
-                            Text(SiteCopy.t("onboarding.welcome.loginSkip", locale))
-                                .font(.system(size: 17))
-                                .foregroundStyle(theme.muted)
-                                .frame(minHeight: 32)
-                                .padding(.horizontal, 4)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(pending)
-                    }
-                    .padding(.top, geo.safeAreaInsets.top + 6)
-                    .padding(.horizontal, 20)
-
-                    // 内容不满屏时整体居中（RN contentInner justifyContent center）
-                    ScrollView(showsIndicators: false) {
-                        VStack(alignment: .leading, spacing: 18) {
-                            brand
-                            language
-                            login
-                        }
-                        .frame(maxWidth: 420, alignment: .leading)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
-                        .frame(maxWidth: .infinity, minHeight: geo.size.height - geo.safeAreaInsets.top - 44, alignment: .center)
-                    }
+                    topBar
+                    Spacer(minLength: 0).frame(height: geo.size.height * 0.12)
+                    brand
+                    Spacer(minLength: 24)
+                    bottom
                 }
+                .frame(maxWidth: 420)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 24)
+            }
+        }
+        .sheet(isPresented: $showSignIn) {
+            WelcomeSignInSheet(auth: auth, locale: locale) {
+                showSignIn = false
+                onDone()
             }
         }
     }
 
-    /// 抬头：应用名 + 一句引言，欢迎页不该只有一堆输入框
+    /// 右上角只放两个轻量入口：语言、登录。都不是主任务。
+    private var topBar: some View {
+        HStack(spacing: 14) {
+            Spacer()
+            Menu {
+                Picker("", selection: Binding(get: { localeOverride }, set: { onSetLocale($0) })) {
+                    Text(SiteCopy.t("native.followSystem", locale)).tag(AppLocale?.none)
+                    Text(AppLocale.zhCN.settingLabel).tag(AppLocale?.some(.zhCN))
+                    Text(AppLocale.zhTW.settingLabel).tag(AppLocale?.some(.zhTW))
+                    Text(AppLocale.en.settingLabel).tag(AppLocale?.some(.en))
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Text(localeOverride?.settingLabel ?? SiteCopy.t("native.followSystem", locale))
+                        .font(.system(size: 15))
+                    Image(systemName: "chevron.down").font(.system(size: 11, weight: .semibold))
+                }
+                .foregroundStyle(theme.muted)
+                .frame(minHeight: 40)
+                .contentShape(Rectangle())
+            }
+            Button { showSignIn = true } label: {
+                Text(SiteCopy.t("native.welcomeSignIn", locale))
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(theme.muted)
+                    .frame(minHeight: 40)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.top, 4)
+    }
+
     private var brand: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(spacing: 10) {
             Text(SiteCopy.t("native.welcomeTitle", locale))
-                .font(.system(size: 28, weight: .bold))
+                .font(.system(size: 30, weight: .bold))
                 .foregroundStyle(theme.ink)
-            Text(SiteCopy.t("onboarding.welcome.loginIntro", locale))
+                .multilineTextAlignment(.center)
+            Text(SiteCopy.t("native.welcomeTagline", locale))
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(theme.accentOt)
+            Text(SiteCopy.t("native.welcomeLead", locale))
                 .font(.system(size: 14))
                 .lineSpacing(4)
                 .foregroundStyle(theme.muted)
+                .multilineTextAlignment(.center)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var language: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(SiteCopy.t("onboarding.welcome.languageTitle", locale))
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(theme.muted)
-            HStack(spacing: 0) {
-                chip(nil, label: SiteCopy.t("native.followSystem", locale))
-                chip(.zhCN, label: AppLocale.zhCN.settingLabel)
-                chip(.zhTW, label: AppLocale.zhTW.settingLabel)
-                chip(.en, label: AppLocale.en.settingLabel)
+    /// 唯一主动作 + 一句同步提示。登录不在这条路径上。
+    private var bottom: some View {
+        VStack(spacing: 14) {
+            Button(action: onDone) {
+                Text(SiteCopy.t("native.welcomeStart", locale))
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(theme.ink)
+                    .frame(maxWidth: .infinity).frame(minHeight: 52)
+                    .background(RoundedRectangle(cornerRadius: 12).fill(Color(rgb: 0xffb101, opacity: 0.22)))
+                    .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(theme.border, lineWidth: 0.5))
+                    .contentShape(Rectangle())
             }
-            .frame(minHeight: 50)
-            .background(RoundedRectangle(cornerRadius: 10).fill(theme.surface))
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(theme.border, lineWidth: 0.5))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .buttonStyle(.plain)
+            Text(SiteCopy.t("native.welcomeSyncHint", locale))
+                .font(.system(size: 12))
+                .lineSpacing(3)
+                .foregroundStyle(theme.muted)
+                .multilineTextAlignment(.center)
         }
+        .padding(.bottom, 28)
+    }
+}
+
+/// 登录整套（第三方 + 折叠的邮箱密码）。从欢迎页右上角「登录」拉起，不占首屏。
+struct WelcomeSignInSheet: View {
+    @ObservedObject var auth: MemberAuthStore
+    let locale: AppLocale
+    var onDone: () -> Void
+
+    @State private var email = ""
+    @State private var password = ""
+    @State private var name = ""
+    /// 邮箱密码默认折叠（ChatGPT 评审 P0：三种登录方式同时展开，首屏信息量过大）
+    @State private var emailOpen = false
+    @State private var registering = false
+    @State private var pendingAction: Action?
+    @State private var error: String?
+    @StateObject private var social = SocialSignInState()
+
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.parchment) private var theme
+
+    var body: some View {
+        ZStack {
+            ParchmentBackground(theme: theme).ignoresSafeArea()
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(SiteCopy.t("auth.pageTitle", locale))
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(theme.ink)
+                        .padding(.bottom, 2)
+                    SocialSignInButtons(auth: auth, locale: locale, state: social, onDone: onDone)
+                    if emailOpen {
+                        emailForm
+                    } else {
+                        Button { emailOpen = true } label: {
+                            Text(SiteCopy.t("native.welcomeEmailSignIn", locale))
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(theme.ink)
+                                .frame(maxWidth: .infinity).frame(minHeight: 48)
+                                .background(RoundedRectangle(cornerRadius: 12).fill(Color(parchment: 0xF8F1E3, opacity: 0.72)))
+                                .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(theme.border, lineWidth: 0.5))
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .frame(maxWidth: 420, alignment: .leading)
+                .padding(.horizontal, 24)
+                .padding(.top, 24)
+                .padding(.bottom, 32)
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .presentationDetents([.medium, .large])
     }
 
-    private func chip(_ value: AppLocale?, label: String) -> some View {
-        let on = localeOverride == value
-        return Button { onSetLocale(value) } label: {
-            Text(label)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(on ? theme.ink : theme.muted)
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, minHeight: 50)
-                .background(on ? Color(rgb: 0xffb101, opacity: 0.18) : Color.clear)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .disabled(pending)
-    }
-
-    private var login: some View {
+    private var emailForm: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // 标题那句引言已经说了「登录或注册」，这里不再重复一遍
-            SocialSignInButtons(auth: auth, locale: locale, state: social, onDone: onDone)
             AuthField(label: SiteCopy.t("auth.email", locale), text: $email, locale: locale,
                       keyboard: .emailAddress, contentType: .emailAddress)
             if registering {
@@ -117,44 +182,24 @@ struct WelcomeView: View {
                           contentType: .name)
             }
             AuthField(label: SiteCopy.t("auth.password", locale), text: $password, locale: locale,
-                      secure: true, contentType: .password)
+                      secure: true, contentType: registering ? .newPassword : .password)
             if let error { AuthErrorText(error, locale: locale) }
-            // RN actionRow：登录 / 注册并排，各占一半
-            HStack(spacing: 10) {
-                actionButton(SiteCopy.t("auth.submit", locale), action: .login) { submit(.login) }
-                actionButton(SiteCopy.t("auth.registerSubmit", locale), action: .register) {
-                    if registering { submit(.register) } else { registering = true }
-                }
+            AuthSubmit(title: SiteCopy.t(registering ? "auth.registerSubmit" : "auth.submit", locale),
+                       pending: pendingAction != nil, locale: locale) {
+                submit(registering ? .register : .login)
             }
-            .padding(.top, 6)
-        }
-    }
-
-    private func actionButton(_ title: String, action: Action, run: @escaping () -> Void) -> some View {
-        Button(action: run) {
-            ZStack {
-                if pendingAction == action { ProgressView().tint(theme.ink) }
-                else {
-                    Text(title)
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(theme.ink)
-                }
+            // 注册是文字链接，不再和登录并排等重
+            AuthLink(title: SiteCopy.t(registering ? "auth.registerGoLogin" : "native.welcomeNoAccount", locale),
+                     locale: locale) {
+                registering.toggle(); error = nil
             }
-            .frame(maxWidth: .infinity).frame(minHeight: 48)
-            .background(RoundedRectangle(cornerRadius: 12).fill(Color(rgb: 0xFFFCF5, opacity: 0.62)))
-            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(theme.border, lineWidth: 0.5))
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .disabled(pending)
-        .opacity(pending ? 0.55 : 1)
     }
 
     enum Action { case login, register }
-    private var pending: Bool { pendingAction != nil }
 
     private func submit(_ action: Action) {
-        guard !pending, !social.busy else { return }
+        guard pendingAction == nil, !social.busy else { return }
         pendingAction = action; error = nil; social.clearErrors()
         Task {
             let err: String?

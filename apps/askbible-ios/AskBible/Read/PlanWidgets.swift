@@ -31,9 +31,9 @@ enum PlanIcons {
     /// 轨道图标与色：旧约蓝 / 新约橙 / 智慧书绿（目录页的约别配色）
     static func track(_ id: String) -> (glyph: String, color: Color) {
         switch id {
-        case "ot": return (MI.historyEdu, Color(rgb: 0x2E5E8C))
-        case "nt": return (MI.autoStories, Color(rgb: 0xB8611E))
-        default: return (MI.lightbulb, Color(rgb: 0x3F7A4A))
+        case "ot": return (MI.historyEdu, Color(parchment: 0x2E5E8C))
+        case "nt": return (MI.autoStories, Color(parchment: 0xB8611E))
+        default: return (MI.lightbulb, Color(parchment: 0x3F7A4A))
         }
     }
 }
@@ -41,7 +41,7 @@ enum PlanIcons {
 /// 要点胶囊：图标 16 + 文字 14/600
 struct PlanFactChip: View {
     let fact: PlanFact
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     var body: some View {
         HStack(spacing: 6) {
             MaterialIcon(glyph: PlanIcons.glyph(fact.icon), size: 18, color: theme.muted)
@@ -121,7 +121,7 @@ struct PlanFlowLayout: Layout {
 /// 「怎么读」一行：金色圆底图标 + 16/500 短句
 struct PlanHowRow: View {
     let fact: PlanFact
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
             ZStack {
@@ -143,7 +143,7 @@ struct PlanTodayCard: View {
     var subtitle: String?
     var progress: Double?
     let action: () -> Void
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     var body: some View {
         Button(action: action) {
             HStack(spacing: 14) {
@@ -165,7 +165,7 @@ struct PlanTodayCard: View {
                 MaterialIcon(glyph: MI.chevronRight, size: 26, color: theme.faint)
             }
             .padding(.horizontal, 16).padding(.vertical, 14)
-            .background(RoundedRectangle(cornerRadius: 14).fill(Color(rgb: 0xFFFCF5, opacity: 0.72)))
+            .background(RoundedRectangle(cornerRadius: 14).fill(Color(parchment: 0xFFFCF5, opacity: 0.72)))
             .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(theme.border, lineWidth: 0.5))
         }
         .buttonStyle(.plain)
@@ -174,7 +174,7 @@ struct PlanTodayCard: View {
 
 struct PlanProgressBar: View {
     let value: Double
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     var body: some View {
         GeometryReader { g in
             ZStack(alignment: .leading) {
@@ -191,11 +191,11 @@ struct PlanPrimaryButton: View {
     let title: String
     var filled = true
     let action: () -> Void
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     var body: some View {
         Button(action: action) {
             Text(title).font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(filled ? Color(rgb: 0xF5EFE4) : theme.ink)
+                .foregroundStyle(filled ? Color(parchment: 0xF5EFE4) : theme.ink)
                 .frame(maxWidth: .infinity).frame(height: 52)
                 .background(RoundedRectangle(cornerRadius: 14).fill(filled ? theme.ink : theme.surface))
                 .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(filled ? Color.clear : theme.ink.opacity(0.35), lineWidth: 1))
@@ -207,7 +207,7 @@ struct PlanPrimaryButton: View {
 struct PlanSectionHeader: View {
     let title: String
     var hint: String?
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title).font(.system(size: 20, weight: .bold)).foregroundStyle(theme.ink)
@@ -222,8 +222,8 @@ struct PlanStatusPill: View {
     let text: String
     var body: some View {
         HStack(spacing: 6) {
-            MaterialIcon(glyph: MI.checkCircle, size: 18, color: Color(rgb: 0x8A5A00))
-            Text(text).font(.system(size: 15, weight: .semibold)).foregroundStyle(Color(rgb: 0x5B3A00))
+            MaterialIcon(glyph: MI.checkCircle, size: 18, color: Color(parchment: 0x8A5A00))
+            Text(text).font(.system(size: 15, weight: .semibold)).foregroundStyle(Color(parchment: 0x5B3A00))
         }
         .padding(.horizontal, 12).padding(.vertical, 7)
         .background(Capsule().fill(Brand.logo.opacity(0.26)))
@@ -236,7 +236,7 @@ struct PlanChoiceTile: View {
     let subtitle: String
     let on: Bool
     let action: () -> Void
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     var body: some View {
         Button(action: action) {
             VStack(spacing: 4) {
@@ -255,7 +255,7 @@ struct PlanChoiceTile: View {
 struct PlanStepper: View {
     @Binding var value: Int
     let range: ClosedRange<Int>
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     var body: some View {
         HStack(spacing: 16) {
             step(MI.remove, enabled: value > range.lowerBound) { value = max(range.lowerBound, value - 1) }
@@ -285,7 +285,7 @@ struct PlanDisclosure<Content: View>: View {
     let closeTitle: String
     @ViewBuilder let content: () -> Content
     @State private var open = false
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Button { withAnimation(.easeInOut(duration: 0.2)) { open.toggle() } } label: {
@@ -306,7 +306,7 @@ struct PlanLinkCard: View {
     let title: String
     let lead: String
     let action: () -> Void
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     var body: some View {
         Button(action: action) {
             HStack(spacing: 12) {
@@ -329,12 +329,13 @@ struct PlanLinkCard: View {
 /// 左上返回箭头（整块 44×44 可点：图标外的透明部分默认不算点击区，真机点 x<24 没反应）：页面在 GeometryReader（不 ignoresSafeArea）里，内容本来就从安全区下方开始，这里只留 8pt，
 /// 不能再加 safeAreaInsets.top —— 那会把箭头压到比系统默认位置低一个状态栏（Josh 真机 2026-09-10）
 struct PlanBackButton: View {
+    @Environment(\.parchment) private var theme
     let action: () -> Void
     var body: some View {
         Button(action: action) {
             Image(systemName: "arrow.left")
                 .font(.system(size: 22, weight: .medium))
-                .foregroundStyle(Parchment.light.ink)
+                .foregroundStyle(theme.ink)
                 .frame(width: 44, height: 44).contentShape(Rectangle())
         }
         .buttonStyle(.plain)

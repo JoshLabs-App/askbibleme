@@ -13,6 +13,8 @@ struct ExploreView: View {
     var onOpenLogin: () -> Void = {}
     /// 退出登录（先把本机进度推上云端再清本机，由壳接线）
     var onSignOut: () -> Void = {}
+    /// 右上角「设置」：打开原首页左上角那块菜单（语言 / 译本 / 登录 / 提醒 / 反馈 / 删号），Josh 2026-09-16 移到探索
+    var onOpenSettings: () -> Void = {}
     var size: ReadSize = .default
     /// 收藏（Josh 2026-09-11「探索里要放收藏，前 3 条 + 更多」）
     @ObservedObject var bookmarks: VerseBookmarkStore
@@ -22,8 +24,10 @@ struct ExploreView: View {
     var onOpenFavorites: () -> Void = {}
     /// 文章里的经文链接 → 读经 Tab 打开那一章
     var onOpenChapter: (_ bookId: String, _ chapter: Int) -> Void = { _, _ in }
+    /// 成就页入口（等级条整条可点）
+    var onOpenAchievements: () -> Void = {}
 
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     @State private var nameEditorOpen = false
     @State private var nameDraft = ""
 
@@ -48,7 +52,7 @@ struct ExploreView: View {
     private var page: some View {
         GeometryReader { geo in
             let safeTop = geo.safeAreaInsets.top
-            ZStack {
+            ZStack(alignment: .topTrailing) {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 0) {
                         // RN ExploreScreen 抬头：没登录点了去登录页；登录了显示「你好，名字」，点了改称呼
@@ -62,17 +66,29 @@ struct ExploreView: View {
                         }
                         .buttonStyle(.plain)
                         .padding(.top, safeTop + 37)
-                        if auth.user != nil {
-                            // RN 的「退出登录」在侧边抽屉里；原生版还没有抽屉，先放在抬头下面
-                            Button { onSignOut() } label: {
-                                Text(SiteCopy.t("auth.drawerLogout", locale)).font(.system(size: 13)).underline().foregroundStyle(theme.faint)
-                            }
-                            .buttonStyle(.plain).padding(.top, 8)
-                        }
 
                         progressLine.padding(.top, 26)
 
                         statsRow.padding(.top, 22)
+
+                        // 等级条：探索页最显眼的常驻反馈，整条可点进成就页
+                        Button(action: onOpenAchievements) {
+                            VStack(spacing: 8) {
+                                XPBar()
+                                HStack(spacing: 4) {
+                                    Text(SiteCopy.t("native.achievementsSub", locale))
+                                        .font(.system(size: 12)).foregroundStyle(theme.muted)
+                                    Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold))
+                                        .foregroundStyle(theme.muted)
+                                }
+                            }
+                            .padding(14)
+                            .background(theme.surface, in: RoundedRectangle(cornerRadius: 16))
+                            .overlay(RoundedRectangle(cornerRadius: 16).stroke(theme.border, lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 20)
 
                         Text(usageLine)
                             .font(.system(size: 17))
@@ -116,10 +132,11 @@ struct ExploreView: View {
 
                         favoritesBlock
 
-                        // 查经资料：RN 探索格子里的精选文章（section 上 36 + 8，格子上 16 + 8，3 列 gap 10）
-                        articleGrid(width: geo.size.width)
-                            .padding(.top, 36 + 8 + 16 + 8)
-                            .padding(.horizontal, 22)
+                        // 查经资料格子（让经文发声 / 圣经的模型 / 正式研读）Josh 2026-09-18 收起来，探索页不再摆出来。
+                        // `articleGrid` 和文章数据都留着：读经计划页的「麦克阿瑟研经法」链接仍然要能打开文章页。
+                        // articleGrid(width: geo.size.width)
+                        //     .padding(.top, 36 + 8 + 16 + 8)
+                        //     .padding(.horizontal, 22)
 
                         // RN：72 + 安全区 + 120（渐隐区）+ 探索首页再多留 120
                         Color.clear.frame(height: ShellMetrics.tabBarClearance + geo.safeAreaInsets.bottom + 120 + 120)
@@ -127,6 +144,15 @@ struct ExploreView: View {
                 }
                 .ignoresSafeArea(edges: .bottom)
                 .parchmentFade(.tabbar)
+
+                Button(action: onOpenSettings) {
+                    MaterialIcon(glyph: MI.settings, size: 24, color: theme.ink.opacity(0.72))
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .padding(.trailing, 12)
+                .padding(.top, safeTop + 34)
             }
             .background(ParchmentBackground(theme: theme).ignoresSafeArea())
         }
@@ -148,7 +174,7 @@ struct ExploreView: View {
                             VStack(spacing: 10) {
                                 MaterialIcon(glyph: a.icon, size: 28, color: theme.ink, community: true)
                                     .frame(width: 64, height: 64)
-                                    .background(RoundedRectangle(cornerRadius: 18).fill(Color(rgb: 0xFFFCF5, opacity: 0.55)))
+                                    .background(RoundedRectangle(cornerRadius: 18).fill(Color(parchment: 0xFFFCF5, opacity: 0.55)))
                                     .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(theme.border, lineWidth: 1 / UIScreen.main.scale))
                                 Text(a.exploreLabel)
                                     .font(.system(size: 12, weight: .semibold))
@@ -262,7 +288,7 @@ struct ExploreView: View {
                     let fr = MemberReadingSyncRules.rangeToTrackFraction(start: r.start, end: r.end, daysInYear: tl.daysInYear)
                     let drawW = max(fr.width, minW)
                     let drawLeft = min(fr.left, max(0, 1 - drawW))
-                    Capsule().fill(Color(rgb: 0xE8A017)).frame(width: w * drawW, height: 5)
+                    Capsule().fill(Color(parchment: 0xE8A017)).frame(width: w * drawW, height: 5)
                         .frame(maxHeight: .infinity).offset(x: w * drawLeft)
                 }
                 Circle().fill(theme.parchmentAccent).frame(width: 11, height: 11)
@@ -278,9 +304,9 @@ struct ExploreView: View {
         return HStack(spacing: 0) {
             stat(String(tl.dayOfYear), SiteCopy.t("pages.read.todayReadingStatYearDayLabel", locale), theme.parchmentAccent)
             divider
-            stat(String(activity.readDays), SiteCopy.t("pages.read.todayReadingStatReadLabel", locale), Color(rgb: 0x4F7A54))
+            stat(String(activity.readDays), SiteCopy.t("pages.read.todayReadingStatReadLabel", locale), Color(parchment: 0x4F7A54))
             divider
-            stat(String(activity.streakDays), SiteCopy.t("pages.read.todayReadingStatStreakLabel", locale), Color(rgb: 0x4F7A54))
+            stat(String(activity.streakDays), SiteCopy.t("pages.read.todayReadingStatStreakLabel", locale), Color(parchment: 0x4F7A54))
         }
         .padding(.horizontal, 24)
     }

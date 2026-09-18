@@ -17,7 +17,7 @@ struct VerseActionSheet: View {
     var onHighlight: () -> Void = {}
     var onClose: () -> Void
 
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
 
     var body: some View {
         let fs = size.metrics.verseFontSize
@@ -46,7 +46,7 @@ struct VerseActionSheet: View {
             }
             .padding(.horizontal, 18).padding(.top, 14).padding(.bottom, 28)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .parchmentCard(cornerRadius: 16)
+            .parchmentCard(cornerRadius: AskCorner.card)
             .contentShape(Rectangle())
             .onTapGesture {}
         }
@@ -77,7 +77,7 @@ struct VerseFeedbackToast: View {
         if let message {
             Text(message)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(Color(rgb: 0xF7F4EF))
+                .foregroundStyle(Color(parchment: 0xF7F4EF))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 16).padding(.vertical, 10)
                 .background(Capsule().fill(Color(red: 28 / 255, green: 20 / 255, blue: 16 / 255, opacity: 0.82)))

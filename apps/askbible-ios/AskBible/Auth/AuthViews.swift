@@ -94,12 +94,12 @@ struct SocialSignInButtons: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            AuthProviderButton(variant: .google, label: SiteCopy.t("auth.continueWithGoogle", locale), pending: state.googlePending, disabled: state.busy, locale: locale) { google() }
-            if let e = state.googleError { AuthOAuthError(e, locale: locale) }
-        }
-        VStack(spacing: 6) {
             AuthProviderButton(variant: .apple, label: SiteCopy.t("auth.continueWithApple", locale), pending: state.applePending, disabled: state.busy, locale: locale) { apple() }
             if let e = state.appleError { AuthOAuthError(e, locale: locale) }
+        }
+        VStack(spacing: 6) {
+            AuthProviderButton(variant: .google, label: SiteCopy.t("auth.continueWithGoogle", locale), pending: state.googlePending, disabled: state.busy, locale: locale) { google() }
+            if let e = state.googleError { AuthOAuthError(e, locale: locale) }
         }
         AuthMethodDivider(locale: locale)
     }
@@ -142,7 +142,7 @@ private struct AuthProviderButton: View {
     let disabled: Bool
     let locale: AppLocale
     let action: () -> Void
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
 
     var body: some View {
         Button(action: { if !(disabled || pending) { action() } }) {
@@ -163,7 +163,7 @@ private struct AuthProviderButton: View {
                 }
             }
             .frame(maxWidth: .infinity).frame(minHeight: 48)
-            .background(RoundedRectangle(cornerRadius: 12).fill(Color(rgb: 0xFFFCF5, opacity: 0.62)))
+            .background(RoundedRectangle(cornerRadius: 12).fill(Color(parchment: 0xF8F1E3, opacity: 0.72)))
             .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(theme.border, lineWidth: 0.5))
         }
         .buttonStyle(AuthPressStyle())
@@ -193,7 +193,7 @@ private struct AuthOAuthError: View {
 /// RN MemberAuthMethodDivider：hairline 线 —「或」— 线，上下 16
 private struct AuthMethodDivider: View {
     let locale: AppLocale
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     var body: some View {
         HStack(spacing: 12) {
             Rectangle().fill(theme.border).frame(height: 0.5)
@@ -212,7 +212,7 @@ private struct AuthPage<Content: View>: View {
     let title: String
     var onBack: () -> Void
     @ViewBuilder var content: () -> Content
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
 
     var body: some View {
         GeometryReader { geo in
@@ -246,7 +246,7 @@ struct AuthField: View {
     var keyboard: UIKeyboardType = .default
     var secure = false
     var contentType: UITextContentType? = nil
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
 
     var body: some View {
         Text(locale.zh(label)).font(.system(size: 15, weight: .semibold)).foregroundStyle(theme.muted).padding(.top, 10)
@@ -261,8 +261,8 @@ struct AuthField: View {
         .autocorrectionDisabled()
         .padding(.horizontal, 14)
         .frame(minHeight: 50)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color(rgb: 0xFFFCF5, opacity: 0.62)))
-        .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(theme.border, lineWidth: 0.5))
+        .background(RoundedRectangle(cornerRadius: 8).fill(Color(parchment: 0xF8F1E3, opacity: 0.72)))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(theme.border, lineWidth: 0.5))
     }
 }
 
@@ -283,7 +283,7 @@ struct AuthSubmit: View {
     let pending: Bool
     let locale: AppLocale
     let action: () -> Void
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     var body: some View {
         Button(action: action) {
             ZStack {
@@ -291,17 +291,20 @@ struct AuthSubmit: View {
                 else { Text(locale.zh(title)).font(.system(size: 15, weight: .semibold)).foregroundStyle(theme.ink) }
             }
             .frame(maxWidth: .infinity).frame(minHeight: 48)
-            .background(RoundedRectangle(cornerRadius: 12).fill(Color(rgb: 0x1C1410, opacity: 0.1)))
+            // 主 CTA 用琥珀（与欢迎页「开始今日灵修」同一颗），和纸色的次级按钮拉开层级
+            .background(RoundedRectangle(cornerRadius: 12).fill(Color(rgb: 0xffb101, opacity: 0.22)))
+            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(theme.border, lineWidth: 0.5))
         }
         .buttonStyle(.plain).disabled(pending).opacity(pending ? 0.55 : 1).padding(.top, 16)
     }
 }
 
-private struct AuthLink: View {
+/// 欢迎页也要用这几块（原本只给登录 / 注册页），所以不再 private
+struct AuthLink: View {
     let title: String
     let locale: AppLocale
     let action: () -> Void
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     var body: some View {
         Button(action: action) {
             Text(locale.zh(title)).font(.system(size: 13, weight: .medium)).underline().foregroundStyle(theme.muted)

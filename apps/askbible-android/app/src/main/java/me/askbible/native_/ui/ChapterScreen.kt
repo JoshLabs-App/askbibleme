@@ -130,6 +130,10 @@ fun ChapterScreen(
     onOpenCatalog: () -> Unit = {},
     /** 结尾左右的上一章 / 下一章（可跨卷） */
     onNavigate: (bookId: String, chapter: Int) -> Unit = { _, _ -> },
+    /** 成就：滚到章末即算读完这一章（点亮书卷印章的唯一入口） */
+    onReachedEnd: () -> Unit = {},
+    /** 成就：滚过 n 节经文，给微反馈 XP（同一段只报一次） */
+    onVersesRead: (Int) -> Unit = {},
 ) {
     val context = LocalContext.current
     // 章页上的界面小字（署名、上一章 / 下一章）：法语等版本用英文，别在法语经文下面写中文
@@ -142,6 +146,9 @@ fun ChapterScreen(
     val groups = remember(verses, meta) { ChapterSegments.paragraphGroups(verses, meta) }
     val neighbors = remember(bookId, chapter) { ChapterNeighbor.resolve(bookId, chapter) }
     val listState = rememberLazyListState()
+    // 成就上报去重：已报过的段 / 章末，换章自动作废（tag 里带卷章）
+    val reportedGroups = remember { mutableStateOf(setOf<String>()) }
+    val reportedEnd = remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     // 搜索定位标记：进来时亮着，用户一动某节就灭
     var searchFocus by remember(bookId, chapter, focusVerse) { mutableStateOf(focusVerse) }
@@ -266,6 +273,13 @@ fun ChapterScreen(
                         else group.firstOrNull { it.number == v }?.let(onLongPressVerse)
                     },
                     onVerseBounds = { b -> verseBounds.putAll(b) })
+                // 这一段进过视口 = 这几节读过了（微反馈 XP）
+                LaunchedEffect(bookId, chapter, gi) {
+                    val tag = "$bookId:$chapter:$gi"
+                    if (tag in reportedGroups.value) return@LaunchedEffect
+                    reportedGroups.value = reportedGroups.value + tag
+                    onVersesRead(group.size)
+                }
             }
 
             // 在线译本的版权声明（YouVersion 条款要求展示；内置译本没有这一行）
@@ -278,6 +292,13 @@ fun ChapterScreen(
 
             item(key = "ending") {
                 EndingSection(bookName, neighbors, theme, onOpenCatalog, onNavigate, chromeLocale)
+                // 看到章末 = 读完这一章（拖到底也算：读经本来就允许略读）
+                LaunchedEffect(bookId, chapter) {
+                    val tag = "$bookId:$chapter"
+                    if (reportedEnd.value == tag) return@LaunchedEffect
+                    reportedEnd.value = tag
+                    onReachedEnd()
+                }
             }
             // 读后两版入口：陪你探索 / 查找资料（RN ReadChapterPostReadingEditions）。
             // 库里只有中英两套：读中文版本给中文那套，读英文版本（或英文界面）给英文那套；

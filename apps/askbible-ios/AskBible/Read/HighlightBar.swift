@@ -8,7 +8,7 @@ struct HighlightBar: View {
     @Binding var erasing: Bool
     var onDone: () -> Void
 
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -56,7 +56,7 @@ struct HighlightBar: View {
                         .foregroundStyle(erasing ? theme.ink : theme.muted)
                         .padding(.horizontal, 12).frame(minHeight: 34)
                         .background(
-                            Capsule().fill(erasing ? Color(rgb: 0xffb101, opacity: 0.22) : Color(rgb: 0xfff8eb, opacity: 0.5))
+                            Capsule().fill(erasing ? Color(rgb: 0xffb101, opacity: 0.22) : Color(parchment: 0xfff8eb, opacity: 0.5))
                         )
                         .contentShape(Rectangle())
                 }
@@ -65,7 +65,10 @@ struct HighlightBar: View {
         }
         .padding(.horizontal, 18).padding(.top, 14).padding(.bottom, 28)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .parchmentCard(cornerRadius: 16, backgroundHitTesting: false)
+        // Josh 2026-09-16 真机确认画笔正常后改成玻璃。玻璃背景不像原来那张整屏羊皮图会吃触点
+        // （DECISIONS 2026-09-13 Bug 2），所以不再需要 backgroundHitTesting: false 那个补丁。
+        .askGlassRect(tone: .light, radius: AskCorner.card)
+        .askFloatingShadow(.overlay)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         .ignoresSafeArea(edges: .bottom)
     }

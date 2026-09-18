@@ -9,7 +9,7 @@ struct FavoritesView: View {
     var onBack: () -> Void
     var onOpen: (VerseBookmark) -> Void
 
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
 
     var body: some View {
         GeometryReader { geo in

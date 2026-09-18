@@ -80,6 +80,10 @@ enum ShellMetrics {
     static let fabMarginH: CGFloat = 8
     static let tabBarDockGap: CGFloat = 6
     static let tabBarMinBottomInset: CGFloat = 8
+    /// 玻璃胶囊离屏幕底安全区的距离（浮起来才看得出是玻璃；贴死屏幕底就又变成一条矩形栏）
+    static let glassCapsuleBottomGap: CGFloat = 4
+    /// 玻璃读经坞的整体高度（两行 + 上下 padding），给滚动内容留边用
+    static let glassDockHeight: CGFloat = 104
 
     // 读经顶部竖排
     static let topChromeOffset: CGFloat = 6

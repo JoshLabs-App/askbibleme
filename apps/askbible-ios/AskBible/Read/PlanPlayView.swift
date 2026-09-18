@@ -27,7 +27,7 @@ struct PlanPlayView: View {
     /// 深读某阶设为今日后：回到今天、游标归零
     var onStageSet: () -> Void
 
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     @State private var confirmBusy = false
     @State private var lastRowTap: (index: Int, at: Date)?
     @State private var stageToConfirm: Int?
@@ -63,7 +63,7 @@ struct PlanPlayView: View {
                                 confirmBusy = false
                             } label: {
                                 Text(locale.zh(PlanCopy.t(confirmBusy ? "pages.read.todayPlanLoading" : "pages.read.planPlayConfirmDay")))
-                                    .font(.system(size: 16, weight: .semibold)).foregroundStyle(Color(rgb: 0xF5EFE4))
+                                    .font(.system(size: 16, weight: .semibold)).foregroundStyle(Color(parchment: 0xF5EFE4))
                                     .frame(maxWidth: .infinity).frame(height: 46)
                                     .background(RoundedRectangle(cornerRadius: 12).fill(theme.ink))
                             }
@@ -210,20 +210,20 @@ struct PlanPlayView: View {
                     } label: {
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
                             Text(locale.zh(PlanCopy.f("pages.read.ntDeepRepeatStageLabel", ["n": "\(i + 1)"])))
-                                .font(.system(size: 13, weight: .semibold)).foregroundStyle(isCurrent ? Color(rgb: 0x8A5A00) : theme.faint)
+                                .font(.system(size: 13, weight: .semibold)).foregroundStyle(isCurrent ? Color(parchment: 0x8A5A00) : theme.faint)
                                 .frame(width: 58, alignment: .leading)
                             Text(NtDeepRepeat.stageRange(seg))
                                 .font(.system(size: 16, weight: isCurrent ? .semibold : .regular)).foregroundStyle(isCurrent ? theme.ink : theme.inkSoft)
                             Spacer(minLength: 6)
                             if isCurrent {
                                 Text(locale.zh(PlanCopy.f("pages.read.ntDeepRepeatStageCurrent", ["day": "\(s.dayInSegment)", "total": "\(s.segmentDayTarget)"])))
-                                    .font(.system(size: 12, weight: .semibold)).foregroundStyle(Color(rgb: 0x8A5A00))
+                                    .font(.system(size: 12, weight: .semibold)).foregroundStyle(Color(parchment: 0x8A5A00))
                             } else if done {
                                 Text(locale.zh(PlanCopy.t("pages.read.ntDeepRepeatStageDone"))).font(.system(size: 12)).foregroundStyle(theme.faint)
                             }
                         }
                         .padding(.horizontal, 12).padding(.vertical, 9)
-                        .background(RoundedRectangle(cornerRadius: 10).fill(isCurrent ? Color(rgb: 0xFFECBF, opacity: 0.9) : theme.surface.opacity(0.45)))
+                        .background(RoundedRectangle(cornerRadius: 10).fill(isCurrent ? Color(parchment: 0xFFECBF, opacity: 0.9) : theme.surface.opacity(0.45)))
                         .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(isCurrent ? Color(rgb: 0xFFB101, opacity: 0.7) : theme.border, lineWidth: isCurrent ? 1 : 0.5))
                     }
                     .buttonStyle(.plain)
@@ -244,7 +244,7 @@ struct PlanMonthCalendar: View {
     let listened: Set<String>
     var onSelectAhead: (Int) -> Void
 
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     @State private var cursorYear = 0
     @State private var cursorMonth = 0
 

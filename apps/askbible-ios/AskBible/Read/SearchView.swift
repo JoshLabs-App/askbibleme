@@ -13,7 +13,7 @@ struct SearchView: View {
     var onBack: () -> Void
     var onOpenHit: (ScriptureSearchHit) -> Void
 
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     @State private var query = ""
     @State private var results: [ScriptureSearchHit] = []
     @State private var searched = false

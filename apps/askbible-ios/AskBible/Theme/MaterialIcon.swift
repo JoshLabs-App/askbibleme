@@ -53,6 +53,7 @@ enum MI {
     static let chevronLeft = "\u{e5cb}"
     static let chevronRight = "\u{e5cc}"
     static let close = "\u{e5cd}"
+    static let moreVert = "\u{e5d4}"
     static let check = "\u{e5ca}"
     static let checkCircle = "\u{e86c}"
     static let formatAlignLeft = "\u{e236}"

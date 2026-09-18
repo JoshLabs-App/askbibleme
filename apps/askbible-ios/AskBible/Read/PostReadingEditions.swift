@@ -22,8 +22,8 @@ struct PostReadingEditions: View {
 
     private static let lead = Color(red: 120 / 255, green: 75 / 255, blue: 30 / 255, opacity: 0.9)
     private static let hint = Color(red: 140 / 255, green: 90 / 255, blue: 42 / 255, opacity: 0.92)
-    private static let navInk = Color(rgb: 0x8C5A2A)
-    private static let paper = Color(rgb: 0xF2E4CF)
+    private static let navInk = Color(parchment: 0x8C5A2A)
+    private static let paper = Color(parchment: 0xF2E4CF)
 
     var body: some View {
         VStack(spacing: 0) {
@@ -100,7 +100,7 @@ struct PostReadingEditions: View {
                             .font(.system(size: 11, weight: .medium)).tracking(0.2)
                             .foregroundStyle(Self.hint)
                         MaterialIcon(glyph: isActive ? MI.checkCircle : MI.chevronRight, size: 14,
-                                     color: isActive ? Color(rgb: 0x7A633A) : Self.navInk)
+                                     color: isActive ? Color(parchment: 0x7A633A) : Self.navInk)
                     }
                     .frame(minHeight: 18).padding(.top, 2)
                 }
@@ -197,7 +197,7 @@ private struct EditionBlock: View {
                     VStack(spacing: 16) {
                         ProgressView(value: progress > 0 ? progress : nil)
                             .progressViewStyle(.circular)
-                            .tint(Color(rgb: 0x8C5A2A))
+                            .tint(Color(parchment: 0x8C5A2A))
                             .frame(width: 36, height: 36)
                         Text("首次准备中")
                             .font(.system(size: sx(13))).foregroundStyle(theme.muted)
@@ -213,7 +213,7 @@ private struct EditionBlock: View {
                             .foregroundStyle(theme.muted).frame(maxWidth: .infinity)
                         Button("重试") { downloader.resetForRetry() }
                             .font(.system(size: sx(14), weight: .semibold))
-                            .foregroundStyle(Color(rgb: 0x8C5A2A))
+                            .foregroundStyle(Color(parchment: 0x8C5A2A))
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 48)
@@ -240,7 +240,7 @@ private struct EditionBlock: View {
 
                 Button(action: onBack) {
                     Text(SiteCopy.t("pages.read.chapterChromeBack")).font(.system(size: sx(14), weight: .semibold)).tracking(0.3)
-                        .foregroundStyle(Color(rgb: 0x8C5A2A))
+                        .foregroundStyle(Color(parchment: 0x8C5A2A))
                         .padding(.horizontal, 8).padding(.vertical, 6)
                 }
                 .buttonStyle(.plain)
@@ -249,7 +249,7 @@ private struct EditionBlock: View {
             }
             .padding(.horizontal, 18).padding(.top, 20).padding(.bottom, 22)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: 18).fill(Color(rgb: 0xF2E4CF)))
+            .background(RoundedRectangle(cornerRadius: 18).fill(Color(parchment: 0xF2E4CF)))
             .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Color(red: 150 / 255, green: 112 / 255, blue: 64 / 255, opacity: 0.18), lineWidth: 1))
             .shadow(color: .black.opacity(0.22), radius: 16, y: 8)
             .padding(.horizontal, 12).padding(.top, 14).padding(.bottom, 14)

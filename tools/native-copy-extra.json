@@ -355,5 +355,97 @@
   "native.done": {
     "zh": "完成",
     "en": "Done"
+  },
+  "native.welcomeTagline": {
+    "zh": "每日灵修 · 每日读经",
+    "en": "Daily devotion · Daily reading"
+  },
+  "native.welcomeLead": {
+    "zh": "用几分钟，安静在神的话语里。",
+    "en": "Take a few quiet minutes in God's word."
+  },
+  "native.welcomeStart": {
+    "zh": "开始今日灵修",
+    "en": "Start today's devotion"
+  },
+  "native.welcomeSignIn": {
+    "zh": "登录",
+    "en": "Sign in"
+  },
+  "native.welcomeSyncHint": {
+    "zh": "登录后可同步读经进度与收藏，也可以稍后再登录。",
+    "en": "Sign in to sync your reading progress and bookmarks, or do it later."
+  },
+  "native.welcomeEmailSignIn": {
+    "zh": "使用邮箱登录",
+    "en": "Sign in with email"
+  },
+  "native.welcomeNoAccount": {
+    "zh": "还没有账号？注册",
+    "en": "New here? Create an account"
+  },
+  "native.welcomeLanguage": {
+    "zh": "界面语言",
+    "en": "Language"
+  },
+  "native.todayDevotion": {
+    "zh": "今日灵修",
+    "en": "Today's devotion"
+  },
+  "native.sealEarned": {
+    "zh": "点亮书卷印章",
+    "en": "Book seal unlocked"
+  },
+  "native.levelUp": {
+    "zh": "升到 {{level}} 级",
+    "en": "Level {{level}} reached"
+  },
+  "native.achievements": {
+    "zh": "成就",
+    "en": "Achievements"
+  },
+  "native.achievementsSub": {
+    "zh": "勋章、书卷印章与等级",
+    "en": "Medals, book seals and levels"
+  },
+  "native.medals": {
+    "zh": "勋章",
+    "en": "Medals"
+  },
+  "native.bookSeals": {
+    "zh": "书卷印章",
+    "en": "Book seals"
+  },
+  "native.chaptersReadLabel": {
+    "zh": "已读章",
+    "en": "Chapters"
+  },
+  "native.totalXP": {
+    "zh": "总经验",
+    "en": "Total XP"
+  },
+  "native.streakBonus": {
+    "zh": "连续加成",
+    "en": "Streak bonus"
+  },
+  "native.nextTier": {
+    "zh": "下一档 {{n}}",
+    "en": "Next: {{n}}"
+  },
+  "native.medalLocked": {
+    "zh": "还没获得",
+    "en": "Not yet earned"
+  },
+  "native.sealsProgress": {
+    "zh": "已点亮 {{n}} / 66 卷",
+    "en": "{{n}} of 66 books"
+  },
+  "native.medalsProgress": {
+    "zh": "已获得 {{n}} / {{total}} 枚",
+    "en": "{{n}} of {{total}} earned"
+  },
+  "native.chaptersReadStat": {
+    "zh": "已读 {{n}} 章",
+    "en": "{{n}} chapters read"
   }
 }

@@ -184,6 +184,8 @@
     "check:reading-plan": "node tools/reading-plan-check.mjs",
     "gen:reading-plans": "node tools/gen-reading-plans.mjs",
     "gen:site-copy": "node tools/gen-site-copy.mjs",
+    "gen:medals": "node tools/gen-medals.mjs",
+    "check:medals": "node tools/gen-medals.mjs --check",
     "gen:language-order": "node tools/gen-language-order.mjs",
     "check:language-order": "node tools/gen-language-order.mjs --check",
     "check:site-copy": "node tools/gen-site-copy.mjs --check",

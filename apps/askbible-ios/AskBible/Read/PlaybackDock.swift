@@ -9,10 +9,26 @@ struct PlaybackDock: View {
     var available: Bool = true
     var onSearch: () -> Void = {}
     var onSkipNext: () -> Void = {}
+    /// 紧凑档点中间那条：展开完整 transport（语速 / 循环 / 搜索 在紧凑档放不下）
+    var onExpand: () -> Void = {}
     /// 播放键的自定义动作（计划播放页：没建池时从选中章起播）；nil 走 audio.toggle()
     var onToggle: (() -> Void)? = nil
+    /// 紧凑档左上显示的章名（「创世记 1」）。空串就只显示时间行
+    var title: String = ""
+    /// 紧凑档左侧缩略图用的自然场景 id（借首页场景图当封面 —— 章节朗读本身没有封面图）
+    var artworkSceneId: String? = nil
+    /// 「下一章」标签的界面语言
+    var locale: AppLocale = .zhCN
 
-    private let theme = Parchment.light
+    private var nextLabel: String {
+        switch locale {
+        case .en: return "Next\nChapter"
+        case .zhTW: return "下一章"
+        case .zhCN: return "下一章"
+        }
+    }
+
+    @Environment(\.parchment) private var theme
 
     private var elapsed: String { ChapterAudioPlayer.timeLabel(audio.currentTime) }
     /// RN 右侧显示总时长（formatClock(durationSec)），没有时长时是 "—:—"
@@ -20,13 +36,154 @@ struct PlaybackDock: View {
         audio.duration > 0 ? ChapterAudioPlayer.timeLabel(audio.duration) : "\u{2014}:\u{2014}"
     }
 
-    var body: some View {
-        VStack(spacing: 0) {
-            // RN wrap.borderTop 是 hairline（1 物理像素）的 border 色 —— 在羊皮纹上几乎看不见
-            Rectangle()
-                .fill(theme.border)
-                .frame(height: 1 / UIScreen.main.scale)
+    /// 倒计时（Josh 圈的参考图里右边是 -3:42，不是总时长）
+    private var remaining: String {
+        guard audio.duration > 0 else { return "\u{2014}:\u{2014}" }
+        return "-" + ChapterAudioPlayer.timeLabel(max(0, audio.duration - audio.currentTime))
+    }
 
+    /// 紧凑档：浮在系统底栏上方的迷你播放器。两行 —— 上行「封面 + 章名 + 进度 + 倒计时」，
+    /// 下行「语速 / 循环 / 琥珀大播放键 / 下一章」。按 Josh 2026-09-16 圈定的参考图做。
+    var compact: Bool = false
+
+    var body: some View {
+        if compact { compactBody } else { fullBody }
+    }
+
+    private var compactBody: some View {
+        // 几何按 Josh 2026-09-16 给的效果图逐项对齐：整块更紧凑，控件比之前小一档，
+        // 「下一章」带两行文字标签（效果图里的 Next Chapter）。
+        VStack(spacing: 8) {
+            HStack(spacing: 10) {
+                artwork
+
+                VStack(alignment: .leading, spacing: 4) {
+                    if !title.isEmpty {
+                        Text(title)
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(theme.scripturePrimaryText)
+                            .lineLimit(1)
+                    }
+                    HStack(spacing: 8) {
+                        timeText(elapsed)
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Color(parchment: 0x5c4030, opacity: 0.20))
+                            GeometryReader { geo in
+                                Capsule().fill(Brand.logo).frame(width: geo.size.width * audio.progress)
+                            }
+                        }
+                        .frame(height: 2)
+                        timeText(remaining)
+                    }
+                }
+            }
+            HStack(spacing: 0) {
+                Button { audio.cycleRate() } label: {
+                    SpeedRateImage(rate: Double(audio.rate), color: theme.scriptureSecondaryText.opacity(0.75))
+                        .scaleEffect(0.82)
+                        // 视觉尺寸按效果图走，但点击框一律撑到 44 —— 上一轮照效果图把框也缩了，
+                        // Josh 真机反馈「图标都比较小，会误点」。图标小是设计，触控小是 bug。
+                        .frame(width: 48, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                Spacer(minLength: 0)
+
+                Button { audio.cycleLoop() } label: {
+                    RepeatGlyph(badge: audio.loopMode.badge,
+                                color: audio.loopMode == .forward ? theme.scriptureSecondaryText : theme.scripturePrimaryText,
+                                size: 19)
+                        .opacity(0.8)
+                        .frame(width: 48, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    if let onToggle { onToggle() } else { audio.toggle() }
+                } label: {
+                    ZStack {
+                        Circle().fill(Brand.logo)
+                        if audio.isLoading && audio.wantsPlayback {
+                            ProgressView().tint(theme.ink)
+                        } else {
+                            Image(systemName: audio.isPlaying ? "pause.fill" : "play.fill")
+                                .font(.system(size: 19, weight: .bold))
+                                .foregroundStyle(theme.ink)
+                        }
+                    }
+                    .frame(width: 42, height: 42)
+                    .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 18)
+
+                // 下一章：图标 + 两行小字标签（效果图里的 Next Chapter）
+                Button(action: onSkipNext) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "forward.end.fill")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(theme.scriptureSecondaryText)
+                        Text(nextLabel)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(theme.scriptureSecondaryText)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize()
+                    }
+                    .frame(height: 44)
+                    .padding(.horizontal, 4)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(!available)
+                .opacity(available ? 1 : 0.35)
+
+                Spacer(minLength: 0)
+
+                Button(action: onSearch) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 15, weight: .regular))
+                        .foregroundStyle(theme.scriptureSecondaryText.opacity(0.8))
+                        .frame(width: 48, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        // 整块垫一层纸色底色玻璃（Josh 2026-09-16：「原来做的 GPT 图这里是有一层底色玻璃的」，
+        // 只垫文字行时，按钮行背后经文透出来太吵）。玻璃边缘仍由外层 askGlass 提供高光。
+        .background(
+            RoundedRectangle(cornerRadius: AskCorner.control, style: .continuous)
+                .fill(theme.scriptureBackground.opacity(0.78))
+        )
+    }
+
+    /// 封面：用当前自然场景的缩略图（没有就画一本书的字形底）
+    private var artwork: some View {
+        let shape = RoundedRectangle(cornerRadius: 10, style: .continuous)
+        return Group {
+            if let id = artworkSceneId, let image = NatureScenes.thumbImage(id: id) {
+                Image(uiImage: image).resizable().scaledToFill()
+            } else {
+                ZStack {
+                    theme.scriptureAccent.opacity(0.18)
+                    Image(systemName: "book.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(theme.scriptureAccent)
+                }
+            }
+        }
+        .frame(width: 40, height: 40)
+        .clipShape(shape)
+        .overlay(shape.strokeBorder(theme.border, lineWidth: 0.5))
+    }
+
+    private var fullBody: some View {
+        VStack(spacing: 0) {
             VStack(spacing: 0) {
                 if let message = audio.errorMessage {
                     Text(message)
@@ -42,8 +199,14 @@ struct PlaybackDock: View {
             .padding(.top, ShellMetrics.dockPaddingTop)
             .padding(.horizontal, ShellMetrics.dockPaddingH)
             .padding(.bottom, ShellMetrics.dockMarginBottom)
+            // 坞与底栏现在同处一块玻璃胶囊内（DECISIONS 2026-09-15），分隔靠一条内缩的 hairline，
+            // 不再靠 6pt 空隙 + 各自的矩形底。原来坞顶那条 border 去掉了 —— 它会压在胶囊的玻璃边缘上。
+            Rectangle()
+                .fill(theme.border.opacity(0.55))
+                .frame(height: 1 / UIScreen.main.scale)
+                .padding(.horizontal, 24)
         }
-        // 底色由 ShellTabBarHost 连坞带底栏一起铺；这里不再单独铺一层（两层羊皮纹错位会在坞底露出一条接缝）
+        // 底色由 ShellTabBarHost 的玻璃胶囊承担；这里不铺任何底
     }
 
     private var scrubber: some View {
@@ -71,7 +234,7 @@ struct PlaybackDock: View {
 
     private func timeText(_ s: String) -> some View {
         Text(s)
-            .font(.system(size: ShellMetrics.timeFontSize, weight: .medium))
+            .font(.system(size: compact ? 11 : ShellMetrics.timeFontSize, weight: compact ? .semibold : .medium))
             .monospacedDigit()
             .foregroundStyle(theme.muted)
     }
@@ -100,7 +263,7 @@ struct PlaybackDock: View {
                         .background {
                             // loopBtnOn: rgba(92, 64, 48, 0.1)
                             if audio.loopMode != .forward {
-                                Circle().fill(Color(rgb: 0x5c4030, opacity: 0.1))
+                                Circle().fill(Color(parchment: 0x5c4030, opacity: 0.1))
                             }
                         }
                 }
@@ -216,5 +379,25 @@ struct RepeatGlyph: View {
             }
         }
         .frame(width: size, height: size)
+    }
+}
+
+
+/// 挂进 TabView 的读经坞。系统给两种位置：贴在底栏上方的 `inline`（矮，只够一行）
+/// 与用户上拉后的 `expanded`（高，能放完整 transport）。两档共用同一个 `PlaybackDock`，
+/// 只切 `compact` —— 一套控件，两个尺寸，不是两份实现。
+@available(iOS 26, *)
+struct PlaybackDockAccessory: View {
+    @Environment(\.tabViewBottomAccessoryPlacement) private var placement
+    let dock: PlaybackDock
+
+    var body: some View {
+        var d = dock
+        // 实测（iOS 26.5 模拟器）：挂在底栏上方时 placement 报的是 .expanded，但系统给的高度只有一行，
+        // 完整 transport 会被裁掉。所以不看 placement，accessory 里一律用紧凑档；
+        // 完整 transport 留给后面做上拉展开（见 redesign 文档「还没做的」）。
+        d.compact = true
+        _ = placement
+        return d
     }
 }

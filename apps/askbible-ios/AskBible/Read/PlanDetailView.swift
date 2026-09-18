@@ -11,7 +11,7 @@ struct PlanDetailView: View {
     var onOpenPlan: (String) -> Void
     var onOpenChapter: (PlanPointer) -> Void
     var onGoHome: () -> Void
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
 
     @State private var anchor: PlanAnchor = .fromToday
     @State private var pace: Int = NtDeepRepeat.defaultPace
@@ -62,7 +62,7 @@ struct PlanDetailView: View {
 
     private func header(_ plan: ReadingPlanEntry) -> some View {
         VStack(spacing: 0) {
-            Text(plan.badge).font(.system(size: 14, weight: .semibold)).kerning(0.8).foregroundStyle(Color(rgb: 0x4D3522, opacity: 0.8))
+            Text(plan.badge).font(.system(size: 14, weight: .semibold)).kerning(0.8).foregroundStyle(Color(parchment: 0x4D3522, opacity: 0.8))
             Text(plan.title).font(.system(size: 28, weight: .bold)).foregroundStyle(theme.ink)
                 .multilineTextAlignment(.center).padding(.top, 8)
             Text(plan.tagline).font(.system(size: 18)).lineSpacing(7).foregroundStyle(theme.muted)
@@ -257,13 +257,13 @@ struct PlanDetailView: View {
                                 .foregroundStyle(isCurrent ? theme.ink : (isDone ? theme.muted : theme.faint))
                             Spacer(minLength: 0)
                             if isCurrent {
-                                Text(PlanText.t("stageCurrent")).font(.system(size: 14, weight: .semibold)).foregroundStyle(Color(rgb: 0x8A5A00))
+                                Text(PlanText.t("stageCurrent")).font(.system(size: 14, weight: .semibold)).foregroundStyle(Color(parchment: 0x8A5A00))
                             } else if isDone {
                                 MaterialIcon(glyph: MI.check, size: 18, color: theme.faint)
                             }
                         }
                         .padding(.vertical, 8).padding(.horizontal, 10)
-                        .background(RoundedRectangle(cornerRadius: 8).fill(isCurrent ? Color(rgb: 0xFFECBF, opacity: 0.6) : Color.clear))
+                        .background(RoundedRectangle(cornerRadius: 8).fill(isCurrent ? Color(parchment: 0xFFECBF, opacity: 0.6) : Color.clear))
                     }
                 }
             }

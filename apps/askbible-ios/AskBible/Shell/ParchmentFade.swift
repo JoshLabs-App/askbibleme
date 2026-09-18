@@ -8,8 +8,15 @@ enum ParchmentFadePreset {
     case tabbar, chapter
 
     var edgeFadeTop: CGFloat { 70 }
-    var edgeFadeBottom: CGFloat { self == .tabbar ? 120 : 0 }
-    var tabNear: CGFloat { self == .tabbar ? 80 : 0 }
+    /// 底部**不再渐隐**（章页 0，Tab 页只留 60 的软边）。
+    ///
+    /// Josh 2026-09-16：「我感觉我们的图不是原生的，是一个底色，而不是玻璃。」
+    /// 根因不在材质（真机 iOS 26.6.2，走的就是 `glassEffect`），而在**玻璃背后没东西可折射**：
+    /// 之前在坞上方就把经文淡掉了，玻璃底下只剩一片平整的纸 —— 真玻璃盖在平色上，看起来就是一块底色。
+    /// 效果图里文字是穿到玻璃后面去的，那层弯折与模糊才是「玻璃感」的来源。
+    /// 所以让内容照常滚到玻璃后面（滚动长度仍由 safeAreaInset 保证，最后一行能完整滚出来）。
+    var edgeFadeBottom: CGFloat { self == .tabbar ? 60 : 0 }
+    var tabNear: CGFloat { self == .tabbar ? 30 : 0 }
     var topTabNear: CGFloat { 30 }
     var tabMaskOpacity: Double { 0.03 }
 
@@ -62,7 +69,7 @@ extension ShellMetrics {
 /// 坞 + 底栏后面的羊皮底：与页面同一张羊皮图、按整屏尺寸钉在屏幕底再裁到宿主高度，
 /// 像素与页面底图完全重合，所以看不出接缝（RN `scriptureDockParchmentHost` + `ReadParchmentFillLayer pinBottom`）。
 struct ParchmentPinnedBottom: View {
-    var theme: Parchment = .light
+    @Environment(\.parchment) private var theme
 
     var body: some View {
         Color.clear

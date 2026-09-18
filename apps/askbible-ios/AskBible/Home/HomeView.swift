@@ -16,10 +16,14 @@ struct HomeView: View {
     var onCycleSleepTimer: () -> Void
     var onPressAlbum: (String) -> Void
     var onOpenMenu: () -> Void = {}
+    /// 界面收起 / 唤回时通知壳：首页闲置后连系统底栏一起淡出，全景不被任何东西压着（Josh 2026-09-18）
+    var onChromeHidden: (Bool) -> Void = { _ in }
 
     @Environment(\.scenePhase) private var scenePhase
     @State private var toolsOpen = false
     @State private var idleEpoch = 0
+    /// 闲置后收起菜单钮与专辑排，只留金句 + 底栏（DECISIONS 2026-09-16 首页方案 A）；点屏幕恢复
+    @State private var chromeVisible = true
     private var verse: GoldenVerse { home.verse }
 
     /// RN homeNatureLayoutMetrics / homeNatureScreenConstants / shellPlaybackTransportLayout 逐值
@@ -62,35 +66,58 @@ struct HomeView: View {
                         .frame(width: geo.size.width, height: fullHeight)
                 }
 
-                // 顶部渐变，保图标可读
-                LinearGradient(
-                    colors: [Color(rgb: 0x1c1410, opacity: 0.42), .clear],
-                    startPoint: .top, endPoint: .bottom
-                )
-                .frame(height: 180)
-                .frame(maxHeight: .infinity, alignment: .top)
+                // 顶部原来有一层 180pt 暗渐变保图标可读；图标现在是玻璃圆钮，自带对比，
+                // 这层只剩把天空压暗的副作用 —— Josh 2026-09-16：「首页上面不要一层阴影层」，去掉。
+
+                // 点空白处：收起的界面叫回来；已显示时再点就立即收起
+                Color.clear
+                    .frame(width: geo.size.width, height: fullHeight)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        // 先算出目标状态再赋值：touch() 里有「不可见就唤回」的逻辑，
+                        // 直接 toggle 再 touch 会把刚收起的界面立刻弹回来
+                        let next = !chromeVisible
+                        if toolsOpen { toolsOpen = false }
+                        withAnimation(.easeInOut(duration: 0.3)) { chromeVisible = next }
+                        onChromeHidden(!next)
+                        idleEpoch += 1
+                    }
 
                 verseBlock
+                    .allowsHitTesting(false)
                     .padding(.horizontal, 22)
                     .padding(.top, safeTop + 99)
 
-                topChrome(safeTop: safeTop)
+                // 左上菜单已移到探索页右上「设置」（Josh 2026-09-16），首页顶部不再放任何控件
 
+                // 常用键要一直够得着，所以这一带不整体淡出，只在闲置时压淡；
+                // 底栏没了之后它可以往下坐一些（Josh 2026-09-18）
                 bottomBand
                     .frame(maxHeight: .infinity, alignment: .bottom)
-                    .padding(.bottom, 92 + geo.safeAreaInsets.bottom)
+                    .padding(.bottom, (chromeVisible ? 92 : 36) + geo.safeAreaInsets.bottom)
+                    .opacity(chromeVisible ? 1 : 0.55)
+                    .animation(.easeInOut(duration: 0.4), value: chromeVisible)
             }
             .ignoresSafeArea()
         }
         // 点开设置后闲置 7 秒自动收起（HOME_SCENE_TOOLS_AUTO_CLOSE_MS）；任何一次操作都重新计时
-        .task(id: toolsOpen ? idleEpoch : -1) {
-            guard toolsOpen else { return }
+        // 闲置 7 秒：先收设置簇，再过 7 秒淡出整层界面；任何一次操作都重新计时
+        .task(id: idleEpoch) {
             try? await Task.sleep(nanoseconds: M.toolsAutoCloseNs)
-            if !Task.isCancelled { toolsOpen = false }
+            guard !Task.isCancelled else { return }
+            if toolsOpen { toolsOpen = false; idleEpoch += 1; return }
+            withAnimation(.easeInOut(duration: 0.6)) { chromeVisible = false }
+            onChromeHidden(true)
         }
     }
 
-    private func touch() { idleEpoch += 1 }
+    private func touch() {
+        idleEpoch += 1
+        if !chromeVisible {
+            withAnimation(.easeInOut(duration: 0.3)) { chromeVisible = true }
+            onChromeHidden(false)
+        }
+    }
 
     // MARK: 金句
 
@@ -102,14 +129,14 @@ struct HomeView: View {
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
                 .lineSpacing(HomeVerseTypography.bodyLineHeight(scale: scale) - HomeVerseTypography.bodySize(scale: scale))
-                .verseBodyShadow()
+                .verseTextShadow()
 
             Text(verse.reference)
                 .font(.system(size: HomeVerseTypography.refSize(scale: scale), weight: .bold))
                 .foregroundStyle(.white)
                 .kerning(0.1)
                 .padding(.top, HomeVerseTypography.refTopGap(scale: scale))
-                .verseBodyShadow()
+                .verseTextShadow()
         }
     }
 
@@ -117,26 +144,26 @@ struct HomeView: View {
 
     private func topChrome(safeTop: CGFloat) -> some View {
         // RN HomeNatureScreenTopChrome：展开中或环境音开着时齿轮点亮 LOGO 色
-        let settingsLit = toolsOpen || ambient.isOn
-        return HStack {
-            // RN ShellMenuButton menu 28 / HomeNatureScreenTopChrome settings 28
-            chromeButton(MI.menu, color: .white, action: onOpenMenu)
+        // 方案 A（2026-09-16）：右上齿轮移到底部专辑排末尾，顶部只留一颗淡一点的菜单钮，画面上方保持干净
+        HStack {
+            chromeButton(MI.menu, color: .white.opacity(0.85), action: onOpenMenu)
             Spacer()
-            chromeButton(MI.settings, color: settingsLit ? Brand.logo : .white) {
-                touch()
-                toolsOpen.toggle()
-            }
         }
         .padding(.horizontal, ShellMetrics.topChromeSideInset)
         .padding(.top, safeTop + ShellMetrics.topChromeOffset)
         .frame(maxHeight: .infinity, alignment: .top)
     }
 
+    /// 玻璃小圆钮（DECISIONS 2026-09-15：操作 = 玻璃）。不再靠双层黑影在视频上硬造层次。
     private func chromeButton(_ glyph: String, color: Color, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            MaterialIcon(glyph: glyph, size: 28, color: color)
-                .frame(width: ShellMetrics.topChromeButton, height: ShellMetrics.topChromeButton)
-                .shellIconShadow()
+            MaterialIcon(glyph: glyph, size: 22, color: color)
+                // 玻璃不再着色（Josh 要原生质感），白图标的对比改由这层极轻阴影负责
+                .askGlassIconShadow()
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+                .askGlassCapsule(tone: .dark, interactive: true)
+                .askFloatingShadow()
         }
         .buttonStyle(.plain)
     }
@@ -145,26 +172,40 @@ struct HomeView: View {
 
     /// bottomBand：paddingTop 12，各排之间 22；展开时上面多出 字号/定时 行、环境音、场景条
     private var bottomBand: some View {
-        VStack(spacing: M.rowGap) {
-            if toolsOpen {
-                scaleTimerRow
-                ambientRow
-                sceneStrip
+        // 齿轮展开的那堆东西收进**一块**玻璃控制簇（GPT 评审：不要做成一排各自为政的玻璃按钮），
+        // 专辑排自己是一块玻璃胶囊；两块同处一个 AskGlassGroup，iOS 26 下展开/收起有玻璃形变过渡。
+        AskGlassGroup(spacing: 14) {
+            VStack(spacing: 14) {
+                if toolsOpen {
+                    VStack(spacing: M.rowGap) {
+                        scaleTimerRow
+                        ambientRow
+                        sceneStrip
+                    }
+                    .padding(.vertical, 14)
+                    // 不再给这簇垫玻璃：iOS 26 的 clear 玻璃在浅色场景（晴天湖面）上会提亮成一块发白的板子，
+                    // 风景被蒙住，场景缩略图反被压暗（Josh 2026-09-18「玻璃在浅色状态下很不好看」）。
+                    // 跟专辑排 2026-09-16 那次同一个处理：图标直接浮在画面上，可读性交给图标自己的阴影。
+                    .padding(.horizontal, AskGlassMetrics.capsuleInset)
+                }
+                // 专辑排不要玻璃底（Josh 2026-09-16）：白图标直接浮在画面上，靠图标阴影保可读
+                albumRow
             }
-            albumRow
         }
         .padding(.top, M.bandPadTop)
     }
 
     /// RN HomeVerseScaleTimerControl：减 / 加 / 定时（定时开着亮黄并角标分钟数）
     private var scaleTimerRow: some View {
-        let idle = Color.white.opacity(0.78)
+        // 玻璃是 .clear（不着色），白图标全靠自己的不透明度和阴影压住亮天空 —— 0.78 在雪山湖面上看不见（Josh 2026-09-18）
+        let idle = Color.white.opacity(0.95)
         let timerOn = sleepTimerMinutes > 0
         return HStack(spacing: M.iconGap) {
             quickChip(MI.remove, color: idle) { touch(); prefs.bumpTextScale(-1) }
             quickChip(MI.add, color: idle) { touch(); prefs.bumpTextScale(1) }
             Button { touch(); onCycleSleepTimer() } label: {
                 MaterialIcon(glyph: MI.timer, size: M.scaleTimerIcon, color: timerOn ? Brand.logo : idle)
+                    .shadow(color: .black.opacity(0.45), radius: 4, x: 0, y: 1)
                     .frame(width: M.scaleTimerRowH, height: M.scaleTimerRowH)
                     .overlay(alignment: .topTrailing) {
                         if timerOn {
@@ -187,6 +228,7 @@ struct HomeView: View {
     private func quickChip(_ glyph: String, color: Color, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             MaterialIcon(glyph: glyph, size: M.scaleTimerIcon, color: color)
+                .shadow(color: .black.opacity(0.45), radius: 4, x: 0, y: 1)
                 .frame(width: M.scaleTimerRowH, height: M.scaleTimerRowH)
         }
         .buttonStyle(.plain)
@@ -202,9 +244,10 @@ struct HomeView: View {
                         Button { touch(); onToggleAmbient(slot.id) } label: {
                             MaterialIcon(glyph: Self.ambientGlyph(slot.id), size: M.ambientIcon,
                                          color: selected ? Brand.logo : .white, community: true)
+                                .shadow(color: .black.opacity(0.45), radius: 4, x: 0, y: 1)
                                 .frame(width: M.ambientIcon, height: M.ambientIcon)
                                 .scaleEffect(selected ? 1.06 : 1)
-                                .opacity(selected ? 1 : 0.6)
+                                .opacity(selected ? 1 : 0.8)
                         }
                         .buttonStyle(.plain)
                         .id(slot.id)
@@ -274,6 +317,12 @@ struct HomeView: View {
                 albumButton(MI.volumeUp, on: home.voiceOn) { touch(); home.toggleVoice() }
             }
             albumButton(MCI.coffeeOutline, community: true, on: playingAlbum == "下午茶") { touch(); onPressAlbum("下午茶") }
+            // 设置（原右上齿轮）：字号 / 定时 / 环境音 / 场景都从这里展开。
+            // 它是低频的，闲置时跟着底栏一起走；左边三颗（音乐 / 朗读 / 下午茶）是常用键，留下（Josh 2026-09-18）
+            if chromeVisible {
+                Rectangle().fill(Color.white.opacity(0.45)).frame(width: 1, height: 22).shadow(color: .black.opacity(0.4), radius: 2)
+                albumButton(MI.settings, on: toolsOpen || ambient.isOn) { touch(); toolsOpen.toggle() }
+            }
         }
         .frame(height: M.albumBtn)
     }
@@ -281,8 +330,9 @@ struct HomeView: View {
     private func albumButton(_ glyph: String, community: Bool = false, on: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             MaterialIcon(glyph: glyph, size: ShellMetrics.tabIconSize, color: on ? Brand.logo : .white, community: community)
+                .shadow(color: .black.opacity(0.45), radius: 4, x: 0, y: 1)
                 .frame(width: M.albumBtn, height: M.albumBtn)
-                .shellIconShadow()
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }

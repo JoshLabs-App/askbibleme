@@ -13,7 +13,7 @@ struct VerseXrefSheet: View {
     let onClose: () -> Void
     var locale: AppLocale = .zhCN
 
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -97,7 +97,7 @@ struct SleepTimerSheet: View {
     let remainingLabel: String?
     let onPick: (Int?) -> Void
     let onClose: () -> Void
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
 
     var body: some View {
         ZStack(alignment: .bottom) {

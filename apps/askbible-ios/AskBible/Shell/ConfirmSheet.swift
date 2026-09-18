@@ -10,7 +10,7 @@ struct ConfirmSheet: View {
     var onConfirm: () -> Void
     var onCancel: () -> Void
 
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -35,7 +35,7 @@ struct ConfirmSheet: View {
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(theme.ink)
                             .frame(maxWidth: .infinity).frame(minHeight: 48)
-                            .background(RoundedRectangle(cornerRadius: 12).fill(Color(rgb: 0xFFFCF5, opacity: 0.62)))
+                            .background(RoundedRectangle(cornerRadius: 12).fill(Color(parchment: 0xFFFCF5, opacity: 0.62)))
                             .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(theme.border, lineWidth: 0.5))
                             .contentShape(Rectangle())
                     }
@@ -55,7 +55,8 @@ struct ConfirmSheet: View {
             }
             .padding(.horizontal, 18).padding(.top, 16).padding(.bottom, 28)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .parchmentCard(cornerRadius: 16)
+            .askGlassRect(tone: .light, radius: AskCorner.card)
+            .askFloatingShadow(.overlay)
             .contentShape(Rectangle())
             .onTapGesture {}
         }

@@ -14,9 +14,12 @@ struct CatalogView: View {
     /// 右侧竖排最后一个「历史」：回到上次读到的那一章；没有记录时按钮变淡且点不动
     var onLastRead: (() -> Void)? = nil
 
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     /// 右侧竖排最后一个按钮的底边（全局坐标）：落在它上面的行要给图标让位
     @State private var railBottom: CGFloat = 0
+    /// 右栏工具簇是否展开（收起时只留一颗钮，不挡卷名）
+    @State private var railOpen = false
+    @Namespace private var railNamespace
 
     var body: some View {
         GeometryReader { geo in
@@ -32,12 +35,12 @@ struct CatalogView: View {
                         HStack(spacing: 14) {
                             Text(ReadChrome.testamentOld(locale))
                                 .font(.system(size: 20, weight: .bold))
-                                .foregroundStyle(Color(rgb: 0x2F6291))
+                                .foregroundStyle(Color(parchment: 0x2F6291))
                             // RN BibleCatalogOutlineContent：MaterialIcons notes 22，未开时 faint
                             MaterialIcon(glyph: MI.notes, size: 22, color: theme.faint)
                             Text(ReadChrome.testamentNew(locale))
                                 .font(.system(size: 20, weight: .bold))
-                                .foregroundStyle(Color(rgb: 0xC1660B))
+                                .foregroundStyle(Color(parchment: 0xC1660B))
                         }
                         .padding(.top, 18)
 
@@ -94,16 +97,33 @@ struct CatalogView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    /// 右栏：与章页同一套做法 —— 收起时只有一颗钮，点开才展开成玻璃簇。
+    /// 6 颗常驻玻璃钮会压住新约那一列的卷名（实测「马太福音」右侧被切）。
     private func rail(safeTop: CGFloat) -> some View {
+        AskGlassGroup(spacing: 8) {
         VStack(spacing: ShellMetrics.topChromeGap) {
-            railButton(MI.settings, action: onOpenSettings)
-            railButton(MI.search, action: onOpenSearch)
-            railButton(MI.bookmarkBorder, action: onOpenFavorites)
-            railLabel("+") { if let n = size.next { size = n } }
-            railLabel("\u{2212}") { if let p = size.previous { size = p } }
-            railButton(MI.history, action: onLastRead ?? {})
-                .opacity(onLastRead == nil ? 0.4 : 1)
-                .disabled(onLastRead == nil)
+            railButton(railOpen ? MI.close : MI.moreVert) {
+                withAnimation(.smooth(duration: 0.3)) { railOpen.toggle() }
+            }
+            .askGlassID("catalog-rail-toggle", in: railNamespace)
+
+            if railOpen {
+                railButton(MI.settings) { railOpen = false; onOpenSettings() }
+                    .askGlassID("catalog-rail-settings", in: railNamespace)
+                railButton(MI.search) { railOpen = false; onOpenSearch() }
+                    .askGlassID("catalog-rail-search", in: railNamespace)
+                railButton(MI.bookmarkBorder) { railOpen = false; onOpenFavorites() }
+                    .askGlassID("catalog-rail-favorites", in: railNamespace)
+                railLabel("+") { if let n = size.next { size = n } }
+                    .askGlassID("catalog-rail-bigger", in: railNamespace)
+                railLabel("\u{2212}") { if let p = size.previous { size = p } }
+                    .askGlassID("catalog-rail-smaller", in: railNamespace)
+                railButton(MI.history) { railOpen = false; (onLastRead ?? {})() }
+                    .opacity(onLastRead == nil ? 0.4 : 1)
+                    .disabled(onLastRead == nil)
+                    .askGlassID("catalog-rail-history", in: railNamespace)
+            }
+        }
         }
         .padding(.top, safeTop + ShellMetrics.topChromeOffset)
         .padding(.trailing, ShellMetrics.topChromeSideInset)
@@ -116,10 +136,13 @@ struct CatalogView: View {
     /// 右栏图标走 RN 同一套 Material 字形（READ_TOP_CHROME.iconSize = 32）
     private func railButton(_ glyph: String, action: @escaping () -> Void = {}) -> some View {
         Button(action: action) {
-            MaterialIcon(glyph: glyph, size: ShellMetrics.topChromeIcon, color: .white)
+            // 羊皮页上的壳层按钮＝浅调玻璃小圆钮（DECISIONS 2026-09-15）。
+            // 原来是白字压双层黑影：白色在米色纸上本来就没对比，只能靠影子硬撑，越看越脏。
+            MaterialIcon(glyph: glyph, size: ShellMetrics.topChromeIcon * 0.84, color: theme.ink.opacity(0.78))
                 .frame(width: ShellMetrics.topChromeButton, height: ShellMetrics.topChromeButton)
-                .shellIconShadow()
                 .contentShape(Rectangle())
+                .askGlassCapsule(tone: .light, interactive: true)
+                .askFloatingShadow()
         }
         .buttonStyle(.plain)
     }
@@ -127,10 +150,12 @@ struct CatalogView: View {
     private func railLabel(_ text: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(text)
-                .font(.system(size: ShellMetrics.topChromeSizeLabel, weight: .medium))
-                .foregroundStyle(Color.white)
+                .font(.system(size: ShellMetrics.topChromeSizeLabel * 0.84, weight: .medium))
+                .foregroundStyle(theme.ink.opacity(0.78))
                 .frame(width: ShellMetrics.topChromeButton, height: ShellMetrics.topChromeButton)
-                .shellIconShadow()
+                .contentShape(Rectangle())
+                .askGlassCapsule(tone: .light, interactive: true)
+                .askFloatingShadow()
         }
         .buttonStyle(.plain)
     }
@@ -147,7 +172,7 @@ struct ChapterPickerSheet: View {
     /// 书卷名：在线译本用它自己那套
     var bookLabel: (BookRef) -> String = { $0.name(AppLocale.current) }
 
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 9), count: 6)
 
     var body: some View {
@@ -237,7 +262,7 @@ struct TranslationPanel: View {
     /// 版本搜索（几百本在线译本，横滑找语言太慢）
     @State private var query = ""
     @State private var querySecondary = ""
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
 
     var body: some View {
         let allGroups = groups
@@ -279,7 +304,7 @@ struct TranslationPanel: View {
                         if expandedSecondary { expanded = false }
                     } label: {
                         dropdown(text: store.secondary?.label(locale) ?? SiteCopy.t("native.none", locale),
-                                 color: Color(rgb: 0xE0A100), open: expandedSecondary)
+                                 color: Color(parchment: 0xE0A100), open: expandedSecondary)
                     }
                     .buttonStyle(.plain)
                 }
@@ -420,7 +445,7 @@ struct TranslationPanel: View {
         }
         .background(
             RoundedRectangle(cornerRadius: 9)
-                .fill(Color(rgb: 0xfffdf8))
+                .fill(Color(parchment: 0xfffdf8))
                 .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(theme.border.opacity(0.6), lineWidth: 1))
         )
         .padding(.leading, 40)
@@ -482,7 +507,7 @@ struct TranslationPanel: View {
         .frame(height: 40)
         .background(
             RoundedRectangle(cornerRadius: 9)
-                .fill(Color(rgb: 0xfffdf8))
+                .fill(Color(parchment: 0xfffdf8))
                 .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(theme.border.opacity(0.6), lineWidth: 1))
         )
     }

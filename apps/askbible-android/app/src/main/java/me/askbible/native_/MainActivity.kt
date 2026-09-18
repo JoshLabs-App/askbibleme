@@ -15,6 +15,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.statusBarsPadding
+import me.askbible.native_.data.Parchment
+import me.askbible.native_.data.MedalXP
+import me.askbible.native_.ui.AchievementsScreen
+import me.askbible.native_.ui.EarnedToast
+import me.askbible.native_.ui.XPFloater
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -261,6 +267,10 @@ private fun RootScreen() {
     val plans = remember { ReadingPlanStore(context) }
     // 读经活动（习惯日 / 累计听 / 使用时长 / 最近阅读）与会员读经进度同步（RN AppUsageTimeBridge / useMemberReadingSync）
     val activity = remember { ReadingActivityStore(context) }
+    // 成就 / XP（DECISIONS「成就系统」「XP 要一直在涨」）：与 iOS AchievementStore 对等
+    val achievements = remember { me.askbible.native_.data.AchievementStore(context) }
+    var showAchievements by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { achievements.attach(activity, plans, bookmarks, highlights) }
     val syncEngine = remember { MemberReadingSyncEngine(context).also { it.attach(auth, plans, bookmarks, activity, searchPrefs, highlights); me.askbible.native_.data.RnLegacyMigration.runOnce(context, it) } }
     LaunchedEffect(appLocale) { syncEngine.localeTag = { appLocale.tag } }
     // 网站译本目录（几百本在线译本）：盘里没过期就不走网
@@ -290,8 +300,9 @@ private fun RootScreen() {
     DisposableEffect(lifecycle) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
             when (event) {
-                androidx.lifecycle.Lifecycle.Event.ON_RESUME -> { activity.noteForeground(); activity.touchHabitDay(); syncEngine.flushInBackground("foreground"); me.askbible.native_.audio.AudioInterruptionMonitor.onForeground() }
-                androidx.lifecycle.Lifecycle.Event.ON_PAUSE -> activity.noteBackground()
+                // 听读 XP 只在前台给（A 方案防刷：后台放整夜不算）
+                androidx.lifecycle.Lifecycle.Event.ON_RESUME -> { achievements.foreground = true; activity.noteForeground(); activity.touchHabitDay(); syncEngine.flushInBackground("foreground"); me.askbible.native_.audio.AudioInterruptionMonitor.onForeground() }
+                androidx.lifecycle.Lifecycle.Event.ON_PAUSE -> { achievements.foreground = false; activity.noteBackground() }
                 else -> {}
             }
         }
@@ -302,7 +313,27 @@ private fun RootScreen() {
     // 睡眠定时四路（读经 / 音乐 / 金句 / 环境音）同一份分钟数；0 = 未设
     var sleepTimerMinutes by remember { mutableIntStateOf(0) }
 
-    val audio = remember { ChapterAudioPlayer(context, scope).also { p -> p.onProgress = { t, playing -> activity.noteListenProgress(t, playing) } } }
+    // 听读每 listenTickSeconds 给一次 XP：读经的时候进度条肉眼在动
+    var lastListenTickAt by remember { mutableStateOf(-1.0) }
+    // onProgress 是在 remember {} 里一次性挂的，读不到后面的 Compose 值：当前在听哪一章放这个 holder 里
+    val listenTarget = remember { mutableStateOf<Pair<String, Int>?>(null) }
+    val audio = remember {
+        ChapterAudioPlayer(context, scope).also { p ->
+            p.onProgress = { t, playing ->
+                activity.noteListenProgress(t, playing)
+                if (!playing || t.isNaN() || t.isInfinite() || t < 0) lastListenTickAt = -1.0
+                else if (lastListenTickAt < 0) lastListenTickAt = t
+                else {
+                    if (t - lastListenTickAt >= MedalXP.listenTickSeconds) {
+                        lastListenTickAt = t
+                        // 每章封顶在 store 里判（A 方案防刷）；音源就是播放器当前那一章
+                        listenTarget.value?.let { (bid, ch) -> achievements.noteListenTick(bid, ch) }
+                    }
+                    if (t < lastListenTickAt) lastListenTickAt = t   // 拖回去了重新起算
+                }
+            }
+        }
+    }
     fun openPlanChapter(p: PlanPointer, autoPlay: Boolean) {
         val b = BibleCatalog.book(p.bookId) ?: return
         focusVerse = null
@@ -325,7 +356,11 @@ private fun RootScreen() {
         val b = openedBook
         if (planFlowActive) {
             val cb = b ?: listenBook
-            if (cb != null) plans.markChapterRead(cb.id, if (b != null) chapter else listenChapter)
+            if (cb != null) {
+                val readChapter = if (b != null) chapter else listenChapter
+                plans.markChapterRead(cb.id, readChapter)
+                achievements.noteChapterRead(cb.id, readChapter)
+            }
             val next = planQueueIndex + 1
             if (next < planQueue.size) {
                 planQueueIndex = next
@@ -397,6 +432,10 @@ private fun RootScreen() {
     // 音源目标：章页开着就是那一章；否则是播放页在听的章
     val targetBook = book ?: listenBook
     val targetChapter = if (book != null) chapter else listenChapter
+    // 听读 XP 的「每章封顶」要知道现在听的是哪一章
+    LaunchedEffect(targetBook?.id, targetChapter) {
+        listenTarget.value = targetBook?.let { it.id to targetChapter }
+    }
     // 译本切换后重新取数
     val data by produceState(initialValue = ChapterData(), translation.id, secondary?.id, book?.id, chapter, reloadToken) {
         val id = book?.id
@@ -461,6 +500,7 @@ private fun RootScreen() {
             showTranslationPanel -> showTranslationPanel = false
             actionVerse != null -> actionVerse = null
             showSearch -> showSearch = false
+            showAchievements -> showAchievements = false
             showFavorites -> showFavorites = false
             exploreArticle != null -> exploreArticle = null
             pickingBook != null -> pickingBook = null
@@ -567,6 +607,7 @@ private fun RootScreen() {
                 size = size, article = exploreArticle, onOpenArticle = { exploreArticle = it },
                 auth = auth, locale = appLocale, onOpenLogin = { authRoute = "login" },
                 activity = activity, onSignOut = { scope.launch { syncEngine.prepareSignOut(); auth.signOut() } },
+                achievements = achievements, onOpenAchievements = { showAchievements = true },
                 favorites = bookmarks.list,
                 onOpenVerse = { id, ch, v ->
                     // 探索页的收藏：跳到读经 Tab 的那一节
@@ -652,8 +693,13 @@ private fun RootScreen() {
             )
             else {
                 // RN writeLastReadPosition + pushReadRecentChapter：最后位置 + 探索页「最近阅读」
-                LaunchedEffect(book.id, chapter) { activity.recordOpened(book.id, chapter, book.name(displayLocale)) }
+                LaunchedEffect(book.id, chapter) {
+                    activity.recordOpened(book.id, chapter, book.name(displayLocale))
+                    achievements.noteChapterOpened(book.id, chapter)
+                }
                 ChapterScreen(
+                    onReachedEnd = { achievements.noteChapterRead(book.id, chapter) },
+                    onVersesRead = { achievements.noteVersesRead(it) },
                     highlights = highlights.chapter(translation.id, book.id, chapter),
                     paintColor = if (highlighting && !erasing) highlightColor else null,
                     eraseMode = highlighting && erasing,
@@ -938,6 +984,18 @@ private fun RootScreen() {
                 },
                 onClose = { xrefVerse = null },
             )
+        }
+
+        // 成就页：从探索页的等级条卡片进来，盖在最上面（返回键由 BackHandler 接）
+        if (showAchievements) {
+            AchievementsScreen(achievements, appLocale, Parchment.light, onBack = { showAchievements = false })
+        }
+        // +XP 飘字 + 勋章 / 印章 / 升级提示（Josh 2026-09-18「要感觉到 XP 一直在增加」）
+        Box(Modifier.fillMaxSize().statusBarsPadding(), contentAlignment = Alignment.TopCenter) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                EarnedToast(achievements, appLocale, Parchment.light, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                XPFloater(achievements, Modifier.padding(top = 60.dp))
+            }
         }
 
         if (showSleepSheet) {

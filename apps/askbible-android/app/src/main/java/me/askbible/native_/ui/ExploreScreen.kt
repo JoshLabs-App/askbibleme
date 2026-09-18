@@ -90,6 +90,9 @@ fun ExploreScreen(
     activity: ReadingActivityStore? = null,
     /** 退出登录（先把本机进度推上云端再清本机，由壳接线） */
     onSignOut: () -> Unit = {},
+    /** 成就 / XP：等级条卡片，点进成就页 */
+    achievements: me.askbible.native_.data.AchievementStore? = null,
+    onOpenAchievements: () -> Unit = {},
     theme: Parchment = Parchment.light,
 ) {
     if (article != null) {
@@ -174,6 +177,27 @@ fun ExploreScreen(
                     Stat((activity?.readDays ?: 0).toString(), SiteCopy.t("pages.read.todayReadingStatReadLabel", locale), Color(0xFF4F7A54), theme, Modifier.weight(1f))
                     Divider(theme)
                     Stat((activity?.streakDays ?: 0).toString(), SiteCopy.t("pages.read.todayReadingStatStreakLabel", locale), Color(0xFF4F7A54), theme, Modifier.weight(1f))
+                }
+                // 等级条：探索页最显眼的常驻反馈，整张卡片可点进成就页
+                if (achievements != null) {
+                    Spacer(Modifier.height(20.dp))
+                    Column(
+                        Modifier.fillMaxWidth().padding(horizontal = 24.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(theme.surface.toColor())
+                            .border(1.dp, theme.border.toColor(), RoundedCornerShape(16.dp))
+                            .clickableNoRipple(onOpenAchievements)
+                            .padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        XPBar(achievements, locale, theme)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(SiteCopy.t("native.achievementsSub", locale),
+                                 color = theme.muted.toColor(), fontSize = 12.sp)
+                            Spacer(Modifier.width(4.dp))
+                            Text("\u203A", color = theme.muted.toColor(), fontSize = 14.sp)
+                        }
+                    }
                 }
                 Spacer(Modifier.height(18.dp))
 

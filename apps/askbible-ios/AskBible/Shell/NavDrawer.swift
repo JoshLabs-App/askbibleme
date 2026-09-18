@@ -27,7 +27,7 @@ struct NavDrawerView: View {
     var onDeleteAccount: () -> Void = {}
     var onClose: () -> Void = {}
 
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     private static let supportEmail = "askbibleme@gmail.com"
 
     var body: some View {
@@ -41,18 +41,23 @@ struct NavDrawerView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     header
                     ScrollView(showsIndicators: false) { rows }
-                    Text(SiteCopy.t("native.appVersion", locale).replacingOccurrences(of: "{{version}}", with: Self.versionLabel))
+                    Text(SiteCopy.t("native.appVersion", locale).replacingOccurrences(of: "{{version}}", with: Self.versionLabel)
+                         + AskGlassDiagnostics.badge)
                         .font(.system(size: 11))
                         .foregroundStyle(theme.ink.opacity(0.42))
                         .frame(maxWidth: .infinity)
                         .padding(.top, 8)
                 }
-                .padding(.horizontal, 14)
+                .padding(.horizontal, 16)
                 .padding(.top, max(geo.safeAreaInsets.top, 12))
                 .padding(.bottom, max(geo.safeAreaInsets.bottom, 16))
                 .frame(width: panelW, height: geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom)
-                .background(ParchmentBackground(theme: theme))
-                .overlay(alignment: .trailing) { Rectangle().fill(theme.border).frame(width: 0.5) }
+                // DECISIONS 2026-09-15：抽屉是操作层，所以它是玻璃，从内容上浮出来，
+                // 而不是一块推开内容的纯色/羊皮板（原来这里铺 ParchmentBackground + 右侧 hairline，
+                // 在视频首页和羊皮页之间切换时像是第三套 UI）。右上角圆掉，左侧贴边。
+                .askGlassRect(tone: .light, radius: AskCorner.sheet)
+                .askFloatingShadow(.overlay)
+                .padding(.trailing, 6)
                 .ignoresSafeArea()
             }
         }
@@ -119,10 +124,10 @@ struct NavDrawerView: View {
                         .lineLimit(1)
                     Text(SiteCopy.t(reminderEnabled ? "native.reminderOn" : "native.reminderOff", locale))
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(reminderEnabled ? Color(rgb: 0x784b1e) : theme.ink.opacity(0.5))
+                        .foregroundStyle(reminderEnabled ? Color(parchment: 0x784b1e) : theme.ink.opacity(0.5))
                         .padding(.horizontal, 8).padding(.vertical, 3)
                         .background(
-                            Capsule().fill(reminderEnabled ? Color(rgb: 0xffb101, opacity: 0.22) : Color(rgb: 0xfff8eb, opacity: 0.5))
+                            Capsule().fill(reminderEnabled ? Color(rgb: 0xffb101, opacity: 0.22) : Color(parchment: 0xfff8eb, opacity: 0.5))
                         )
                 }
                 .contentShape(Rectangle())
@@ -163,12 +168,12 @@ struct NavDrawerView: View {
         return Button { onSetLocale(value) } label: {
             Text(label)
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(on ? Color(rgb: 0x784b1e) : theme.ink.opacity(0.72))
+                .foregroundStyle(on ? Color(parchment: 0x784b1e) : theme.ink.opacity(0.72))
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, minHeight: 32)
                 .background(
                     RoundedRectangle(cornerRadius: 999)
-                        .fill(on ? Color(rgb: 0xffb101, opacity: 0.18) : Color(rgb: 0xfff8eb, opacity: 0.45))
+                        .fill(on ? Color(rgb: 0xffb101, opacity: 0.18) : Color(parchment: 0xfff8eb, opacity: 0.45))
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 999)

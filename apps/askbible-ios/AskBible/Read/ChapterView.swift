@@ -48,8 +48,16 @@ struct ChapterView: View {
     var onOpenCatalog: () -> Void = {}
     /// 结尾左右的上一章 / 下一章（可跨卷）
     var onNavigate: (_ bookId: String, _ chapter: Int) -> Void = { _, _ in }
+    /// 成就：滚到章末即算读完这一章（点亮书卷印章的唯一入口）
+    var onReachedEnd: () -> Void = {}
+    /// 成就：滚过 n 节经文，给微反馈 XP（同一段只报一次）
+    var onVersesRead: (Int) -> Void = { _ in }
 
-    private let theme = Parchment.light
+    /// 已上报过的段 / 章末，换章自动作废（tag 里带卷章）
+    @State private var reportedGroups: Set<String> = []
+    @State private var reportedEnd = ""
+
+    @Environment(\.parchment) private var theme
     @EnvironmentObject private var store: ScriptureStore
     @State private var verses: [LoadedVerse] = []
     @State private var xrefVerses: Set<Int> = []
@@ -63,6 +71,9 @@ struct ChapterView: View {
     enum LoadState { case idle, loading, failed }
     @State private var loadState: LoadState = .idle
     @State private var reloadToken = 0
+    /// 右栏工具簇是否展开（收起时只留一颗钮，不挡经文）
+    @State private var railOpen = false
+    @Namespace private var railNamespace
 
     private var bookmarkedVerses: Set<Int> { bookmarks.bookmarkedVerses(translationId: store.translation.id, bookId: bookId, chapter: chapter) }
 
@@ -96,7 +107,7 @@ struct ChapterView: View {
                         if let message = store.lastError {
                             Text(message)
                                 .font(.system(size: 14))
-                                .foregroundStyle(Color(rgb: 0x994812))
+                                .foregroundStyle(Color(parchment: 0x994812))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
                         }
@@ -105,6 +116,12 @@ struct ChapterView: View {
                         ForEach(groups.indices, id: \.self) { gi in
                             paragraphBlock(groups[gi], index: gi, metrics: m)
                                 .id(gi)
+                                .onAppear {
+                                    let tag = "\(bookId):\(chapter):\(gi)"
+                                    guard !reportedGroups.contains(tag) else { return }
+                                    reportedGroups.insert(tag)
+                                    onVersesRead(groups[gi].count)
+                                }
                         }
 
                         // 在线译本的版权声明（YouVersion 条款要求展示；内置译本没有这一行）
@@ -117,6 +134,13 @@ struct ChapterView: View {
                         }
 
                         endingSection()
+                            .onAppear {
+                                // 看到章末 = 读完这一章（拖到底也算：读经本来就允许略读）
+                                let tag = "\(bookId):\(chapter)"
+                                guard reportedEnd != tag else { return }
+                                reportedEnd = tag
+                                onReachedEnd()
+                            }
 
                         // 读后两版入口：陪你探索 / 查找资料（RN ReadChapterPostReadingEditions）。
                         // 库里只有中英两套：读中文版本给中文那套，读英文版本（或英文界面）给英文那套；
@@ -140,6 +164,8 @@ struct ChapterView: View {
                     .padding(.horizontal, 20)
                 }
                 .shellBottomInset(hasDock: true)
+                // 系统的底缘渐进模糊会把经文糊掉，玻璃就没东西可折射了（见 askNoScrollEdgeBlur）
+                .askNoScrollEdgeBlur()
                 // 浮层时在 shellBottomInset 之外再留出空间，防止底部文字被遮住
                 .safeAreaInset(edge: .bottom) {
                     if paintColor != nil || eraseMode { Color.clear.frame(height: 140) }
@@ -262,7 +288,7 @@ struct ChapterView: View {
                 Text(locale.zh(headings[i]))
                     .font(.system(size: m.verseFontSize + 1, weight: .semibold))
                     .tracking(0.3)
-                    .foregroundStyle(Color(rgb: 0x70451F))
+                    .foregroundStyle(Color(parchment: 0x70451F))
                     .opacity(0.92)
                     .multilineTextAlignment(.center)
                     .lineSpacing(max(0, m.verseLineHeight + 2 - (m.verseFontSize + 1)))
@@ -366,12 +392,29 @@ struct ChapterView: View {
             // RN 的返回是 React Navigation HeaderBackButton：iOS 上是系统 chevron，Android 才是 arrow-back
             chromeButton(systemName: "chevron.left", action: onBack)
             Spacer()
-            VStack(spacing: ShellMetrics.topChromeGap) {
-                chromeGlyph(MI.settings, action: onOpenSettings)
-                chromeGlyph(MI.search, action: onOpenSearch)
-                chromeGlyph(MI.bookmarkBorder, action: onOpenFavorites)
-                chromeLabel("+") { if let n = size.next { size = n } }
-                chromeLabel("\u{2212}") { if let p = size.previous { size = p } }
+            // 右栏原来是 5 颗常驻按钮（竖排 270pt）压在经文上。白字带阴影时字能从笔画缝里透出来还能忍，
+            // 换成玻璃圆钮后就是实打实地挡住两三行经文 —— 所以收成一颗，点开才展开成玻璃簇
+            // （iOS 26 下靠 askGlassID 从那颗钮长出来）。经文是主角，工具不常驻。
+            AskGlassGroup(spacing: 8) {
+                VStack(spacing: ShellMetrics.topChromeGap) {
+                    chromeButton(systemName: railOpen ? "xmark" : "ellipsis") {
+                        withAnimation(.smooth(duration: 0.3)) { railOpen.toggle() }
+                    }
+                    .askGlassID("rail-toggle", in: railNamespace)
+
+                    if railOpen {
+                        chromeGlyph(MI.settings) { railOpen = false; onOpenSettings() }
+                            .askGlassID("rail-settings", in: railNamespace)
+                        chromeGlyph(MI.search) { railOpen = false; onOpenSearch() }
+                            .askGlassID("rail-search", in: railNamespace)
+                        chromeGlyph(MI.bookmarkBorder) { railOpen = false; onOpenFavorites() }
+                            .askGlassID("rail-favorites", in: railNamespace)
+                        chromeLabel("+") { if let n = size.next { size = n } }
+                            .askGlassID("rail-bigger", in: railNamespace)
+                        chromeLabel("\u{2212}") { if let p = size.previous { size = p } }
+                            .askGlassID("rail-smaller", in: railNamespace)
+                    }
+                }
             }
         }
         .padding(.horizontal, ShellMetrics.topChromeSideInset)
@@ -381,13 +424,14 @@ struct ChapterView: View {
     private func chromeButton(systemName: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(.system(size: ShellMetrics.topChromeIcon * 0.78, weight: .semibold))
-                .foregroundStyle(Color.white)
-                .frame(width: ShellMetrics.topChromeButton, height: ShellMetrics.topChromeButton)
-                .shellIconShadow()
-                // SF Symbol 只有笔画本身可点：不补这一句，50×50 里只有细细的箭头能点中
+                .font(.system(size: ShellMetrics.topChromeIcon * 0.68, weight: .semibold))
+                .foregroundStyle(theme.ink.opacity(0.78))
+                // SF Symbol 只有笔画本身可点：不补 contentShape，50×50 里只有细细的箭头能点中
                 // （Josh 2026-09-10 真机「今日读经进章后返回退不回去」）
+                .frame(width: ShellMetrics.topChromeButton, height: ShellMetrics.topChromeButton)
                 .contentShape(Rectangle())
+                .askGlassCapsule(tone: .light, interactive: true)
+                .askFloatingShadow()
         }
         .buttonStyle(.plain)
     }
@@ -395,9 +439,11 @@ struct ChapterView: View {
     /// 右栏图标走 RN 同一套 Material 字形（READ_TOP_CHROME.iconSize = 32）
     private func chromeGlyph(_ glyph: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            MaterialIcon(glyph: glyph, size: ShellMetrics.topChromeIcon, color: .white)
+            MaterialIcon(glyph: glyph, size: ShellMetrics.topChromeIcon * 0.84, color: theme.ink.opacity(0.78))
                 .frame(width: ShellMetrics.topChromeButton, height: ShellMetrics.topChromeButton)
-                .shellIconShadow()
+                .contentShape(Rectangle())
+                .askGlassCapsule(tone: .light, interactive: true)
+                .askFloatingShadow()
         }
         .buttonStyle(.plain)
     }
@@ -406,10 +452,12 @@ struct ChapterView: View {
     private func chromeLabel(_ text: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(text)
-                .font(.system(size: ShellMetrics.topChromeSizeLabel, weight: .medium))
-                .foregroundStyle(Color.white)
+                .font(.system(size: ShellMetrics.topChromeSizeLabel * 0.84, weight: .medium))
+                .foregroundStyle(theme.ink.opacity(0.78))
                 .frame(width: ShellMetrics.topChromeButton, height: ShellMetrics.topChromeButton)
-                .shellIconShadow()
+                .contentShape(Rectangle())
+                .askGlassCapsule(tone: .light, interactive: true)
+                .askFloatingShadow()
         }
         .buttonStyle(.plain)
     }

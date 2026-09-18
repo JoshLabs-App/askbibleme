@@ -9,7 +9,7 @@ struct ExploreArticleView: View {
     var onOpenChapter: (_ bookId: String, _ chapter: Int) -> Void
     var onOpenArticle: (ExploreArticle) -> Void
 
-    private let theme = Parchment.light
+    @Environment(\.parchment) private var theme
     @State private var expanded: String?
 
     var body: some View {

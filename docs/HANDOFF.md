@@ -198,11 +198,29 @@ Maestro 真源：`docs/mobile-maestro-auto-merge.md`。GitHub Linux CI **不跑*
   - 版本 **1.1**，build **128**，bundle ID `me.askbible`（接替 Expo App）
   - 新增 WidgetKit DailyVerse 小组件（`me.askbible.DailyVerse`），读 App Group `group.me.askbible.native`
   - 首页 `HomeVerseController.writeToWidget()` 每次换句自动刷新小组件
-  - App Review 提交时间：`2026-09-14T04:51:02Z`，状态 `WAITING_FOR_REVIEW`
+  - App Review 提交时间：`2026-09-14T04:51:02Z`，状态 `WAITING_FOR_REVIEW`（等待中）
   - 提审用 ASC API：`PATCH /v1/reviewSubmissions/{id}` + `attributes: { submitted: true }`（文档未记载的隐藏字段）
+- **原生 Android App（Kotlin）`apps/askbible-android`** 已交付并安装到 Samsung S23 Ultra（R5CW11DNS2K）：
+  - 2026-09-14 commit `43936fcd`：划重点 dispatch 改同步直发（`MutableMap<Int,(Offset)->Unit>`），消除异步 snapshotFlow 的一帧延迟；修节号处的高亮空洞（`runStart==0` 时从 `verseStart` 取，不漏节号行）
+  - 2026-09-14 commit `001660b5`：人物 slug 重命名（jacob-patriarch / figure-esau / figure-leah / figure-rachel / joseph-genesis）；读经计划起始文案（tripleStartToday / tripleStartCalendar / epochTripleSelf）
+  - APK 已安装，app 首页正常启动（哥林多前书 15:52 金句可见）
+  - ✅ **划重点真机验证通过（2026-09-14）**：创世记第1章实测，节号区有黄色高亮（runStart==0 fix），从第2节跨段落拖到第3节两个 ParagraphBlock 均有绿色高亮（同步 dispatch fix），无空洞、无延迟
 - Mobile Expo **1.0.38**（iOS build 119 / Android versionCode 119）；夜间审查：**无阻断性新 bug**。
 - iOS Maestro 默认冒烟 + 扩展项 PASS；Android Pixel 完整 7 项 PASS（见 `docs/overnight-optimization-2026-08-27.md`）。
 - 可还原 App 快照：`.snapshots/`（如 `askbible-app-2026-08-26-0142`）；说明见同目录 `RESTORE.txt`。
+
+### 验收命令
+
+```bash
+# Android check 全套（确认无回归）
+cd /Users/joshua/Desktop/APP/01AskBible && npm run check:native
+
+# 安装最新 debug APK 到 Samsung（先接好 USB/WiFi ADB）
+cd apps/askbible-android && ./gradlew assembleDebug
+adb -s R5CW11DNS2K uninstall me.askbible.native
+adb -s R5CW11DNS2K install app/build/outputs/apk/debug/app-debug.apk
+adb -s R5CW11DNS2K shell am start -n me.askbible.native/me.askbible.native_.MainActivity
+```
 
 ### 建议下一步（摘自夜间报告 backlog）
 
@@ -358,3 +376,48 @@ python3 -c "from PIL import Image; im=Image.open('tmp/figure-portraits/raw/moses
 - **别用截图轮询进度**，一张上千 token。查 `stop-button` 存不存在就够了。
 - 浏览器面板被隐藏时 `setTimeout` 被节流，页内长轮询会超时；改用 `computer wait` 分段等，再单次 JS 查状态。
 - 输入框是和 Josh 共用的，`form_input` 会把他正在打的字整段覆盖掉。动手前先查输入框是不是空的。
+
+---
+
+# 交接：成就 / XP 系统第一版（2026-09-18）
+
+## 当前状态
+
+**素材**：MY CLASS 的 40 枚勋章 + 66 卷书卷印章，透明版压 512px WebP（单张约 55KB，共 6.2M），95 张全部已上传 R2 `askbible-media/medals/`，公网可读，两条基址都验过 200：
+`https://askbible-media.joshlabs.app/medals/<key>.webp` 和 `https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/medals/<key>.webp`（代码里用后者，和项目其它素材一致）。
+
+**真源与生成**：`data/medals.json`（23 枚勋章 / 56 档 / 66 卷印章 / 12 级称号 / XP 经济）→ `npm run gen:medals` 生成两端表；`npm run check:medals` 对拍。**不要手改生成物** `MedalCatalog.swift` / `MedalCatalog.kt`。
+
+**iOS 全链路已通，编译通过**（`xcodebuild -project apps/askbible-ios/AskBible.xcodeproj -scheme AskBible -configuration Debug -destination 'generic/platform=iOS Simulator' build`）：
+- `Model/AchievementStore.swift` —— 账本 + 判定引擎 + XP + 会员同步的 JSON 出入口
+- `Read/AchievementViews.swift` —— 勋章图按需下载缓存、`XPBar` 等级条、`XPFloater` 飘字、`EarnedToast` 获得提示
+- `Read/AchievementsView.swift` —— 成就页（勋章墙 + 66 卷印章墙 + 三个数字）
+- 接线：`AskBibleApp.swift` 建 store / 注入 / 叠加飘字与提示 / 听读每 15 秒打点 / 打开章 / 计划流读完章；`ChapterView.swift` 新增 `onReachedEnd`（滚到章末 = 读完，点亮印章的唯一入口）和 `onVersesRead`（滚过的节数，微反馈 XP）；`ExploreView.swift` 加等级条卡片，点进成就页
+- 新文案键走 `tools/native-copy-extra.json` + `npm run gen:site-copy`
+
+**安卓全链路已通，编译通过**（`cd apps/askbible-android && ./gradlew :app:compileDebugKotlin`）：
+- `app/.../data/AchievementStore.kt` —— 与 Swift 版逐条对等（ledger 落 SharedPreferences `achievements`，键 `askbible-achievements-ledger-v1`）。Swift 靠 `Snapshot` 的 `didSet` 落盘，Kotlin 用显式 `dirty` 标记，免得 `attach()` 时空写一次还触发同步通知。
+- `app/.../ui/AchievementViews.kt` —— `MedalImages`（HttpURLConnection 下 R2 的 WebP，落 `cacheDir/medals`，无 Coil 依赖）、`MedalIcon`、`XPBar`、`XPFloater`、`EarnedToast`
+- `app/.../ui/AchievementsScreen.kt` —— 成就页（勋章墙一行 3 枚 / 印章墙一行 5 枚 / 三个数字），左上返回键
+- 接线：`MainActivity.kt` 建 store + `attach` / 听读 `onProgress` 每 15 秒打点 / `LaunchedEffect(book.id, chapter)` 里 `noteChapterOpened` / `skipNext` 计划流里 `noteChapterRead` / 顶层叠 `EarnedToast` + `XPFloater` / `showAchievements` 全屏页 + BackHandler；`ChapterScreen.kt` 新增 `onReachedEnd`、`onVersesRead`（段落 `LaunchedEffect` 去重上报）；`ExploreScreen.kt` 加等级条卡片
+- 新文案键 `native.chaptersReadLabel` 走 `tools/native-copy-extra.json` + `npm run gen:site-copy`（iOS 那边原来用「英文界面就显示 Chapters」的土办法，已换成这个键）
+
+## 关键决定
+全在 `docs/DECISIONS.md` 末尾两条：「成就系统：复用 MY CLASS 勋章图，三端 + 上会员同步」「XP 要『一直在涨』：微反馈 + 连续乘区 + 大数字」。
+ChatGPT 的评审与我的逐条判断在 `docs/gamification-chatgpt-review.md`。
+
+## 下一步（按顺序）
+1. ~~等 Josh 拍板 XP 刺激强度~~ **已定 A 方案并在两端落地**（2026-09-18，见 `docs/DECISIONS.md` 末条）：倍率只升不降（`bestStreakDays`）、听读 XP 三重约束（前台 + 在播 + 每章 `listenTicksPerChapterCap`=80 片）。`noteListenTick` 现在要传 `bookId`/`chapter`。
+2. **接会员同步**：两端 `AchievementStore` 的 `syncJSON`（Kotlin：`syncJson()`）/ `mergeRemote` / `clearForAccountSwitch` 都写好了，只差挂进 `MemberReadingSyncEngine` 和在 Supabase 加 blob。
+3. **网页端**：直接 `import data/medals.json`，判定逻辑照 Swift 再写一份 TS。
+
+## 别踩的坑
+- **模拟器上底栏点不动**：iOS 26 Liquid Glass 底栏，`simctl` 注入的 tap 打在首页那层「点空白收起/唤回」的透明层上，切 Tab 没反应。别在这上面耗，要验 UI 直接装真机。
+- **模拟器上的 bundle id 是 `me.askbible`**，不是真机的 `me.askbible.native`，`simctl launch` 别用错。
+- **Kotlin 的 `const val` 要显式 Double**：生成器里 `listenTickSeconds` 这类必须输出 `15.0`，写 `15` 编译不过（已在 `gen-medals.mjs` 里用 `dbl()` 处理）。
+- **`PlanDates.parseLocalDate` 返回的是 `(y, m, d)` 元组不是 `Date`**，要自己 `DateComponents` 拼。
+- **`DateComponents` 的参数有顺序**：`weekday` 必须在 `weekOfYear` 前面。
+- **AskBible 的 iOS 没有 `Endpoints` 枚举**（那是 MyClass 的），R2 基址各文件自己写字面量。
+- **安卓模拟器 emulator-5554 上别做点击验证**：这台机器上有别的项目的 kiosk 启动器（`app.joshlabs.desk`）和 `app.joshlabs.tingdao` 反复抢前台，`input tap` 会落到别的 App 上，dump 出来的「成就墙」是那个 App 自己的页面。要目视验证就装真机。
+- **听读 XP 需要「现在听的是哪一章」**：安卓的 `onProgress` 挂在 `remember {}` 里读不到后面的 Compose 值，用 `listenTarget` 这个 `mutableStateOf` holder 由 `LaunchedEffect(targetBook?.id, targetChapter)` 写进去；iOS 直接读 `audioTarget`。
+- **`ChapterAudioPlayer.onProgress` 是在 `remember {}` 里一次性挂的**，不要在里面读 Compose 状态；听读打点的「上一次落点」用 `by remember { mutableStateOf(-1.0) }` 在外面存。

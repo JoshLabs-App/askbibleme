@@ -321,14 +321,17 @@ struct ChapterFlowParagraph: UIViewRepresentable {
             Self.bookmarkFill.setFill()
             for r in bookmarkRanges {
                 // RN 是圆角 2，真机上看还是方的；Josh 2026-09-09「四角要加弧边」→ 6
-                for rect in rects(for: r) { UIBezierPath(roundedRect: rect.insetBy(dx: -2, dy: -1), cornerRadius: 6).fill() }
+                // 只横向撑，不纵向撑：撑高了相邻两行会重叠，半透明叠起来就是一条深色带
+                // （Josh 2026-09-19「这 2 行黄色高亮…目前是重叠了一点点」）
+                for rect in rects(for: r) { UIBezierPath(roundedRect: rect.insetBy(dx: -2, dy: 0), cornerRadius: 6).fill() }
             }
             // 划重点：逐行铺用户选的颜色，压在正文底下
             for run in highlightRuns + liveHighlightRuns {
                 // 颜色已由 VerseHighlightRules.fillColor 带好 alpha，这里不再二次压透明
                 run.color.setFill()
                 for rect in rects(for: run.range) {
-                    UIBezierPath(roundedRect: rect.insetBy(dx: 0, dy: -1), cornerRadius: 3).fill()
+                    // 同理：划重点也改成不纵向撑，多行时不叠出深色带
+                    UIBezierPath(roundedRect: rect.insetBy(dx: 0, dy: 0), cornerRadius: 3).fill()
                 }
             }
             layoutManager.drawBackground(forGlyphRange: range, at: .zero)

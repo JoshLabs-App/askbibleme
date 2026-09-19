@@ -1,6 +1,13 @@
 package me.askbible.native_.ui
 
 import android.graphics.BitmapFactory
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -95,11 +102,42 @@ fun PlaybackDock(
                      fontWeight = FontWeight.Medium,
                      modifier = Modifier.width(ShellMetrics.timeLabelMinWidth.dp))
                 // MinimalProgressBar：轨 rgba(92,64,48,.22) / 填充 LOGO 黄，高 3 圆角 1.5
+                // 可拖动（Josh 2026-09-19「播放条需要可以拉动」）：轨道只有 3dp 点不中，
+                // 外面套一个 44dp 高的透明触控框；拖动中显示本地值，避免松手时先弹回旧位置。
+                var dragFraction by remember { mutableStateOf<Float?>(null) }
+                var trackWidthPx by remember { mutableStateOf(0f) }
+                val fraction = dragFraction ?: audio.progress.toFloat().coerceIn(0f, 1f)
+                fun seekTo(x: Float) {
+                    if (audio.duration > 0 && trackWidthPx > 0f) {
+                        audio.seekTo((x / trackWidthPx).coerceIn(0f, 1f) * audio.duration)
+                    }
+                }
                 Box(
-                    Modifier.weight(1f).height(3.dp).clip(CircleShape).background(Color(0x385C4030))
+                    Modifier.weight(1f).height(44.dp)
+                        .onSizeChanged { trackWidthPx = it.width.toFloat() }
+                        .pointerInput(Unit) {
+                            detectHorizontalDragGestures(
+                                onDragStart = { dragFraction = (it.x / size.width).coerceIn(0f, 1f) },
+                                onDragEnd = {
+                                    dragFraction?.let { f -> seekTo(f * trackWidthPx) }
+                                    dragFraction = null
+                                },
+                                onDragCancel = { dragFraction = null },
+                            ) { change, _ ->
+                                dragFraction = (change.position.x / size.width).coerceIn(0f, 1f)
+                            }
+                        }
+                        .pointerInput(Unit) {
+                            detectTapGestures { seekTo(it.x) }
+                        },
+                    contentAlignment = Alignment.CenterStart,
                 ) {
-                    Box(Modifier.fillMaxWidth(audio.progress.toFloat()).height(3.dp)
-                        .clip(CircleShape).background(Brand.logo.toColor()))
+                    Box(
+                        Modifier.fillMaxWidth().height(3.dp).clip(CircleShape).background(Color(0x385C4030))
+                    ) {
+                        Box(Modifier.fillMaxWidth(fraction).height(3.dp)
+                            .clip(CircleShape).background(Brand.logo.toColor()))
+                    }
                 }
                 Text(total, color = theme.muted.toColor(), fontSize = ShellMetrics.timeFontSize.sp,
                      fontWeight = FontWeight.Medium, textAlign = TextAlign.End,

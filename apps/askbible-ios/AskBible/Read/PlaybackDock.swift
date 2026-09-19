@@ -66,13 +66,11 @@ struct PlaybackDock: View {
                     }
                     HStack(spacing: 8) {
                         timeText(elapsed)
-                        ZStack(alignment: .leading) {
-                            Capsule().fill(Color(parchment: 0x5c4030, opacity: 0.20))
-                            GeometryReader { geo in
-                                Capsule().fill(Brand.logo).frame(width: geo.size.width * audio.progress)
-                            }
-                        }
-                        .frame(height: 2)
+                        SeekableProgressBar(
+                            audio: audio,
+                            trackHeight: 2,
+                            trackColor: Color(parchment: 0x5c4030, opacity: 0.20)
+                        )
                         timeText(remaining)
                     }
                 }
@@ -214,16 +212,12 @@ struct PlaybackDock: View {
             timeText(elapsed)
                 .frame(minWidth: ShellMetrics.timeLabelMinWidth, alignment: .leading)
 
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    // MinimalProgressBar：轨 rgba(92,64,48,.22) / 填充 LOGO 黄，高 3 圆角 1.5
-                    Capsule().fill(Color(red: 92 / 255, green: 64 / 255, blue: 48 / 255, opacity: 0.22))
-                    Capsule()
-                        .fill(Brand.logo)
-                        .frame(width: geo.size.width * audio.progress)
-                }
-            }
-            .frame(height: 3)
+            // MinimalProgressBar：轨 rgba(92,64,48,.22) / 填充 LOGO 黄，高 3 圆角 1.5
+            SeekableProgressBar(
+                audio: audio,
+                trackHeight: 3,
+                trackColor: Color(red: 92 / 255, green: 64 / 255, blue: 48 / 255, opacity: 0.22)
+            )
 
             timeText(total)
                 .frame(minWidth: ShellMetrics.timeLabelMinWidth, alignment: .trailing)
@@ -399,5 +393,53 @@ struct PlaybackDockAccessory: View {
         d.compact = true
         _ = placement
         return d
+    }
+}
+
+/// 可拖动的播放进度条。
+///
+/// Josh 2026-09-19：「播放条需要可以拉动」。原来只是画了一根 Capsule，没有任何手势。
+/// 两个要点：
+/// - **触控区要够高**：轨道本身只有 2–3pt，手指点不中。外面套一个 44pt 高的透明
+///   contentShape，视觉不变、能点。（和上面那条「图标小是设计，触控小是 bug」一个道理。）
+/// - **拖动时用本地值**：松手后播放器要几百毫秒才报新位置，期间若还读 audio.progress，
+///   进度条会先弹回旧位置再跳过去。拖动中一律显示 dragFraction。
+struct SeekableProgressBar: View {
+    @ObservedObject var audio: ChapterAudioPlayer
+    /// 轨道高度（迷你坞 2、展开坞 3）
+    var trackHeight: CGFloat
+    var trackColor: Color
+
+    @State private var dragFraction: Double?
+
+    private var fraction: Double {
+        dragFraction ?? min(max(audio.progress, 0), 1)
+    }
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(trackColor)
+                Capsule().fill(Brand.logo).frame(width: geo.size.width * fraction)
+            }
+            .frame(height: trackHeight)
+            // 轨道在 44pt 高的透明框里垂直居中：视觉还是细线，手指有地方落
+            .frame(maxHeight: .infinity, alignment: .center)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        guard audio.duration > 0, geo.size.width > 0 else { return }
+                        dragFraction = min(max(value.location.x / geo.size.width, 0), 1)
+                    }
+                    .onEnded { value in
+                        defer { dragFraction = nil }
+                        guard audio.duration > 0, geo.size.width > 0 else { return }
+                        let f = min(max(value.location.x / geo.size.width, 0), 1)
+                        audio.seek(to: f * audio.duration)
+                    }
+            )
+        }
+        .frame(height: 44)
     }
 }

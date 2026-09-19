@@ -238,8 +238,11 @@ fun ChapterFlowParagraph(
                             else l.getLineRight(line)
                         }
                         if (right <= left) continue
-                        drawRoundRect(c.copy(alpha = 0.45f), topLeft = Offset(left, l.getLineTop(line) - 1.dp.toPx()),
-                                      size = Size(right - left, l.getLineBottom(line) - l.getLineTop(line) + 2.dp.toPx()),
+                        // 1) 颜色已由 verseHighlightFill / audioFollowColor 带好 alpha，不再二次压透明
+                        // 2) 不纵向撑高：撑高了相邻两行会重叠，半透明叠起来就是一条深色带
+                        //    （Josh 2026-09-19「这 2 行黄色高亮…目前是重叠了一点点」）
+                        drawRoundRect(c, topLeft = Offset(left, l.getLineTop(line)),
+                                      size = Size(right - left, l.getLineBottom(line) - l.getLineTop(line)),
                                       cornerRadius = CornerRadius(3.dp.toPx()))
                     }
                 }

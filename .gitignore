@@ -132,3 +132,10 @@ tools/.reading-plans.json
 # 原生 App 的跟读时间轴库（6.5MB 产物）：npm run build:verse-timings 从 RN 的 verse-timings-bundle.json 生成
 /apps/askbible-ios/AskBible/Resources/verse-timings.sqlite
 /apps/askbible-android/app/src/main/assets/verse-timings.sqlite
+
+# 会话里做 UI 验证留下的截图（一次性产物，重跑即得）
+/*.png
+# 本地备份与临时凭据副本，绝不入库
+*.bak
+*.bak-*
+.wrangler/

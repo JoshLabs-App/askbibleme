@@ -20,8 +20,9 @@ const CAP_RADIUS = 5;
 const SHELL_BORDER = "rgba(28, 20, 16, 0.58)";
 const SHELL_FILL = "rgba(255, 252, 245, 0.92)";
 const LIVED = LOGO_COLOR;
-/** 状态栏常见满电绿 */
-const REMAINING = "#34C759";
+/** 全 App 唯一的绿（橄榄绿 READ_DONE_ACCENT）。原来用的是状态栏满电绿 #34C759，
+ *  和羊皮卷配色不是一个年代（2026-09-19 收敛）。 */
+const REMAINING = "#65775C";
 
 /** 人生 90 岁满格：5 格分段电池（每格 18 岁，四舍五入） */
 export function ExploreLifeDayBattery({ filledSegments }: Props) {

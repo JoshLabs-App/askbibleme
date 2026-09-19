@@ -38,6 +38,8 @@ type Props = {
   onPress?: () => void;
   onLongPress?: () => void;
   preciseHighlightUnits?: boolean;
+  /** 跟读高亮：当前正在读的那一句在节正文里的字符区间（前闭后开）；null = 不在跟读 */
+  audioFollowRange?: { start: number; end: number } | null;
   searchKeyword?: string | null;
 };
 
@@ -58,6 +60,7 @@ export function ReadChapterVerseText({
   onPress,
   onLongPress,
   preciseHighlightUnits = false,
+  audioFollowRange = null,
   searchKeyword = null,
 }: Props) {
   const { px } = useReadBibleTypography();
@@ -78,14 +81,16 @@ export function ReadChapterVerseText({
   const segments = useMemo(() => buildSpeechSegments(parts), [parts]);
 
   const highlightedChars = useMemo(() => {
-    if (!highlightedCharIndexes?.size) return null;
+    // 跟读高亮也走这条逐字符分段的路：没有划重点、只在跟读时同样要分段
+    if (!highlightedCharIndexes?.size && !audioFollowRange) return null;
     return buildHighlightedCharSpans({
       text,
       parts,
-      highlightedCharIndexes,
+      highlightedCharIndexes: highlightedCharIndexes ?? new Map(),
       activeHighlightColor,
+      audioFollowRange,
     });
-  }, [activeHighlightColor, highlightedCharIndexes, parts, text]);
+  }, [activeHighlightColor, audioFollowRange, highlightedCharIndexes, parts, text]);
 
   const {
     rootTextRef,

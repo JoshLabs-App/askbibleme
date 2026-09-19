@@ -38,8 +38,10 @@ struct HighlightBar: View {
                         color = hex
                         erasing = false
                     } label: {
+                        // 所见即所得：色块用正文里实际铺出来的合成色，不是纯颜料色
                         Circle()
-                            .fill(Color(hex: hex))
+                            .fill(theme.canvas)
+                            .overlay(Circle().fill(Color(uiColor: VerseHighlightRules.fillColor(hex))))
                             .frame(width: 34, height: 34)
                             .overlay(
                                 Circle().stroke(theme.ink.opacity(!erasing && color == hex ? 0.75 : 0.12),

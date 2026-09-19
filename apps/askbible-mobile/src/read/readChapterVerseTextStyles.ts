@@ -1,5 +1,5 @@
 import { parchmentSans } from "../fonts/parchmentType";
-import { readParchmentTheme as c } from "./readParchmentTheme";
+import { READ_PARCHMENT_COLOR_MODE, readParchmentTheme as c } from "./readParchmentTheme";
 
 export const readChapterVerseTextStyles = {
   divine: {
@@ -16,6 +16,17 @@ export const readChapterVerseTextStyles = {
     borderRadius: 2,
     paddingHorizontal: 1,
     paddingVertical: 0,
+  },
+  /**
+   * 跟读高亮：贴着当前这一句的字铺，不再整行铺底。
+   * LOGO 黄叠透明度（浅 .55 / 深 .34），比划重点的灯油黄 .45 重一点，
+   * 让「机器读到这里」和「我自己划的」分得开。
+   */
+  audioFollow: {
+    borderRadius: 2,
+    paddingHorizontal: 1,
+    backgroundColor:
+      READ_PARCHMENT_COLOR_MODE === "dark" ? "rgba(255, 177, 3, 0.34)" : "rgba(255, 177, 3, 0.55)",
   },
   preciseHighlightFlow: {
     flexDirection: "row" as const,

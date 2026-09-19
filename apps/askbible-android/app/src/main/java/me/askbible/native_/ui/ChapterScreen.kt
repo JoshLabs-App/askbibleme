@@ -100,6 +100,8 @@ fun ChapterScreen(
     xrefVerses: Set<Int>,
     size: ReadSize,
     activeVerse: Int?,
+    /** 跟读高亮：当前节内的朗读进度（0…1），用来再插值定位到句 */
+    activeVerseProgress: Double = 0.0,
     onBack: () -> Unit,
     onOpenSettings: () -> Unit,
     onSizeUp: () -> Unit,
@@ -253,7 +255,7 @@ fun ChapterScreen(
                 ChapterStatus(loading, ScriptureTranslation.find(translationId)?.delivery == TranslationDelivery.DOWNLOAD, theme, locale, onRetry)
             }
             itemsIndexed(groups, key = { _, g -> g.first().number }) { gi, group ->
-                ParagraphBlock(group, gi, meta, locale, m, theme, xrefVerses, activeVerse, contrast,
+                ParagraphBlock(group, gi, meta, locale, m, theme, xrefVerses, activeVerse, activeVerseProgress, contrast,
                     bookmarked = if (selectedVerses.isNotEmpty()) selectedVerses else bookmarked, searchFocus = searchFocus,
                     tapWholeVerse = selectedVerses.isNotEmpty(),
                     highlights = highlights, paintColor = paintColor, eraseMode = eraseMode, onPaint = onPaint,
@@ -331,6 +333,7 @@ private fun ParagraphBlock(
     theme: Parchment,
     xrefVerses: Set<Int>,
     activeVerse: Int?,
+    activeVerseProgress: Double,
     contrast: Map<Int, String>,
     bookmarked: Set<Int>,
     searchFocus: Int?,
@@ -371,7 +374,7 @@ private fun ParagraphBlock(
                 textAlign = TextAlign.Center,
             )
         }
-        ChapterFlowParagraph(group, m, theme, xrefVerses, activeVerse, bookmarked, searchFocus,
+        ChapterFlowParagraph(group, m, theme, xrefVerses, activeVerse, activeVerseProgress, bookmarked, searchFocus,
                              onTapVerseNumber, onDoubleTapVerse, onLongPressVerse, onVerseBounds,
                              tapWholeVerse = tapWholeVerse,
                              highlights = highlights, paintColor = paintColor, eraseMode = eraseMode, onPaint = onPaint,

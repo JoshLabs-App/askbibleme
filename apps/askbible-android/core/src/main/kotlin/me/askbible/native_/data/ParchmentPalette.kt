@@ -41,6 +41,8 @@ data class Parchment(
     val verseSearchFocusBg: Rgba,
     val divineSpeech: Rgba,
     val humanSpeech: Rgba,
+    /** 深色模式标志：划重点铺色要按深浅换 alpha */
+    val isDark: Boolean = false,
     val verseBookmarkMarker: Rgba,
     val parchmentAccent: Rgba,
     val parchmentAccentGlow: Rgba,
@@ -106,7 +108,9 @@ data class Parchment(
             verseAudioActiveNum = Rgba(0xf0b88a, 0.95),
             verseSearchFocusBg = Rgba(0xf5e6d2, 0.14),
             divineSpeech = Rgba(0xffc68c, 0.95),
-            humanSpeech = Rgba(0x38486C),
+            // 深色下原来沿用浅色的 #38486C，深蓝压在 #1a1512 上几乎看不见（2026-09-19 修）
+            humanSpeech = Rgba(0x9DB2DE),
+            isDark = true,
             verseBookmarkMarker = Rgba(0xFFB103),
             parchmentAccent = Rgba(0xD97707),
             parchmentAccentGlow = Rgba(0xD97707, 0.28),

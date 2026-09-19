@@ -1,4 +1,6 @@
 import Foundation
+import SwiftUI
+import UIKit
 
 /// 划重点：一节里逐字符的颜色。
 /// 存储格式与 RN `read-verse-text-highlights.ts` 完全一致 —— 键 `译本:卷:章:节`，
@@ -7,17 +9,49 @@ import Foundation
 enum VerseHighlightRules {
     static let storageKey = "askbible-read-verse-text-highlights-v1"
     static let defaultColor = "#FFB103"
-    /// RN VERSE_TEXT_HIGHLIGHT_PALETTE
-    static let palette = ["#FFB103", "#7BC96F", "#0FBCDB", "#F48FB1"]
+    /// RN VERSE_TEXT_HIGHLIGHT_PALETTE（2026-09-19 改版，见 docs/design-color-system.md）。
+    /// 存的是「颜料」hex，渲染时一律走 `fillColor(_:)` 叠 alpha 铺在羊皮底上，
+    /// 不要直接把这些 hex 当不透明背景色用。
+    static let palette = [
+        "#FFB103",  // 灯油黄
+        "#A3B565",  // 橄榄绿
+        "#4E86A0",  // 青石蓝
+        "#C0625F",  // 石榴红
+    ]
+
+    /// 旧色板 → 新色板。老用户存量数据里是旧 hex，不迁就会被 normalizeColor 全打回默认黄。
+    static let legacyColorMap = [
+        "#7BC96F": "#A3B565",
+        "#0FBCDB": "#4E86A0",
+        "#F48FB1": "#C0625F",
+    ]
+
+    /// 每支笔的铺色透明度（浅色, 深色）：合成后亮度接近，谁也不比谁响
+    static let fillAlpha: [String: (CGFloat, CGFloat)] = [
+        "#FFB103": (0.45, 0.28),
+        "#A3B565": (0.50, 0.28),
+        "#4E86A0": (0.46, 0.32),
+        "#C0625F": (0.42, 0.30),
+    ]
+
+    /// 颜料 hex → 实际铺的颜色（随系统深浅自动换 alpha）。渲染端一律走这里。
+    static func fillColor(_ raw: String) -> UIColor {
+        let hex = normalizeColor(raw)
+        let (light, dark) = fillAlpha[hex] ?? (0.45, 0.28)
+        let base = UIColor(Color(hex: hex))
+        return UIColor { trait in
+            base.withAlphaComponent(trait.userInterfaceStyle == .dark ? dark : light)
+        }
+    }
 
     static func key(translationId: String, bookId: String, chapter: Int, verse: Int) -> String {
         "\(translationId):\(bookId):\(chapter):\(verse)"
     }
 
     static func normalizeColor(_ raw: Any?) -> String {
-        guard let s = (raw as? String)?.trimmingCharacters(in: .whitespaces).uppercased(),
-              palette.contains(s) else { return defaultColor }
-        return s
+        guard let s = (raw as? String)?.trimmingCharacters(in: .whitespaces).uppercased() else { return defaultColor }
+        if palette.contains(s) { return s }
+        return legacyColorMap[s] ?? defaultColor
     }
 }
 

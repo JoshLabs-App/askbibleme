@@ -14,11 +14,12 @@ import { useLocale } from "../i18n/LocaleProvider";
 import { resolveUiText } from "../i18n/site-copy";
 import { ParchmentModalCard } from "../shell/ParchmentControlSheet";
 import { ReadChapterVerseText } from "./ReadChapterVerseText";
-import { readParchmentTheme as c } from "./readParchmentTheme";
+import { READ_PARCHMENT_COLOR_MODE, readParchmentTheme as c } from "./readParchmentTheme";
 import { parchmentSans } from "./readTypography";
 import {
   DEFAULT_VERSE_TEXT_HIGHLIGHT_COLOR,
   VERSE_TEXT_HIGHLIGHT_PALETTE,
+  verseTextHighlightFill,
   writeVerseTextHighlightIndices,
 } from "./read-verse-text-highlights";
 
@@ -170,7 +171,14 @@ export function ReadVerseHighlightWordSheet({
                     onPress={() => setActiveColor(color)}
                     style={[
                       styles.colorChip,
-                      { backgroundColor: color },
+                      // 所见即所得：色块用正文里实际铺出来的合成色
+                      { backgroundColor: c.canvas },
+                      {
+                        backgroundColor: verseTextHighlightFill(
+                          color,
+                          READ_PARCHMENT_COLOR_MODE === "dark",
+                        ),
+                      },
                       active && styles.colorChipActive,
                     ]}
                     accessibilityRole="button"

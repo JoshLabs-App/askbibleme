@@ -738,6 +738,7 @@ private fun RootScreen() {
                     xrefVerses = data.xrefs,
                     size = size,
                     activeVerse = audio.activeVerse,
+                    activeVerseProgress = audio.activeVerseProgress,
                     onBack = {
                         openedBook = null
                         // 从计划页进来的章页：回计划 Tab、不停播（RN 返回上一页仍在放）

@@ -67,7 +67,7 @@ function IosSettingsSwitch({
       onClick={() => onChange(!checked)}
       className={[
         "relative inline-flex h-[31px] w-[51px] shrink-0 cursor-pointer rounded-full border-0 p-0 transition-colors motion-reduce:transition-none",
-        checked ? "bg-[#34C759]" : "bg-ink/20 dark:bg-white/20",
+        checked ? "bg-[#65775C]" : "bg-ink/20 dark:bg-white/20",
       ].join(" ")}
     >
       <span

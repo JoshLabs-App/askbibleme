@@ -271,7 +271,7 @@ export function ReadChapterScreen() {
 
   const { onAdvanceChapterAudio } = nav;
 
-  const { activeVerseIndex, nearAudioEnd } = useReadChapterAudio(chapterData, scrollRef, {
+  const { activeVerseIndex, activeSentence, nearAudioEnd } = useReadChapterAudio(chapterData, scrollRef, {
     onAdvanceChapter: onAdvanceChapterAudio,
     isPlanFlow,
     planFlowTick,
@@ -361,6 +361,7 @@ export function ReadChapterScreen() {
         px={px}
         searchFocusVerse={searchFocusVerse}
         activeVerseIndex={activeVerseIndex}
+        activeSentence={activeSentence}
         contrastByVerse={contrastByVerse}
         xrefVerseNumbers={xrefVerseNumbers}
         postReadingReady={postReadingReady}

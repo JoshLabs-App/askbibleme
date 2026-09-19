@@ -38,6 +38,8 @@ type Props = {
   px: ReadBibleTypographyPx;
   searchFocusVerse: number | null;
   activeVerseIndex: number | null;
+  /** 跟读高亮：当前正在读的那一句在节正文里的字符区间 */
+  activeSentence: { start: number; end: number } | null;
   contrastByVerse: Map<number, ContrastVerseLine[]> | null;
   xrefVerseNumbers: Set<number> | null;
   postReadingReady: boolean;
@@ -82,6 +84,7 @@ export function ReadChapterScreenBody({
   px,
   searchFocusVerse,
   activeVerseIndex,
+  activeSentence,
   contrastByVerse,
   xrefVerseNumbers,
   postReadingReady,
@@ -119,6 +122,7 @@ export function ReadChapterScreenBody({
           px={px}
           searchFocusVerse={searchFocusVerse}
           activeVerseIndex={activeVerseIndex}
+          activeSentence={activeSentence}
           contrastByVerse={contrastByVerse}
           xrefVerseNumbers={xrefVerseNumbers}
           postReadingReady={postReadingReady}

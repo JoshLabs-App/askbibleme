@@ -111,4 +111,16 @@ enum VerseTimingLookup {
         if found == timings.count - 1, time > timings[found].end { return nil }
         return timings[found].verse
     }
+
+    /// 当前节 + 节内进度（0…1）。进度给 `VerseSentences` 插值定位到句，
+    /// 让跟读高亮跟到句而不是整节（Josh 2026-09-19）。
+    /// 停顿间隙（time > end）算 1.0，即停在本节最后一句上，不会提前跳走。
+    static func activeVerseProgress(at time: Double, in timings: [VerseTiming]) -> (verse: Int, progress: Double)? {
+        guard let verse = activeVerse(at: time, in: timings),
+              let t = timings.first(where: { $0.verse == verse })
+        else { return nil }
+        let span = t.end - t.start
+        guard span > 0 else { return (verse, 0) }
+        return (verse, min(max((time - t.start) / span, 0), 1))
+    }
 }

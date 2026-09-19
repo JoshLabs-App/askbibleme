@@ -7,6 +7,14 @@ import { resolveReadChapterNeighbors } from "../bible/read-chapter-neighbors";
 import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
 import { useMusicPlayback } from "../music/MusicPlaybackContext";
 import { useScriptureFollowDerived } from "./useScriptureFollowDerived";
+import { loadBundledChapterVerseTimings } from "../bible/bundled-verse-timings";
+import { activeVerseProgressAt } from "./verse-timing-lookup";
+import { verseSentenceIndexAt } from "./verse-sentences";
+import {
+  buildChapterSentenceIndex,
+  decodeFollowKey,
+  encodeFollowKey,
+} from "./read-chapter-follow-sentences";
 import {
   getScripturePlayingChapter,
   subscribeScripturePlayingChapter,
@@ -30,9 +38,15 @@ type UseReadChapterAudioOptions = {
 };
 
 /**
- * 读经音频：注册音轨、邻章预取、近结尾检测。
- * 播经跟读高亮 + 自动滚到屏幕中间已移除（易错位且 120ms 跟读态会抬高 JS CPU）。
- * 用户「划重点」与搜索定位滚屏仍由其它 hook 负责。
+ * 读经音频：注册音轨、邻章预取、近结尾检测、跟读高亮。
+ *
+ * 跟读高亮曾被整个摘掉（「易错位且 120ms 跟读态会抬高 JS CPU」），2026-09-19 重开，
+ * 两个老毛病分别这么绕开：
+ * - **错位**：时间轴只对得上和合本 / WEB / 潮州语，认不出的译本 `loadBundled…` 返回 null，
+ *   没有时间轴就不高亮（Josh 2026-09-11 定的「没有时间点就不高亮」）。
+ * - **CPU**：派生值是一个字符串 `节号:句下标`，`useSyncExternalStore` 快照不变就跳过重渲染。
+ *   秒数每 120ms 推一次，但句几秒才换一次，实际重渲染频率比原来的「按节」还低。
+ *   句切分表在 `useMemo` 里切一次缓存住，派生函数里只做二分 + 累加。
  */
 export function useReadChapterAudio(
   chapterData: LoadedChapter | null,
@@ -190,11 +204,50 @@ export function useReadChapterAudio(
       sec >= Math.max(0, scriptureDurationSec - 1.2),
   );
 
+  // 跟读时间轴：认不出的译本返回 null —— 没有时间点就不高亮，宁可不亮也不要错位
+  const followTimings = useMemo(() => {
+    if (!chapterData || !supported) return null;
+    return loadBundledChapterVerseTimings(
+      chapterAudioTranslationId,
+      audioVoiceId,
+      chapterData.bookId,
+      chapterData.chapter,
+    );
+  }, [audioVoiceId, chapterAudioTranslationId, chapterData, supported]);
+
+  // 句切分表：整章切一次缓存住，派生函数里不许重切
+  const sentenceIndex = useMemo(
+    () => buildChapterSentenceIndex(chapterData?.verses),
+    [chapterData],
+  );
+
+  const followKey = useScriptureFollowDerived((sec) => {
+    if (!scriptureBoundToCurrentChapter || !followTimings?.length) return "";
+    const hit = activeVerseProgressAt(sec, followTimings);
+    if (!hit) return "";
+    const entry = sentenceIndex.get(hit.verse);
+    if (!entry) return "";
+    return encodeFollowKey(hit.verse, verseSentenceIndexAt(hit.progress, entry.weights));
+  });
+
+  const follow = useMemo(
+    () => decodeFollowKey(followKey, sentenceIndex),
+    [followKey, sentenceIndex],
+  );
+
+  // 节号 → 列表下标（整条经文列表按下标比对）
+  const activeVerseIndex = useMemo(() => {
+    if (!follow || !chapterData) return null;
+    const i = chapterData.verses.findIndex((v) => v.verse === follow.verse);
+    return i >= 0 ? i : null;
+  }, [chapterData, follow]);
+
   return {
     supported,
     chapterAudioAvailable: Boolean(chapterAudioSrc),
-    /** 跟读高亮已关闭；保留字段以免改动整条经文列表 props。 */
-    activeVerseIndex: null as number | null,
+    activeVerseIndex,
+    /** 当前正在读的那一句在节正文里的字符区间；没有时间轴或切不出句时为 null */
+    activeSentence: follow?.sentence ?? null,
     audioMatchesChapter,
     nearAudioEnd,
   };

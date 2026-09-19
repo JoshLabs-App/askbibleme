@@ -60,7 +60,7 @@ function LifeDayBattery({ filledSegments }: { filledSegments: number }) {
           {Array.from({ length: LIFE_BATTERY_SEGMENT_COUNT }, (_, i) => (
             <div
               key={i}
-              className={`flex-1 rounded-sm ${i < filled ? "bg-[#FFB103]" : "bg-[#34C759]"}`}
+              className={`flex-1 rounded-sm ${i < filled ? "bg-[#FFB103]" : "bg-[#65775C]"}`}
             />
           ))}
         </div>

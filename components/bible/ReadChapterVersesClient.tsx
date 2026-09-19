@@ -6,6 +6,7 @@ import { parseScriptureVerseParam } from "@/lib/bible/parse-scripture-verse-para
 import { normalizeScriptureSearchQuery } from "@/lib/bible/scripture-search";
 import { useCuvChapterAudioVoice } from "@/components/bible/CuvChapterAudioVoiceContext";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
+import { useReadChapterFollowSentence } from "@/hooks/useReadChapterFollowSentence";
 import type { LoadedChapterVerse } from "@/lib/bible/loaded-chapter-verse";
 import { resolveVerseSpeechParts } from "@/lib/bible/resolve-verse-speech-parts";
 import {
@@ -174,7 +175,7 @@ export function ReadChapterVersesClient({
   const initialFocusVerse = initialFocusVerseProp ?? focusVerseFromUrl;
   const [bookmarkFeedback, setBookmarkFeedback] = useState<string | null>(null);
   const { effectiveVoiceId } = useCuvChapterAudioVoice();
-  const { effectiveSrc, playing } = useMusicShellPlayback();
+  const { effectiveSrc, playing, currentSec } = useMusicShellPlayback();
   const playVoice = effectiveVoiceId(bookId);
   const [resolvedChapterSrc, setResolvedChapterSrc] = useState<string | null>(null);
   const verseElRefs = useRef<(HTMLElement | null)[]>([]);
@@ -372,9 +373,23 @@ export function ReadChapterVersesClient({
     return Boolean(resolvedChapterSrc) && shellPlaybackUrlsEqual(resolvedChapterSrc!, effectiveSrc.trim());
   })();
 
-  // 播经跟读高亮 + 自动滚到屏幕中间已关（与 App 对齐；易错位、跟读态抬重渲染）。
-  // 用户划重点与搜索定位滚屏仍保留。
-  const activeIndex: number | null = null;
+  // 播经跟读高亮：2026-09-19 重开，并从「整节铺底」改成「只铺当前这一句」。
+  // 老毛病的绕法写在 useReadChapterFollowSentence 的注释里（没时间轴就不亮 + key 收敛）。
+  // 自动滚到屏幕中间仍然不做 —— 那一条是另一个问题（滚屏抢手势）。
+  const follow = useReadChapterFollowSentence({
+    enabled: audioMatchesThisChapter,
+    translationId: chapterAudioTranslationId,
+    voiceId: playVoice,
+    bookId,
+    chapter,
+    verses,
+    currentSec,
+  });
+  const activeIndex = useMemo(() => {
+    if (follow.verse == null) return null;
+    const i = verses.findIndex((v) => v.verse === follow.verse);
+    return i >= 0 ? i : null;
+  }, [follow.verse, verses]);
 
   useEffect(() => {
     void recordTodayReadingChapterFraction(bookId, chapter, 0.1);
@@ -712,6 +727,14 @@ export function ReadChapterVersesClient({
                           activeIndex !== null &&
                           i === activeIndex
                         }
+                        audioFollowRange={
+                          searchFocusVerse !== v.verse &&
+                          !isBookmarked({ translationId, bookId, chapter, verse: v.verse }) &&
+                          activeIndex !== null &&
+                          i === activeIndex
+                            ? follow.sentence
+                            : null
+                        }
                         highlightModeActive={highlightModeActive}
                         highlightedIndexes={activeHighlightMap.get(v.verse) ?? null}
                         activeHighlightColor={activeHighlightColor}
@@ -761,6 +784,12 @@ export function ReadChapterVersesClient({
           active={(() => {
             const bm = isBookmarked({ translationId, bookId, chapter, verse: v.verse });
             return searchFocusVerse !== v.verse && !bm && activeIndex !== null && i === activeIndex;
+          })()}
+          audioFollowRange={(() => {
+            const bm = isBookmarked({ translationId, bookId, chapter, verse: v.verse });
+            const on =
+              searchFocusVerse !== v.verse && !bm && activeIndex !== null && i === activeIndex;
+            return on ? follow.sentence : null;
           })()}
           contrastLines={contrastByVerse?.get(v.verse) ?? null}
           xrefBundle={xrefsByVerse?.get(v.verse)}
@@ -846,6 +875,8 @@ type ReadChapterInlineVerseChunkProps = {
   searchKeyword?: string | null;
   bookmarked: boolean;
   active: boolean;
+  /** 跟读高亮：当前正在读的那一句在节正文里的字符区间 */
+  audioFollowRange: { start: number; end: number } | null;
   highlightModeActive: boolean;
   selectionMode: boolean;
   highlightedIndexes: VerseHighlightMap | null;
@@ -869,6 +900,7 @@ function ReadChapterInlineVerseChunk({
   searchKeyword = null,
   bookmarked,
   active,
+  audioFollowRange,
   highlightModeActive,
   selectionMode,
   highlightedIndexes,
@@ -906,6 +938,7 @@ function ReadChapterInlineVerseChunk({
     >
       <sup className="read-chapter-verse-inline-num">{v.verse}</sup>
       <ReadChapterVerseText
+        audioFollowRange={audioFollowRange}
         text={v.text}
         parts={parts}
         highlightedCharIndexes={highlightedIndexes}
@@ -932,6 +965,8 @@ type VerseParagraphProps = {
   searchKeyword?: string | null;
   bookmarked: boolean;
   active: boolean;
+  /** 跟读高亮：当前正在读的那一句在节正文里的字符区间 */
+  audioFollowRange: { start: number; end: number } | null;
   contrastLines: ContrastVerseLine[] | null;
   xrefBundle: ScriptureVerseXrefsSerialized | undefined;
   highlightModeActive: boolean;
@@ -961,6 +996,7 @@ function ReadChapterVerseParagraph({
   searchKeyword = null,
   bookmarked,
   active,
+  audioFollowRange,
   contrastLines,
   xrefBundle,
   highlightModeActive,
@@ -1036,6 +1072,7 @@ function ReadChapterVerseParagraph({
         )}
         <span className="read-chapter-verse-primary">
           <ReadChapterVerseText
+            audioFollowRange={audioFollowRange}
             text={v.text}
             parts={parts}
             highlightedCharIndexes={highlightedIndexes}

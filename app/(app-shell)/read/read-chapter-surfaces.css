@@ -1106,11 +1106,10 @@
   box-shadow: inset 0 0 0 1px color-mix(in srgb, rgba(245, 230, 210, 0.1) 100%, transparent);
 }
 
-/* 朗读跟读：纯 LOGO 黄（与 App #FFB103 一致） */
+/* 连排模式下跟读中的那一节：整节不再铺 LOGO 黄，底色只铺当前这一句
+   （.read-chapter-verse-audio-follow）。这里只留节号变色，标出「读到这一节了」。 */
 .read-chapter-verse-inline-chunk--audio-active {
   border-radius: 0.4rem;
-  background-color: #ffb103;
-  box-shadow: inset 0 0 0 1px #ffb103;
 }
 
 .read-chapter-verse-inline-num {
@@ -2247,12 +2246,12 @@
 }
 
 /* 和合本整章朗读：按进度估算的当前节（纯 LOGO 黄，与 App 一致） */
+/* 跟读中的那一节：整节不再铺底（那就是「按行高亮」），底色只铺当前这一句，
+   见 .read-chapter-verse-audio-follow。这里只留一点排版占位，避免切换时跳动。 */
 .read-chapter-verse.read-chapter-verse--audio-active {
   margin-inline: -0.35rem;
   padding: 0.15rem 0.35rem 0.35rem;
   border-radius: 0.4rem;
-  background-color: #ffb103;
-  box-shadow: inset 0 0 0 1px #ffb103;
 }
 
 /* 经文搜索跳入：高亮并 scrollIntoView(center) */
@@ -2345,11 +2344,31 @@
   -webkit-user-select: none;
 }
 
+/* 跟读高亮：贴着当前这一句的字铺，不再整节铺底（Josh 2026-09-19「可以改为句吗」）。
+   LOGO 黄叠透明度，比划重点的灯油黄 .45 重一点，让「机器读到这里」和「我自己划的」分得开。 */
+.read-chapter-verse-audio-follow {
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  border-radius: 2px;
+  padding: 0 0.04em;
+  background-color: rgb(255 177 3 / 0.55);
+}
+
+.dark .read-chapter-verse-audio-follow {
+  background-color: rgb(255 177 3 / 0.34);
+}
+
+/* 划重点：颜料半透明铺在羊皮底上（`verseTextHighlightStyle` 注入 --vh-rgb / --vh-a / --vh-a-dark） */
 .read-chapter-verse-text-highlight {
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
   border-radius: 2px;
   padding: 0 0.04em;
+  background-color: rgb(var(--vh-rgb, 255 177 3) / var(--vh-a, 0.45));
+}
+
+.dark .read-chapter-verse-text-highlight {
+  background-color: rgb(var(--vh-rgb, 255 177 3) / var(--vh-a-dark, 0.28));
 }
 
 .read-chapter-verse-text-unit {
@@ -2419,12 +2438,20 @@
   gap: 0.4rem;
 }
 
+/* 色板按钮所见即所得：和正文里铺出来的是同一个合成色，不是纯颜料色 */
 .read-chapter-highlight-color-chip {
   width: 1.35rem;
   height: 1.35rem;
   border-radius: 999px;
   border: 2px solid transparent;
   cursor: pointer;
+  background-color: rgb(var(--vh-rgb, 255 177 3) / var(--vh-a, 0.45));
+  box-shadow: inset 0 0 0 1px rgb(28 20 16 / 0.14);
+}
+
+.dark .read-chapter-highlight-color-chip {
+  background-color: rgb(var(--vh-rgb, 255 177 3) / var(--vh-a-dark, 0.28));
+  box-shadow: inset 0 0 0 1px rgb(244 235 225 / 0.18);
 }
 
 .read-chapter-highlight-color-chip--active {
@@ -2632,8 +2659,10 @@
   color: #38486c;
 }
 
+/* #38486c 是旧约强调色，浅色下照用；深色原样照抄会压在 #1a1512 上几乎看不见，
+   改成同色相提亮版，与 iOS Parchment.dark 的 0x9DB2DE 对齐（2026-09-19 修） */
 .dark .read-chapter-human-speech {
-  color: #38486c;
+  color: #9db2de;
 }
 
 .dark .read-chapter-verse-num {

@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useRef, type ReactNode } from "react";
+import { useCallback, useMemo, useRef, type CSSProperties, type ReactNode } from "react";
 import type { VerseSpeechPart } from "@/lib/bible/verse-annotations";
 import {
   speechKindsForText,
   tokenizeHighlightUnits,
   type VerseSpeechKind,
 } from "@/lib/read/read-verse-highlight-utils";
+import { verseTextHighlightStyle } from "@/lib/read/read-verse-text-highlights";
 import { ScriptureSearchHighlightedText } from "@/components/bible/ScriptureSearchHighlightedText";
 
 type Props = {
@@ -19,6 +20,8 @@ type Props = {
   onPaintHighlightUnit?: (start: number, end: number, mode: "add" | "remove", color: string) => void;
   goldenMark?: boolean;
   bookmarkMark?: boolean;
+  /** 跟读高亮：当前正在读的那一句在节正文里的字符区间；null = 不在跟读 */
+  audioFollowRange?: { start: number; end: number } | null;
   /** 经文搜索跳入：在节内高亮匹配词 */
   searchKeyword?: string | null;
 };
@@ -40,27 +43,38 @@ function HighlightedSpans({
   highlightedCharIndexes,
   goldenMark,
   bookmarkMark,
+  audioFollowRange = null,
 }: {
   text: string;
   parts: VerseSpeechPart[] | null;
   highlightedCharIndexes: Map<number, string>;
   goldenMark?: boolean;
   bookmarkMark?: boolean;
+  /** 跟读高亮：当前正在读的那一句的字符区间（前闭后开） */
+  audioFollowRange?: { start: number; end: number } | null;
 }) {
   const kinds = useMemo(() => speechKindsForText(text, parts), [text, parts]);
   const chars = text.split("");
+  const following = (i: number) =>
+    Boolean(audioFollowRange && i >= audioFollowRange.start && i < audioFollowRange.end);
   const spans: ReactNode[] = [];
   let runStart = 0;
   let runColor = highlightedCharIndexes.get(0) ?? null;
   let runMarked = Boolean(runColor);
+  let runFollow = following(0);
   let runKind = kinds[0] ?? "plain";
 
   for (let i = 1; i <= chars.length; i += 1) {
     const nextColor = i < chars.length ? (highlightedCharIndexes.get(i) ?? null) : null;
     const nextMarked = Boolean(nextColor);
     const nextKind = i < chars.length ? kinds[i]! : "plain";
+    const nextFollow = i < chars.length ? following(i) : false;
     const sameRun =
-      i < chars.length && nextMarked === runMarked && nextKind === runKind && nextColor === runColor;
+      i < chars.length &&
+      nextMarked === runMarked &&
+      nextFollow === runFollow &&
+      nextKind === runKind &&
+      nextColor === runColor;
     if (sameRun) continue;
 
     const chunk = chars.slice(runStart, i).join("");
@@ -71,10 +85,12 @@ function HighlightedSpans({
           speechClass(runKind),
           markerClass(goldenMark && !runMarked, bookmarkMark && !runMarked),
           runMarked ? "read-chapter-verse-text-highlight" : "",
+          // 用户划的重点压过跟读：自己划的优先级更高
+          !runMarked && runFollow ? "read-chapter-verse-audio-follow" : "",
         ]
           .filter(Boolean)
           .join(" ")}
-        style={runMarked ? { backgroundColor: runColor ?? undefined } : undefined}
+        style={runMarked && runColor ? (verseTextHighlightStyle(runColor) as CSSProperties) : undefined}
       >
         {chunk}
       </span>,
@@ -82,6 +98,7 @@ function HighlightedSpans({
 
     runStart = i;
     runMarked = Boolean(nextMarked);
+    runFollow = nextFollow;
     runColor = nextColor;
     runKind = nextKind;
   }
@@ -232,7 +249,7 @@ function EditModeUnits({
             ]
               .filter(Boolean)
               .join(" ")}
-            style={allSelected ? { backgroundColor: color } : undefined}
+            style={allSelected ? (verseTextHighlightStyle(color) as CSSProperties) : undefined}
             onPointerDown={(e) => {
               if (!highlightedCharIndexes && !onToggleHighlightUnit && !onPaintHighlightUnit) return;
               beginDrag(idx);
@@ -317,6 +334,7 @@ export function ReadChapterVerseText({
   onPaintHighlightUnit,
   goldenMark = false,
   bookmarkMark = false,
+  audioFollowRange = null,
   searchKeyword = null,
 }: Props) {
   if (highlightEditMode && onToggleHighlightUnit) {
@@ -336,14 +354,16 @@ export function ReadChapterVerseText({
     return <SearchKeywordBody text={text} keyword={searchKeyword} />;
   }
 
-  if (highlightedCharIndexes?.size) {
+  // 跟读高亮也走逐字符分段这条路：没有划重点、只在跟读时同样要分段
+  if (highlightedCharIndexes?.size || audioFollowRange) {
     return (
       <HighlightedSpans
         text={text}
         parts={parts}
-        highlightedCharIndexes={highlightedCharIndexes}
+        highlightedCharIndexes={highlightedCharIndexes ?? new Map()}
         goldenMark={goldenMark}
         bookmarkMark={bookmarkMark}
+        audioFollowRange={audioFollowRange}
       />
     );
   }

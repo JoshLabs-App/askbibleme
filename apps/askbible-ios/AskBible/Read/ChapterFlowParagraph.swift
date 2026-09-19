@@ -14,6 +14,8 @@ struct ChapterFlowParagraph: UIViewRepresentable {
     let theme: Parchment
     let xrefVerses: Set<Int>
     let activeVerse: Int?
+    /// 跟读高亮：当前节内的朗读进度（0…1），用来再插值定位到句
+    var activeVerseProgress: Double = 0
     /// 已收藏的节：正文铺 verseBookmarkMarker 底（圆角 2），并压过跟读高亮（RN：bookmarked 时不画 audioActive）
     var bookmarked: Set<Int> = []
     /// 搜索结果跳进来的那节：verseSearchFocusBg 整行框
@@ -63,7 +65,12 @@ struct ChapterFlowParagraph: UIViewRepresentable {
         var textStarts: [(verse: Int, range: NSRange)] = []
         /// 划过一段：节号 + 节内字符区间
         var onPaint: (Int, ClosedRange<Int>) -> Void = { _, _ in }
-        static let activeFill = UIColor(red: 1, green: 0.694, blue: 0.012, alpha: 1)
+        /// 跟读高亮：LOGO 黄。改成贴字铺之后不再是横贯整行的大色块，
+        /// 按新色板的规矩叠透明度铺在羊皮底上；比划重点的灯油黄（.45）稍重一点，
+        /// 让「机器读到这里」和「我自己划的」能分得开。
+        static let activeFill = UIColor { t in
+            UIColor(red: 1, green: 0.694, blue: 0.012, alpha: t.userInterfaceStyle == .dark ? 0.34 : 0.55)
+        }
         static let bookmarkFill = UIColor { t in UIColor((t.userInterfaceStyle == .dark ? Parchment.dark : Parchment.light).verseBookmarkMarker) }
         static let searchFocusFill = UIColor { t in UIColor((t.userInterfaceStyle == .dark ? Parchment.dark : Parchment.light).verseSearchFocusBg) }
 
@@ -293,14 +300,21 @@ struct ChapterFlowParagraph: UIViewRepresentable {
         override func draw(_ rect: CGRect) {
             container.size = CGSize(width: bounds.width, height: .greatestFiniteMagnitude)
             let range = layoutManager.glyphRange(for: container)
-            // 圆角 8 整行框：跟读高亮 #FFB103 / 搜索定位 verseSearchFocusBg
-            for (rangeOpt, fill) in [(activeRange, Self.activeFill), (searchFocusRange, Self.searchFocusFill)] {
-                guard let r = rangeOpt, r.length > 0 else { continue }
+            // 跟读高亮：贴着当前这一句的字铺（逐行取 rect），不再横贯整行 ——
+            // 整行框在长节上看着就是「按行高亮」（Josh 2026-09-19）
+            if let r = activeRange, r.length > 0 {
+                Self.activeFill.setFill()
+                for rect in rects(for: r) {
+                    UIBezierPath(roundedRect: rect.insetBy(dx: -2, dy: -1), cornerRadius: 6).fill()
+                }
+            }
+            // 搜索定位仍是圆角 8 整行框：要的是「跳到了这一节」的整节提示
+            if let r = searchFocusRange, r.length > 0 {
                 let glyphs = layoutManager.glyphRange(forCharacterRange: r, actualCharacterRange: nil)
                 var box = layoutManager.boundingRect(forGlyphRange: glyphs, in: container)
                 box.origin.x = 0
                 box.size.width = bounds.width
-                fill.setFill()
+                Self.searchFocusFill.setFill()
                 UIBezierPath(roundedRect: box.integral, cornerRadius: 8).fill()
             }
             // 收藏：正文逐行铺 verseBookmarkMarker，圆角 6、上下各撑 1（RN verseTextHighlightStyle("bookmark") 圆角 2）
@@ -311,7 +325,8 @@ struct ChapterFlowParagraph: UIViewRepresentable {
             }
             // 划重点：逐行铺用户选的颜色，压在正文底下
             for run in highlightRuns + liveHighlightRuns {
-                run.color.withAlphaComponent(0.45).setFill()
+                // 颜色已由 VerseHighlightRules.fillColor 带好 alpha，这里不再二次压透明
+                run.color.setFill()
                 for rect in rects(for: run.range) {
                     UIBezierPath(roundedRect: rect.insetBy(dx: 0, dy: -1), cornerRadius: 3).fill()
                 }
@@ -350,7 +365,22 @@ struct ChapterFlowParagraph: UIViewRepresentable {
         v.onDoubleTapVerse = onDoubleTapVerse
         v.onLongPressVerse = onLongPressVerse
         // 已收藏的节不再画跟读高亮（RN audioActive = !bookmarked && …）
-        v.activeRange = activeVerse.flatMap { a in bookmarked.contains(a) ? nil : built.ranges.first { $0.verse == a }?.range }
+        // 跟读高亮定位到「句」：时间轴只精确到节，节内按字数插值找当前句（VerseSentences）。
+        // 整节铺底在长节上就是「按行高亮」，和耳朵对不上（Josh 2026-09-19）。
+        v.activeRange = activeVerse.flatMap { a -> NSRange? in
+            guard !bookmarked.contains(a) else { return nil }
+            guard let body = built.textRanges.first(where: { $0.verse == a })?.range,
+                  let text = verses.first(where: { $0.number == a })?.text,
+                  let sentence = VerseSentences.sentence(at: activeVerseProgress, in: text)
+            else { return built.ranges.first { $0.verse == a }?.range }
+            // 句下标是「节正文」坐标，换算到整段文本坐标；越界就退回整节
+            let loc = body.location + sentence.lowerBound
+            let len = sentence.count
+            guard loc >= body.location, loc + len <= body.location + body.length, len > 0 else {
+                return built.ranges.first { $0.verse == a }?.range
+            }
+            return NSRange(location: loc, length: len)
+        }
         v.searchFocusRange = searchFocus.flatMap { f in built.ranges.first { $0.verse == f }?.range }
         // 收藏高亮盖住整节（含节号与节末空格）：Josh 2026-09-11「标高亮时连节号也一起包含进去，
         // 不会在两句中断开」——原来只铺正文段，节号和两节之间会露白
@@ -358,7 +388,7 @@ struct ChapterFlowParagraph: UIViewRepresentable {
         v.textStarts = built.textRanges
         v.textOffsets = [:]
         let inPaintMode = paintColor != nil || eraseMode
-        v.paintColor = inPaintMode ? UIColor(Color(hex: paintColor ?? VerseHighlightRules.defaultColor)) : nil
+        v.paintColor = inPaintMode ? VerseHighlightRules.fillColor(paintColor ?? VerseHighlightRules.defaultColor) : nil
         v.onPaint = onPaint
         v.highlightRuns = Self.runs(highlights: highlights, textRanges: built.textRanges, fullRanges: built.ranges)
         // 划完之后 updateUIView 到来时，清掉实时预览（highlightRuns 已更新，不再需要 live 备份）
@@ -393,7 +423,7 @@ struct ChapterFlowParagraph: UIViewRepresentable {
                 let loc = runStart == 0 ? fullStart : (base.location + runStart)
                 let len = runStart == 0 ? (end - runStart + 1 + numOffset) : (end - runStart + 1)
                 guard loc >= 0, len > 0, loc + len <= base.location + base.length else { return }
-                out.append((NSRange(location: loc, length: len), UIColor(Color(hex: color))))
+                out.append((NSRange(location: loc, length: len), VerseHighlightRules.fillColor(color)))
             }
             for i in sorted.dropFirst() {
                 let c = byIndex[i] ?? VerseHighlightRules.defaultColor

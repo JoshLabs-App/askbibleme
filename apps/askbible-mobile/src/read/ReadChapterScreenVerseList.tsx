@@ -46,6 +46,8 @@ type Props = {
   highlightedVerseIndexes: ChapterHighlightMap;
   xrefVerseNumbers: Set<number> | null;
   activeVerseIndex: number | null;
+  /** 跟读高亮：当前正在读的那一句在节正文里的字符区间 */
+  activeSentence: { start: number; end: number } | null;
   verseIndexByVerse: Map<number, number>;
   speechPartsByVerse: Map<number, VerseSpeechPart[] | null> | null;
   contrastByVerse: Map<number, ContrastVerseLine[]> | null;
@@ -75,23 +77,6 @@ type Props = {
 
 type VerseBox = { y: number; height: number };
 
-function audioFollowBox(
-  verseNum: number,
-  verses: number[],
-  paragraphHeight: number,
-  measured: VerseBox | undefined,
-): VerseBox | null {
-  const usable =
-    measured &&
-    measured.height > 8 &&
-    (verses.length <= 1 || measured.height <= Math.max(paragraphHeight, measured.height) * 0.72);
-  return verseRelativeInParagraphGroup(
-    verseNum,
-    verses,
-    paragraphHeight,
-    usable ? measured : null,
-  );
-}
 
 function ParagraphVerseFlowBlock({
   group,
@@ -103,6 +88,7 @@ function ParagraphVerseFlowBlock({
   highlightedVerseIndexes,
   xrefVerseNumbers,
   activeVerseIndex,
+  activeSentence,
   verseIndexByVerse,
   speechPartsByVerse,
   localeZhText,
@@ -121,22 +107,8 @@ function ParagraphVerseFlowBlock({
   const [verseBoxes, setVerseBoxes] = useState<Map<number, VerseBox>>(() => new Map());
   const [paragraphHeight, setParagraphHeight] = useState(0);
   const verseNums = group.verses.map((v) => v.verse);
-  const audioVerseNum =
-    group.verses.find((v) => {
-      const verseIndex = verseIndexByVerse.get(v.verse) ?? -1;
-      const searchFocus = searchFocusVerse === v.verse;
-      const bookmarked = isBookmarked({
-        translationId: chapterData.translationId,
-        bookId: chapterData.bookId,
-        chapter: chapterData.chapter,
-        verse: v.verse,
-      });
-      return !searchFocus && !bookmarked && verseIndex >= 0 && activeVerseIndex === verseIndex;
-    })?.verse ?? null;
-  const iosAudioBox =
-    Platform.OS === "ios" && audioVerseNum != null
-      ? audioFollowBox(audioVerseNum, verseNums, paragraphHeight, verseBoxes.get(audioVerseNum))
-      : null;
+  // 跟读高亮原来是 iOS 上画一个横贯整行的覆盖框 + 安卓整节铺底，
+  // 那就是 Josh 说的「按行」。2026-09-19 改成在正文里只铺当前这一句（audioFollowRange）。
 
   return (
     <View
@@ -166,9 +138,6 @@ function ParagraphVerseFlowBlock({
         );
       }}
     >
-      {iosAudioBox ? (
-        <View pointerEvents="none" style={[styles.verseAudioFollowOverlay, iosAudioBox]} />
-      ) : null}
       <View collapsable={false}>
       <Text
         onTextLayout={(event: NativeSyntheticEvent<TextLayoutEventData>) => {
@@ -229,9 +198,7 @@ function ParagraphVerseFlowBlock({
             ? styles.verseInlineChunkSelected
             : searchFocus
               ? styles.verseInlineChunkSearchFocus
-              : audioActive && Platform.OS !== "ios"
-                ? styles.verseInlineChunkAudioActive
-                : styles.verseInlineChunkAudioIdle;
+              : styles.verseInlineChunkAudioIdle;
           const hasXref = Boolean(xrefVerseNumbers?.has(v.verse));
           return (
             <Text
@@ -284,6 +251,7 @@ function ParagraphVerseFlowBlock({
                 text={localeZhText(v.text)}
                 parts={speechPartsByVerse?.get(v.verse) ?? null}
                 highlightedCharIndexes={highlightedIndexes}
+                audioFollowRange={audioActive ? (activeSentence ?? null) : null}
                 searchKeyword={searchFocus && searchQuery ? searchQuery : null}
                 {...verseBodyPressProps(v.verse, v.text)}
               />
@@ -310,6 +278,7 @@ export function ReadChapterScreenVerseList({
   highlightedVerseIndexes,
   xrefVerseNumbers,
   activeVerseIndex,
+  activeSentence,
   verseIndexByVerse,
   speechPartsByVerse,
   contrastByVerse,
@@ -459,6 +428,7 @@ export function ReadChapterScreenVerseList({
     highlightedVerseIndexes,
     xrefVerseNumbers,
     activeVerseIndex,
+    activeSentence,
     verseIndexByVerse,
     speechPartsByVerse,
     contrastByVerse,
@@ -568,6 +538,7 @@ export function ReadChapterScreenVerseList({
           highlightedVerseIndexes={highlightedVerseIndexes}
           xrefVerseNumbers={xrefVerseNumbers}
           activeVerseIndex={activeVerseIndex}
+          activeSentence={activeSentence}
           speechPartsByVerse={speechPartsByVerse}
           contrastByVerse={contrastByVerse}
           localeZhText={localeZhText}

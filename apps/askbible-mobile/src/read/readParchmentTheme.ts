@@ -104,7 +104,9 @@ const dark = {
   verseSearchFocusBorder: "rgba(245, 230, 210, 0.22)",
   verseSearchFocusNum: "rgba(255, 220, 185, 0.98)",
   divineSpeech: "rgba(255, 198, 140, 0.95)",
-  humanSpeech: "#38486C",
+  // #38486C 是旧约强调色（canon-section-theme），浅色下照用；深色下原样照抄会压在
+  // #1a1512 上几乎看不见，改成同色相提亮版（2026-09-19 修）
+  humanSpeech: "#9DB2DE",
   verseBookmarkMarker: "#FFB103",
   verseSelectionMarker: "rgba(255, 177, 3, 0.38)",
   parchmentAccent: "#D97707",

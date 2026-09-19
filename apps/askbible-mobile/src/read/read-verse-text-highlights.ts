@@ -2,14 +2,43 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const READ_VERSE_TEXT_HIGHLIGHTS_STORAGE_KEY = "askbible-read-verse-text-highlights-v1";
 export const DEFAULT_VERSE_TEXT_HIGHLIGHT_COLOR = "#FFB103";
+/**
+ * 划重点四色板（2026-09-19 改版，见 docs/design-color-system.md）。
+ * 存的是「颜料」hex，渲染时一律走 `verseTextHighlightFill()` 叠 alpha 铺在羊皮底上。
+ */
 export const VERSE_TEXT_HIGHLIGHT_PALETTE = [
-  DEFAULT_VERSE_TEXT_HIGHLIGHT_COLOR,
-  "#7BC96F",
-  "#0FBCDB",
-  "#F48FB1",
+  DEFAULT_VERSE_TEXT_HIGHLIGHT_COLOR, // 灯油黄
+  "#A3B565", // 橄榄绿
+  "#4E86A0", // 青石蓝
+  "#C0625F", // 石榴红
 ] as const;
 
+/** 旧色板 → 新色板。老用户存量数据里是旧 hex，不迁就会被打回默认黄。 */
+export const LEGACY_VERSE_TEXT_HIGHLIGHT_COLOR_MAP: Record<string, string> = {
+  "#7BC96F": "#A3B565",
+  "#0FBCDB": "#4E86A0",
+  "#F48FB1": "#C0625F",
+};
+
+/** 每支笔的铺色透明度（[浅色, 深色]）：合成后亮度接近，谁也不比谁响 */
+const VERSE_TEXT_HIGHLIGHT_ALPHA: Record<string, readonly [number, number]> = {
+  "#FFB103": [0.45, 0.28],
+  "#A3B565": [0.5, 0.28],
+  "#4E86A0": [0.46, 0.32],
+  "#C0625F": [0.42, 0.3],
+};
+
 const HIGHLIGHT_COLOR_SET = new Set<string>(VERSE_TEXT_HIGHLIGHT_PALETTE);
+
+/** 颜料 hex → 实际铺的 rgba()。渲染端一律走这里，不要直接用调色板 hex。 */
+export function verseTextHighlightFill(color: string, dark: boolean): string {
+  const hex = normalizeHighlightColor(color);
+  const [light, night] = VERSE_TEXT_HIGHLIGHT_ALPHA[hex] ?? [0.45, 0.28];
+  const r = Number.parseInt(hex.slice(1, 3), 16);
+  const g = Number.parseInt(hex.slice(3, 5), 16);
+  const b = Number.parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${dark ? night : light})`;
+}
 
 type VerseTextHighlightRef = {
   translationId: string;
@@ -27,12 +56,9 @@ function highlightKey(ref: VerseTextHighlightRef): string {
 }
 
 function normalizeHighlightColor(input: unknown): string {
-  const value = typeof input === "string" ? input.trim() : "";
-  if (!/^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$/.test(value)) {
-    return DEFAULT_VERSE_TEXT_HIGHLIGHT_COLOR;
-  }
-  const normalized = value.toUpperCase();
-  return HIGHLIGHT_COLOR_SET.has(normalized) ? normalized : DEFAULT_VERSE_TEXT_HIGHLIGHT_COLOR;
+  const value = typeof input === "string" ? input.trim().toUpperCase() : "";
+  if (HIGHLIGHT_COLOR_SET.has(value)) return value;
+  return LEGACY_VERSE_TEXT_HIGHLIGHT_COLOR_MAP[value] ?? DEFAULT_VERSE_TEXT_HIGHLIGHT_COLOR;
 }
 
 function parseStore(raw: string | null): VerseTextHighlightStore {

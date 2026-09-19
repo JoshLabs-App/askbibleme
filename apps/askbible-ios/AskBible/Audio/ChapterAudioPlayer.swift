@@ -53,6 +53,8 @@ final class ChapterAudioPlayer: ObservableObject {
     @Published private(set) var interrupted = false
     /// 跟读高亮：当前正在朗读的节号
     @Published private(set) var activeVerse: Int?
+    /// 跟读高亮：当前节内的朗读进度（0…1）。时间轴只精确到节，靠它再插值到句。
+    @Published private(set) var activeVerseProgress: Double = 0
     /// 睡眠定时：到期时刻；nil = 未设。到期只暂停不停止，与 RN 版 SleepTimerFired
     /// （wantPlaying=false, userPaused=true）一致。
     @Published private(set) var sleepDeadline: Date?
@@ -167,6 +169,7 @@ final class ChapterAudioPlayer: ObservableObject {
         currentTime = 0
         duration = 0
         activeVerse = nil
+        activeVerseProgress = 0
     }
 
     /// 代理没拿到地址
@@ -188,6 +191,7 @@ final class ChapterAudioPlayer: ObservableObject {
         timings = bookId.isEmpty ? [] : (timingDB?.timings(
             translationId: translationId, bookId: bookId, chapter: chapter) ?? [])
         activeVerse = nil
+        activeVerseProgress = 0
         errorMessage = nil
         isLoading = true
         currentTime = 0
@@ -230,8 +234,11 @@ final class ChapterAudioPlayer: ObservableObject {
                 let t = time.seconds.isFinite ? time.seconds : 0
                 self.currentTime = t
                 self.onProgress?(t, self.isPlaying)
-                let next = VerseTimingLookup.activeVerse(at: t, in: self.timings)
-                if next != self.activeVerse { self.activeVerse = next }
+                let hit = VerseTimingLookup.activeVerseProgress(at: t, in: self.timings)
+                if hit?.verse != self.activeVerse { self.activeVerse = hit?.verse }
+                let progress = hit?.progress ?? 0
+                // 0.02 的死区：0.25s 一跳，句的切换只在跨过阈值时才重画
+                if abs(progress - self.activeVerseProgress) > 0.02 { self.activeVerseProgress = progress }
                 if self.duration == 0, let d = self.player?.currentItem?.duration.seconds,
                    d.isFinite, d > 0 {
                     self.duration = d
@@ -325,7 +332,9 @@ final class ChapterAudioPlayer: ObservableObject {
         let clamped = duration > 0 ? min(max(0, seconds), duration) : max(0, seconds)
         player?.seek(to: CMTime(seconds: clamped, preferredTimescale: 600))
         currentTime = clamped
-        activeVerse = VerseTimingLookup.activeVerse(at: clamped, in: timings)
+        let hit = VerseTimingLookup.activeVerseProgress(at: clamped, in: timings)
+        activeVerse = hit?.verse
+        activeVerseProgress = hit?.progress ?? 0
         updateNowPlaying()
     }
 

@@ -30,12 +30,18 @@ import androidx.compose.ui.unit.sp
 import me.askbible.native_.data.LoadedVerse
 import me.askbible.native_.data.Parchment
 import me.askbible.native_.data.VerseHighlightRules
+import me.askbible.native_.data.VerseSentences
 import me.askbible.native_.data.ReadTypographyMetrics
 import me.askbible.native_.data.SpeechKind
 
 /** Android 用 em space 作节号与正文的间隔（READ_VERSE_NUM_BODY_GAP） */
 private const val NUMBER_GAP = " "
-private val AUDIO_ACTIVE = Color(0xFFFFB103)
+/**
+ * 跟读高亮：LOGO 黄。改成贴字铺之后不再是横贯整行的大色块，
+ * 按新色板的规矩叠透明度铺在羊皮底上；比划重点的灯油黄（.45）稍重一点，
+ * 让「机器读到这里」和「我自己划的」能分得开。
+ */
+private fun audioFollowColor(dark: Boolean) = Color(0xFFFFB103).copy(alpha = if (dark) 0.34f else 0.55f)
 
 /**
  * 连排段落：一段里的各节接排成一个文本块（RN 默认 verseParagraphFlow = true）。
@@ -48,6 +54,8 @@ fun ChapterFlowParagraph(
     theme: Parchment,
     xrefVerses: Set<Int>,
     activeVerse: Int?,
+    /** 跟读高亮：当前节内的朗读进度（0…1），用来再插值定位到句 */
+    activeVerseProgress: Double = 0.0,
     /** 已收藏的节：正文铺 verseBookmarkMarker 底（圆角 2），并压过跟读高亮（RN：bookmarked 时不画 audioActive） */
     bookmarked: Set<Int> = emptySet(),
     /** 搜索结果跳进来的那节：verseSearchFocusBg 整行框 */
@@ -114,7 +122,18 @@ fun ChapterFlowParagraph(
     var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
     var textRootPos by remember { mutableStateOf(Offset.Zero) }
     // 已收藏的节不再画跟读高亮（RN audioActive = !bookmarked && …）
-    val activeRange = activeVerse?.takeIf { it !in bookmarked }?.let { a -> ranges.firstOrNull { it.first == a }?.second }
+    // 跟读高亮定位到「句」：时间轴只精确到节，节内按字数插值找当前句（VerseSentences）。
+    // 整节铺底在长节上就是「按行高亮」，和耳朵对不上（Josh 2026-09-19）。
+    val activeRange = activeVerse?.takeIf { it !in bookmarked }?.let { a ->
+        val whole = ranges.firstOrNull { it.first == a }?.second
+        val body = textRanges.firstOrNull { it.first == a }?.second ?: return@let whole
+        val text = verses.firstOrNull { it.number == a }?.text ?: return@let whole
+        val sentence = VerseSentences.sentenceAt(activeVerseProgress, text) ?: return@let whole
+        // 句下标是「节正文」坐标，换算到整段文本坐标；越界就退回整节
+        val from = body.first + sentence.first
+        val to = body.first + sentence.last
+        if (from in body && to in body && to >= from) from..to else whole
+    }
     val focusRange = searchFocus?.let { f -> ranges.firstOrNull { it.first == f }?.second }
     // 收藏高亮盖住整节（含节号与节末空格）：Josh 2026-09-11「标高亮时连节号也一起包含进去，
     // 不会在两句中断开」——原来只铺正文段，节号和两节之间会露白
@@ -122,7 +141,9 @@ fun ChapterFlowParagraph(
     val bookmarkFill = theme.verseBookmarkMarker.toColor()
     val focusFill = theme.verseSearchFocusBg.toColor()
     // 划重点：把「节内字符下标 → 颜色」压成连续同色区间，换算到整段文本坐标，少画几次
-    val highlightRuns = remember(highlights, textRanges) {
+    val highlightDark = theme.isDark
+    val audioFollowFill = audioFollowColor(highlightDark)
+    val highlightRuns = remember(highlights, textRanges, highlightDark) {
         val out = ArrayList<Pair<IntRange, Color>>()
         for ((verse, byIndex) in highlights) {
             val base = textRanges.firstOrNull { it.first == verse }?.second ?: continue
@@ -135,7 +156,7 @@ fun ChapterFlowParagraph(
             fun flush(end: Int) {
                 val from = if (runStart == 0) verseStart else base.first + runStart
                 val to = base.first + end
-                if (to in base) out.add((from..to) to hexColor(color))
+                if (to in base) out.add((from..to) to verseHighlightFill(color, highlightDark))
             }
             for (i in sorted.drop(1)) {
                 val c = byIndex[i] ?: VerseHighlightRules.DEFAULT_COLOR
@@ -197,14 +218,16 @@ fun ChapterFlowParagraph(
             .drawBehind {
                 val l = layout ?: return@drawBehind
                 // 圆角 8 整行框：跟读高亮 #FFB103 / 搜索定位 verseSearchFocusBg（RN verseAudioFollowOverlay / verseSearchFocusBg）
-                for ((r, fill) in listOf(activeRange to AUDIO_ACTIVE, focusRange to focusFill)) {
-                    if (r == null || r.isEmpty()) continue
+                // 搜索定位仍是圆角 8 整行框：要的是「跳到了这一节」的整节提示
+                focusRange?.takeIf { !it.isEmpty() }?.let { r ->
                     val top = l.getLineTop(l.getLineForOffset(r.first))
                     val bottom = l.getLineBottom(l.getLineForOffset(r.last))
-                    drawRoundRect(fill, topLeft = Offset(0f, top), size = Size(size.width, bottom - top), cornerRadius = CornerRadius(8.dp.toPx()))
+                    drawRoundRect(focusFill, topLeft = Offset(0f, top), size = Size(size.width, bottom - top), cornerRadius = CornerRadius(8.dp.toPx()))
                 }
-                // 划重点：逐行铺用户选的颜色，压在正文底下
-                for ((r, c) in highlightRuns) {
+                // 跟读高亮：贴着当前这一句的字铺（和划重点同一套逐行算法），不再横贯整行
+                val followRuns = activeRange?.takeIf { !it.isEmpty() }?.let { listOf(it to audioFollowFill) } ?: emptyList()
+                // 划重点 + 跟读：逐行铺颜色，压在正文底下
+                for ((r, c) in highlightRuns + followRuns) {
                     val first = l.getLineForOffset(r.first); val last = l.getLineForOffset(r.last)
                     for (line in first..last) {
                         val left = if (line == first) l.getHorizontalPosition(r.first, true) else l.getLineLeft(line)
@@ -256,3 +279,10 @@ fun hexColor(hex: String): Color {
     val v = raw.take(6).toLongOrNull(16) ?: 0xFFB103L
     return Color(0xFF000000L or v)
 }
+
+/**
+ * 划重点实际铺的颜色：颜料 hex 叠透明度，让羊皮底透上来。
+ * 渲染端一律走这里，不要直接 hexColor() 当不透明底用。
+ */
+fun verseHighlightFill(hex: String, dark: Boolean): Color =
+    hexColor(hex).copy(alpha = VerseHighlightRules.fillAlpha(hex, dark))

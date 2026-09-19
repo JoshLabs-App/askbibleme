@@ -244,6 +244,7 @@ struct ChapterView: View {
         return ChapterFlowParagraph(
             verses: group, metrics: m, theme: theme, xrefVerses: xrefVerses,
             activeVerse: audio.activeVerse,
+            activeVerseProgress: audio.activeVerseProgress,
             bookmarked: marks,
             searchFocus: searchFocus,
             tapWholeVerse: selecting,

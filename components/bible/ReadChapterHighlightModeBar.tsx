@@ -1,9 +1,11 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   DEFAULT_VERSE_TEXT_HIGHLIGHT_COLOR,
   VERSE_TEXT_HIGHLIGHT_PALETTE,
+  verseTextHighlightStyle,
 } from "@/lib/read/read-verse-text-highlights";
 
 type Props = {
@@ -31,7 +33,7 @@ export function ReadChapterHighlightModeBar({ activeColor, onColorChange, onDone
               ]
                 .filter(Boolean)
                 .join(" ")}
-              style={{ backgroundColor: color }}
+              style={verseTextHighlightStyle(color) as CSSProperties}
               aria-label={
                 active
                   ? t("pages.read.verseHighlightColorActive")

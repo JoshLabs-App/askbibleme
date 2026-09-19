@@ -22,6 +22,8 @@ type Props = {
   highlightedVerseIndexes: ChapterHighlightMap;
   xrefVerseNumbers: Set<number> | null;
   activeVerseIndex: number | null;
+  /** 跟读高亮：当前正在读的那一句在节正文里的字符区间 */
+  activeSentence?: { start: number; end: number } | null;
   speechPartsByVerse: Map<number, VerseSpeechPart[] | null> | null;
   contrastByVerse: Map<number, ContrastVerseLine[]> | null;
   localeZhText: (text: string) => string;
@@ -56,6 +58,7 @@ export function ReadChapterScreenVerseRow({
   highlightedVerseIndexes,
   xrefVerseNumbers,
   activeVerseIndex,
+  activeSentence = null,
   speechPartsByVerse,
   contrastByVerse,
   localeZhText,
@@ -93,13 +96,13 @@ export function ReadChapterScreenVerseRow({
       : bookmarked
         ? "bookmark"
         : undefined;
+  // 跟读高亮不再整行铺底（那就是 Josh 说的「按行」），改成在正文里只铺当前这一句
   const verseBlockBackgroundStyle = selected
     ? styles.verseBlockSelected
     : searchFocus
       ? styles.verseLineSearchFocus
-      : audioActive
-        ? styles.verseLineActive
-        : styles.verseLineIdle;
+      : styles.verseLineIdle;
+  const audioFollowRange = audioActive ? (activeSentence ?? null) : null;
   const hasXref = Boolean(xrefVerseNumbers?.has(v.verse));
 
   return (
@@ -191,6 +194,7 @@ export function ReadChapterScreenVerseRow({
               text={localeZhText(v.text)}
               parts={speechPartsByVerse?.get(v.verse) ?? null}
               highlightedCharIndexes={highlightedIndexes}
+              audioFollowRange={audioFollowRange}
               searchKeyword={searchFocus && searchQuery ? searchQuery : null}
               {...verseBodyPressProps(v.verse, v.text)}
             />

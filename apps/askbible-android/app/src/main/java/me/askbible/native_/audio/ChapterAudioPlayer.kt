@@ -58,6 +58,8 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
     var duration by mutableStateOf(0.0); private set
     var errorMessage by mutableStateOf<String?>(null); private set
     var activeVerse by mutableStateOf<Int?>(null); private set
+    /** 跟读高亮：当前节内的朗读进度（0…1）。时间轴只精确到节，靠它再插值到句。 */
+    var activeVerseProgress by mutableStateOf(0.0); private set
     var loopMode by mutableStateOf(LoopMode.FORWARD); private set
     var rate by mutableStateOf(1.0f); private set
 
@@ -138,7 +140,7 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
         loadedKey = key
         wantsPlayback = false
         errorMessage = null
-        currentTime = 0.0; duration = 0.0; activeVerse = null; timings = emptyList()
+        currentTime = 0.0; duration = 0.0; activeVerse = null; activeVerseProgress = 0.0; timings = emptyList()
         player.stop(); player.clearMediaItems()
         isLoading = true
     }
@@ -198,7 +200,9 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
         val clamped = if (duration > 0) seconds.coerceIn(0.0, duration) else maxOf(0.0, seconds)
         player.seekTo((clamped * 1000).toLong())
         currentTime = clamped
-        activeVerse = VerseTimingLookup.activeVerse(clamped, timings)
+        val seekHit = VerseTimingLookup.activeVerseProgress(clamped, timings)
+        activeVerse = seekHit?.first
+        activeVerseProgress = seekHit?.second ?: 0.0
     }
 
     fun cycleLoop() { loopMode = loopMode.next }
@@ -250,8 +254,11 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
                 currentTime = pos
                 onProgress?.invoke(pos, isPlaying)
                 if (duration <= 0 && player.duration > 0) duration = player.duration / 1000.0
-                val next = VerseTimingLookup.activeVerse(pos, timings)
-                if (next != activeVerse) activeVerse = next
+                val hit = VerseTimingLookup.activeVerseProgress(pos, timings)
+                if (hit?.first != activeVerse) activeVerse = hit?.first
+                val progress = hit?.second ?: 0.0
+                // 死区：定时器每跳一次都算一遍，句的切换只在跨过阈值时才重组
+                if (kotlin.math.abs(progress - activeVerseProgress) > 0.02) activeVerseProgress = progress
                 delay(250)
             }
         }

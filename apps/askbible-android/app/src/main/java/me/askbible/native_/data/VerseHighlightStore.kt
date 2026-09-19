@@ -16,14 +16,43 @@ import org.json.JSONObject
 object VerseHighlightRules {
     const val STORAGE_KEY = "askbible-read-verse-text-highlights-v1"
     const val DEFAULT_COLOR = "#FFB103"
-    /** RN VERSE_TEXT_HIGHLIGHT_PALETTE */
-    val PALETTE = listOf("#FFB103", "#7BC96F", "#0FBCDB", "#F48FB1")
+    /**
+     * RN VERSE_TEXT_HIGHLIGHT_PALETTE（2026-09-19 改版，见 docs/design-color-system.md）。
+     * 存的是「颜料」hex，渲染时一律叠 [fillAlpha] 铺在羊皮底上，不要当不透明背景色用。
+     */
+    val PALETTE = listOf(
+        "#FFB103", // 灯油黄
+        "#A3B565", // 橄榄绿
+        "#4E86A0", // 青石蓝
+        "#C0625F", // 石榴红
+    )
+
+    /** 旧色板 → 新色板。老用户存量数据里是旧 hex，不迁就会被 normalizeColor 全打回默认黄。 */
+    val LEGACY_COLOR_MAP = mapOf(
+        "#7BC96F" to "#A3B565",
+        "#0FBCDB" to "#4E86A0",
+        "#F48FB1" to "#C0625F",
+    )
+
+    /** 每支笔的铺色透明度（浅色 to 深色）：合成后亮度接近，谁也不比谁响 */
+    private val FILL_ALPHA = mapOf(
+        "#FFB103" to (0.45f to 0.28f),
+        "#A3B565" to (0.50f to 0.28f),
+        "#4E86A0" to (0.46f to 0.32f),
+        "#C0625F" to (0.42f to 0.30f),
+    )
+
+    fun fillAlpha(raw: String, dark: Boolean): Float {
+        val (light, night) = FILL_ALPHA[normalizeColor(raw)] ?: (0.45f to 0.28f)
+        return if (dark) night else light
+    }
 
     fun key(translationId: String, bookId: String, chapter: Int, verse: Int) = "$translationId:$bookId:$chapter:$verse"
 
     fun normalizeColor(raw: Any?): String {
         val s = (raw as? String)?.trim()?.uppercase() ?: return DEFAULT_COLOR
-        return if (s in PALETTE) s else DEFAULT_COLOR
+        if (s in PALETTE) return s
+        return LEGACY_COLOR_MAP[s] ?: DEFAULT_COLOR
     }
 }
 

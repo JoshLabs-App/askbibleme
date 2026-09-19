@@ -1,0 +1,5 @@
+{
+  "cred": "tgobadhdylarhssudplc",
+  "table": "schema_migrations_askbible",
+  "migrations": "supabase/migrations"
+}

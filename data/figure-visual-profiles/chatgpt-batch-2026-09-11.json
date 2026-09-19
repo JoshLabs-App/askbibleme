@@ -1,0 +1,24 @@
+{
+  "note": "2026-09-11 在 ChatGPT 网页版会话里生成的人物立绘索引。fid 用于 /backend-api/files/download/<fid> 取原图。同一人物多条时取最后一条。",
+  "conversationUrl": "https://chatgpt.com/c/6aa43ecf-1ed4-83ea-b082-b88ab74a0c96",
+  "problems": [
+    "后半批图是 RGB 无 alpha，灰白棋盘格是被画进画面的图案，不是真透明。已在会话里提出纠正，重做摩西验证中。",
+    "后半批风格漂成真人写实，不是前面雅各/大卫那种 3D 动画角色风。同一条纠正里一并提了。",
+    "马利亚那张（唯一 Josh 认可构图的）已不在当前会话分支的接口返回里，需要重生成。"
+  ],
+  "picks": [
+    {"slug": "david", "label": "大卫王（壮年为王）", "fid": "file_00000000f45881f5a4bbf94c4abd7fac", "note": "在平视规则之前生成，可能仰拍"},
+    {"slug": "saul", "label": "扫罗王", "fid": "file_000000006f7881f58a8838340a1ac9f0", "note": "「不要从下往上」那条产出的重画版"},
+    {"slug": "moses", "label": "摩西（出埃及、旷野）", "fid": "file_00000000f69081f58e6ae528db9db1ab", "note": "已取回 tmp/figure-portraits/raw/moses.png，假透明+写实，要重做"},
+    {"slug": "abraham", "label": "亚伯拉罕（族长时期）", "fid": "file_0000000011dc81f593cdc04c22bbd3f7"},
+    {"slug": "joseph-genesis", "label": "约瑟（埃及宰相时期）", "fid": "file_00000000600c81f5862d1f897384419c"},
+    {"slug": "figure-jesus", "label": "耶稣（约三十岁传道）", "fid": "file_0000000061b481f5bd8fff773a3f5e3f"},
+    {"slug": "figure-joshua", "label": "约书亚（进迦南的将领）", "fid": "file_00000000e28881f5b3e19d7842023c8c"},
+    {"slug": "judah-ot", "label": "犹大（雅各第四子）", "fid": "file_00000000bb9881f5acf3845e2d5b8de2"},
+    {"slug": "paul", "label": "使徒保罗（宣教旅程）", "fid": "file_000000004cdc81f5b75671d6f6410267"},
+    {"slug": "james-apostle", "label": "雅各（耶稣的兄弟，雅各书作者）", "fid": "file_00000000f98081f59b5be1fbef38bf19"},
+    {"slug": "jude-author", "label": "犹大（耶稣的兄弟，犹大书作者）", "fid": "file_00000000ea9481f598c922e3af13c153"},
+    {"slug": "jacob-patriarch", "label": "雅各（以撒的儿子，族长）", "fid": "file_000000008cd481f58a7a320e716c7b1b"},
+    {"slug": "mary-mother-of-jesus", "label": "马利亚（拿撒勒少女时期）", "fid": null, "note": "缺，要重生成"}
+  ]
+}

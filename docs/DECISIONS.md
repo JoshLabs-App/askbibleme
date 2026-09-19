@@ -437,3 +437,42 @@
 而卸载重装会清掉登录和设置。「装到手机一律 Release」（APP/CLAUDE.md 7.0）
 和「别清真机数据」这两条规矩，靠这个变体同时满足。对应 8.2 里的
 `gradle_task: assembleSideloadRelease` 那个已有模式。
+
+## 圣经故事解读做成技能，成品先放私域
+
+- **决定了什么**：整套流程固化为技能 `.claude/skills/bible-story/SKILL.md`（简写 bible-story）。成品**先放私域**——Josh 自己听、自己测试，**不进 App、不上 R2**。稿子入库（`docs/story-scripts/`），音频不入库（`private/bible-stories/audio/`，已加 .gitignore）。
+- **为什么**：内容口径和听感还在摸索期，先自用验证，确认稳定了再谈上线形态。这也顺带把「成品放哪」那个悬了三轮的问题解掉了——暂时哪都不放。
+- **技能里固化了什么**：取经文的 sqlite 命令与两个文本坑、写稿的八条要点（正统释经路线，非鸡汤）、中文 250 字/分钟的长度换算、NotebookLM 完整操作步骤与 A/B 两版指令模板、以及**五条已验证走不通的下载办法**（挂 window.open 钩子会把真实下载一起拦死、CORS、navigate 被禁、curl 拿到登录页、Chrome 是另一个 Google 账号）。
+- **下载这一步保持人工**：浏览器面板只允许用户自己的点击开新标签，Claude 点必被拦。流程是把 ⋮ 菜单摆好、请 Josh 点一下。一集一到两下，成本最低，不再找绕路。
+- **日期**：2026-09-19
+
+## 2026-09-19 · 会员同步 flushNow 不能写成递归（真机启动几秒必被杀的根因）
+
+- **决定了什么**：`MemberReadingSyncEngine.flushNow` 在 iOS / 安卓两端一律改成
+  **循环 + 等完就地清 `inFlight`**，不再递归自调。
+- **症状**：真机上 App 启动几秒就消失，**没有任何崩溃报告**。手机的
+  `JetsamEvent-2026-09-19-145648.ips` 里记着 AskBible 连被杀三次，
+  `reason = per-process-limit`，每次 `rpages = 134272`（= 2098 MB，撞穿 iPhone 12 的
+  单进程上限），`cpuTime` 只有 6.3～6.8 秒。
+- **根因**：`flushNow` 里「已有同步在跑就等它完再跑一轮」写成了递归：
+  ```swift
+  if let t = inFlight { pendingFlushReason = reason; let o = await t.value
+      guard let again = pendingFlushReason else { return o }
+      pendingFlushReason = nil; return await flushNow(reason: again) }   // ← 递归
+  ```
+  `inFlight` 的清理挂在 `schedule()` 里**另一条** Task/协程上，所以 `await t.value`
+  返回时 `inFlight` 往往还指着那个**已经跑完**的 task。递归回来又 await 一个完成态
+  task —— 立即返回、不让出任何时间，`pendingFlushReason` 还是自己刚写进去的，
+  于是无限递归。它把 MainActor 占死，负责清 `inFlight` 的那条 Task 永远排不上队，
+  循环再也出不来。
+- **为什么只有登录用户中招**：入口第一行就是 `guard loggedIn`。空模拟器不复现，
+  把真机的 `Library/Preferences/me.askbible.plist`（含 sessionToken）灌进模拟器后必现。
+- **实测数据**：修复前峰值 **16313 MB**（4 秒破 2 GB，真机就是在这儿被杀）；
+  修复后同样条件峰值 **323 MB**，40 秒平稳。`heap` 显示 820 万个 "Task stack" 占 8.4 GB，
+  `malloc_history -callTree -invert` 把 5.27 GB 直接指到 `MemberReadingSyncEngine.swift:328`。
+- **网页 / RN 端不用改**：它们靠 Promise `.finally()` 的时序 —— 清 `syncInFlight = null`
+  发生在 `await` 返回**之前**，不存在这个窗口。这是三端对等写里少见的「写法不同反而救了一端」。
+- **留下的规矩**：`inFlight` 这类「谁在跑」的句柄，**清理必须和等待在同一条执行流里**。
+  只要清理另起 Task，等待方就必须在 await 之后自己再判一次、就地清掉，绝不能凭
+  「它应该已经被清了」继续往下走。
+- **日期**：2026-09-19

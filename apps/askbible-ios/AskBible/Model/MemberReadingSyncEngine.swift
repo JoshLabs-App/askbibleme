@@ -317,26 +317,40 @@ final class MemberReadingSyncEngine: ObservableObject {
     }
 
     /// 登录 / 回前台 / 本地改动 / 退出前：跳过节流；已有同步在跑就等它完再用最新本地跑一轮
+    ///
+    /// 这里**不能写成递归**（2026-09-19 修）：`schedule()` 把 `inFlight` 的清理挂在另一条 Task 上，
+    /// 所以等到 `await t.value` 返回时，`inFlight` 很可能还指着那个**已经跑完**的 task。
+    /// 递归回来一看 `inFlight` 非 nil，又去 `await` 一个已完成的 task —— 立即返回、不让出任何时间，
+    /// `pendingFlushReason` 还是自己刚写进去的，于是无限递归。它把 MainActor 占死，
+    /// 负责清 `inFlight` 的那条 Task 永远排不上队，循环再也出不来：实测每秒造上百万个 Task，
+    /// 几秒钟就把进程顶到 2GB 被 Jetsam 杀掉（表现为「启动几秒就闪退」且没有崩溃报告）。
+    /// 改法两条：等完就地把 `inFlight` 清掉；递归改循环。
     @discardableResult
     func flushNow(reason: String) async -> Outcome {
         guard loggedIn else { return .skipped }
-        if let t = inFlight {
-            pendingFlushReason = reason
-            let o = await t.value
-            guard let again = pendingFlushReason else { return o }
-            pendingFlushReason = nil
-            return await flushNow(reason: again)
+        var reason = reason
+        while true {
+            if let t = inFlight {
+                pendingFlushReason = reason
+                let o = await t.value
+                // t 已经结束了。别等它那条异步清理 —— 就地清，否则下一轮又 await 一个完成态 task 空转
+                if inFlight == t { inFlight = nil }
+                guard let again = pendingFlushReason else { return o }
+                pendingFlushReason = nil
+                reason = again
+                continue        // 用最新的理由真正跑一轮（此时 inFlight 已是 nil，不会再空转）
+            }
+            lastSyncStartedAt = 0
+            let task = Task { [weak self] () -> Outcome in
+                guard let self else { return .skipped }
+                return await self.run(reason: reason)
+            }
+            inFlight = task
+            let o = await task.value
+            if inFlight == task { inFlight = nil }
+            lastSyncStartedAt = Date().timeIntervalSince1970
+            return o
         }
-        lastSyncStartedAt = 0
-        let task = Task { [weak self] () -> Outcome in
-            guard let self else { return .skipped }
-            return await self.run(reason: reason)
-        }
-        inFlight = task
-        let o = await task.value
-        if inFlight == task { inFlight = nil }
-        lastSyncStartedAt = Date().timeIntervalSince1970
-        return o
     }
 
     /// 本地读经数据变更后 1.5 秒内合并成一次上传

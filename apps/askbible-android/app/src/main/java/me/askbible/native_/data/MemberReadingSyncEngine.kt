@@ -338,21 +338,40 @@ class MemberReadingSyncEngine(context: Context) {
         scope.launch { try { d.await() } finally { if (inFlight === d) inFlight = null } }
     }
 
-    /** 登录 / 回前台 / 本地改动 / 退出前：跳过节流；已有同步在跑就等它完再用最新本地跑一轮 */
+    /**
+     * 登录 / 回前台 / 本地改动 / 退出前：跳过节流；已有同步在跑就等它完再用最新本地跑一轮
+     *
+     * 这里**不能写成递归**（2026-09-19 修，iOS 侧同一个 bug 已实测炸过）：
+     * `schedule()` 把 `inFlight` 的清理挂在另一条协程上（第 338 行的 `scope.launch`），
+     * 所以 `t.await()` 返回时 `inFlight` 很可能还指着那个**已经跑完**的 Deferred。
+     * 递归回来一看它非 null，又去 await 一个完成态 Deferred —— 立即返回、不挂起，
+     * `pendingFlushReason` 还是自己刚写进去的，于是无限递归，把主线程占死，
+     * 负责清 `inFlight` 的那条协程永远排不上队。iOS 上实测每秒造上百万个 Task，
+     * 几秒钟就顶到 2GB 被系统杀掉（表现为「启动几秒就闪退」且没有崩溃报告）。
+     * 改法两条：等完就地把 `inFlight` 清掉；递归改循环。
+     */
     suspend fun flushNow(reason: String): Outcome {
         if (!loggedIn) return Outcome.SKIPPED
-        inFlight?.let { t ->
-            pendingFlushReason = reason
-            val o = t.await()
-            val again = pendingFlushReason ?: return o
-            pendingFlushReason = null
-            return flushNow(again)
+        var next = reason
+        while (true) {
+            val t = inFlight
+            if (t != null) {
+                pendingFlushReason = next
+                val o = t.await()
+                // t 已经结束了。别等那条异步清理 —— 就地清，否则下一轮又 await 一个完成态 Deferred 空转
+                if (inFlight === t) inFlight = null
+                val again = pendingFlushReason ?: return o
+                pendingFlushReason = null
+                next = again
+                continue        // 用最新的理由真正跑一轮（此时 inFlight 已是 null，不会再空转）
+            }
+            lastSyncStartedAt = 0
+            val r = next
+            val d = scope.async { run(r) }
+            inFlight = d
+            val o = try { d.await() } finally { if (inFlight === d) inFlight = null; lastSyncStartedAt = System.currentTimeMillis() }
+            return o
         }
-        lastSyncStartedAt = 0
-        val d = scope.async { run(reason) }
-        inFlight = d
-        val o = try { d.await() } finally { if (inFlight === d) inFlight = null; lastSyncStartedAt = System.currentTimeMillis() }
-        return o
     }
 
     fun flushInBackground(reason: String) { scope.launch { flushNow(reason) } }

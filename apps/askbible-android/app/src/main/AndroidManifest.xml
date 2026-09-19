@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 成就反馈的触感（加 XP / 拿勋章 / 升级）；普通权限，不弹授权框 -->
+    <uses-permission android:name="android.permission.VIBRATE" />
     <!-- 每日读经提醒：Android 13+ 发通知要用户授权；开机后重排提醒 -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />

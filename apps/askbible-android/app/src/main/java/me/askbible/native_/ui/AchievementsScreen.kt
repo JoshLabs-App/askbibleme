@@ -1,5 +1,13 @@
 package me.askbible.native_.ui
 
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import me.askbible.native_.data.AchievementFeedback
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -68,6 +76,8 @@ fun AchievementsScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item { Header(ach, locale, theme) }
+
+            item { SoundToggle(locale, theme) }
 
             item {
                 SectionTitle(
@@ -200,5 +210,40 @@ private fun MedalCell(def: MedalDef, tier: Int, current: Int, locale: AppLocale,
             Text(def.localizedCondition(tier, locale), color = theme.faint.toColor(),
                  fontSize = 10.sp, maxLines = 1, textAlign = TextAlign.Center)
         }
+    }
+}
+
+/**
+ * 成就音效开关。放在成就墙里，而不是另开一个设置页 ——
+ * 用户想关它的时候，人就在这一屏（刚被响了一下）。与 iOS AchievementsView.soundToggle 对等。
+ */
+@Composable
+private fun SoundToggle(locale: AppLocale, theme: Parchment) {
+    val context = LocalContext.current
+    var on by remember { mutableStateOf(AchievementFeedback.soundEnabled(context)) }
+    Row(
+        Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(theme.surfaceSolid.toColor().copy(alpha = 0.75f))
+            .border(1.dp, theme.border.toColor(), RoundedCornerShape(14.dp))
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(SiteCopy.t("native.achievementSound", locale),
+                 fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = theme.ink.toColor())
+            Text(SiteCopy.t("native.achievementSoundHint", locale),
+                 fontSize = 12.sp, color = theme.muted.toColor())
+        }
+        Switch(
+            checked = on,
+            onCheckedChange = {
+                on = it
+                AchievementFeedback.setSoundEnabled(context, it)
+                // 打开的当下响一声，让人知道是什么声
+                if (it) AchievementFeedback.play(context, AchievementFeedback.Cue.EARN)
+            },
+            colors = SwitchDefaults.colors(checkedTrackColor = XPGold),
+        )
     }
 }

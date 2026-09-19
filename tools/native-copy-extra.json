@@ -1,128 +1,28 @@
 {
   "_note": "原生 App 独有、RN 文案表里没有的键（RN 的 explore 统计行 / 睡眠定时 / 译本状态等）。zh 简体，繁体运行时转；en 手写。由 tools/gen-site-copy.mjs 并进 SiteCopy。",
-  "native.usageTime": {
-    "zh": "使用时长",
-    "en": "Time in app"
+  "native.achievementSound": {
+    "zh": "成就音效",
+    "en": "Achievement sounds"
   },
-  "native.listenTotal": {
-    "zh": "累计听 {{duration}}",
-    "en": "Listened {{duration}}"
+  "native.achievementSoundHint": {
+    "zh": "加经验、拿勋章、升级时响一声；手机调静音时不响",
+    "en": "A chime on XP, medals and level-ups. Silent when your phone is muted."
   },
-  "native.recentReading": {
-    "zh": "最近阅读",
-    "en": "Recently read"
+  "native.achievements": {
+    "zh": "成就",
+    "en": "Achievements"
   },
-  "native.noReadingRecord": {
-    "zh": "还没有阅读记录",
-    "en": "No reading history yet"
-  },
-  "native.followSystem": {
-    "zh": "跟随系统",
-    "en": "System"
-  },
-  "native.chapterUnit": {
-    "zh": "{{bookName}} {{chapter}}章",
-    "en": "{{bookName}} {{chapter}}"
-  },
-  "native.sleepTimer": {
-    "zh": "睡眠定时",
-    "en": "Sleep timer"
-  },
-  "native.sleepTimerOff": {
-    "zh": "关闭定时",
-    "en": "Turn off"
-  },
-  "native.sleepTimerLeft": {
-    "zh": "剩余 {{left}}",
-    "en": "{{left}} left"
-  },
-  "native.minutes": {
-    "zh": "{{m}} 分钟",
-    "en": "{{m}} min"
-  },
-  "native.translationDownloading": {
-    "zh": "正在下载这个译本…",
-    "en": "Downloading this translation…"
-  },
-  "native.chapterFetching": {
-    "zh": "正在获取经文…",
-    "en": "Loading the chapter…"
-  },
-  "native.translationOfflineHint": {
-    "zh": "这个译本要联网获取，暂时拿不到，请检查网络后重试",
-    "en": "This translation is fetched online and isn't available right now. Check your connection and retry."
-  },
-  "native.articleTapHint": {
-    "zh": "点按段落可展开或收起",
-    "en": "Tap a section to expand or collapse"
-  },
-  "native.musicLoadFailed": {
-    "zh": "音乐加载失败",
-    "en": "Music failed to load"
-  },
-  "native.audioLoadFailed": {
-    "zh": "音频加载失败",
-    "en": "Audio failed to load"
-  },
-  "native.trackNoSource": {
-    "zh": "这首曲子没有可用音源",
-    "en": "No audio source for this track"
-  },
-  "native.langSimplified": {
-    "zh": "简中",
-    "en": "Simp. Chinese"
-  },
-  "native.langTraditional": {
-    "zh": "繁中",
-    "en": "Trad. Chinese"
-  },
-  "native.langEnglish": {
-    "zh": "英文",
-    "en": "English"
-  },
-  "native.none": {
-    "zh": "无",
-    "en": "None"
-  },
-  "native.online": {
-    "zh": "在线",
-    "en": "Online"
-  },
-  "native.needDownload": {
-    "zh": "需下载",
-    "en": "Download"
-  },
-  "native.downloading": {
-    "zh": "下载中",
-    "en": "Downloading"
-  },
-  "native.searchFallbackNote": {
-    "zh": "当前译本是在线译本，暂不支持搜索；已改用「{{name}}」搜索",
-    "en": "The current translation is online-only and can't be searched; searching {{name}} instead"
-  },
-  "native.days": {
-    "zh": "{{n}} 天",
-    "en": "{{n}} days"
-  },
-  "native.dailySegments": {
-    "zh": "每日 ≤ {{n}} 段",
-    "en": "≤ {{n}} readings a day"
-  },
-  "native.stepDayPrefix": {
-    "zh": "第",
-    "en": "Day"
-  },
-  "native.stepDaySuffix": {
-    "zh": "天",
-    "en": ""
-  },
-  "native.albumCalm": {
-    "zh": "放松",
-    "en": "Calm"
+  "native.achievementsSub": {
+    "zh": "勋章、书卷印章与等级",
+    "en": "Medals, book seals and levels"
   },
   "native.albumAfternoon": {
     "zh": "休闲",
     "en": "Leisure"
+  },
+  "native.albumCalm": {
+    "zh": "放松",
+    "en": "Calm"
   },
   "native.albumHymns": {
     "zh": "圣诗",
@@ -140,29 +40,37 @@
     "zh": "工作",
     "en": "Focus"
   },
-  "native.syncUnauthorized": {
-    "zh": "登录已失效，请重新登录",
-    "en": "Your session has expired. Please sign in again."
+  "native.ambientNowPlaying": {
+    "zh": "AskBible · 环境音",
+    "en": "AskBible · Ambience"
   },
-  "native.syncOffline": {
-    "zh": "当前无网络",
-    "en": "No network connection"
+  "native.appVersion": {
+    "zh": "版本 {{version}}",
+    "en": "Version {{version}}"
   },
-  "native.syncNoSession": {
-    "zh": "未找到登录会话",
-    "en": "No signed-in session found"
+  "native.articleTapHint": {
+    "zh": "点按段落可展开或收起",
+    "en": "Tap a section to expand or collapse"
   },
-  "native.syncPullFailedAfterSwitch": {
-    "zh": "帐号切换后拉取失败",
-    "en": "Could not fetch after switching accounts"
+  "native.audioLoadFailed": {
+    "zh": "音频加载失败",
+    "en": "Audio failed to load"
   },
-  "native.syncPullFailed": {
-    "zh": "拉取失败",
-    "en": "Fetch failed"
+  "native.audioSessionFailed": {
+    "zh": "音频会话配置失败：{{error}}",
+    "en": "Audio session setup failed: {{error}}"
   },
-  "native.authInvalidCredentials": {
-    "zh": "邮箱或密码不正确。",
-    "en": "Incorrect email or password."
+  "native.authAppleFailed": {
+    "zh": "Apple 登录失败，请重试。",
+    "en": "Apple sign-in failed. Please try again."
+  },
+  "native.authAppleNotConfigured": {
+    "zh": "Apple 登录尚未配置。请在 Supabase 的 Apple 提供商中登记 Bundle ID：me.askbible.native。",
+    "en": "Apple sign-in is not configured yet. Register the bundle ID me.askbible.native under the Apple provider in Supabase."
+  },
+  "native.authDefaultName": {
+    "zh": "用户",
+    "en": "friend"
   },
   "native.authEmailNotConfirmed": {
     "zh": "请先完成邮箱验证后再登录。",
@@ -180,129 +88,49 @@
     "zh": "你好，{{name}}",
     "en": "Hello, {{name}}"
   },
-  "native.authAppleFailed": {
-    "zh": "Apple 登录失败，请重试。",
-    "en": "Apple sign-in failed. Please try again."
-  },
-  "native.authAppleNotConfigured": {
-    "zh": "Apple 登录尚未配置。请在 Supabase 的 Apple 提供商中登记 Bundle ID：me.askbible.native。",
-    "en": "Apple sign-in is not configured yet. Register the bundle ID me.askbible.native under the Apple provider in Supabase."
-  },
-  "native.save": {
-    "zh": "保存",
-    "en": "Save"
-  },
-  "native.cancel": {
-    "zh": "取消",
-    "en": "Cancel"
-  },
-  "native.authDefaultName": {
-    "zh": "用户",
-    "en": "friend"
-  },
-  "native.goldenVerseNowPlaying": {
-    "zh": "AskBible · 金句",
-    "en": "AskBible · Verse"
-  },
-  "native.audioSessionFailed": {
-    "zh": "音频会话配置失败：{{error}}",
-    "en": "Audio session setup failed: {{error}}"
-  },
-  "native.syncPullFailedFirst": {
-    "zh": "未绑定先拉取失败：{{message}}",
-    "en": "Initial fetch failed: {{message}}"
-  },
-  "native.syncPushFailedAfterMerge": {
-    "zh": "合并后再次上传失败：{{message}}",
-    "en": "Upload failed again after merging: {{message}}"
-  },
-  "native.syncPushFailed": {
-    "zh": "上传失败：{{message}}",
-    "en": "Upload failed: {{message}}"
-  },
-  "native.ambientNowPlaying": {
-    "zh": "AskBible · 环境音",
-    "en": "AskBible · Ambience"
-  },
-  "native.durationDays": {
-    "zh": "{{n}} 天",
-    "en": "{{n}} days"
-  },
-  "native.durationMonths": {
-    "zh": "约 {{n}} 个月",
-    "en": "about {{n}} months"
-  },
-  "native.durationYears": {
-    "zh": "约 {{n}} 年",
-    "en": "about {{n}} years"
-  },
-  "native.searchTranslation": {
-    "zh": "搜索译本",
-    "en": "Search versions"
-  },
-  "native.remoteTextAttribution": {
-    "zh": "{{name}} · 经文由 YouVersion 提供",
-    "en": "{{name}} · Scripture provided by YouVersion"
-  },
-  "native.userMenu": {
-    "zh": "用户菜单",
-    "en": "User menu"
+  "native.authInvalidCredentials": {
+    "zh": "邮箱或密码不正确。",
+    "en": "Incorrect email or password."
   },
   "native.bibleVersion": {
     "zh": "圣经版本",
     "en": "Bible version"
   },
-  "native.signedIn": {
-    "zh": "已登录",
-    "en": "Signed in"
+  "native.bookSeals": {
+    "zh": "书卷印章",
+    "en": "Book seals"
   },
-  "native.register": {
-    "zh": "注册",
-    "en": "Register"
+  "native.cancel": {
+    "zh": "取消",
+    "en": "Cancel"
   },
-  "native.sendFeedback": {
-    "zh": "发送反馈",
-    "en": "Send feedback"
+  "native.chapterFetching": {
+    "zh": "正在获取经文…",
+    "en": "Loading the chapter…"
   },
-  "native.readingSync": {
-    "zh": "读经同步",
-    "en": "Reading sync"
+  "native.chapterUnit": {
+    "zh": "{{bookName}} {{chapter}}章",
+    "en": "{{bookName}} {{chapter}}"
   },
-  "native.syncLast": {
-    "zh": "上次 {{time}}",
-    "en": "Last {{time}}"
+  "native.chaptersReadLabel": {
+    "zh": "已读章",
+    "en": "Chapters"
   },
-  "native.syncNever": {
-    "zh": "尚未同步",
-    "en": "Not synced yet"
-  },
-  "native.syncIncomplete": {
-    "zh": "同步未完成",
-    "en": "Sync incomplete"
+  "native.chaptersReadStat": {
+    "zh": "已读 {{n}} 章",
+    "en": "{{n}} chapters read"
   },
   "native.closeMenu": {
     "zh": "关闭菜单",
     "en": "Close menu"
   },
-  "native.appVersion": {
-    "zh": "版本 {{version}}",
-    "en": "Version {{version}}"
+  "native.dailySegments": {
+    "zh": "每日 ≤ {{n}} 段",
+    "en": "≤ {{n}} readings a day"
   },
-  "native.welcomeTitle": {
-    "zh": "欢迎使用 AskBible",
-    "en": "Welcome to AskBible"
-  },
-  "native.favoritesMore": {
-    "zh": "更多",
-    "en": "See all"
-  },
-  "native.noFavorites": {
-    "zh": "还没有收藏",
-    "en": "No favorites yet"
-  },
-  "native.verseMultiCopy": {
-    "zh": "多选复制",
-    "en": "Copy several"
+  "native.days": {
+    "zh": "{{n}} 天",
+    "en": "{{n}} days"
   },
   "native.deleteAccount": {
     "zh": "删除账户",
@@ -316,17 +144,125 @@
     "zh": "账户已删除",
     "en": "Account deleted"
   },
-  "native.reminderTitle": {
-    "zh": "每日读经提醒",
-    "en": "Daily reading reminder"
+  "native.done": {
+    "zh": "完成",
+    "en": "Done"
   },
-  "native.reminderOn": {
-    "zh": "开启",
-    "en": "On"
+  "native.downloading": {
+    "zh": "下载中",
+    "en": "Downloading"
   },
-  "native.reminderOff": {
-    "zh": "关闭",
-    "en": "Off"
+  "native.durationDays": {
+    "zh": "{{n}} 天",
+    "en": "{{n}} days"
+  },
+  "native.durationMonths": {
+    "zh": "约 {{n}} 个月",
+    "en": "about {{n}} months"
+  },
+  "native.durationYears": {
+    "zh": "约 {{n}} 年",
+    "en": "about {{n}} years"
+  },
+  "native.favoritesMore": {
+    "zh": "更多",
+    "en": "See all"
+  },
+  "native.followSystem": {
+    "zh": "跟随系统",
+    "en": "System"
+  },
+  "native.goldenVerseNowPlaying": {
+    "zh": "AskBible · 金句",
+    "en": "AskBible · Verse"
+  },
+  "native.highlight": {
+    "zh": "划重点",
+    "en": "Highlight"
+  },
+  "native.highlightErase": {
+    "zh": "擦除",
+    "en": "Erase"
+  },
+  "native.highlightHint": {
+    "zh": "手指划过要标的字",
+    "en": "Drag across the words to mark"
+  },
+  "native.langEnglish": {
+    "zh": "英文",
+    "en": "English"
+  },
+  "native.langSimplified": {
+    "zh": "简中",
+    "en": "Simp. Chinese"
+  },
+  "native.langTraditional": {
+    "zh": "繁中",
+    "en": "Trad. Chinese"
+  },
+  "native.levelUp": {
+    "zh": "升到 {{level}} 级",
+    "en": "Level {{level}} reached"
+  },
+  "native.listenTotal": {
+    "zh": "累计听 {{duration}}",
+    "en": "Listened {{duration}}"
+  },
+  "native.medalLocked": {
+    "zh": "还没获得",
+    "en": "Not yet earned"
+  },
+  "native.medals": {
+    "zh": "勋章",
+    "en": "Medals"
+  },
+  "native.medalsProgress": {
+    "zh": "已获得 {{n}} / {{total}} 枚",
+    "en": "{{n}} of {{total}} earned"
+  },
+  "native.minutes": {
+    "zh": "{{m}} 分钟",
+    "en": "{{m}} min"
+  },
+  "native.musicLoadFailed": {
+    "zh": "音乐加载失败",
+    "en": "Music failed to load"
+  },
+  "native.needDownload": {
+    "zh": "需下载",
+    "en": "Download"
+  },
+  "native.nextTier": {
+    "zh": "下一档 {{n}}",
+    "en": "Next: {{n}}"
+  },
+  "native.noFavorites": {
+    "zh": "还没有收藏",
+    "en": "No favorites yet"
+  },
+  "native.noReadingRecord": {
+    "zh": "还没有阅读记录",
+    "en": "No reading history yet"
+  },
+  "native.none": {
+    "zh": "无",
+    "en": "None"
+  },
+  "native.online": {
+    "zh": "在线",
+    "en": "Online"
+  },
+  "native.readingSync": {
+    "zh": "读经同步",
+    "en": "Reading sync"
+  },
+  "native.recentReading": {
+    "zh": "最近阅读",
+    "en": "Recently read"
+  },
+  "native.register": {
+    "zh": "注册",
+    "en": "Register"
   },
   "native.reminderAt": {
     "zh": "每天 {{time}}",
@@ -340,128 +276,200 @@
     "zh": "系统通知权限没开，去设置里打开后再试",
     "en": "Notifications are off for this app. Turn them on in Settings and try again."
   },
-  "native.highlight": {
-    "zh": "划重点",
-    "en": "Highlight"
+  "native.reminderOff": {
+    "zh": "关闭",
+    "en": "Off"
   },
-  "native.highlightHint": {
-    "zh": "手指划过要标的字",
-    "en": "Drag across the words to mark"
+  "native.reminderOn": {
+    "zh": "开启",
+    "en": "On"
   },
-  "native.highlightErase": {
-    "zh": "擦除",
-    "en": "Erase"
+  "native.reminderTitle": {
+    "zh": "每日读经提醒",
+    "en": "Daily reading reminder"
   },
-  "native.done": {
-    "zh": "完成",
-    "en": "Done"
+  "native.remoteTextAttribution": {
+    "zh": "{{name}} · 经文由 YouVersion 提供",
+    "en": "{{name}} · Scripture provided by YouVersion"
   },
-  "native.welcomeTagline": {
-    "zh": "每日灵修 · 每日读经",
-    "en": "Daily devotion · Daily reading"
-  },
-  "native.welcomeLead": {
-    "zh": "用几分钟，安静在神的话语里。",
-    "en": "Take a few quiet minutes in God's word."
-  },
-  "native.welcomeStart": {
-    "zh": "开始今日灵修",
-    "en": "Start today's devotion"
-  },
-  "native.welcomeSignIn": {
-    "zh": "登录",
-    "en": "Sign in"
-  },
-  "native.welcomeSyncHint": {
-    "zh": "登录后可同步读经进度与收藏，也可以稍后再登录。",
-    "en": "Sign in to sync your reading progress and bookmarks, or do it later."
-  },
-  "native.welcomeEmailSignIn": {
-    "zh": "使用邮箱登录",
-    "en": "Sign in with email"
-  },
-  "native.welcomeNoAccount": {
-    "zh": "还没有账号？注册",
-    "en": "New here? Create an account"
-  },
-  "native.welcomeLanguage": {
-    "zh": "界面语言",
-    "en": "Language"
-  },
-  "native.todayDevotion": {
-    "zh": "今日灵修",
-    "en": "Today's devotion"
-  },
-  "native.sealEarned": {
-    "zh": "点亮书卷印章",
-    "en": "Book seal unlocked"
-  },
-  "native.levelUp": {
-    "zh": "升到 {{level}} 级",
-    "en": "Level {{level}} reached"
-  },
-  "native.achievements": {
-    "zh": "成就",
-    "en": "Achievements"
-  },
-  "native.achievementsSub": {
-    "zh": "勋章、书卷印章与等级",
-    "en": "Medals, book seals and levels"
-  },
-  "native.medals": {
-    "zh": "勋章",
-    "en": "Medals"
-  },
-  "native.bookSeals": {
-    "zh": "书卷印章",
-    "en": "Book seals"
-  },
-  "native.chaptersReadLabel": {
-    "zh": "已读章",
-    "en": "Chapters"
-  },
-  "native.totalXP": {
-    "zh": "总经验",
-    "en": "Total XP"
-  },
-  "native.streakBonus": {
-    "zh": "连续加成",
-    "en": "Streak bonus"
-  },
-  "native.nextTier": {
-    "zh": "下一档 {{n}}",
-    "en": "Next: {{n}}"
-  },
-  "native.medalLocked": {
-    "zh": "还没获得",
-    "en": "Not yet earned"
-  },
-  "native.sealsProgress": {
-    "zh": "已点亮 {{n}} / 66 卷",
-    "en": "{{n}} of 66 books"
-  },
-  "native.medalsProgress": {
-    "zh": "已获得 {{n}} / {{total}} 枚",
-    "en": "{{n}} of {{total}} earned"
-  },
-  "native.chaptersReadStat": {
-    "zh": "已读 {{n}} 章",
-    "en": "{{n}} chapters read"
+  "native.returnFreshTitle": {
+    "zh": "从这里开始",
+    "en": "Start here"
   },
   "native.returnGreeting": {
     "zh": "你回来了",
     "en": "Welcome back"
   },
-  "native.returnResumeTitle": {
-    "zh": "我们上次停在这里",
-    "en": "We stopped here last time"
-  },
   "native.returnResumeAction": {
     "zh": "接着走",
     "en": "Continue"
   },
-  "native.returnFreshTitle": {
-    "zh": "从这里开始",
-    "en": "Start here"
+  "native.returnResumeTitle": {
+    "zh": "我们上次停在这里",
+    "en": "We stopped here last time"
+  },
+  "native.save": {
+    "zh": "保存",
+    "en": "Save"
+  },
+  "native.sealEarned": {
+    "zh": "点亮书卷印章",
+    "en": "Book seal unlocked"
+  },
+  "native.sealsProgress": {
+    "zh": "已点亮 {{n}} / 66 卷",
+    "en": "{{n}} of 66 books"
+  },
+  "native.searchFallbackNote": {
+    "zh": "当前译本是在线译本，暂不支持搜索；已改用「{{name}}」搜索",
+    "en": "The current translation is online-only and can't be searched; searching {{name}} instead"
+  },
+  "native.searchTranslation": {
+    "zh": "搜索译本",
+    "en": "Search versions"
+  },
+  "native.sendFeedback": {
+    "zh": "发送反馈",
+    "en": "Send feedback"
+  },
+  "native.signedIn": {
+    "zh": "已登录",
+    "en": "Signed in"
+  },
+  "native.sleepTimer": {
+    "zh": "睡眠定时",
+    "en": "Sleep timer"
+  },
+  "native.sleepTimerLeft": {
+    "zh": "剩余 {{left}}",
+    "en": "{{left}} left"
+  },
+  "native.sleepTimerOff": {
+    "zh": "关闭定时",
+    "en": "Turn off"
+  },
+  "native.stepDayPrefix": {
+    "zh": "第",
+    "en": "Day"
+  },
+  "native.stepDaySuffix": {
+    "zh": "天",
+    "en": ""
+  },
+  "native.streakBonus": {
+    "zh": "连续加成",
+    "en": "Streak bonus"
+  },
+  "native.syncIncomplete": {
+    "zh": "同步未完成",
+    "en": "Sync incomplete"
+  },
+  "native.syncLast": {
+    "zh": "上次 {{time}}",
+    "en": "Last {{time}}"
+  },
+  "native.syncNever": {
+    "zh": "尚未同步",
+    "en": "Not synced yet"
+  },
+  "native.syncNoSession": {
+    "zh": "未找到登录会话",
+    "en": "No signed-in session found"
+  },
+  "native.syncOffline": {
+    "zh": "当前无网络",
+    "en": "No network connection"
+  },
+  "native.syncPullFailed": {
+    "zh": "拉取失败",
+    "en": "Fetch failed"
+  },
+  "native.syncPullFailedAfterSwitch": {
+    "zh": "帐号切换后拉取失败",
+    "en": "Could not fetch after switching accounts"
+  },
+  "native.syncPullFailedFirst": {
+    "zh": "未绑定先拉取失败：{{message}}",
+    "en": "Initial fetch failed: {{message}}"
+  },
+  "native.syncPushFailed": {
+    "zh": "上传失败：{{message}}",
+    "en": "Upload failed: {{message}}"
+  },
+  "native.syncPushFailedAfterMerge": {
+    "zh": "合并后再次上传失败：{{message}}",
+    "en": "Upload failed again after merging: {{message}}"
+  },
+  "native.syncUnauthorized": {
+    "zh": "登录已失效，请重新登录",
+    "en": "Your session has expired. Please sign in again."
+  },
+  "native.todayDevotion": {
+    "zh": "今日灵修",
+    "en": "Today's devotion"
+  },
+  "native.totalXP": {
+    "zh": "总经验",
+    "en": "Total XP"
+  },
+  "native.trackNoSource": {
+    "zh": "这首曲子没有可用音源",
+    "en": "No audio source for this track"
+  },
+  "native.translationDownloading": {
+    "zh": "正在下载这个译本…",
+    "en": "Downloading this translation…"
+  },
+  "native.translationOfflineHint": {
+    "zh": "这个译本要联网获取，暂时拿不到，请检查网络后重试",
+    "en": "This translation is fetched online and isn't available right now. Check your connection and retry."
+  },
+  "native.usageTime": {
+    "zh": "使用时长",
+    "en": "Time in app"
+  },
+  "native.userMenu": {
+    "zh": "用户菜单",
+    "en": "User menu"
+  },
+  "native.verseMultiCopy": {
+    "zh": "多选复制",
+    "en": "Copy several"
+  },
+  "native.welcomeEmailSignIn": {
+    "zh": "使用邮箱登录",
+    "en": "Sign in with email"
+  },
+  "native.welcomeLanguage": {
+    "zh": "界面语言",
+    "en": "Language"
+  },
+  "native.welcomeLead": {
+    "zh": "用几分钟，安静在神的话语里。",
+    "en": "Take a few quiet minutes in God's word."
+  },
+  "native.welcomeNoAccount": {
+    "zh": "还没有账号？注册",
+    "en": "New here? Create an account"
+  },
+  "native.welcomeSignIn": {
+    "zh": "登录",
+    "en": "Sign in"
+  },
+  "native.welcomeStart": {
+    "zh": "开始今日灵修",
+    "en": "Start today's devotion"
+  },
+  "native.welcomeSyncHint": {
+    "zh": "登录后可同步读经进度与收藏，也可以稍后再登录。",
+    "en": "Sign in to sync your reading progress and bookmarks, or do it later."
+  },
+  "native.welcomeTagline": {
+    "zh": "每日灵修 · 每日读经",
+    "en": "Daily devotion · Daily reading"
+  },
+  "native.welcomeTitle": {
+    "zh": "欢迎使用 AskBible",
+    "en": "Welcome to AskBible"
   }
 }

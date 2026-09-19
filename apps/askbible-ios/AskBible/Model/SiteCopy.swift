@@ -70,6 +70,8 @@ enum SiteCopy {
         "mobile.tripleStartTodayHint": ("今天算第 1 天，三轨都从头读", "Today is day 1; all three tracks start over"),
         "mobile.update": ("保存设置", "Save settings"),
         "mobile.use": ("设为当前计划", "Use this plan"),
+        "native.achievementSound": ("成就音效", "Achievement sounds"),
+        "native.achievementSoundHint": ("加经验、拿勋章、升级时响一声；手机调静音时不响", "A chime on XP, medals and level-ups. Silent when your phone is muted."),
         "native.achievements": ("成就", "Achievements"),
         "native.achievementsSub": ("勋章、书卷印章与等级", "Medals, book seals and levels"),
         "native.albumAfternoon": ("休闲", "Leisure"),

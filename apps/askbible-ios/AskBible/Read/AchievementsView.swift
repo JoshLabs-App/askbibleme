@@ -11,6 +11,7 @@ struct AchievementsView: View {
         ScrollView {
             VStack(spacing: 22) {
                 header
+                soundToggle
                 medalWall
                 sealWall
             }
@@ -20,6 +21,32 @@ struct AchievementsView: View {
         .background(ParchmentBackground().ignoresSafeArea())
         .navigationTitle(SiteCopy.t("native.achievements"))
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    /// 成就音效开关。放在成就墙里，而不是另开一个设置页 ——
+    /// 用户想关它的时候，人就在这一屏（刚被响了一下）。
+    private var soundToggle: some View {
+        Toggle(isOn: Binding(
+            get: { AchievementFeedback.soundEnabled },
+            set: { on in
+                AchievementFeedback.soundEnabled = on
+                // 打开的当下响一声，让人知道是什么声
+                if on { AchievementFeedback.shared.play(.earn) }
+            }
+        )) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(SiteCopy.t("native.achievementSound"))
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Color(parchment: 0x2B1D15))
+                Text(SiteCopy.t("native.achievementSoundHint"))
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color(parchment: 0x7A633A))
+            }
+        }
+        .tint(Color(rgb: 0xFFB101))
+        .padding(.horizontal, 14).padding(.vertical, 10)
+        .background(Color(parchment: 0xFFFCF5, opacity: 0.75), in: RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(parchment: 0xC9A672, opacity: 0.35), lineWidth: 1))
     }
 
     private var header: some View {

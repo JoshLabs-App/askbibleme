@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { MedalIcon } from "@/components/achievements/MedalIcon";
 import { XPBar, useAchievementSnapshot } from "@/components/achievements/XPBar";
 import { medalCondition, medalText } from "@/components/achievements/achievement-text";
@@ -11,6 +12,11 @@ import {
   sealKeyForBookNumber,
   type MedalDef,
 } from "@/lib/achievements/medal-catalog";
+import {
+  achievementSoundEnabled,
+  playAchievementCue,
+  setAchievementSoundEnabled,
+} from "@/lib/achievements/achievement-feedback-web";
 import { metricValue, type MedalEarned } from "@/lib/achievements/achievement-store-web";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
 import { getScriptureBookDisplayName } from "@/lib/bible/scripture-book-display-name";
@@ -69,6 +75,8 @@ export function AchievementsView() {
             </div>
           </div>
         </section>
+
+        <SoundToggle locale={locale} />
 
         {/* 勋章墙 */}
         <section className="flex flex-col" style={{ gap: 12 }}>
@@ -214,5 +222,51 @@ function MedalCell({
         </span>
       )}
     </div>
+  );
+}
+
+/**
+ * 成就音效开关。放在成就墙里，而不是另开一个设置页 ——
+ * 用户想关它的时候，人就在这一屏（刚被响了一下）。与两个原生端对等。
+ *
+ * 初值必须在 useEffect 里读：localStorage 在服务端渲染时不存在，
+ * 直接读会导致 hydration 前后不一致。
+ */
+function SoundToggle({ locale }: { locale: AppLocale }) {
+  const [on, setOn] = useState(true);
+  useEffect(() => setOn(achievementSoundEnabled()), []);
+
+  return (
+    <label
+      className="flex cursor-pointer items-center"
+      style={{
+        gap: 12,
+        padding: "10px 14px",
+        borderRadius: 14,
+        backgroundColor: SURFACE,
+        border: `1px solid ${TRACK}`,
+      }}
+    >
+      <span className="flex flex-1 flex-col" style={{ gap: 2 }}>
+        <span className="font-semibold" style={{ fontSize: 15, color: INK }}>
+          {achCopy("native.achievementSound", locale)}
+        </span>
+        <span style={{ fontSize: 12, color: MUTED }}>
+          {achCopy("native.achievementSoundHint", locale)}
+        </span>
+      </span>
+      <input
+        type="checkbox"
+        checked={on}
+        onChange={(e) => {
+          const next = e.target.checked;
+          setOn(next);
+          setAchievementSoundEnabled(next);
+          // 打开的当下响一声，让人知道是什么声
+          if (next) playAchievementCue("earn");
+        }}
+        style={{ width: 20, height: 20, accentColor: "#FFB101" }}
+      />
+    </label>
   );
 }

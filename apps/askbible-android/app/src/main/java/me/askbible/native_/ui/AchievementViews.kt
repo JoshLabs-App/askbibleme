@@ -1,5 +1,8 @@
 package me.askbible.native_.ui
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import me.askbible.native_.data.AchievementFeedback
 import android.content.Context
 import android.graphics.BitmapFactory
 import androidx.compose.animation.AnimatedVisibility
@@ -223,11 +226,13 @@ fun XPFloater(ach: AchievementStore, modifier: Modifier = Modifier) {
     var seq by remember { mutableStateOf(0) }
     var shown by remember { mutableStateOf<List<FloaterItem>>(emptyList()) }
 
+    val context = LocalContext.current
     val head = ach.pending.firstOrNull()
     LaunchedEffect(head) {
         val xp = head as? AchievementStore.Event.Xp ?: return@LaunchedEffect
         ach.consume()
         seq += 1
+        AchievementFeedback.play(context, AchievementFeedback.Cue.XP)
         shown = (shown + FloaterItem(seq, "+${xp.amount}", xp.amount >= MedalXP.perChapterRead)).takeLast(3)
     }
 
@@ -242,13 +247,19 @@ fun XPFloater(ach: AchievementStore, modifier: Modifier = Modifier) {
                 }
                 var appeared by remember { mutableStateOf(false) }
                 LaunchedEffect(item.id) { appeared = true }
-                val scale by animateFloatAsState(if (appeared) 1f else 0.5f, tween(240), label = "pop")
-                val alpha by animateFloatAsState(if (appeared) 1f else 0f, tween(240), label = "fade")
+                // 回弹进场（spring 比 tween 更「动态」），同时整条往上飘一截
+                val scale by animateFloatAsState(
+                    if (appeared) 1f else 0.4f,
+                    spring(dampingRatio = 0.45f, stiffness = Spring.StiffnessMediumLow),
+                    label = "pop",
+                )
+                val rise by animateFloatAsState(if (appeared) -10f else 14f, tween(1100), label = "rise")
+                val alpha by animateFloatAsState(if (appeared) 1f else 0f, tween(200), label = "fade")
                 Text(
                     item.text, color = XPGold,
                     fontSize = (if (item.big) 22 else 16).sp, fontWeight = FontWeight.ExtraBold,
                     modifier = Modifier.graphicsLayer {
-                        scaleX = scale; scaleY = scale; this.alpha = alpha
+                        scaleX = scale; scaleY = scale; translationY = rise; this.alpha = alpha
                     },
                 )
             }
@@ -271,8 +282,15 @@ fun EarnedToast(
     }
     val d = event?.let { describeEarned(it, ach.level, locale) }
 
+    val toastContext = LocalContext.current
     LaunchedEffect(event) {
         if (event == null) return@LaunchedEffect
+        // 声音 + 触感：升级用三声上行钟，勋章 / 卷印用单声钟
+        AchievementFeedback.play(
+            toastContext,
+            if (event is AchievementStore.Event.LevelUp) AchievementFeedback.Cue.LEVEL_UP
+            else AchievementFeedback.Cue.EARN,
+        )
         delay(2800)
         ach.consumeThrough(event)
     }

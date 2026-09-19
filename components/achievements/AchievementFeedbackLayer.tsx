@@ -14,6 +14,7 @@ import {
   subscribeAchievements,
   type AchievementEvent,
 } from "@/lib/achievements/achievement-store-web";
+import { playAchievementCue } from "@/lib/achievements/achievement-feedback-web";
 import { getScriptureBookDisplayName } from "@/lib/bible/scripture-book-display-name";
 import type { AppLocale } from "@/lib/i18n/config";
 
@@ -55,7 +56,11 @@ export function AchievementFeedbackLayer() {
           others.push(e);
         }
       }
-      if (xp.length) setFloaters((cur) => [...cur, ...xp].slice(-3));
+      if (xp.length) {
+        // 一批只响一次：一次抽干三条 XP 不该连响三下
+        playAchievementCue("xp");
+        setFloaters((cur) => [...cur, ...xp].slice(-3));
+      }
       if (others.length) setToasts((cur) => [...cur, ...others].slice(-6));
     };
     drain();
@@ -80,6 +85,8 @@ export function AchievementFeedbackLayer() {
 
   useEffect(() => {
     if (!currentToast) return;
+    // 声音 + 触感：升级用三声上行钟，勋章 / 卷印用单声钟
+    playAchievementCue(currentToast.kind === "levelUp" ? "levelUp" : "earn");
     const id = window.setTimeout(dropToast, TOAST_MS);
     return () => window.clearTimeout(id);
   }, [currentToast, dropToast]);
@@ -99,18 +106,18 @@ export function AchievementFeedbackLayer() {
                 fontSize: f.big ? 22 : 16,
                 color: "#FFB101",
                 textShadow: "0 1px 4px rgba(0,0,0,0.28)",
-                transform: f.leaving ? "translateY(-40px)" : "none",
+                transform: f.leaving ? "translateY(-56px) scale(1.12)" : "none",
                 opacity: f.leaving ? 0 : 1,
                 transition: f.leaving
                   ? `transform ${FLOAT_OUT_MS}ms ease-out, opacity ${FLOAT_OUT_MS}ms ease-out`
                   : "none",
-                animation: f.leaving ? undefined : "askbible-xp-pop 350ms cubic-bezier(0.2,1.4,0.4,1)",
+                animation: f.leaving ? undefined : "askbible-xp-pop 420ms cubic-bezier(0.2,1.7,0.35,1)",
               }}
             >
               {f.text}
             </span>
           ))}
-          <style>{`@keyframes askbible-xp-pop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}`}</style>
+          <style>{`@keyframes askbible-xp-pop{from{transform:scale(.4) translateY(14px);opacity:0}60%{transform:scale(1.14) translateY(-4px);opacity:1}to{transform:scale(1) translateY(0);opacity:1}}`}</style>
         </div>
       ) : null}
 

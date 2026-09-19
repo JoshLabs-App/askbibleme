@@ -133,8 +133,8 @@ struct XPFloater: View {
                     .foregroundStyle(Color(rgb: 0xFFB101))
                     .shadow(color: .black.opacity(0.28), radius: 4, y: 1)
                     .transition(.asymmetric(
-                        insertion: .scale(scale: 0.5).combined(with: .opacity),
-                        removal: .offset(y: -40).combined(with: .opacity)))
+                        insertion: .scale(scale: 0.4).combined(with: .offset(y: 14)).combined(with: .opacity),
+                        removal: .offset(y: -56).combined(with: .scale(scale: 1.12)).combined(with: .opacity)))
             }
         }
         .allowsHitTesting(false)
@@ -150,7 +150,9 @@ struct XPFloater: View {
         ach.consume()
         seq += 1
         let id = seq
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) {
+        AchievementFeedback.shared.play(.xp)
+        // dampingFraction 0.52：比原来更弹一点，弹出来才「动态」
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.52)) {
             shown.append((id, "+\(n)", n >= MedalXP.perChapterRead))
             if shown.count > 3 { shown.removeFirst() }
         }
@@ -165,6 +167,15 @@ struct XPFloater: View {
 /// 获得提示：勋章 / 印章 / 升级各弹一条，2.8 秒收起，点一下提前关
 struct EarnedToast: View {
     @EnvironmentObject private var ach: AchievementStore
+    /// 弹入的回弹
+    @State private var pop = false
+    /// 升级金边的呼吸
+    @State private var pulse = false
+
+    private func isLevelUp(_ e: AchievementStore.Event) -> Bool {
+        if case .levelUp = e { return true }
+        return false
+    }
 
     private var first: AchievementStore.Event? {
         ach.pending.first { if case .xp = $0 { return false }; if case .chapterRead = $0 { return false }; return true }
@@ -195,9 +206,25 @@ struct EarnedToast: View {
             .background(Color(parchment: 0xFFFCF5), in: RoundedRectangle(cornerRadius: 16))
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(rgb: 0xFFB101, opacity: 0.35), lineWidth: 1))
             .shadow(color: .black.opacity(0.18), radius: 14, y: 4)
+            // 升级那一下给一圈会呼吸的金边，比勋章更隆重
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color(rgb: 0xFFB101), lineWidth: isLevelUp(e) ? 2 : 0)
+                    .opacity(pulse ? 0.15 : 0.9)
+                    .animation(isLevelUp(e)
+                               ? .easeInOut(duration: 0.75).repeatForever(autoreverses: true)
+                               : .default,
+                               value: pulse)
+            )
+            .scaleEffect(pop ? 1 : 0.86)
             .transition(.move(edge: .top).combined(with: .opacity))
             .onTapGesture { withAnimation { drop(e) } }
             .task(id: d.title) {
+                // 声音 + 触感：升级用三声上行钟，勋章 / 卷印用单声钟
+                AchievementFeedback.shared.play(isLevelUp(e) ? .levelUp : .earn)
+                pop = false
+                withAnimation(.spring(response: 0.34, dampingFraction: 0.55)) { pop = true }
+                pulse = isLevelUp(e)
                 try? await Task.sleep(for: .seconds(2.8))
                 withAnimation { drop(e) }
             }

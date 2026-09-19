@@ -35,6 +35,18 @@ export function writeScriptureListenTotalsWeb(record: ScriptureListenTotalsRecor
   } catch {
     /* ignore */
   }
+  emitListenTotals();
+}
+
+/**
+ * 累加听经秒数。网页端此前**没有任何地方往上加**——总数只靠会员同步从原生端拉下来，
+ * 所以纯网页用户的「累计听读时长」永远是 0（2026-09-19 修）。
+ */
+export function addScriptureListenSecondsWeb(sec: number): void {
+  if (typeof window === "undefined") return;
+  const add = Math.floor(sec);
+  if (!Number.isFinite(add) || add <= 0) return;
+  writeScriptureListenTotalsWeb({ version: 1, totalSec: readScriptureListenTotalsWeb().totalSec + add });
 }
 
 export function mergeScriptureListenTotalsWeb(
@@ -50,6 +62,16 @@ export function replaceScriptureListenTotalsWeb(remote: ScriptureListenTotalsRec
 }
 
 const listenListeners = new Set<() => void>();
+
+function emitListenTotals(): void {
+  listenListeners.forEach((l) => {
+    try {
+      l();
+    } catch {
+      /* ignore */
+    }
+  });
+}
 
 export function subscribeScriptureListenTotals(onStore: () => void): () => void {
   listenListeners.add(onStore);

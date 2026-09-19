@@ -11,6 +11,7 @@ import { AppImmersiveProvider } from "@/components/app-shell/AppImmersiveProvide
 import { PwaServiceWorkerRegistration } from "@/components/app-shell/PwaServiceWorkerRegistration";
 import { ParchmentShellRouteEffect } from "@/components/shell/ParchmentShellRouteEffect";
 import { AskbibleUserProvider } from "@/components/auth/AskbibleUserProvider";
+import { AchievementFeedbackLayer } from "@/components/achievements/AchievementFeedbackLayer";
 import { MemberReadingSyncBridge } from "@/components/member/MemberReadingSyncBridge";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { CuvChapterAudioVoiceProvider } from "@/components/bible/CuvChapterAudioVoiceContext";
@@ -125,6 +126,7 @@ export default async function RootLayout({
           <LocaleProvider>
             <AskbibleUserProvider>
               <MemberReadingSyncBridge />
+              <AchievementFeedbackLayer />
               <CuvChapterAudioVoiceProvider>
                 <MusicShellPlaybackProvider>
                   <MediaPlaybackCoordinatorProvider>

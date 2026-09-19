@@ -77,6 +77,9 @@ import {
   readScripturePlaybackRatePersisted,
   writeScripturePlaybackRatePersisted,
 } from "@/lib/read/scripture-playback-rate-web";
+import { addScriptureListenSecondsWeb } from "@/lib/read/scripture-listen-totals-web";
+import { noteListenTick } from "@/lib/achievements/achievement-store-web";
+import { MEDAL_XP } from "@/lib/achievements/medal-catalog";
 import { ASKBIBLE_PRODUCT_NAME } from "@/lib/askbible-product-name";
 import { resolveLocalized } from "@/lib/i18n/localized-text";
 import {
@@ -261,6 +264,8 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   type DevicePlaybackCell = { trackId: string; objectUrl: string; persistResume: boolean };
   const [devicePlayback, setDevicePlaybackState] = useState<DevicePlaybackCell | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  /** 当前在播的经文章（听读计时用）：src 对不上就说明换成别的音频了，不再计时 */
+  const scriptureListenTargetRef = useRef<{ bookId: string; chapter: number; src: string } | null>(null);
   const [playing, setPlaying] = useState(false);
   const [currentSec, setCurrentSec] = useState(0);
   const [durationSec, setDurationSec] = useState(0);
@@ -874,6 +879,57 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     };
   }, [persistShellPlayback]);
 
+  /**
+   * 听读计时：每满 MEDAL_XP.listenTickSeconds（15 秒）记一片，同时喂
+   * 「累计听读时长」和成就 XP。三重约束和原生一致：页面在前台、确实在播、
+   * 且同一章的片数上限由 AchievementStore 自己卡（防挂机刷分）。
+   * 用媒体时间的增量而不是墙钟：暂停 / 拖动 / 后台节流都不会虚增。
+   */
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    const TICK_SEC = MEDAL_XP.listenTickSeconds;
+    let lastTime = 0;
+    let carry = 0;
+    const onTime = () => {
+      const target = scriptureListenTargetRef.current;
+      const el = audioRef.current;
+      if (!el || !target || el.paused) {
+        lastTime = el?.currentTime ?? 0;
+        return;
+      }
+      if (!audioUrlEquals(el, target.src)) {
+        scriptureListenTargetRef.current = null;
+        return;
+      }
+      if (document.visibilityState !== "visible") {
+        lastTime = el.currentTime;
+        return;
+      }
+      const delta = el.currentTime - lastTime;
+      lastTime = el.currentTime;
+      // 拖动进度条会产生大跳，只认正常推进的那一段
+      if (!(delta > 0 && delta < 2)) return;
+      carry += delta;
+      while (carry >= TICK_SEC) {
+        carry -= TICK_SEC;
+        addScriptureListenSecondsWeb(TICK_SEC);
+        noteListenTick(target.bookId, target.chapter);
+      }
+    };
+    const onSeekOrPlay = () => {
+      lastTime = audioRef.current?.currentTime ?? 0;
+    };
+    a.addEventListener("timeupdate", onTime);
+    a.addEventListener("play", onSeekOrPlay);
+    a.addEventListener("seeked", onSeekOrPlay);
+    return () => {
+      a.removeEventListener("timeupdate", onTime);
+      a.removeEventListener("play", onSeekOrPlay);
+      a.removeEventListener("seeked", onSeekOrPlay);
+    };
+  }, []);
+
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
@@ -1142,6 +1198,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       if (!resolved.ok) return;
 
       const want = resolved.src.trim();
+      scriptureListenTargetRef.current = { bookId, chapter, src: want };
       const prefetchPlanQueueAfterChapter = () => {
         if (!readPlanFlowActive()) return;
         const session = readReadingPlanAudioSession();

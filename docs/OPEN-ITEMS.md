@@ -127,26 +127,26 @@
 
 ## 网页端成就系统（2026-09-19）
 
-### 1. 网页端没有「听读秒数」的来源，听读 XP 永远是 0
+Josh 2026-09-19「你决定」——下面四条按我的推荐处理完了，保留在这里是为了记住**为什么**这么定，以及剩下的那一条尾巴。
 
-- **现状**：`lib/read/scripture-listen-totals-web.ts` 全库没有任何地方往上加秒数——只有原生端在累计，网页端靠会员同步把总数拉下来显示。所以 `noteListenTick` 在网页端**没有调用方**，`listenTicks` 恒为 0。`listenHours` / `listenHoursThisMonth` 两个勋章指标靠同步下来的总秒数仍然能解锁，不受影响。
-- **影响**：登录用户不受影响（原生端会把听读进度同步过来）；**纯网页用户**在网页上听经文拿不到听读 XP，也解不开那两枚听读勋章。
-- **需要 Josh 决定**：要不要在网页播放器上补一个「每 15 秒累加 totalSec」的计时（同时喂 `scriptureListenTotals` 和 `noteListenTick`）。**我的推荐：做**——它顺带把网页端「累计听读时长」这个已经显示在探索页、但对纯网页用户永远是 0 的数字修好，不只是为了 XP。
+### 已关闭
 
-### 2. 网页端没有逐节微反馈 XP（滚过一节 +8）
+- **听读 XP 没有数据源 → 已做**：`lib/read/scripture-listen-totals-web.ts` 新增 `addScriptureListenSecondsWeb()`（并补上 `writeScriptureListenTotalsWeb` 一直漏掉的变更通知——此前订阅者根本收不到通知）；`components/music/MusicShellPlaybackContext.tsx` 里按**媒体时间增量**每满 15 秒记一片，同时喂听读总数和 `noteListenTick`。约束和原生一致：页面可见 + 在播 + 单章上限由 store 自己卡；拖动进度条产生的大跳（delta ≥ 2 秒）不计。**顺带修好的不只是 XP**——网页端探索页那个「累计听读时长」对纯网页用户此前永远是 0。
+- **飘字 / 获得提示 → 已做**：`components/achievements/AchievementFeedbackLayer.tsx` 挂在 `app/layout.tsx`，+XP 走 1.4 秒飘字，勋章 / 印章 / 升级走 2.6 秒横幅，依次播完。实测一次全新账本进阅读页依次弹出「+150 XP」→「获得勋章 · 初次翻开」→「升级 · Lv.2 初读」。
+- **build 默认堆 OOM → 已做**：`package.json` 的 build 脚本写死 `NODE_OPTIONS=--max-old-space-size=8192`。
+- **逐节微反馈 XP → 决定不做**：`noteVersesRead` 保留但不接线。网页阅读器没有现成的逐节可见性观察，要新加 IntersectionObserver，改动面大于收益；等网页端真有活跃阅读用户再说。
 
-- **现状**：`noteVersesRead` 已实现但没接线。原生是在阅读器里按滚过的节数上报；网页阅读器目前只有「滚到章末 = 读完」这一个信号。
-- **影响**：网页端的 XP 曲线比原生「跳得少」——原生几秒跳一次，网页要读完一整章才跳一次。DECISIONS 里「XP 要一直在涨」那条的爽感在网页端打了折。
-- **需要 Josh 决定**：网页端要不要也做逐节上报。**我的推荐：先不做**——网页阅读器没有现成的逐节可见性观察，要新加 IntersectionObserver，改动面比收益大；等网页端真有活跃阅读用户再说。
+### 仍然开着
 
-### 3. 网页端没有飘字 / 获得提示，也没有换帐号清空的接线
+#### 1. 网页端的听读计时没有在浏览器里实测
 
-- **现状**：`AchievementEvent` 队列（`getPendingAchievementEvents` / `consumeAchievementEvent`）已经在产出事件，但网页端没有对应的 `XPFloater` / `EarnedToast` UI 去消费——事件只会在队列里堆到上限 24 条后被丢弃。另外 `clearAchievementsForAccountSwitch()` 已导出但**没有调用方**：网页端根本没有「换帐号清本机 blob」的机制（原生有 `clearLocalBlobs()`，网页端没有对应物）。
-- **影响**：网页端得到勋章 / 升级时**没有任何即时反馈**，要主动点进成就页才看得到；共用一台电脑换帐号登录时，上一个人的成就会留在本机，被合并进新帐号。
-- **需要 Josh 决定**：(a) 飘字 / 提示要不要在网页端做；(b) 换帐号清空要不要补。**我的推荐：(a) 做，(b) 做**——(b) 是数据正确性问题而不是体验问题，而且不只成就一个 blob 受影响，值得单独开一轮把网页端的「登出清本机」整块补上。
+- **现状**：代码已接线、`tsc` / `lint` 通过，但**没跑通一次真实播放**——开发环境里 `/read/<书>/<章>` 页面上找不到经文朗读的入口按钮（首页底栏有 `play_arrow`，章节页没有；`translationSupportsChapterAudio` 对和合本是 true，所以不是译本不支持）。没有播放就触发不了 `playScriptureChapter`，也就验不了那段累加。
+- **影响**：如果网页端的经文朗读入口本来就只在某些壳层状态下出现，这段计时可能长期不触发，等于白写；也可能一切正常，只是我没找到入口。
+- **需要 Josh 决定**：告诉我网页端从哪儿点开经文朗读（或者确认网页端目前**就是没有**章节朗读入口）。**我的推荐**：下一轮先花五分钟确认这个入口的现状——如果网页端确实没有经文朗读，那第一条「已做」的实际价值只剩「把总数的变更通知修好」，听读 XP 要等朗读入口先做出来。
 
-### 4. `next build` 默认堆会 OOM，要 8G 才能过
+#### 2. 换帐号 / 登出不清本机数据 —— 决定**维持现状**，但记下来
 
-- **现状**：`npm run build` 在默认堆下 `FATAL ERROR: Ineffective mark-compacts near heap limit`，`NODE_OPTIONS=--max-old-space-size=8192 npm run build` 正常通过（本轮验证就是这么跑的）。这不是本轮引入的——`app/(app-shell)/explore/page.tsx` 的注释里早就记着「那份 bundle 有 149KB，从客户端组件引用会被整份打进 chunk，把 next build 推爆堆上限」。
-- **影响**：新线程 / CI 上直接跑 `npm run build` 会失败，容易被误判成代码有问题。
-- **需要 Josh 决定**：要不要把 `--max-old-space-size` 直接写进 `package.json` 的 build 脚本。**我的推荐：写进去**——一行的事，省掉每个人踩一次。
+- **决定**：不在登出时清成就。网页端的 `logout`（`components/auth/AskbibleUserProvider.tsx`）是**故意**保留本机数据的：先 `flushMemberReadingSyncWebNow` 推一次，再 `markMemberReadingSyncPullOnlyWeb()` 标记成只拉不推，然后才登出。26 个 blob 全部如此。单把成就清掉会让它成为**唯一一个行为不同的 blob**，比现状更难理解。
+- **仍然存在的问题**：共用一台电脑时，前一个人的本机进度会在下一个人登录后被合并进新帐号——这对**所有** blob 都成立，不是成就引入的。
+- **需要 Josh 决定**：要不要单开一轮做「网页端登出清本机」。`clearAchievementsForAccountSwitch()` 已经导出、就位，等那一轮一起接。**我的推荐**：值得做，但要整块做（26 个 blob 一起），不要零敲碎打。
+

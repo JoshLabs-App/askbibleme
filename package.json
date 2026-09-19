@@ -16,7 +16,7 @@
     "dev:restart": "node scripts/free-port.mjs 3450 && npm run dev:fresh",
     "check": "tsc --noEmit && npm run build",
     "dev:any": "node scripts/write-app-build-meta.mjs --dev && node scripts/write-next-devtools-config.mjs && next dev",
-    "build": "next build",
+    "build": "NODE_OPTIONS=--max-old-space-size=8192 next build",
     "render:build": "npm install --include=dev --no-audit --no-fund && npm run build",
     "start": "node scripts/start-render.mjs",
     "lint": "next lint",

@@ -346,3 +346,14 @@
 - **会员同步**：`reading-sync-local-web.ts` 三处接线（`localHasMemberReadingProgressWeb` / 导出 `blobs.achievements` / `applyBlob` 的 `achievements` 分支 → `mergeRemoteAchievements`）。合并规则那半边早就写好了（`lib/member-reading-sync/merge.ts` 的 `mergeAchievements`），本轮没动。推送时机跟网页端既有做法（可见性 / focus 触发），另在 `MemberReadingSyncBridge` 里挂 `setAchievementsLocalChangeHandler` 做 1.5 秒防抖推送，对齐原生 `onLocalChange`。
 - **界面**：`/explore/achievements`（`components/achievements/AchievementsView.tsx`）= 等级条 + 三个数字 + 23 枚勋章墙 + 66 卷印章墙，未点亮走 `grayscale + opacity`；探索页顶部加 `AchievementLevelCard` 等级条卡片点进去。勋章文案只有简体 + 英文，繁体运行时用 `toZhTwText` 转（同 medals.json 的约定）。
 - **日期**：2026-09-19
+
+## 网页端补齐：听读计时、即时反馈层；逐节 XP 不做，登出不清本机
+
+- **决定了什么**（Josh 2026-09-19「你决定」，四条 OPEN-ITEMS 的处理）：
+  1. **补听读计时**——网页端此前没有任何地方累加听经秒数，纯网页用户的「累计听读时长」永远是 0。在壳层播放器上按**媒体时间增量**每满 15 秒记一片，同时喂 `scriptureListenTotals` 和 `noteListenTick`。用媒体时间而不是墙钟：暂停 / 拖动 / 后台节流都不会虚增；拖进度条的大跳（≥2 秒）丢弃。
+  2. **补即时反馈层**——`AchievementFeedbackLayer` 挂在 root layout，+XP 飘字 1.4 秒、勋章 / 印章 / 升级横幅 2.6 秒，依次播完。
+  3. **逐节微反馈 XP 不做**——网页阅读器没有现成的逐节可见性观察，要新加 IntersectionObserver，改动面大于收益。`noteVersesRead` 留着不接线。
+  4. **登出不清本机成就**——网页端 `logout` 是**故意**保留本机数据的（flush → 标记只拉不推 → 登出），26 个 blob 一视同仁。单清成就会让它成为唯一行为不同的 blob，比现状更难理解。共用电脑的账号串数据问题对所有 blob 都成立，要修就整块修，已记进 OPEN-ITEMS。
+- **过程中修掉的一个既有 bug**：`writeScriptureListenTotalsWeb` 一直没有通知订阅者（`listenListeners` 建了却没人 emit），探索页的听读时长不会随播放刷新。
+- **反馈层踩的坑**（值得记住）：第一版把「消费队列」写在 `setState` 的 updater 里，又用 ref 记「当前是否在展示」——React 会重复调用 updater、且会重复挂载组件，跨挂载残留的 ref 把后续事件永久堵住，表现是**只弹出第一条、后面全丢**。改成组件订阅后把 store 队列整段抽干到自己的 state 再依次展示，问题消失。
+- **日期**：2026-09-19

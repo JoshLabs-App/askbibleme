@@ -50,11 +50,15 @@ class MemberReadingSyncEngine(context: Context) {
     private var applyingRemote = false
 
     private var highlights: VerseHighlightStore? = null
+    private var achievements: AchievementStore? = null
     private var applyingUpdatedAtMs = 0L
 
     fun attach(auth: MemberAuthStore, plans: ReadingPlanStore, bookmarks: VerseBookmarkStore, activity: ReadingActivityStore,
-               search: SearchPrefs, highlights: VerseHighlightStore? = null) {
+               search: SearchPrefs, highlights: VerseHighlightStore? = null,
+               achievements: AchievementStore? = null) {
         this.highlights = highlights
+        this.achievements = achievements
+        achievements?.onLocalChange = { k -> notifyLocalChanged(k) }
         highlights?.onLocalChange = { k -> notifyLocalChanged(k) }
         this.auth = auth; this.plans = plans; this.bookmarks = bookmarks; this.activity = activity; this.search = search
         plans.onLocalChange = { notifyLocalChanged(it) }
@@ -105,6 +109,7 @@ class MemberReadingSyncEngine(context: Context) {
             if (h.localUpdatedAtMs > 0) blobs.put("highlights", wrap(h.json(), R.isoString(h.localUpdatedAtMs.toDouble())))
             else { val hl = h.json(); if (hl.length() > 0) blobs.put("highlights", wrap(hl, now)) }
         }
+        achievements?.let { a -> if (a.hasProgress) blobs.put("achievements", wrap(a.syncJson(), now)) }
         return blobs
     }
 
@@ -121,8 +126,8 @@ class MemberReadingSyncEngine(context: Context) {
 
     // ---- 应用云端（RN applyMemberReadingSyncBlobs / applyReadingSyncBlob） ----
 
-    private fun beginApplying() { applyingRemote = true; plans.suppressChangeNotify = true; activity.suppressChangeNotify = true }
-    private fun endApplying() { plans.suppressChangeNotify = false; activity.suppressChangeNotify = false; applyingRemote = false }
+    private fun beginApplying() { applyingRemote = true; plans.suppressChangeNotify = true; activity.suppressChangeNotify = true; achievements?.suppressChangeNotify = true }
+    private fun endApplying() { plans.suppressChangeNotify = false; activity.suppressChangeNotify = false; achievements?.suppressChangeNotify = false; applyingRemote = false }
 
     fun applyBlobs(blobs: JSONObject) {
         beginApplying()
@@ -180,6 +185,7 @@ class MemberReadingSyncEngine(context: Context) {
                 if (R.num(d.opt("version")) == 1.0 && d.opt("terms") is JSONArray) search.replaceRecent(R.stringArray(d.opt("terms")))
             }
             "highlights" -> R.dict(value)?.let { highlights?.replace(VerseHighlightStore.parse(it), applyingUpdatedAtMs) }
+            "achievements" -> R.dict(value)?.let { achievements?.mergeRemote(it) }
             "appUsageTime" -> R.dict(value)?.let { d -> R.num(d.opt("totalSec"))?.let { activity.mergeRemoteUsage(it) } }
             "recentChapters" -> R.dict(value)?.let { d ->
                 val items = d.opt("items") as? JSONArray ?: return@let
@@ -201,7 +207,7 @@ class MemberReadingSyncEngine(context: Context) {
     /** 换帐号 / 退出：清空本机同步数据（RN clearLocalMemberReadingSyncBlobs） */
     private fun clearLocalBlobs() {
         beginApplying()
-        try { plans.clearForAccountSwitch(); bookmarks.clearForAccountSwitch(); activity.clearForAccountSwitch(); search.clearRecentForAccountSwitch() }
+        try { plans.clearForAccountSwitch(); bookmarks.clearForAccountSwitch(); activity.clearForAccountSwitch(); search.clearRecentForAccountSwitch(); achievements?.clearForAccountSwitch() }
         finally { endApplying() }
     }
 

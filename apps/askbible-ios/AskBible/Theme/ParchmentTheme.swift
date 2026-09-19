@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 extension Color {
     /// 「#RRGGBB」→ Color（划重点的调色板是十六进制字符串，和 RN / 网页共用一份）
@@ -24,8 +27,11 @@ extension Color {
     /// 页面里原来散着 ~70 处 `Color(rgb:)` 字面值（棕墨、纸色底、状态绿蓝），逐个接 theme 改动面太大，
     /// 所以集中在这张表里给每个浅色值配一个暗色值：纸色底 → 深色表面，棕墨 → 暖浅色，绿蓝 → 提亮。
     /// 品牌黄 #FFB101、Google 标志色、错误红**不在表里**，两种模式保持原色。
+    /// `#if canImport(UIKit)`：tools/member-sync-check.mjs 用裸 swiftc（macOS 目标）把这个文件编成
+    /// 命令行 harness，那里没有 UIKit。harness 只需要编过、不看颜色，所以退化成不带深色映射的纯色。
     init(parchment rgb: UInt32, opacity: Double = 1) {
         let dark = Color.parchmentDarkMap[rgb] ?? rgb
+        #if canImport(UIKit)
         self.init(uiColor: UIColor { traits in
             let v = traits.userInterfaceStyle == .dark ? dark : rgb
             return UIColor(
@@ -34,6 +40,10 @@ extension Color {
                 blue: CGFloat(v & 0xFF) / 255,
                 alpha: opacity)
         })
+        #else
+        _ = dark
+        self.init(rgb: rgb, opacity: opacity)
+        #endif
     }
 
     static let parchmentDarkMap: [UInt32: UInt32] = [

@@ -26,6 +26,8 @@ object MemberReadingSyncRules {
         "natureSceneUi", "musicVisualTheme", "scripturePlaybackRate", "cuvAudioVoice", "exploreYearDayProfile", "appLocale",
         // Josh 2026-09-11：使用时长与最近阅读也要上云（原本只存本机）
         "appUsageTime", "recentChapters",
+        // Josh 2026-09-18：成就 / XP 账本（AchievementStore）
+        "achievements",
     )
     const val MIN_SYNC_INTERVAL_MS = 30_000L
     const val LOCAL_CHANGE_DEBOUNCE_MS = 1_500L
@@ -371,7 +373,58 @@ object MemberReadingSyncRules {
         "readingPlanPrefs" -> mergeReadingPlanPrefsValue(a, b)
         "tripleLoopProgress" -> mergeTripleLoopState(a, b)
         "ntDeepRepeatProgress" -> mergeNtDeepRepeatState(a, b, now)
+        "achievements" -> mergeAchievements(a, b)
         else -> b
+    }
+
+    /** 成就账本：计数取大、日期取并集、勋章取更高档、首次点亮时间取更早（与 AchievementStore.mergeRemote 同规则） */
+    fun mergeAchievements(a: Any?, b: Any?): Any? {
+        val left = dict(a) ?: return b
+        val right = dict(b) ?: return a
+        fun maxInt(k: String): Int = maxOf(num(left.opt(k)) ?: 0.0, num(right.opt(k)) ?: 0.0).toInt()
+        fun dates(k: String): List<String> = normalizeDates(stringArray(left.opt(k)) + stringArray(right.opt(k)))
+        // 首读 / 首次点亮时间：两端都有就取更早的那次
+        fun earliestMap(k: String): JSONObject {
+            val out = JSONObject()
+            for (side in listOf(left, right)) {
+                val m = dict(side.opt(k)) ?: continue
+                for (key in m.keys()) {
+                    val at = (num(m.opt(key)) ?: 0.0).toLong()
+                    val cur = if (out.has(key)) out.optLong(key) else null
+                    out.put(key, if (cur == null) at else if (at > 0L) minOf(cur, at) else cur)
+                }
+            }
+            return out
+        }
+        val earned = JSONObject()
+        for (side in listOf(left, right)) {
+            val m = dict(side.opt("earned")) ?: continue
+            for (key in m.keys()) {
+                val o = dict(m.opt(key)) ?: continue
+                val tier = (num(o.opt("tier")) ?: 0.0).toInt()
+                if (tier < 1) continue
+                val at = (num(o.opt("at")) ?: 0.0).toLong()
+                val cur = dict(earned.opt(key))
+                when {
+                    cur == null -> earned.put(key, JSONObject().put("tier", tier).put("at", at))
+                    tier > cur.optInt("tier") -> earned.put(key, JSONObject().put("tier", tier).put("at", at))
+                    tier == cur.optInt("tier") && at > 0L ->
+                        cur.put("at", if (cur.optLong("at") > 0L) minOf(cur.optLong("at"), at) else at)
+                }
+            }
+        }
+        return JSONObject()
+            .put("version", 1)
+            .put("chaptersRead", earliestMap("chaptersRead"))
+            .put("versesRead", maxInt("versesRead"))
+            .put("listenTicks", maxInt("listenTicks"))
+            .put("chaptersOpened", maxInt("chaptersOpened"))
+            .put("morningDates", JSONArray(dates("morningDates")))
+            .put("nightDates", JSONArray(dates("nightDates")))
+            .put("bonusXP", maxInt("bonusXP"))
+            .put("bestStreakDays", maxInt("bestStreakDays"))
+            .put("earned", earned)
+            .put("seals", earliestMap("seals"))
     }
 
     /** RN mergeBlobPair：时间戳新的一侧为准（相等取右），updatedAt 取大 */

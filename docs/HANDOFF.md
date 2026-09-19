@@ -408,8 +408,15 @@ ChatGPT 的评审与我的逐条判断在 `docs/gamification-chatgpt-review.md`�
 
 ## 下一步（按顺序）
 1. ~~等 Josh 拍板 XP 刺激强度~~ **已定 A 方案并在两端落地**（2026-09-18，见 `docs/DECISIONS.md` 末条）：倍率只升不降（`bestStreakDays`）、听读 XP 三重约束（前台 + 在播 + 每章 `listenTicksPerChapterCap`=80 片）。`noteListenTick` 现在要传 `bookId`/`chapter`。
-2. **接会员同步**：两端 `AchievementStore` 的 `syncJSON`（Kotlin：`syncJson()`）/ `mergeRemote` / `clearForAccountSwitch` 都写好了，只差挂进 `MemberReadingSyncEngine` 和在 Supabase 加 blob。
-3. **网页端**：直接 `import data/medals.json`，判定逻辑照 Swift 再写一份 TS。
+2. ~~**接会员同步**~~ **已完成（2026-09-18，两端编译通过）**，见 `docs/DECISIONS.md` 末条「成就 / XP 账本上会员同步」。落地内容：
+   - blob 键 `achievements` 加进三份键表：`lib/member-reading-sync/schema.ts`、iOS `Model/MemberReadingSync.swift`、安卓 `core/.../MemberReadingSync.kt`（RN 那份不加，理由见 DECISIONS）。
+   - 三端各加一份 `mergeAchievements`（逐字段：计数取大 / 日期并集 / 勋章取更高档 / 首次时间取更早），挂进各自的 `mergeBlobValue`。
+   - 两端 `AchievementStore` 新增 `hasProgress`（空账本不推）。
+   - 引擎接线：`MemberReadingSyncEngine.attach(...)` 多收一个 `achievements`，绑 `onLocalChange` → 1.5 秒防抖上传；`exportLocal()` 产出 blob；`apply("achievements")` → `mergeRemote`；`beginApplying/endApplying` 一并压 `suppressChangeNotify`；`clearLocalBlobs()` 一并 `clearForAccountSwitch()`。
+   - 调用处：iOS `AskBibleApp.swift` 把 `achievements.attach(...)` 提到 `sync.attach(...)` 之前再传参；安卓 `MainActivity.kt` 的 `syncEngine` `remember` 里多传一个参数。
+   - **数据库不用迁移**：`blobs` 是无约束 `jsonb`。
+   - 验证：`xcodebuild ... -destination 'generic/platform=iOS Simulator' build` 与 `./gradlew :app:compileDebugKotlin` 均通过。`npm run check:member-sync` **已修好并通过**（164 条用例三端一致），其中新增 5 条 `achievements` 用例。真机端到端（两台设备互相同步勋章）**还没实测**。
+3. **网页端**：直接 `import data/medals.json`，判定逻辑照 Swift 再写一份 TS。合并规则那半边已经写好了（`lib/member-reading-sync/merge.ts` 的 `mergeAchievements`），只差本机 store 和界面。
 
 ## 别踩的坑
 - **模拟器上底栏点不动**：iOS 26 Liquid Glass 底栏，`simctl` 注入的 tap 打在首页那层「点空白收起/唤回」的透明层上，切 Tab 没反应。别在这上面耗，要验 UI 直接装真机。
@@ -421,3 +428,63 @@ ChatGPT 的评审与我的逐条判断在 `docs/gamification-chatgpt-review.md`�
 - **安卓模拟器 emulator-5554 上别做点击验证**：这台机器上有别的项目的 kiosk 启动器（`app.joshlabs.desk`）和 `app.joshlabs.tingdao` 反复抢前台，`input tap` 会落到别的 App 上，dump 出来的「成就墙」是那个 App 自己的页面。要目视验证就装真机。
 - **听读 XP 需要「现在听的是哪一章」**：安卓的 `onProgress` 挂在 `remember {}` 里读不到后面的 Compose 值，用 `listenTarget` 这个 `mutableStateOf` holder 由 `LaunchedEffect(targetBook?.id, targetChapter)` 写进去；iOS 直接读 `audioTarget`。
 - **`ChapterAudioPlayer.onProgress` 是在 `remember {}` 里一次性挂的**，不要在里面读 Compose 状态；听读打点的「上一次落点」用 `by remember { mutableStateOf(-1.0) }` 在外面存。
+
+---
+
+## 附：2026-09-18 这一轮（欢迎页 + 首页沉浸）交接
+
+### 当前状态
+
+iOS 原生端的一轮 UI 改动，**代码全部写完，模拟器验证做到一半，未提交**。卡点见「别踩的坑」第 1 条。
+
+改完并已在模拟器 AskBible-Glass 上看过效果的：
+
+1. **欢迎页重做**（`Onboarding/WelcomeView.swift`）——不再是登录页。主按钮「开始今日灵修」进首页；语言收右上角轻量菜单；Apple / Google / 邮箱密码 / 注册整套收进右上角「登录」拉起的 `WelcomeSignInSheet`，邮箱密码在 sheet 里再折叠一层。
+2. **登录控件**（`Auth/AuthViews.swift`）——Apple 排到 Google 之前（登录页 / 注册页一并受益）；`AuthLink` 去掉 private（欢迎页要用）；控件底色 `0xFFFCF5/0.62` → `0xF8F1E3/0.72`，输入框圆角 10 → 8；`AuthSubmit` 主按钮改琥珀 `0xffb101/0.22`。
+3. **首页闲置全景**（`Home/HomeView.swift` + `AskBibleApp.swift`）——闲置 7 秒后系统底栏、设置齿轮、分隔线一起淡出，只留全景 + 金句 + 三颗常用键（音乐 / 朗读 / 下午茶，压淡 0.55）。走的是音乐页 `musicChromeHidden` 那条现成的路，新增 `homeChromeHidden`。
+4. **首页去玻璃底**（`Home/HomeView.swift`）——设置簇不再垫 `askGlassRect`；簇内图标阴影升到黑 0.45 / r4，闲置态不透明度 0.78 → 0.95。
+5. **探索页收起文章格**（`Explore/ExploreView.swift`）——`articleGrid` 调用注释掉，函数和数据留着。**这一条还没在模拟器上看过。**
+6. **文案**——`tools/native-copy-extra.json` 加了九条 `native.welcome*` + `native.todayDevotion`，跑过 `node tools/gen-site-copy.mjs`（iOS 和安卓两端 SiteCopy 都是生成物，别手改）。
+
+### 怎么验证
+
+```bash
+cd apps/askbible-ios
+xcodebuild -project AskBible.xcodeproj -scheme AskBible -configuration Debug \
+  -destination "id=4C1D3CEB-DA49-4605-A675-B7C31022B488" build
+xcrun simctl install 4C1D3CEB-DA49-4605-A675-B7C31022B488 <.app 路径>
+xcrun simctl launch 4C1D3CEB-DA49-4605-A675-B7C31022B488 me.askbible
+```
+
+要重看欢迎页：删掉容器里那一个键，**不要卸载 App**（会清登录态）：
+
+```bash
+C=$(xcrun simctl get_app_container 4C1D3CEB-DA49-4605-A675-B7C31022B488 me.askbible data)
+/usr/libexec/PlistBuddy -c "Delete :onboardingCompleted" "$C/Library/Preferences/me.askbible.plist"
+```
+
+模拟器 bundle id 是 `me.askbible`（不是 `me.askbible.native`，那只是 App Group 名）。
+
+### 关键决定
+
+全部在 `docs/DECISIONS.md` 2026-09-18 那几条，按时间读：欢迎页改版 → 首页成为灵修落地页（**已作废**）→ 灵修就是沉浸式首页本身（推翻上一条）→ 下午茶与专注是两个东西 → 每日读经不做首次引导 → 首页闲置底栏退场 → 设置簇去玻璃底。
+
+**最重要的一条**：灵修 = 全景场景 + 经文 + 音乐这件事本身，不是一篇文章。ChatGPT 给的整套方案建立在「灵修 = 文章」的错误前提上，已作废，别再照那套推。
+
+### 别踩的坑
+
+1. **同项目还有别的会话在写代码**（2026-09-18 当晚有三个）。这一轮两次被别人的半成品挡住编译：先是 medals 的 `Endpoints`（已修），后是成就系统的 `AchievementStore.hasProgress`。动手前按 `~/Desktop/APP/CLAUDE.md` 第 6.4 节先 `ListAgents` + 看文件 mtime。
+2. **首页那层「点空白收起/唤回」的 `Color.clear` 必须有明确尺寸**（`frame(width:height:)`），否则不参与点击命中，底栏退场后点屏幕叫不回来。
+3. **同一处别用 `toggle()` + `touch()`**：`touch()` 里有「不可见就唤回」的逻辑，会把刚收起的界面立刻弹回来。先算 `let next = !chromeVisible` 再赋值。
+4. **首页上浮的按钮要 `.zIndex(1)`**，否则被那层整屏点击层吃掉（表现像按钮失灵）。
+5. **iOS 26 的 Liquid Glass 底栏不吃 `.toolbarBackground(.hidden, for: .tabBar)`**，试过，玻璃胶囊底照样在。要「不被压着」只能让它整个退场。
+6. **`.clear` 玻璃在浅色场景上会提亮成一块发白的板子**，风景被蒙住。首页现在没有任何一块玻璃底。
+7. **模拟器上验不了「点空白唤回」**——本文第 422 行早就记了：`simctl` 注入的 tap 打不中首页那层透明层。
+   我这轮没先看这条，为此换了三种手势写法白试了三轮。要验这类交互直接装真机（Release 包，见 APP/CLAUDE.md 7.0）。
+8. 内置浏览器里 ChatGPT 页面**不能 fetch 本地 http 服务**（CSP 挡 connect-src），想把截图发给它要走 Chrome 扩展的 `file_upload`。
+
+### 下一步
+
+1. 等同项目其它会话把编译修通，`xcodebuild` 跑一次，验证第 5 条（探索页格子确实不见了，且读经计划页的「麦克阿瑟研经法」链接仍能打开文章页）。
+2. 验证通过后提交（Josh 的规矩：说明改动 + 聊天确认 → 直接推 main）。
+3. `docs/OPEN-ITEMS.md` 里 2026-09-18 还剩「第 3 屏今日读经引导（已定为不做）」之外的活口，接手前扫一眼。

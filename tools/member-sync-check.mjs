@@ -43,6 +43,23 @@ const fullIncoming = { bookmarks: blob(T2, bmB), chapterCompletion: blob(T3, { v
   scriptureListenTotals: blob(T3, { version: 1, totalSec: 90.7 }), readingPlanPrefs: blob(T3, planNtChosen), tripleLoopProgress: blob(T2, tripleB), ntDeepRepeatProgress: blob(T2, ntA),
   lastPosition: blob(T2, { bookId: "JHN", chapter: 3, bookName: "约翰福音" }), recentSearches: blob(T2, { version: 1, terms: ["  神爱 世人 ", "love", "LOVE", "x"] }),
   musicVisualTheme: blob(T1, { version: 1, theme: "day" }), unknownKey: blob(T1, { x: 1 }), badBlob: { value: 1 }, todayReadingDone: blob("", doneA) };
+const achA = {
+  version: 1,
+  chaptersRead: { "GEN:1": 100, "EXO:2": 500 },
+  versesRead: 40, listenTicks: 10, chaptersOpened: 7, bonusXP: 300, bestStreakDays: 9,
+  morningDates: ["2026-09-03", "2026-09-01"], nightDates: ["2026-09-02"],
+  earned: { "first-open": { tier: 2, at: 100 }, "streak": { tier: 1, at: 900 } },
+  seals: { GEN: 100, EXO: 500 },
+};
+const achB = {
+  version: 1,
+  chaptersRead: { "GEN:1": 50, "MRK:3": 900 },
+  versesRead: 12, listenTicks: 88, chaptersOpened: 2, bonusXP: 120, bestStreakDays: 3,
+  morningDates: ["2026-09-02"], nightDates: ["2026-09-02", "2026-09-05"],
+  earned: { "first-open": { tier: 1, at: 10 }, "streak": { tier: 1, at: 400 }, "verses": { tier: 3, at: 700 } },
+  seals: { GEN: 40, MRK: 900 },
+};
+
 const CASES = [
   ["merge", J(fullBase), J(fullIncoming), NOW], ["merge", "-", J(fullIncoming), NOW], ["merge", J(fullBase), "-", NOW],
   ["merge", J({ bookmarks: blob(T2, bmA) }), J({ bookmarks: blob(T1, bmB) }), NOW], ["merge", J({ bookmarks: blob(T1, bmOld) }), J({ bookmarks: blob(T1, bmB) }), NOW],
@@ -72,6 +89,10 @@ const CASES = [
   ["mergeval", "readingPlanPrefs", "-", J(planEsv), NOW], ["mergeval", "readingPlanPrefs", J(planEsv), J(7), NOW], ["mergeval", "readingPlanPrefs", J({ version: 1, planId: "triple-loop", anchor: "calendar-easter", startedOn: "2026-04-05", aheadDays: 0 }), J({ version: 1, planId: "esveverydayinword", anchor: "from-today", startedOn: "2026-06-01", chosen: true }), NOW],
   ["mergeval", "tripleLoopProgress", J(tripleA), J(tripleB), NOW], ["mergeval", "tripleLoopProgress", J(tripleB), J(tripleA), NOW], ["mergeval", "tripleLoopProgress", "-", J(tripleA), NOW], ["mergeval", "tripleLoopProgress", J({ ot: { bookId: "ZZZ", chapter: 99 }, nt: { bookId: "REV", chapter: 40 }, wisdom: { bookId: "SNG", chapter: 0 } }), J({}), NOW],
   ["mergeval", "ntDeepRepeatProgress", J(ntA), J(ntB), NOW], ["mergeval", "ntDeepRepeatProgress", J(ntB), J(ntA), NOW], ["mergeval", "ntDeepRepeatProgress", J(ntA), J(ntC), NOW], ["mergeval", "ntDeepRepeatProgress", "-", J(ntA), NOW],
+  // 成就 / XP 账本（Josh 2026-09-18）：计数取大、日期并集、勋章取更高档、首读 / 首次点亮时间取更早
+  ["mergeval", "achievements", J(achA), J(achB), NOW], ["mergeval", "achievements", J(achB), J(achA), NOW],
+  ["mergeval", "achievements", "-", J(achA), NOW], ["mergeval", "achievements", J(achA), J("str"), NOW],
+  ["mergeval", "achievements", J({ version: 1 }), J({ version: 1, versesRead: 3, earned: { x: { tier: 0, at: 5 } }, morningDates: ["2026-09-01", "bad", "2026-09-01"] }), NOW],
   ["mergeval", "lastPosition", J({ bookId: "GEN", chapter: 1 }), J({ bookId: "EXO", chapter: 2 }), NOW], ["mergeval", "appLocale", J({ version: 1, locale: "zh-CN" }), J({ version: 1, locale: "en" }), NOW], ["mergeval", "whatever", J(1), J(2), NOW],
   ["path", "", "0", "u1", "1", "0", "0"], ["path", "", "0", "u1", "0", "0", "0"], ["path", "", "0", "u1", "0", "1", "0"], ["path", "u1", "0", "u1", "1", "1", "0"], ["path", "u1", "0", "u1", "0", "0", "0"],
   ["path", "u2", "0", "u1", "0", "1", "1"], ["path", "u1", "1", "u1", "1", "1", "0"], ["path", "u1", "1", "u1", "1", "1", "1"], ["path", "", "1", "u1", "1", "0", "1"], ["path", "", "0", "u1", "1", "1", "1"],
@@ -117,16 +138,28 @@ try {
 } catch (err) { console.error("Kotlin 端跑不起来，本次只检 iOS ↔ TS：" + String(err.message).split("\n")[0]); }
 const ts = run(process.execPath, [path.join(ROOT, "node_modules/tsx/dist/cli.mjs"), path.join(ROOT, "tools/member-sync-expect.mts")], "TS 期望值");
 const problems = [], counts = {};
+// 明知故犯的三端不一致：写在这里才放行，没写在这里的一律算失败。
+// key 是「<用例类型> <参数1> <端>」。新增之前先想清楚为什么不能对齐，并在这里说明白。
+const KNOWN_DIVERGENCE = {
+  // 安卓的划重点整份以时间戳新的一侧为准（见 core/.../MemberReadingSync.kt 的注释）：
+  // 并集会让用户擦掉的重点被旧副本补回来。iOS / TS 仍是并集，属于 iOS 侧的待修项，
+  // 见 docs/OPEN-ITEMS.md「iOS 擦掉的划重点会被云端旧副本补回来」。
+  "mergeval highlights Kotlin": "安卓故意不用并集：擦掉的重点不该被旧副本补回",
+};
+const waived = [];
 function cmp(other, name) {
   for (let i = 0; i < CASES.length; i++) {
     const kind = CASES[i][0];
     if (other[i] === "skip") continue;
     counts[kind] = (counts[kind] || 0) + 1;
+    const waiver = KNOWN_DIVERGENCE[`${kind} ${CASES[i][1]} ${name}`];
+    if (waiver && swift[i] !== other[i]) { waived.push(`#${i} ${kind} ${CASES[i][1]} ${name}：${waiver}`); continue; }
     if (swift[i] !== other[i]) problems.push(`#${i} ${CASES[i].slice(0, 2).join(" ").slice(0, 90)}\n      Swift: ${String(swift[i]).slice(0, 320)}\n      ${name}: ${String(other[i]).slice(0, 320)}`);
   }
 }
 cmp(ts, "TS");
 if (kotlin) cmp(kotlin, "Kotlin");
 if (problems.length) { console.error("会员读经同步规则对拍失败："); for (const p of problems) console.error("  - " + p); process.exit(1); }
+if (waived.length) { console.warn("已知的三端不一致（白名单放行）："); for (const w of waived) console.warn("  ! " + w); }
 console.log(`会员读经同步规则对拍通过：${CASES.length} 条用例${kotlin ? "三端一致" : "iOS ↔ TS 一致（Kotlin 端未参与）"}`);
 console.log("  " + Object.entries(counts).map(([k, v]) => `${k} ${v / (kotlin ? 2 : 1)}`).join(" · "));

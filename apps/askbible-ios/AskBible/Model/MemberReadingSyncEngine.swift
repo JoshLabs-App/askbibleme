@@ -20,6 +20,7 @@ final class MemberReadingSyncEngine: ObservableObject {
     private var activity: ReadingActivityStore!
     private var search: SearchPrefs!
     private var highlights: VerseHighlightStore!
+    private var achievements: AchievementStore!
     /// 当前界面语言（appLocale 侧车的 locale）
     var localeTag: () -> String = { "zh-CN" }
 
@@ -32,9 +33,11 @@ final class MemberReadingSyncEngine: ObservableObject {
     private var applyingRemote = false
 
     func attach(auth: MemberAuthStore, plans: ReadingPlanStore, bookmarks: VerseBookmarkStore, activity: ReadingActivityStore,
-                search: SearchPrefs, highlights: VerseHighlightStore) {
+                search: SearchPrefs, highlights: VerseHighlightStore, achievements: AchievementStore) {
         self.auth = auth; self.plans = plans; self.bookmarks = bookmarks; self.activity = activity; self.search = search
         self.highlights = highlights
+        self.achievements = achievements
+        achievements.onLocalChange = { [weak self] k in self?.notifyLocalChanged(k) }
         highlights.onLocalChange = { [weak self] k in self?.notifyLocalChanged(k) }
         plans.onLocalChange = { [weak self] k in self?.notifyLocalChanged(k) }
         bookmarks.onLocalChange = { [weak self] in self?.notifyLocalChanged("bookmarks") }
@@ -82,6 +85,7 @@ final class MemberReadingSyncEngine: ObservableObject {
         if !activity.recent.isEmpty { blobs["recentChapters"] = wrap(activity.recentJSON, now) }
         let hl = highlights.json
         if !hl.isEmpty { blobs["highlights"] = wrap(hl, now) }
+        if achievements.hasProgress { blobs["achievements"] = wrap(achievements.syncJSON, now) }
         return blobs
     }
 
@@ -99,10 +103,10 @@ final class MemberReadingSyncEngine: ObservableObject {
 
     private func beginApplying() {
         applyingRemote = true
-        plans.suppressChangeNotify = true; activity.suppressChangeNotify = true
+        plans.suppressChangeNotify = true; activity.suppressChangeNotify = true; achievements.suppressChangeNotify = true
     }
     private func endApplying() {
-        plans.suppressChangeNotify = false; activity.suppressChangeNotify = false
+        plans.suppressChangeNotify = false; activity.suppressChangeNotify = false; achievements.suppressChangeNotify = false
         applyingRemote = false
     }
 
@@ -152,6 +156,8 @@ final class MemberReadingSyncEngine: ObservableObject {
             if let d = R.dict(value), R.num(d["version"]) == 1, let arr = d["terms"] as? [Any] { search.replaceRecent(arr.compactMap { $0 as? String }) }
         case "highlights":
             if let o = R.dict(value) { highlights.replace(VerseHighlightStore.parse(json: o)) }
+        case "achievements":
+            if let d = R.dict(value) { achievements.mergeRemote(d) }
         case "appUsageTime":
             if let d = R.dict(value), let sec = R.num(d["totalSec"]) { activity.mergeRemoteUsage(totalSec: sec) }
         case "recentChapters":
@@ -177,6 +183,7 @@ final class MemberReadingSyncEngine: ObservableObject {
     private func clearLocalBlobs() {
         beginApplying()
         plans.clearForAccountSwitch(); bookmarks.clearForAccountSwitch(); activity.clearForAccountSwitch(); search.clearRecentForAccountSwitch()
+        achievements.clearForAccountSwitch()
         endApplying()
     }
 

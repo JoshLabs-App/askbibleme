@@ -190,6 +190,62 @@ function mergeRecentChapters(a: unknown, b: unknown): unknown {
   return { version: 1, items };
 }
 
+// 成就 / XP 账本（Josh 2026-09-18），真源在 lib/member-reading-sync/merge.ts：
+// 计数取大、日期并集、勋章取更高档（同档取更早）、chaptersRead / seals 取更早的首次时间
+function mergeAchievementsExpect(a: unknown, b: unknown): unknown {
+  const rec = (v: unknown) => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null);
+  const left = rec(a), right = rec(b);
+  if (!left) return b;
+  if (!right) return a;
+  const sides = [left, right];
+  const int = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? Math.floor(v) : 0);
+  const maxInt = (k: string) => Math.max(int(left[k]), int(right[k]));
+  const dates = (k: string) => {
+    const read = (o: Record<string, unknown>) =>
+      Array.isArray(o[k]) ? (o[k] as unknown[]).filter((x): x is string => typeof x === "string") : [];
+    return normalizeDates([...read(left), ...read(right)]);
+  };
+  const earliestMap = (k: string) => {
+    const out: Record<string, number> = {};
+    for (const side of sides) {
+      const m = rec(side[k]);
+      if (!m) continue;
+      for (const [key, v] of Object.entries(m)) {
+        const at = int(v), cur = out[key];
+        out[key] = cur === undefined ? at : at > 0 ? Math.min(cur, at) : cur;
+      }
+    }
+    return out;
+  };
+  const earned: Record<string, { tier: number; at: number }> = {};
+  for (const side of sides) {
+    const m = rec(side.earned);
+    if (!m) continue;
+    for (const [key, v] of Object.entries(m)) {
+      const o = rec(v);
+      if (!o) continue;
+      const tier = int(o.tier);
+      if (tier < 1) continue;
+      const at = int(o.at), cur = earned[key];
+      if (!cur || tier > cur.tier) earned[key] = { tier, at };
+      else if (tier === cur.tier && at > 0) earned[key] = { tier, at: cur.at > 0 ? Math.min(cur.at, at) : at };
+    }
+  }
+  return {
+    version: 1,
+    chaptersRead: earliestMap("chaptersRead"),
+    versesRead: maxInt("versesRead"),
+    listenTicks: maxInt("listenTicks"),
+    chaptersOpened: maxInt("chaptersOpened"),
+    morningDates: dates("morningDates"),
+    nightDates: dates("nightDates"),
+    bonusXP: maxInt("bonusXP"),
+    bestStreakDays: maxInt("bestStreakDays"),
+    earned,
+    seals: earliestMap("seals"),
+  };
+}
+
 function mergeBlobValue(key: string, a: unknown, b: unknown): unknown {
   switch (key) {
     case "bookmarks": return mergeBookmarks(a, b);
@@ -212,6 +268,7 @@ function mergeBlobValue(key: string, a: unknown, b: unknown): unknown {
     case "readingPlanPrefs": return prefsMerge.mergeReadingPlanPrefsValue(a, b);
     case "tripleLoopProgress": return mergeTripleLoopReadingState(a, b);
     case "ntDeepRepeatProgress": return mergeNtDeepRepeatReadingState(a, b);
+    case "achievements": return mergeAchievementsExpect(a, b);
     default: return b;
   }
 }

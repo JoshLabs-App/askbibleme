@@ -438,6 +438,12 @@ class AchievementStore(context: Context) {
 
     // ---- 会员同步 ----
 
+    /** 账本里有没有值得上云的东西（空账本不推，免得覆盖别的设备） */
+    val hasProgress: Boolean
+        get() = s.chaptersRead.isNotEmpty() || s.earned.isNotEmpty() || s.seals.isNotEmpty() ||
+            s.versesRead > 0 || s.listenTicks > 0 || s.chaptersOpened > 0 || s.bonusXP > 0 ||
+            s.morningDates.isNotEmpty() || s.nightDates.isNotEmpty()
+
     fun syncJson(): JSONObject {
         val chapters = JSONObject()
         for ((k, v) in s.chaptersRead) chapters.put(k, v.toLong())

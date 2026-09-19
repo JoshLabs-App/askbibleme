@@ -204,6 +204,8 @@ private fun RootScreen() {
     var showWelcome by remember { mutableStateOf(!OnboardingPrefs.completed(context)) }
     // 睡眠专辑放着时音乐页把按钮藏起来了，底栏一起藏（RN musicAutoHideChrome）
     var musicChromeHidden by remember { mutableStateOf(false) }
+    // 首页回归卡正占着顶部：勋章 / 升级横幅让位，等它退场再弹（Josh 2026-09-18）
+    var homeReturnCardUp by remember { mutableStateOf(false) }
     // 浏览器 OAuth 回调：拿到 code 就换会话（RN useMemberAuthGoogleDeepLink）
     val oauthCallback = OAuthCallbackBus.url
     LaunchedEffect(oauthCallback) {
@@ -270,8 +272,9 @@ private fun RootScreen() {
     // 成就 / XP（DECISIONS「成就系统」「XP 要一直在涨」）：与 iOS AchievementStore 对等
     val achievements = remember { me.askbible.native_.data.AchievementStore(context) }
     var showAchievements by remember { mutableStateOf(false) }
+    // 先 attach 成就（refresh 会写账本），再挂同步，免得启动时空推一次
     LaunchedEffect(Unit) { achievements.attach(activity, plans, bookmarks, highlights) }
-    val syncEngine = remember { MemberReadingSyncEngine(context).also { it.attach(auth, plans, bookmarks, activity, searchPrefs, highlights); me.askbible.native_.data.RnLegacyMigration.runOnce(context, it) } }
+    val syncEngine = remember { MemberReadingSyncEngine(context).also { it.attach(auth, plans, bookmarks, activity, searchPrefs, highlights, achievements); me.askbible.native_.data.RnLegacyMigration.runOnce(context, it) } }
     LaunchedEffect(appLocale) { syncEngine.localeTag = { appLocale.tag } }
     // 网站译本目录（几百本在线译本）：盘里没过期就不走网
     var catalogRevision by remember { mutableStateOf(0) }
@@ -599,6 +602,18 @@ private fun RootScreen() {
                     else { val wasPlaying = music.isPlaying; music.selectAlbum(album); if (!wasPlaying) music.toggle() }
                 },
                 onOpenMenu = { showMenu = true },
+                // 回归卡（DECISIONS 2026-09-18 Gentle Return）：最近读到的那一章，隔天回来时首页顶部出现
+                lastRead = activity.recent.firstOrNull(),
+                onReturnCardVisible = { homeReturnCardUp = it },
+                onResumeReading = { resume ->
+                    planFlowActive = false; listenBook = null; chapterFromPlan = false
+                    pickingBook = null; focusVerse = null
+                    tab = ShellTab.READ
+                    // 没有记录（首次打开）就只进读经页，让用户自己挑，不替他定一卷
+                    if (resume != null) BibleCatalog.book(resume.bookId)?.let { b ->
+                        chapter = resume.chapter; openedBook = b
+                    }
+                },
             )
             ShellTab.MUSIC -> MusicScreen(player = music, onChromeHidden = { musicChromeHidden = it },
                 sleepActive = audio.sleepDeadlineMs != null || music.sleepDeadlineMs != null || home.sleepDeadlineMs != null || ambient.sleepDeadlineMs != null,
@@ -993,7 +1008,10 @@ private fun RootScreen() {
         // +XP 飘字 + 勋章 / 印章 / 升级提示（Josh 2026-09-18「要感觉到 XP 一直在增加」）
         Box(Modifier.fillMaxSize().statusBarsPadding(), contentAlignment = Alignment.TopCenter) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                EarnedToast(achievements, appLocale, Parchment.light, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                // 回归卡在首页顶部占着同一个位置时先不弹——事件留在 pending 里不消费，卡片退场后照常补上
+                if (!homeReturnCardUp) {
+                    EarnedToast(achievements, appLocale, Parchment.light, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                }
                 XPFloater(achievements, Modifier.padding(top = 60.dp))
             }
         }

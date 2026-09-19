@@ -287,7 +287,8 @@
 - **为什么稿子自己写**：Josh 要求**正统深度神学解读，不要心灵鸡汤**。这需要指定释经路线（圣言权威 / 申13:1-5 与加1:8 的检验 / 来自同侪的试探 / 狮子与驴作为神主权的记号 / 王下23 的应验 / 避免律法主义与廉价恩典两种误读 / 基督论收束），让 NotebookLM 自由发挥拿不到这个深度，而且它每次生成的内容都不一样、不可复现。
 - **为什么音频用它**：2026-09-18 三版盲听，Josh 的结论是「NotebookLM 表现高出不少，非常自然」，明显赢过本机 Kokoro 和微软 edge-tts。首版 16:28 / 31.8MB m4a。
 - **A 路（浏览器自动化）实测是通的**，不需要人工介入。可复用的步骤：内置浏览器打开 notebook.google.com（登录态常在）→「+ 新建」建笔记本 →「复制的文字」粘贴来源（**用这个，别碰文件选择器**）→ Studio →「音频概览」右侧箭头打开自定义面板 → 语言选中文（简体）、格式「深入探究」、在「AI 主持人应着重于哪些方面」里写死指令 →「立即生成」→ 等约 12-16 分钟 → 卡片右侧 ⋮ →「下载」。
-  - **下载是成功的**，即使浏览器面板提示「新标签页被拦截」也一样——文件直接落到 `~/Downloads/<音频标题>.m4a`，去那里取即可。不要被那句拦截提示误导。
+  - **最后这一步「下载」必须 Josh 亲手点**：浏览器面板只允许用户自己的点击打开新标签，Claude 点会被拦下（提示「新标签页被拦截」，且确实没下下来）。点完文件落在 `~/Downloads/<音频标题>.m4a`，Claude 从那里取。前面建笔记本、粘来源、设指令、生成、等待全部可以自动，**只有这一下需要人**。
+  - ⚠️ 别给页面挂 `window.open` / `HTMLAnchorElement.prototype.click` 钩子去捕获下载地址——钩子会把真正的下载也一起拦掉，连 Josh 自己点都失效，必须刷新页面才能恢复。
   - **不要试图自己 fetch 音频 URL**：地址在 `lh3.googleusercontent.com`，跨源 fetch 被 CORS 挡，内置浏览器也不允许导航到该域，`curl` 拿回来的是 Google 登录页（916KB HTML，content-type 还是 text/html）。老老实实点「下载」。
   - 转码留档：`ffmpeg -i x.m4a -ac 1 -ar 24000 -codec:a libmp3lame -b:a 48k x.mp3`（31.8MB → 5.7MB）。
 - **本机 TTS 的位置**：Kokoro **弃用**（Josh 2026-09-18：「用 KOKORO 不行，以后尽量不用」）。需要本机/离线合成时默认用**微软 edge-tts**（`pip install edge-tts`，免费无需 key，52 段并发跑完不到一分钟）：晓恩＝`zh-CN-XiaoxiaoNeural` rate `-6%`，陈老师＝`zh-CN-YunyangNeural` rate `-10%`，按发言人分段生成再用 ffmpeg 插 0.6s 静音拼接。中文金句的 VoxCPM2 方案不受影响，仍按 `.claude/skills/bible-tts` 执行。
@@ -301,4 +302,35 @@
   3. **听读 XP 三重约束**：App 在前台（`AchievementStore.foreground`，由 iOS `scenePhase` / 安卓 `ON_RESUME`/`ON_PAUSE` 驱动）＋ 确实在播 ＋ **同一章最多 80 片**（`xp.listenTicksPerChapterCap`，≈20 分钟，长章如诗篇 119 也够）。换章自动清零。
 - **为什么**：ChatGPT 的评审（`docs/gamification-chatgpt-review.md`）主张把 XP 降成后台、删掉飘字和听读 XP，理由是信仰产品里外在奖励会挤出内在动机。这个担心成立的部分只有两处——**惩罚性的断签**和**挂机刷分**，都能单独修掉，不必牺牲 Josh 明确要的正反馈。所以留爽感、去负反馈、堵漏洞。
 - **注意**：`bestStreakDays` 参与会员同步 JSON（取两端较大值），换设备不会把历史峰值丢掉。
+- **日期**：2026-09-18
+
+## 留存的缺口是「回归」，不是「爽感」：加 Gentle Return 卡，不加任何惩罚
+
+- **决定了什么**：Josh 2026-09-18「你决定」。成就 / XP 三条决策已经把**在 App 里的当下反馈**做满（飘字、微反馈、勋章、印章、等级），但没有任何东西回答「离开之后为什么回来」。补一块**回归卡**：隔天回来时首页顶部出现「你回来了 / 我们上次停在这里 · <书 章>」+「接着走」，点一下直接进那一章。首次或无记录时退化成「从这里开始」。文案键已加进 `tools/native-copy-extra.json`（`native.returnGreeting` / `returnResumeTitle` / `returnResumeAction` / `returnFreshTitle`）并跑过 `gen:site-copy`。
+- **为什么是这块**：「XP 刺激强度定 A 方案」把连续天数倍率改成**只升不降**，去掉了断签惩罚——这是对的（`01-vision.md` 的用户恐惧第一条就是"中断后的失败感"），但代价是**离开一周回来毫无损失，也就毫无回来的理由**。负向召回被拿掉之后，必须补一个正向的。同一个信息，「你已 5 天没来」是问责，「我们上次停在 X」是陪伴，后者才符合 `03-principles.md` 的 Gentle Return。
+- **明确不做**：断签提示、"你已 N 天没读"、完成百分比、催促推送。判断标准一句话——**这个反馈在说「你做得够不够」，还是在说「你走到哪了」？前者一律不要。** 已有的 XP / 勋章属于后者（陈述累积），所以不冲突。
+- **数据现成**：`ReadingActivityStore` 已有「最近阅读」和读经天集合，不需要新存储。
+- **已接线（2026-09-18）**：iOS `Home/HomeView.swift` 的 `returnCard` + 安卓 `ui/HomeScreen.kt` 的 `ReturnCard`，壳层各传 `lastRead`（`ReadingActivityStore.recent.first`）和 `onResumeReading`。两处实现刻意一致：**隔天才出**（最近阅读那天 != 今天）、跟首页闲置一起淡出（7 秒）、点过本次前台不再出。底色两端都用深褐半透 `0x1c1410/0.55`，**没有用 iOS 26 的 clear 玻璃**——浅色场景下它会提亮成一块发白的板子，和同日撤掉设置簇玻璃底是同一个原因。
+- **横幅让位（2026-09-18 追加）**：回归卡和勋章 / 升级横幅抢首页顶部同一个位置，Josh「你决定」。定为**有回归卡的那次启动把横幅压后**——回归卡只在隔天回来时出现，本来就稀有；升级横幅哪次都能补。实现是 `onReturnCardVisible` 报给壳，`EarnedToast` 在卡片在时不渲染且**不消费事件**。
+- **全新用户照样出「从这里开始」（2026-09-18 追加）**：Josh「现在没什么用户，所以可以加的」。保留这一档，不因为「首页不被打扰」把它砍掉；等有真实用户量再回看。
+- **卡片退场和底栏那条解耦（2026-09-18 追加）**：Josh「你决定」。回归卡的退场由**它自己的 7 秒计时**置位 `returnCardDone`，不只依赖 `chromeVisible`。理由：「首页闲置隐藏底栏」那条还挂在等真机确认，若退回成底栏常驻（`chromeVisible` 恒为 true），只靠它的回归卡就会被永久钉在首页顶部。安卓本来就是自带计时，这次是 iOS 对齐安卓。实测：卡片出现 → 7 秒后自己退场。
+- **注意 `09-dangerous-directions.md` 已被覆盖**：那份早期文档写着"不要变成游戏化产品"，与本日三条成就 / XP 决策直接冲突，**以 DECISIONS 为准**。本线程一度按那份旧文档写过一份反游戏化提案（`docs/12-retention-feedback-proposal.md`），已删除作废。
+- **日期**：2026-09-18
+
+## 成就 / XP 账本上会员同步：新增 `achievements` blob，逐字段「只涨不退」合并
+
+- **决定了什么**：成就账本作为**第 26 个 blob 键** `achievements` 挂进会员读经同步（`member_reading_sync_documents.blobs`），四端键表同时加：
+  `lib/member-reading-sync/schema.ts`、iOS `MemberReadingSync.swift`、安卓 `core/.../MemberReadingSync.kt`（RN 那份键表不加——RN 没有成就 store，不会产出这个 blob，而合并时 base 是整份带上去的，不会丢）。
+- **合并规则不用默认的「时间戳新的一侧胜」**，三端各实现一份 `mergeAchievements`，逐字段：计数（`versesRead` / `listenTicks` / `chaptersOpened` / `bonusXP` / `bestStreakDays`）取大，日期集合（`morningDates` / `nightDates`）取并集，勋章 `earned` 取更高档、同档取更早的获得时间，`chaptersRead` / `seals` 取**更早**的首次点亮时间。
+- **为什么**：勋章和 XP 是单调增的荣誉，最怕「换台手机登录后勋章少了一枚」。默认的整份覆盖会让后同步的旧设备把新设备的进度顶掉；而这份账本每个字段的「正确合并」语义各不相同（计数取大、首次时间取小），只能逐字段写。三端规则必须逐字对齐，否则谁最后推谁说了算。
+- **数据库不用迁移**：`blobs` 是 `jsonb`，没有键的约束（`supabase/migrations/20260617000000_member_reading_sync.sql`）。
+- **空账本不推**：两端加了 `AchievementStore.hasProgress`，没有任何进度时不写这个 blob，免得新装的设备用空账本去合并云端。
+- **换帐号 / 退出**：`clearLocalBlobs()` 里一并调 `achievements.clearForAccountSwitch()`——成就跟帐号走。
+- **日期**：2026-09-18
+
+## 三端对拍的「已知不一致」走白名单，不靠记忆
+
+- **决定了什么**：`tools/member-sync-check.mjs` 加了一张 `KNOWN_DIVERGENCE` 表。三端结果不一致时，只有在这张表里写明理由的条目才放行（跑的时候打印一行 `!` 提醒），**没写在表里的一律 exit 1**。目前表里只有一条：安卓的 `highlights` 故意不用并集。
+- **为什么**：这个 check 从深色模式那次提交（2026-09-16）起就编译不过，两周里没人发现三端规则有没有漂。修好之后立刻暴露出一条真实的既有不一致（iOS 擦掉的划重点会被旧副本补回，见 OPEN-ITEMS）。如果为了让它变绿就把用例删掉，等于把 check 再废一次；如果放着它红，下一个人又会习惯性忽略。白名单是唯一能同时做到「已知的不挡路」和「新出现的立刻炸」的写法。
+- **配套**：`Theme/ParchmentTheme.swift` 的 `init(parchment:)` 包了 `#if canImport(UIKit)`，让 harness 能在 macOS 目标下编过；App 行为不变。
 - **日期**：2026-09-18

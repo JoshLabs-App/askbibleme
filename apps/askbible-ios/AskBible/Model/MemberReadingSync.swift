@@ -17,6 +17,8 @@ enum MemberReadingSyncRules {
         "natureSceneUi", "musicVisualTheme", "scripturePlaybackRate", "cuvAudioVoice", "exploreYearDayProfile", "appLocale",
         // Josh 2026-09-11：使用时长与最近阅读也要上云（原本只存本机）
         "appUsageTime", "recentChapters",
+        // Josh 2026-09-18：成就 / XP 账本（AchievementStore）
+        "achievements",
     ]
     /// 同步驱动的节流：30 秒内不重复自动同步；本地改动 1.5 秒防抖；前台轮询 45 秒（RN runMemberReadingSync / requestMemberReadingSync / useMemberReadingSync）
     static let minSyncIntervalMs: Double = 30_000
@@ -388,6 +390,47 @@ enum MemberReadingSyncRules {
         return ["version": 1, "items": Array(items)]
     }
 
+    /// 成就账本：计数取大、日期取并集、勋章取更高档、首次点亮时间取更早（与 AchievementStore.mergeRemote 同规则）
+    static func mergeAchievements(_ a: Any?, _ b: Any?) -> Any? {
+        guard let left = dict(a) else { return b }
+        guard let right = dict(b) else { return a }
+        func maxInt(_ k: String) -> Int { Int(max(num(left[k]) ?? 0, num(right[k]) ?? 0)) }
+        func dates(_ k: String) -> [String] { normalizeDates(stringArray(left[k]) + stringArray(right[k])) }
+        // 首读时间：同一章两端都有就取更早的那次
+        func earliestMap(_ k: String) -> [String: Int] {
+            var out: [String: Int] = [:]
+            for side in [left, right] {
+                for (key, v) in dict(side[k]) ?? [:] {
+                    let at = Int(num(v) ?? 0)
+                    if let cur = out[key] { out[key] = at > 0 ? min(cur, at) : cur } else { out[key] = at }
+                }
+            }
+            return out
+        }
+        var earned: [String: [String: Int]] = [:]
+        for side in [left, right] {
+            for (key, v) in dict(side["earned"]) ?? [:] {
+                guard let o = dict(v), let tier = num(o["tier"]), tier >= 1 else { continue }
+                let at = Int(num(o["at"]) ?? 0)
+                if let cur = earned[key] {
+                    if Int(tier) > (cur["tier"] ?? 0) { earned[key] = ["tier": Int(tier), "at": at] }
+                    else if Int(tier) == (cur["tier"] ?? 0), at > 0 { earned[key] = ["tier": Int(tier), "at": min(cur["at"] ?? at, at)] }
+                } else { earned[key] = ["tier": Int(tier), "at": at] }
+            }
+        }
+        return ["version": 1,
+                "chaptersRead": earliestMap("chaptersRead"),
+                "versesRead": maxInt("versesRead"),
+                "listenTicks": maxInt("listenTicks"),
+                "chaptersOpened": maxInt("chaptersOpened"),
+                "morningDates": dates("morningDates"),
+                "nightDates": dates("nightDates"),
+                "bonusXP": maxInt("bonusXP"),
+                "bestStreakDays": maxInt("bestStreakDays"),
+                "earned": earned,
+                "seals": earliestMap("seals")] as [String: Any]
+    }
+
     // MARK: 一条 blob 的合并 + 整份推送合并
 
     static func mergeBlobValue(key: String, _ a: Any?, _ b: Any?, now: Date) -> Any? {
@@ -405,6 +448,7 @@ enum MemberReadingSyncRules {
         case "readingPlanPrefs": return mergeReadingPlanPrefsValue(a, b)
         case "tripleLoopProgress": return mergeTripleLoopState(a, b)
         case "ntDeepRepeatProgress": return mergeNtDeepRepeatState(a, b, now: now)
+        case "achievements": return mergeAchievements(a, b)
         default: return b
         }
     }

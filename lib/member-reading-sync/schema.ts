@@ -27,6 +27,8 @@ export const MEMBER_READING_SYNC_BLOB_KEYS = [
   // Josh 2026-09-11：使用时长与最近阅读也要上云（原本只存本机）
   "appUsageTime",
   "recentChapters",
+  // Josh 2026-09-18：成就 / XP 账本（原生 AchievementStore；网页端待接）
+  "achievements",
 ] as const;
 
 export type MemberReadingSyncBlobKey = (typeof MEMBER_READING_SYNC_BLOB_KEYS)[number];

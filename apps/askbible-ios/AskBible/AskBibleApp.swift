@@ -26,6 +26,8 @@ struct RootView: View {
     @StateObject private var auth = MemberAuthStore()
     /// 读经活动（习惯日 / 累计听 / 使用时长 / 最近阅读）与会员读经进度同步
     @StateObject private var activity = ReadingActivityStore()
+    /// 首页回归卡正占着顶部：勋章 / 升级横幅让位，等它退场再弹
+    @State private var homeReturnCardUp = false
     @StateObject private var sync = MemberReadingSyncEngine()
     @Environment(\.scenePhase) private var scenePhase
     /// 15 秒一跳：使用时长打点 + 记当天为读经日；每三跳（45 秒）轮询一次同步（RN AppUsageTimeBridge / useMemberReadingSync）
@@ -469,12 +471,12 @@ struct RootView: View {
             .onAppear {
                 Task { await store.refreshRemoteCatalog() }
                 home.setSource(store.translation)
+                achievements.attach(activity: activity, plans: plans, bookmarks: bookmarks, highlights: highlights)
                 sync.attach(auth: auth, plans: plans, bookmarks: bookmarks, activity: activity,
-                            search: searchPrefs, highlights: highlights)
+                            search: searchPrefs, highlights: highlights, achievements: achievements)
                 sync.localeTag = { [appLocale] in appLocale.rawValue }
                 activity.noteForeground(); activity.touchHabitDay()
                 activity.mergeRemoteHabit(Array(plans.listenedDates))
-                achievements.attach(activity: activity, plans: plans, bookmarks: bookmarks, highlights: highlights)
                 audio.onProgress = { [weak activity, weak achievements] t, playing in
                     activity?.noteListenProgress(positionSec: t, isPlaying: playing)
                     // 每 listenTickSeconds 给一次 XP：读经的时候进度条肉眼在动
@@ -739,9 +741,12 @@ struct RootView: View {
         .overlay(alignment: .top) {
             XPFloater().environmentObject(achievements).padding(.top, 90)
         }
-        // 勋章 / 印章 / 升级的获得提示
+        // 勋章 / 印章 / 升级的获得提示。回归卡在首页顶部占着同一个位置时先不弹——
+        // 事件留在 ach.pending 里不消费，卡片退场后照常补上（Josh 2026-09-18）
         .overlay(alignment: .top) {
-            EarnedToast().environmentObject(achievements).padding(.top, 8).padding(.horizontal, 16)
+            if !homeReturnCardUp {
+                EarnedToast().environmentObject(achievements).padding(.top, 8).padding(.horizontal, 16)
+            }
         }
     }
 
@@ -779,7 +784,20 @@ struct RootView: View {
                     }
                 },
                 onOpenMenu: { showMenu = true },
-                onChromeHidden: { hidden in withAnimation(.easeInOut(duration: 0.3)) { homeChromeHidden = hidden } }
+                onChromeHidden: { hidden in withAnimation(.easeInOut(duration: 0.3)) { homeChromeHidden = hidden } },
+                // 回归卡（DECISIONS 2026-09-18 Gentle Return）：最近读到的那一章，隔天回来时首页顶部出现
+                lastRead: activity.recent.first,
+                onResumeReading: { resume in
+                    planFlowActive = false; listenChapter = nil; chapterFromPlan = false
+                    focusVerse = nil
+                    openedBook = nil
+                    tab = .read
+                    // 没有记录（首次打开）就只进读经页，让用户自己挑，不替他定一卷
+                    if let resume, let b = BibleCatalog.book(id: resume.bookId) {
+                        openedChapter = (b, resume.chapter)
+                    }
+                },
+                onReturnCardVisible: { up in homeReturnCardUp = up }
             )
         case .music:
             MusicView(player: music,

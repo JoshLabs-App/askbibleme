@@ -358,6 +358,13 @@ final class AchievementStore: ObservableObject {
 
     // MARK: 会员同步
 
+    /// 账本里有没有值得上云的东西（空账本不推，免得覆盖别的设备）
+    var hasProgress: Bool {
+        !s.chaptersRead.isEmpty || !s.earned.isEmpty || !s.seals.isEmpty
+            || s.versesRead > 0 || s.listenTicks > 0 || s.chaptersOpened > 0 || s.bonusXP > 0
+            || !s.morningDates.isEmpty || !s.nightDates.isEmpty
+    }
+
     var syncJSON: [String: Any] {
         ["version": 1,
          "chaptersRead": s.chaptersRead.mapValues { Int($0) },

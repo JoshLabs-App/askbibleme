@@ -447,5 +447,21 @@
   "native.chaptersReadStat": {
     "zh": "已读 {{n}} 章",
     "en": "{{n}} chapters read"
+  },
+  "native.returnGreeting": {
+    "zh": "你回来了",
+    "en": "Welcome back"
+  },
+  "native.returnResumeTitle": {
+    "zh": "我们上次停在这里",
+    "en": "We stopped here last time"
+  },
+  "native.returnResumeAction": {
+    "zh": "接着走",
+    "en": "Continue"
+  },
+  "native.returnFreshTitle": {
+    "zh": "从这里开始",
+    "en": "Start here"
   }
 }

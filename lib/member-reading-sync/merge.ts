@@ -244,9 +244,71 @@ function mergeBlobValue(key: MemberReadingSyncBlobKey, a: unknown, b: unknown): 
       return mergeTripleLoopReadingState(a, b);
     case "ntDeepRepeatProgress":
       return mergeNtDeepRepeatReadingState(a, b);
+    case "achievements":
+      return mergeAchievements(a, b);
     default:
       return b;
   }
+}
+
+/** 成就账本：计数取大、日期取并集、勋章取更高档、首次点亮时间取更早（与两端 AchievementStore.mergeRemote 同规则） */
+function mergeAchievements(a: unknown, b: unknown): unknown {
+  const rec = (v: unknown): Record<string, unknown> | null =>
+    v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
+  const left = rec(a);
+  const right = rec(b);
+  if (!left) return b;
+  if (!right) return a;
+  const sides = [left, right];
+  const int = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? Math.floor(v) : 0);
+  const maxInt = (k: string) => Math.max(int(left[k]), int(right[k]));
+  const dates = (k: string) => {
+    const read = (o: Record<string, unknown>) =>
+      Array.isArray(o[k]) ? (o[k] as unknown[]).filter((x): x is string => typeof x === "string") : [];
+    return Array.from(new Set([...read(left), ...read(right)])).sort();
+  };
+  // 首读 / 首次点亮时间：两端都有就取更早的那次
+  const earliestMap = (k: string) => {
+    const out: Record<string, number> = {};
+    for (const side of sides) {
+      const m = rec(side[k]);
+      if (!m) continue;
+      for (const [key, v] of Object.entries(m)) {
+        const at = int(v);
+        const cur = out[key];
+        out[key] = cur === undefined ? at : at > 0 ? Math.min(cur, at) : cur;
+      }
+    }
+    return out;
+  };
+  const earned: Record<string, { tier: number; at: number }> = {};
+  for (const side of sides) {
+    const m = rec(side.earned);
+    if (!m) continue;
+    for (const [key, v] of Object.entries(m)) {
+      const o = rec(v);
+      if (!o) continue;
+      const tier = int(o.tier);
+      if (tier < 1) continue;
+      const at = int(o.at);
+      const cur = earned[key];
+      if (!cur || tier > cur.tier) earned[key] = { tier, at };
+      else if (tier === cur.tier && at > 0) earned[key] = { tier, at: cur.at > 0 ? Math.min(cur.at, at) : at };
+    }
+  }
+  return {
+    version: 1,
+    chaptersRead: earliestMap("chaptersRead"),
+    versesRead: maxInt("versesRead"),
+    listenTicks: maxInt("listenTicks"),
+    chaptersOpened: maxInt("chaptersOpened"),
+    morningDates: dates("morningDates"),
+    nightDates: dates("nightDates"),
+    bonusXP: maxInt("bonusXP"),
+    bestStreakDays: maxInt("bestStreakDays"),
+    earned,
+    seals: earliestMap("seals"),
+  };
 }
 
 function mergeBlobPair(

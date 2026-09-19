@@ -55,7 +55,10 @@ import me.askbible.native_.data.GoldenVerse
 import me.askbible.native_.data.HomeVerseTypography
 import me.askbible.native_.data.NatureScene
 import me.askbible.native_.data.NatureScenes
+import me.askbible.native_.data.ReadingActivityStore
 import me.askbible.native_.data.ShellMetrics
+import me.askbible.native_.data.SiteCopy
+import java.util.Calendar
 
 /** RN homeNatureLayoutMetrics / homeNatureScreenConstants 逐值 */
 private object HomeMetrics {
@@ -102,8 +105,17 @@ fun HomeScreen(
     onToggleVoice: () -> Unit,
     onPressAlbum: (String) -> Unit,
     onOpenMenu: () -> Unit,
+    /** 最近读到的一章（ReadingActivityStore.recent.first）；null = 没有阅读记录，卡片退化成「从这里开始」 */
+    lastRead: ReadingActivityStore.RecentChapter? = null,
+    /** 点「接着走」：有记录就跳那一章，没有记录就只进读经页（DECISIONS 2026-09-18 Gentle Return） */
+    onResumeReading: (ReadingActivityStore.RecentChapter?) -> Unit = {},
+    /** 回归卡出现 / 退场时通知壳：它在的时候把勋章 / 升级横幅压后，两块不抢首页顶部同一个位置 */
+    onReturnCardVisible: (Boolean) -> Unit = {},
 ) {
     var toolsOpen by remember { mutableStateOf(false) }
+    // 回归卡：点过就不再出；闲置 7 秒跟着淡走，不常驻压在风景上（首页的价值是全景不被打扰）
+    var returnCardDone by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { delay(HomeMetrics.TOOLS_AUTO_CLOSE_MS); returnCardDone = true }
     var idleEpoch by remember { mutableIntStateOf(0) }
     val touch = { idleEpoch += 1 }
     LaunchedEffect(toolsOpen, idleEpoch) {
@@ -139,6 +151,13 @@ fun HomeScreen(
                 ChromeButton(MI.SETTINGS, if (settingsLit) Brand.logo.toColor() else Color.White) {
                     touch(); toolsOpen = !toolsOpen
                 }
+            }
+
+            // 回归卡：**隔天**才出——今天已经读过就不提（那是「你做得够不够」，不是「你走到哪了」）
+            val returnCardUp = !returnCardDone && !isSameLocalDay(lastRead?.at, System.currentTimeMillis().toDouble())
+            LaunchedEffect(returnCardUp) { onReturnCardVisible(returnCardUp) }
+            if (returnCardUp) {
+                ReturnCard(lastRead) { returnCardDone = true; touch(); onResumeReading(lastRead) }
             }
 
             Column(
@@ -203,6 +222,41 @@ fun HomeScreen(
             }
             Spacer(Modifier.height(shellTabBarBottomInset() + (ShellMetrics.tabRowHeight + 38f).dp))
         }
+    }
+}
+
+/** 两个毫秒时间戳是不是同一个本地日；`at` 为 null（无阅读记录）时按「不是同一天」处理，卡片出「从这里开始」 */
+private fun isSameLocalDay(at: Double?, now: Double): Boolean {
+    if (at == null || at <= 0) return false
+    val a = Calendar.getInstance().apply { timeInMillis = at.toLong() }
+    val b = Calendar.getInstance().apply { timeInMillis = now.toLong() }
+    return a.get(Calendar.YEAR) == b.get(Calendar.YEAR) && a.get(Calendar.DAY_OF_YEAR) == b.get(Calendar.DAY_OF_YEAR)
+}
+
+/**
+ * 「你回来了 / 我们上次停在这里 · 马太福音 13」+「接着走」，点一下直接进那一章（iOS HomeView.returnCard 同构）。
+ * 只陈述走到哪了，不写天数、不写完成度、不催（DECISIONS 2026-09-18 明确不做的那一串）。
+ */
+@Composable
+private fun ReturnCard(last: ReadingActivityStore.RecentChapter?, onClick: () -> Unit) {
+    val title = if (last != null) "${SiteCopy.t("native.returnResumeTitle")} · ${last.bookName} ${last.chapter}"
+                else SiteCopy.t("native.returnFreshTitle")
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 20.dp)
+            .clip(RoundedCornerShape(18.dp)).background(Color(0x8C1C1410))
+            .clickableNoRipple(onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(SiteCopy.t("native.returnGreeting"), color = Color.White.copy(alpha = 0.82f),
+                 fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(3.dp))
+            Text(title, color = Color.White, fontSize = 15.sp, lineHeight = 20.sp, fontWeight = FontWeight.Bold)
+        }
+        Spacer(Modifier.width(12.dp))
+        Text(SiteCopy.t("native.returnResumeAction"), color = Brand.logo.toColor(),
+             fontSize = 14.sp, lineHeight = 18.sp, fontWeight = FontWeight.Bold)
     }
 }
 

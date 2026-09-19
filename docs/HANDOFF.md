@@ -422,7 +422,8 @@ ChatGPT 的评审与我的逐条判断在 `docs/gamification-chatgpt-review.md`�
    - 同步：`lib/member-reading-sync/client/reading-sync-local-web.ts` 三处（hasProgress / 导出 blob / apply 分支）；`components/member/MemberReadingSyncBridge.tsx` 挂 1.5 秒防抖推送。
    - 界面：`/explore/achievements` 页 + `components/achievements/`（`AchievementsView` / `AchievementLevelCard` / `achievement-text`），探索页顶部加等级条卡片。
    - 验证（全过）：`npx tsc --noEmit`、`npm run lint`（只剩和既有代码同类的 `<img>` 警告）、`npm run check:medals`、`npm run check:member-sync`（164 条三端一致）、`NODE_OPTIONS=--max-old-space-size=8192 npm run build`、dev 服务器上实测回填 3 章 → 俄巴底亚整卷 → 印章点亮 + 勋章发出 + Lv.5 / 6450 XP。
-4. **还没做的**：网页端的**听读 XP** 和**逐节微反馈 XP**没有数据源（见 `docs/OPEN-ITEMS.md`），飘字 / 获得提示也还没做——网页端目前只有「静态看结果」的成就页，没有原生那套 `XPFloater` / `EarnedToast`。真机端到端（两台设备 + 网页三方互相同步勋章）仍未实测。
+4. **界面已全面对齐 iOS（2026-09-19）**：勋章档位上色、XPBar 火苗倍率与渐变条、探索页卡片、飘字（顶 90px / 叠 3 条 / 1.1 秒）、获得提示（顶 8px / 羊皮纸卡 / 2.8 秒 / 点一下关）、成就页表头三数字与每枚勋章的下一档进度条，逐项照 `Read/AchievementViews.swift` + `Read/AchievementsView.swift` 复刻；文案与原生共用 `tools/native-copy-extra.json` 这一份真源。详见 `docs/DECISIONS.md` 末条。
+5. **还没做的**：网页端的**逐节微反馈 XP**没有数据源（见 `docs/OPEN-ITEMS.md`），飘字 / 获得提示也还没做——网页端目前只有「静态看结果」的成就页，没有原生那套 `XPFloater` / `EarnedToast`。真机端到端（两台设备 + 网页三方互相同步勋章）仍未实测。
 
 ## 别踩的坑
 - **模拟器上底栏点不动**：iOS 26 Liquid Glass 底栏，`simctl` 注入的 tap 打在首页那层「点空白收起/唤回」的透明层上，切 Tab 没反应。别在这上面耗，要验 UI 直接装真机。

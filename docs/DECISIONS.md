@@ -357,3 +357,18 @@
 - **过程中修掉的一个既有 bug**：`writeScriptureListenTotalsWeb` 一直没有通知订阅者（`listenListeners` 建了却没人 emit），探索页的听读时长不会随播放刷新。
 - **反馈层踩的坑**（值得记住）：第一版把「消费队列」写在 `setState` 的 updater 里，又用 ref 记「当前是否在展示」——React 会重复调用 updater、且会重复挂载组件，跨挂载残留的 ref 把后续事件永久堵住，表现是**只弹出第一条、后面全丢**。改成组件订阅后把 store 队列整段抽干到自己的 state 再依次展示，问题消失。
 - **日期**：2026-09-19
+
+## 网页端成就界面全面对齐 iOS：共用同一份文案真源，逐项照 SwiftUI 复刻
+
+- **决定了什么**（Josh 2026-09-19「网页端需要对齐苹果端的效果」）：网页端的成就界面不再是「能看结果」的简化版，而是照 `Read/AchievementViews.swift` + `Read/AchievementsView.swift` 逐项复刻。
+- **文案共用同一份真源**：新增 `lib/achievements/achievement-copy.ts` 直接 import `tools/native-copy-extra.json`（原生那边由 `gen:site-copy` 生成 SiteCopy）。和 `data/medals.json` 同一个思路——网页端能直接读 JSON，就不再生成第三份表，三端文案天然不会漂。繁体运行时 `toZhTwText` 转。
+- **逐项对齐的清单**：
+  - `MedalIcon`：未获得灰度 + 不透明度 0.28（原来是 grayscale + 0.35），获得后满色并按档位叠暖色（铜 `#B87333` / 银 `#B9BFC6` / 金 `#E8B44A`，0.45 `overlay` 混合）。网页端用 `mask-image` 把色块裁成勋章形状，等价于 SwiftUI 的「同一张图 foregroundStyle + blendMode(.overlay)」。图没到位时先占一个 `#F2E4CF` 羊皮纸圆。
+  - `XPBar`：Lv 号 `#FFB101` + 称号 `#5C4030` + 火苗倍率角标（> 1.001 才出，`#E06C2A` on 12% 底）+ `xpInLevel / xpForLevel` + 渐变进度条（`#FFC94D → #FFB101`，带辉光）。原来是普通 amber 条、没有称号色、没有火苗。
+  - 探索页卡片：整条可点 + 副标题「勋章、书卷印章与等级 ›」，羊皮纸底 `rgba(255,252,245,.92)` / 圆角 16 / 边 `#F2E4CF`。
+  - `XPFloater`：顶部 90px，最多叠 3 条，弹入 scale 0.5 → 1，停 1.1 秒后上移 40px 淡出；`+XP ≥ perChapterRead` 用 22px 大号，否则 16px。原来是单条 1.4 秒的深色小药丸。
+  - `EarnedToast`：顶部 8px、最大宽 340、羊皮纸卡 `#FFFCF5` / 圆角 16 / 琥珀描边 0.35 / 投影，2.8 秒收起，**点一下提前关**；勋章走「名 + 达成条件」，印章走「点亮书卷印章 + 卷名」，升级走「升到 N 级 + 称号」并用 Lv 圆章代替图。原来标题副标题是反的、且不可点关。
+  - 成就页：表头第三个数字从「已得勋章数」改成 **连续加成 ×N**（和 iOS 一致），三数字之间加竖分隔；分节标题右侧补进度（「已获得 n / 23 枚」「已点亮 n / 66 卷」）；每枚勋章补「离下一档还差多少」的 4px 细进度条 + `current / next`，满档改显条件文案；网格改成 iOS 的自适应尺寸（勋章 min 92 / 印章 min 64）。
+- **iOS 有、网页端不做的一条**：`EarnedToast` 在首页回归卡占位时让位。网页端**没有回归卡**（那是 iOS `HomeView` / 安卓 `HomeScreen` 的东西），不存在抢位问题。
+- **踩到的坑**：勋章图用 `onLoad` 控制淡入时，**图若已在浏览器缓存里，onLoad 在 React 挂上监听之前就过去了**，图会永远停在 `opacity: 0`。必须在 ref 回调和 `useEffect` 里各查一次 `img.complete && naturalWidth > 0`。
+- **日期**：2026-09-19

@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { medalText, pickLocaleText } from "@/components/achievements/achievement-text";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { MedalIcon } from "@/components/achievements/MedalIcon";
+import { levelTitleText } from "@/components/achievements/XPBar";
+import { medalCondition, medalText } from "@/components/achievements/achievement-text";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { MEDAL_CATALOG, MedalLevels, medalImageUrl } from "@/lib/achievements/medal-catalog";
+import { achCopy } from "@/lib/achievements/achievement-copy";
+import { MEDAL_CATALOG, MEDAL_XP } from "@/lib/achievements/medal-catalog";
 import {
   consumeAchievementEvent,
   getPendingAchievementEvents,
@@ -12,108 +15,197 @@ import {
   type AchievementEvent,
 } from "@/lib/achievements/achievement-store-web";
 import { getScriptureBookDisplayName } from "@/lib/bible/scripture-book-display-name";
+import type { AppLocale } from "@/lib/i18n/config";
 
-const XP_MS = 1400;
-const TOAST_MS = 2600;
+/** 飘字停留时长（iOS：1.1 秒后淡出上移） */
+const FLOAT_MS = 1100;
+const FLOAT_OUT_MS = 400;
+/** 获得提示停留时长（iOS：2.8 秒） */
+const TOAST_MS = 2800;
+
+type Floater = { id: number; text: string; big: boolean; leaving: boolean };
 
 /**
- * 成就的即时反馈层（对齐原生 `XPFloater` / `EarnedToast`）：
- * 队列里一次消费一条，+XP 走短飘字，勋章 / 印章 / 升级走稍长的横幅。
- * 挂在壳层上，任何页面得到 XP 都看得见。
+ * 成就的即时反馈层（对齐 iOS `XPFloater` + `EarnedToast`）。
+ * 两条通道并行：+XP 走顶部飘字（最多叠 3 条），勋章 / 印章 / 升级走羊皮纸提示卡。
+ * 事件从 store 队列整段抽干后按类型分流——不要用 ref 记「是否在展示」，
+ * React 会重复挂载组件，跨挂载残留的 ref 会把后续事件永久堵住。
  */
 export function AchievementFeedbackLayer() {
   const { locale } = useLocale();
-  const [queue, setQueue] = useState<AchievementEvent[]>([]);
-  const current = queue[0] ?? null;
+  const [floaters, setFloaters] = useState<Floater[]>([]);
+  const [toasts, setToasts] = useState<AchievementEvent[]>([]);
+  const seqRef = useRef(0);
 
-  /**
-   * 订阅 store，把队列整段抽干到组件自己的 state 里再依次展示。
-   * 不用 ref 记「当前是否在展示」：React 会重复挂载（StrictMode 下必然），
-   * 跨挂载残留的 ref 会把后面的事件永久堵住。
-   */
   useEffect(() => {
-    const renderable = (e: AchievementEvent) =>
-      e.kind === "xp" || e.kind === "medal" || e.kind === "seal" || e.kind === "levelUp";
     const drain = () => {
-      const taken: AchievementEvent[] = [];
+      const xp: Floater[] = [];
+      const others: AchievementEvent[] = [];
       for (let e = getPendingAchievementEvents()[0]; e; e = getPendingAchievementEvents()[0]) {
         consumeAchievementEvent();
-        if (renderable(e)) taken.push(e);
+        if (e.kind === "xp") {
+          seqRef.current += 1;
+          xp.push({
+            id: seqRef.current,
+            text: `+${e.amount}`,
+            big: e.amount >= MEDAL_XP.perChapterRead,
+            leaving: false,
+          });
+        } else if (e.kind !== "chapterRead") {
+          others.push(e);
+        }
       }
-      if (taken.length) setQueue((q) => [...q, ...taken].slice(-12));
+      if (xp.length) setFloaters((cur) => [...cur, ...xp].slice(-3));
+      if (others.length) setToasts((cur) => [...cur, ...others].slice(-6));
     };
     drain();
     return subscribeAchievements(drain);
   }, []);
 
+  // 每条飘字各自计时：先标记 leaving 走淡出动画，再移除
   useEffect(() => {
-    if (!current) return;
-    const ms = current.kind === "xp" ? XP_MS : TOAST_MS;
-    const id = window.setTimeout(() => setQueue((q) => q.slice(1)), ms);
+    const live = floaters.find((f) => !f.leaving);
+    if (!live) return;
+    const out = window.setTimeout(() => {
+      setFloaters((cur) => cur.map((f) => (f.id === live.id ? { ...f, leaving: true } : f)));
+      window.setTimeout(() => {
+        setFloaters((cur) => cur.filter((f) => f.id !== live.id));
+      }, FLOAT_OUT_MS);
+    }, FLOAT_MS);
+    return () => window.clearTimeout(out);
+  }, [floaters]);
+
+  const currentToast = toasts[0] ?? null;
+  const dropToast = useCallback(() => setToasts((cur) => cur.slice(1)), []);
+
+  useEffect(() => {
+    if (!currentToast) return;
+    const id = window.setTimeout(dropToast, TOAST_MS);
     return () => window.clearTimeout(id);
-  }, [current]);
-
-  if (!current) return null;
-
-  if (current.kind === "xp") {
-    return (
-      <div className="pointer-events-none fixed inset-x-0 top-[18%] z-[60] flex justify-center">
-        <span className="rounded-full bg-black/55 px-3 py-1 text-sm font-semibold tabular-nums text-amber-200 shadow-lg">
-          +{current.amount.toLocaleString()} XP
-        </span>
-      </div>
-    );
-  }
-
-  const toast = toastContent(current, locale);
-  if (!toast) return null;
+  }, [currentToast, dropToast]);
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-[12%] z-[60] flex justify-center px-4">
-      <div className="flex max-w-sm items-center gap-3 rounded-2xl bg-[#1c1410]/80 px-4 py-2.5 text-white shadow-xl backdrop-blur-sm">
-        {toast.image ? (
-          <img src={toast.image} alt="" width={40} height={40} className="h-10 w-10 object-contain" />
-        ) : null}
-        <div className="min-w-0">
-          <div className="text-[11px] text-white/65">{toast.kicker}</div>
-          <div className="truncate text-sm font-semibold">{toast.title}</div>
+    <>
+      {floaters.length ? (
+        <div
+          className="pointer-events-none fixed inset-x-0 z-[60] flex flex-col items-center gap-1.5"
+          style={{ top: 90 }}
+        >
+          {floaters.map((f) => (
+            <span
+              key={f.id}
+              className="font-extrabold tabular-nums"
+              style={{
+                fontSize: f.big ? 22 : 16,
+                color: "#FFB101",
+                textShadow: "0 1px 4px rgba(0,0,0,0.28)",
+                transform: f.leaving ? "translateY(-40px)" : "none",
+                opacity: f.leaving ? 0 : 1,
+                transition: f.leaving
+                  ? `transform ${FLOAT_OUT_MS}ms ease-out, opacity ${FLOAT_OUT_MS}ms ease-out`
+                  : "none",
+                animation: f.leaving ? undefined : "askbible-xp-pop 350ms cubic-bezier(0.2,1.4,0.4,1)",
+              }}
+            >
+              {f.text}
+            </span>
+          ))}
+          <style>{`@keyframes askbible-xp-pop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}`}</style>
         </div>
-      </div>
+      ) : null}
+
+      {currentToast ? <EarnedToast event={currentToast} locale={locale} onDismiss={dropToast} /> : null}
+    </>
+  );
+}
+
+function EarnedToast({
+  event,
+  locale,
+  onDismiss,
+}: {
+  event: AchievementEvent;
+  locale: AppLocale;
+  onDismiss: () => void;
+}) {
+  const d = describe(event, locale);
+  if (!d) return null;
+  return (
+    <div className="pointer-events-none fixed inset-x-0 z-[60] flex justify-center px-4" style={{ top: 8 }}>
+      <button
+        type="button"
+        onClick={onDismiss}
+        className="pointer-events-auto flex w-full items-center gap-3 text-left"
+        style={{
+          maxWidth: 340,
+          padding: "10px 14px",
+          borderRadius: 16,
+          backgroundColor: "#FFFCF5",
+          border: "1px solid rgba(255,177,1,0.35)",
+          boxShadow: "0 4px 14px rgba(0,0,0,0.18)",
+          animation: "askbible-toast-in 260ms ease-out",
+        }}
+      >
+        {d.image ? (
+          <MedalIcon imageKey={d.image} tier={d.tier} tierCount={d.tierCount} size={48} />
+        ) : (
+          <span
+            className="flex shrink-0 items-center justify-center rounded-full font-extrabold"
+            style={{ width: 48, height: 48, backgroundColor: "rgba(255,177,1,0.18)", color: "#FFB101", fontSize: 15 }}
+          >
+            {d.badge}
+          </span>
+        )}
+        <span className="min-w-0 flex-1">
+          <span className="block truncate font-semibold" style={{ color: "#2B1D15", fontSize: 16 }}>
+            {d.title}
+          </span>
+          <span className="block" style={{ color: "#7A633A", fontSize: 13 }}>
+            {d.subtitle}
+          </span>
+        </span>
+        <style>{`@keyframes askbible-toast-in{from{transform:translateY(-16px);opacity:0}to{transform:translateY(0);opacity:1}}`}</style>
+      </button>
     </div>
   );
 }
 
-function toastContent(
+function describe(
   e: AchievementEvent,
-  locale: string,
-): { kicker: string; title: string; image: string | null } | null {
+  locale: AppLocale,
+): { title: string; subtitle: string; image: string | null; tier: number; tierCount: number; badge: string } | null {
   switch (e.kind) {
     case "medal": {
       const def = MEDAL_CATALOG.find((d) => d.key === e.key);
       if (!def) return null;
+      const threshold = def.tiers[e.tier - 1] ?? def.tiers[def.tiers.length - 1];
       return {
-        kicker: pickLocaleText("获得勋章", "Medal earned", locale),
-        title:
-          medalText(def.name, locale) + (def.tiers.length > 1 ? ` · ${e.tier}` : ""),
-        image: medalImageUrl(def.key),
+        title: medalText(def.name, locale),
+        subtitle: medalCondition(def.condition, threshold, locale),
+        image: def.key,
+        tier: e.tier,
+        tierCount: def.tiers.length,
+        badge: "",
       };
     }
-    case "seal": {
-      const key = sealKeyForBookId(e.bookId);
+    case "seal":
       return {
-        kicker: pickLocaleText("书卷读完", "Book finished", locale),
-        title: getScriptureBookDisplayName(e.bookId, locale as never),
-        image: key ? medalImageUrl(key) : null,
+        title: achCopy("native.sealEarned", locale),
+        subtitle: getScriptureBookDisplayName(e.bookId, locale),
+        image: sealKeyForBookId(e.bookId),
+        tier: 1,
+        tierCount: 1,
+        badge: "",
       };
-    }
-    case "levelUp": {
-      const title = MedalLevels.title(e.level);
+    case "levelUp":
       return {
-        kicker: pickLocaleText("升级", "Level up", locale),
-        title: `Lv.${e.level} · ${pickLocaleText(title.zh, title.en, locale)}`,
+        title: achCopy("native.levelUp", locale, { level: e.level }),
+        subtitle: levelTitleText(e.level, locale),
         image: null,
+        tier: 0,
+        tierCount: 1,
+        badge: `Lv.${e.level}`,
       };
-    }
     default:
       return null;
   }

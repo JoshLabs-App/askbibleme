@@ -427,3 +427,13 @@
 
 **为什么**：不新造色 —— `#65775C` 本来就在读经目录「已读完」和今日统计里用着，
 本来就在羊皮家族里。「读完 / 已获得 / 还剩多少」这类正向状态以后一律用它。
+
+## 2026-09-19 · 安卓真机侧载用 sideload 变体
+
+**决定了什么**：新增 `sideload` buildType（= release + `.native` 包名后缀），
+真机验证一律装它；`assembleRelease` 只留给 Play / 下载页。
+
+**为什么**：手机上的 `me.askbible` 是 Play App Signing 重签的，本地包覆盖不上；
+而卸载重装会清掉登录和设置。「装到手机一律 Release」（APP/CLAUDE.md 7.0）
+和「别清真机数据」这两条规矩，靠这个变体同时满足。对应 8.2 里的
+`gradle_task: assembleSideloadRelease` 那个已有模式。

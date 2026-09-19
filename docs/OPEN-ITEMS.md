@@ -129,6 +129,24 @@
 
 Josh 2026-09-19「你决定」——下面四条按我的推荐处理完了，保留在这里是为了记住**为什么**这么定，以及剩下的那一条尾巴。
 
+## 安卓侧载变体 sideload（2026-09-19 新增）
+
+**现状**：手机上的 `me.askbible` 是 Play 装的（`installerPackageName=com.android.vending`），
+被 Play App Signing 重签过，本地 upload key 打的 release 包覆盖不上去
+（`INSTALL_FAILED_UPDATE_INCOMPATIBLE`）。卸载重装会清掉 Josh 手机上的登录和设置。
+
+**做法**：`apps/askbible-android/app/build.gradle.kts` 加了 `sideload` buildType，
+`initWith(release)` + `applicationIdSuffix = ".native"`。同一把 upload key、不开 minify，
+唯一区别是包名变 `me.askbible.native`，和商店版并排装。
+
+```bash
+cd apps/askbible-android && ./gradlew :app:assembleSideload
+adb -s <三星> install -r app/build/outputs/apk/sideload/app-sideload.apk
+```
+
+**以后装真机一律用这个**，不要再打 `assembleRelease` 往手机上怼。
+`.android-deploy.json` 不动 —— 那条路是发 Play / 下载页用的，必须是 `me.askbible` 正包。
+
 ### 已关闭
 
 - **听读 XP 没有数据源 → 已做**：`lib/read/scripture-listen-totals-web.ts` 新增 `addScriptureListenSecondsWeb()`（并补上 `writeScriptureListenTotalsWeb` 一直漏掉的变更通知——此前订阅者根本收不到通知）；`components/music/MusicShellPlaybackContext.tsx` 里按**媒体时间增量**每满 15 秒记一片，同时喂听读总数和 `noteListenTick`。约束和原生一致：页面可见 + 在播 + 单章上限由 store 自己卡；拖动进度条产生的大跳（delta ≥ 2 秒）不计。**顺带修好的不只是 XP**——网页端探索页那个「累计听读时长」对纯网页用户此前永远是 0。

@@ -40,6 +40,21 @@ android {
             isMinifyEnabled = false
             signingConfigs.findByName("upload")?.let { signingConfig = it }
         }
+        /**
+         * 侧载到真机用：和 release 完全一样（同一把 upload key、不开 minify），
+         * 只是 applicationId 带 .native 后缀，能和商店版 me.askbible 并排装。
+         *
+         * 为什么要它：手机上的 me.askbible 是 Play 装的，被 Play App Signing 重签过，
+         * 本地 upload key 打的包覆盖不上去（INSTALL_FAILED_UPDATE_INCOMPATIBLE），
+         * 而卸载重装会清掉 Josh 手机上的登录和设置。
+         * 「装到手机一律 Release」（APP/CLAUDE.md 7.0）和「别清真机数据」两条规矩，
+         * 靠这个变体同时满足。对应 8.2 里的 gradle_task: assembleSideloadRelease。
+         */
+        create("sideload") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".native"
+            matchingFallbacks += listOf("release")
+        }
     }
 
     compileOptions {

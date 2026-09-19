@@ -40,6 +40,11 @@ import {
   type NatureSceneUiSyncBundle,
 } from "@/lib/member-reading-sync/nature-scene-ui-sync-web";
 import {
+  localHasAchievementsProgressWeb,
+  mergeRemoteAchievements,
+  readAchievementsSyncValue,
+} from "@/lib/achievements/achievement-store-web";
+import {
   MEMBER_READING_SYNC_BLOB_KEYS,
   type MemberReadingSyncBlob,
   type MemberReadingSyncBlobKey,
@@ -210,6 +215,7 @@ export function localHasMemberReadingProgressWeb(): boolean {
   if (today?.doneKeys.length) return true;
   if (fraction && Object.keys(fraction.fractions).length) return true;
   if (habit.completedDates.length) return true;
+  if (localHasAchievementsProgressWeb()) return true;
   if (plan && shouldSyncReadingPlanPrefs(plan)) return true;
   return hasUserTripleLoopProgress() || hasUserNtDeepRepeatProgress();
 }
@@ -282,6 +288,9 @@ export async function exportLocalReadingBlobsWeb(): Promise<MemberReadingSyncPus
     blobs.todayReadingFraction = wrapBlob(todayReadingFraction, now);
   }
   if (habitStats.completedDates.length) blobs.habitStats = wrapBlob(habitStats, now);
+  if (localHasAchievementsProgressWeb()) {
+    blobs.achievements = wrapBlob(readAchievementsSyncValue(), now);
+  }
   const scriptureListenTotals = readScriptureListenTotalsWeb();
   if (scriptureListenTotals.totalSec > 0) {
     blobs.scriptureListenTotals = wrapBlob(scriptureListenTotals, now);
@@ -417,6 +426,9 @@ async function applyBlob(key: MemberReadingSyncBlobKey, value: unknown): Promise
           });
         }
       }
+      break;
+    case "achievements":
+      if (value && typeof value === "object" && !Array.isArray(value)) mergeRemoteAchievements(value);
       break;
     case "appLocale":
       if (value && typeof value === "object" && typeof (value as { locale?: unknown }).locale === "string") {

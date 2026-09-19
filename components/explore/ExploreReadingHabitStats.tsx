@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { AchievementLevelCard } from "@/components/achievements/AchievementLevelCard";
 import { ReadTodayReadingStats } from "@/components/bible/ReadTodayReadingStats";
 import { ReadYearDayTimeline } from "@/components/bible/ReadYearDayTimeline";
 import { ExploreRecentBookmarks } from "@/components/explore/ExploreRecentBookmarks";
@@ -50,6 +51,7 @@ export function ExploreReadingHabitStats() {
   return (
     <div className="explore-habit-stats">
       <div className="explore-habit-stats-inner">
+        <AchievementLevelCard />
         <ReadYearDayTimeline completedDates={completedDates} />
         <ReadTodayReadingStats yearDay={yearDay} snapshot={snapshot} />
         <p className="explore-habit-meta-line">

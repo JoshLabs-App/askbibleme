@@ -416,7 +416,13 @@ ChatGPT 的评审与我的逐条判断在 `docs/gamification-chatgpt-review.md`�
    - 调用处：iOS `AskBibleApp.swift` 把 `achievements.attach(...)` 提到 `sync.attach(...)` 之前再传参；安卓 `MainActivity.kt` 的 `syncEngine` `remember` 里多传一个参数。
    - **数据库不用迁移**：`blobs` 是无约束 `jsonb`。
    - 验证：`xcodebuild ... -destination 'generic/platform=iOS Simulator' build` 与 `./gradlew :app:compileDebugKotlin` 均通过。`npm run check:member-sync` **已修好并通过**（164 条用例三端一致），其中新增 5 条 `achievements` 用例。真机端到端（两台设备互相同步勋章）**还没实测**。
-3. **网页端**：直接 `import data/medals.json`，判定逻辑照 Swift 再写一份 TS。合并规则那半边已经写好了（`lib/member-reading-sync/merge.ts` 的 `mergeAchievements`），只差本机 store 和界面。
+3. ~~**网页端**~~ **已完成（2026-09-19）**，详见 `docs/DECISIONS.md` 末条「网页端成就系统」。落地内容：
+   - `lib/achievements/medal-catalog.ts`（直接 import `data/medals.json`，不生成第三份表）、`lib/achievements/achievement-store-web.ts`（账本 + 判定引擎 + XP + 同步出入口，模块级 store）。
+   - 上报点：`lib/read/read-chapter-completion.ts` 的 `markReadChapterCompleted` → `noteChapterRead`；`components/bible/ReadChapterCompletionSection.tsx` 挂载 → `noteChapterOpened`。
+   - 同步：`lib/member-reading-sync/client/reading-sync-local-web.ts` 三处（hasProgress / 导出 blob / apply 分支）；`components/member/MemberReadingSyncBridge.tsx` 挂 1.5 秒防抖推送。
+   - 界面：`/explore/achievements` 页 + `components/achievements/`（`AchievementsView` / `AchievementLevelCard` / `achievement-text`），探索页顶部加等级条卡片。
+   - 验证（全过）：`npx tsc --noEmit`、`npm run lint`（只剩和既有代码同类的 `<img>` 警告）、`npm run check:medals`、`npm run check:member-sync`（164 条三端一致）、`NODE_OPTIONS=--max-old-space-size=8192 npm run build`、dev 服务器上实测回填 3 章 → 俄巴底亚整卷 → 印章点亮 + 勋章发出 + Lv.5 / 6450 XP。
+4. **还没做的**：网页端的**听读 XP** 和**逐节微反馈 XP**没有数据源（见 `docs/OPEN-ITEMS.md`），飘字 / 获得提示也还没做——网页端目前只有「静态看结果」的成就页，没有原生那套 `XPFloater` / `EarnedToast`。真机端到端（两台设备 + 网页三方互相同步勋章）仍未实测。
 
 ## 别踩的坑
 - **模拟器上底栏点不动**：iOS 26 Liquid Glass 底栏，`simctl` 注入的 tap 打在首页那层「点空白收起/唤回」的透明层上，切 Tab 没反应。别在这上面耗，要验 UI 直接装真机。

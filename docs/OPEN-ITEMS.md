@@ -124,3 +124,29 @@
 - **现状**：对拍恢复之后暴露出来的既有不一致。安卓的 `mergeBlobValue("highlights")` **整份以时间戳新的一侧为准**（`core/.../MemberReadingSync.kt` 有注释说明：并集会让擦掉的重点被旧副本补回），并且 `VerseHighlightStore` 有 `localUpdatedAtMs` 配套；iOS 与 TS 仍是**逐章并集**，没有这套时间戳。对拍脚本里已把这一条列进 `KNOWN_DIVERGENCE` 白名单显式放行（跑起来会打印一行 `!` 提示），所以 check 是绿的，但**不一致是真的**。
 - **影响**：iOS 上擦掉一条划重点，如果另一台设备或云端还留着旧副本，下次同步会被补回来，用户看到「擦不掉」。安卓没这个问题。
 - **要 Josh 决定**：要不要把 iOS / TS 对齐到安卓的语义。推荐**对齐**——擦除是明确的用户意图，不该被旧副本推翻；代价是 iOS `VerseHighlightStore` 要补 `localUpdatedAtMs` 那套时间戳（安卓已有，照搬即可），属于独立一件事，建议单开线程做。不做也不会更糟，是既有行为。
+
+## 网页端成就系统（2026-09-19）
+
+### 1. 网页端没有「听读秒数」的来源，听读 XP 永远是 0
+
+- **现状**：`lib/read/scripture-listen-totals-web.ts` 全库没有任何地方往上加秒数——只有原生端在累计，网页端靠会员同步把总数拉下来显示。所以 `noteListenTick` 在网页端**没有调用方**，`listenTicks` 恒为 0。`listenHours` / `listenHoursThisMonth` 两个勋章指标靠同步下来的总秒数仍然能解锁，不受影响。
+- **影响**：登录用户不受影响（原生端会把听读进度同步过来）；**纯网页用户**在网页上听经文拿不到听读 XP，也解不开那两枚听读勋章。
+- **需要 Josh 决定**：要不要在网页播放器上补一个「每 15 秒累加 totalSec」的计时（同时喂 `scriptureListenTotals` 和 `noteListenTick`）。**我的推荐：做**——它顺带把网页端「累计听读时长」这个已经显示在探索页、但对纯网页用户永远是 0 的数字修好，不只是为了 XP。
+
+### 2. 网页端没有逐节微反馈 XP（滚过一节 +8）
+
+- **现状**：`noteVersesRead` 已实现但没接线。原生是在阅读器里按滚过的节数上报；网页阅读器目前只有「滚到章末 = 读完」这一个信号。
+- **影响**：网页端的 XP 曲线比原生「跳得少」——原生几秒跳一次，网页要读完一整章才跳一次。DECISIONS 里「XP 要一直在涨」那条的爽感在网页端打了折。
+- **需要 Josh 决定**：网页端要不要也做逐节上报。**我的推荐：先不做**——网页阅读器没有现成的逐节可见性观察，要新加 IntersectionObserver，改动面比收益大；等网页端真有活跃阅读用户再说。
+
+### 3. 网页端没有飘字 / 获得提示，也没有换帐号清空的接线
+
+- **现状**：`AchievementEvent` 队列（`getPendingAchievementEvents` / `consumeAchievementEvent`）已经在产出事件，但网页端没有对应的 `XPFloater` / `EarnedToast` UI 去消费——事件只会在队列里堆到上限 24 条后被丢弃。另外 `clearAchievementsForAccountSwitch()` 已导出但**没有调用方**：网页端根本没有「换帐号清本机 blob」的机制（原生有 `clearLocalBlobs()`，网页端没有对应物）。
+- **影响**：网页端得到勋章 / 升级时**没有任何即时反馈**，要主动点进成就页才看得到；共用一台电脑换帐号登录时，上一个人的成就会留在本机，被合并进新帐号。
+- **需要 Josh 决定**：(a) 飘字 / 提示要不要在网页端做；(b) 换帐号清空要不要补。**我的推荐：(a) 做，(b) 做**——(b) 是数据正确性问题而不是体验问题，而且不只成就一个 blob 受影响，值得单独开一轮把网页端的「登出清本机」整块补上。
+
+### 4. `next build` 默认堆会 OOM，要 8G 才能过
+
+- **现状**：`npm run build` 在默认堆下 `FATAL ERROR: Ineffective mark-compacts near heap limit`，`NODE_OPTIONS=--max-old-space-size=8192 npm run build` 正常通过（本轮验证就是这么跑的）。这不是本轮引入的——`app/(app-shell)/explore/page.tsx` 的注释里早就记着「那份 bundle 有 149KB，从客户端组件引用会被整份打进 chunk，把 next build 推爆堆上限」。
+- **影响**：新线程 / CI 上直接跑 `npm run build` 会失败，容易被误判成代码有问题。
+- **需要 Josh 决定**：要不要把 `--max-old-space-size` 直接写进 `package.json` 的 build 脚本。**我的推荐：写进去**——一行的事，省掉每个人踩一次。

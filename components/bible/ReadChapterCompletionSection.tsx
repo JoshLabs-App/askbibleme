@@ -15,6 +15,7 @@ import {
 } from "@/lib/bible/reading-plans/format-reading-range";
 import { isTripleLoopPlanId } from "@/lib/bible/reading-plans/triple-loop-plan";
 import type { ReadingPlanRange } from "@/lib/bible/reading-plans/types";
+import { noteChapterOpened } from "@/lib/achievements/achievement-store-web";
 import { readOnboardingNicknameSync } from "@/lib/onboarding/onboarding-devotion-prefs";
 import { getReadingPlanDaySinceEpoch } from "@/lib/read/reading-plan-epoch";
 import {
@@ -397,6 +398,8 @@ export function ReadChapterCompletionSection({ bookId, chapter }: Props) {
     scrollIntentRef.current = false;
     setCompleted(isReadChapterCompleted(bookId, chapter));
     if (isReadChapterCompleted(bookId, chapter)) markedRef.current = true;
+    // 成就账本：翻开一章（读没读完都算，用来发「初次翻开」和当天首次打开的 XP）
+    noteChapterOpened(bookId, chapter);
   }, [bookId, chapter]);
 
   const markChapterDone = useCallback(() => {

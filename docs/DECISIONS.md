@@ -334,3 +334,15 @@
 - **为什么**：这个 check 从深色模式那次提交（2026-09-16）起就编译不过，两周里没人发现三端规则有没有漂。修好之后立刻暴露出一条真实的既有不一致（iOS 擦掉的划重点会被旧副本补回，见 OPEN-ITEMS）。如果为了让它变绿就把用例删掉，等于把 check 再废一次；如果放着它红，下一个人又会习惯性忽略。白名单是唯一能同时做到「已知的不挡路」和「新出现的立刻炸」的写法。
 - **配套**：`Theme/ParchmentTheme.swift` 的 `init(parchment:)` 包了 `#if canImport(UIKit)`，让 harness 能在 macOS 目标下编过；App 行为不变。
 - **日期**：2026-09-18
+
+## 网页端成就系统：直接 import `data/medals.json`，不再生成第三份表
+
+- **决定了什么**：网页端（Next.js）落地成就 / XP 第三端。`lib/achievements/medal-catalog.ts` **直接 `import "@/data/medals.json"`**，不走 `gen:medals` 生成 TS 表；`lib/achievements/achievement-store-web.ts` 把 iOS `AchievementStore.swift` 的账本 + 判定引擎逐条移植成模块级 store（`useSyncExternalStore` 订阅）。
+- **为什么不生成**：iOS / 安卓要生成是因为 Swift / Kotlin 读不了 JSON 源文件，网页端能直接 import，多一份生成物就多一份要对拍的东西。`medals.json` 只有 10KB，整份进 client chunk 无压力（相比之下探索页那份 149KB bundle 才需要挪到服务端算）。`npm run check:medals` 因此仍只对两端，网页端数值天然不会漂。
+- **上报点**：`markReadChapterCompleted()`（读完一章，点亮印章的唯一入口）在模块内动态 import 调 `noteChapterRead`，所有调用方自动覆盖；`ReadChapterCompletionSection` 挂载时调 `noteChapterOpened`。
+- **网页端刻意和原生不同的两处**：
+  1. **一次性回填**（`backfillFromChapterCompletion`）：网页端在成就系统之前就有 `askbible-read-chapter-completion-v1` 的读完章记录，不回填的话老用户进来成就全空、印章一个不亮。用 `askbible-achievements-backfilled-v1` 作一次性标记，直接读 localStorage 而不是 import 那个模块——它反过来要调本模块，会成环。
+  2. **印章在 `refreshAchievements` 里兜底补发**：原生只在 `noteChapterRead` 里点亮；网页端回填进来的历史章和云端合并进来的章都不经过那条路，所以每次评估都扫一遍「整卷读完但印章没亮」。口径没变（印章 = 整卷读完），XP 也不会重复计（`perBookCompleted` 走 `completedBookIds`，`perSeal` 走 `seals` 计数）。
+- **会员同步**：`reading-sync-local-web.ts` 三处接线（`localHasMemberReadingProgressWeb` / 导出 `blobs.achievements` / `applyBlob` 的 `achievements` 分支 → `mergeRemoteAchievements`）。合并规则那半边早就写好了（`lib/member-reading-sync/merge.ts` 的 `mergeAchievements`），本轮没动。推送时机跟网页端既有做法（可见性 / focus 触发），另在 `MemberReadingSyncBridge` 里挂 `setAchievementsLocalChangeHandler` 做 1.5 秒防抖推送，对齐原生 `onLocalChange`。
+- **界面**：`/explore/achievements`（`components/achievements/AchievementsView.tsx`）= 等级条 + 三个数字 + 23 枚勋章墙 + 66 卷印章墙，未点亮走 `grayscale + opacity`；探索页顶部加 `AchievementLevelCard` 等级条卡片点进去。勋章文案只有简体 + 英文，繁体运行时用 `toZhTwText` 转（同 medals.json 的约定）。
+- **日期**：2026-09-19

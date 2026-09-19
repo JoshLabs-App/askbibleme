@@ -88,6 +88,10 @@ export function markReadChapterCompleted(bookId: string, chapter: number): boole
   done.add(key);
   writeCompletionSet(done);
   touchReadingHabitDay();
+  // 成就账本：读完一章是点亮书卷印章的唯一入口（与原生 onReachedEnd 同一口径）
+  void import("@/lib/achievements/achievement-store-web").then((m) => {
+    m.noteChapterRead(bookId, chapter);
+  });
   return true;
 }
 

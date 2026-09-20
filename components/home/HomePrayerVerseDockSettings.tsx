@@ -67,7 +67,9 @@ function IosSettingsSwitch({
       onClick={() => onChange(!checked)}
       className={[
         "relative inline-flex h-[31px] w-[51px] shrink-0 cursor-pointer rounded-full border-0 p-0 transition-colors motion-reduce:transition-none",
-        checked ? "bg-[#65775C]" : "bg-ink/20 dark:bg-white/20",
+        // 开关 on 态 = accent（LOGO 黄），不是成功绿 —— 「这项设置开着」和
+        // 「读完 / 已获得」是两套语义。和成就墙那三个开关保持一致。
+        checked ? "bg-[#FFB101]" : "bg-ink/20 dark:bg-white/20",
       ].join(" ")}
     >
       <span

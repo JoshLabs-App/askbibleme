@@ -46,6 +46,11 @@ struct PlaybackDock: View {
     /// 下行「语速 / 循环 / 琥珀大播放键 / 下一章」。按 Josh 2026-09-16 圈定的参考图做。
     var compact: Bool = false
 
+    /// 安静档（读经页）：去掉封面和章名，控件小一档、不带「下一章」文字，整块矮一截。
+    /// Josh 2026-09-21：「播放栏太大了，也太吵，影响阅读」——读经页的主角是经文，
+    /// 坞只需要够按；计划播放页不开这档（那页坞就是主角）。
+    var quiet: Bool = false
+
     var body: some View {
         if compact { compactBody } else { fullBody }
     }
@@ -53,12 +58,12 @@ struct PlaybackDock: View {
     private var compactBody: some View {
         // 几何按 Josh 2026-09-16 给的效果图逐项对齐：整块更紧凑，控件比之前小一档，
         // 「下一章」带两行文字标签（效果图里的 Next Chapter）。
-        VStack(spacing: 8) {
-            HStack(spacing: 10) {
-                artwork
+        VStack(spacing: quiet ? 4 : 8) {
+            HStack(spacing: quiet ? 0 : 10) {
+                if !quiet { artwork }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    if !title.isEmpty {
+                    if !title.isEmpty && !quiet {
                         Text(title)
                             .font(.system(size: 13, weight: .bold))
                             .foregroundStyle(theme.scripturePrimaryText)
@@ -81,7 +86,7 @@ struct PlaybackDock: View {
                         .scaleEffect(0.82)
                         // 视觉尺寸按效果图走，但点击框一律撑到 44 —— 上一轮照效果图把框也缩了，
                         // Josh 真机反馈「图标都比较小，会误点」。图标小是设计，触控小是 bug。
-                        .frame(width: 48, height: 44)
+                        .frame(width: quiet ? 40 : 48, height: quiet ? 40 : 44)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -93,7 +98,7 @@ struct PlaybackDock: View {
                                 color: audio.loopMode == .forward ? theme.scriptureSecondaryText : theme.scripturePrimaryText,
                                 size: 19)
                         .opacity(0.8)
-                        .frame(width: 48, height: 44)
+                        .frame(width: quiet ? 40 : 48, height: quiet ? 40 : 44)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -107,15 +112,15 @@ struct PlaybackDock: View {
                             ProgressView().tint(theme.ink)
                         } else {
                             Image(systemName: audio.isPlaying ? "pause.fill" : "play.fill")
-                                .font(.system(size: 19, weight: .bold))
+                                .font(.system(size: quiet ? 16 : 19, weight: .bold))
                                 .foregroundStyle(theme.ink)
                         }
                     }
-                    .frame(width: 42, height: 42)
+                    .frame(width: quiet ? 36 : 42, height: quiet ? 36 : 42)
                     .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
-                .padding(.horizontal, 18)
+                .padding(.horizontal, quiet ? 12 : 18)
 
                 // 下一章：图标 + 两行小字标签（效果图里的 Next Chapter）
                 Button(action: onSkipNext) {
@@ -123,14 +128,16 @@ struct PlaybackDock: View {
                         Image(systemName: "forward.end.fill")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(theme.scriptureSecondaryText)
-                        Text(nextLabel)
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(theme.scriptureSecondaryText)
-                            .lineLimit(2)
-                            .multilineTextAlignment(.leading)
-                            .fixedSize()
+                        if !quiet {
+                            Text(nextLabel)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(theme.scriptureSecondaryText)
+                                .lineLimit(2)
+                                .multilineTextAlignment(.leading)
+                                .fixedSize()
+                        }
                     }
-                    .frame(height: 44)
+                    .frame(height: quiet ? 40 : 44)
                     .padding(.horizontal, 4)
                     .contentShape(Rectangle())
                 }
@@ -144,14 +151,14 @@ struct PlaybackDock: View {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 15, weight: .regular))
                         .foregroundStyle(theme.scriptureSecondaryText.opacity(0.8))
-                        .frame(width: 48, height: 44)
+                        .frame(width: quiet ? 40 : 48, height: quiet ? 40 : 44)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.vertical, quiet ? 6 : 8)
         // 整块垫一层纸色底色玻璃（Josh 2026-09-16：「原来做的 GPT 图这里是有一层底色玻璃的」，
         // 只垫文字行时，按钮行背后经文透出来太吵）。玻璃边缘仍由外层 askGlass 提供高光。
         .background(

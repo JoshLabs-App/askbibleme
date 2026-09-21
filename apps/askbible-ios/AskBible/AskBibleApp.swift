@@ -555,7 +555,8 @@ struct RootView: View {
                         onSkipNext: skipToNextChapter,
                         title: openedChapter.map { "\($0.book.name(displayLocale)) \($0.chapter)" } ?? "",
                         artworkSceneId: naturePrefs.sceneId,
-                        locale: appLocale))
+                        locale: appLocale,
+                        quiet: true))
                 } else if planDockActive {
                     // 播放页的坞：左键是经文搜索（带当前章上下文）；播放键没建池时从选中章起播
                     compactDock(PlaybackDock(

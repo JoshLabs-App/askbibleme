@@ -536,6 +536,7 @@ struct RootView: View {
                 selection: $tab,
                 locale: appLocale,
                 dockActive: readDockActive || planDockActive,
+                dockFlush: readDockActive,
                 // 计划目录 / 详情是独立子页，不放底栏；播放页是主页级页面，底栏照常
                 showTabBar: !(tab == .plan && planRoute != .play && !showSearch) && authRoute == nil && !(tab == .music && musicChromeHidden) && !(tab == .home && homeChromeHidden),
                 // 中央键原来点一下进今日读经；改成普通 Tab 后由切到 .plan 触发同一个动作

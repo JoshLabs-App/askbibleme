@@ -100,7 +100,21 @@ struct HomeView: View {
                         }
                 }
 
-                // 左上菜单已移到探索页右上「设置」（Josh 2026-09-16），首页顶部不再放任何控件
+                // 设置齿轮回到右上（Josh 2026-09-21）。2026-09-16 曾把它塞进底部专辑排末尾，
+                // 结果专辑排的宽度会随它出现/消失而变，三颗常用键跟着左右挪——那是他这次要去掉的位移。
+                HStack {
+                    Spacer()
+                    chromeButton(MI.settings,
+                                 color: (toolsOpen || ambient.isOn) ? Brand.logo : .white.opacity(0.9)) {
+                        touch(); toolsOpen.toggle()
+                    }
+                }
+                .padding(.horizontal, ShellMetrics.topChromeSideInset)
+                .padding(.top, geo.safeAreaInsets.top + ShellMetrics.topChromeOffset)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .opacity(chromeVisible ? 1 : 0.55)
+                .animation(.easeInOut(duration: 0.4), value: chromeVisible)
+                .allowsHitTesting(true)
 
                 // 常用键要一直够得着，所以这一带不整体淡出，只在闲置时压淡；
                 // 底栏没了之后它可以往下坐一些（Josh 2026-09-18）
@@ -111,7 +125,9 @@ struct HomeView: View {
                     Spacer(minLength: 0)
                     bottomBand
                 }
-                .padding(.bottom, (chromeVisible ? 92 : 36) + geo.safeAreaInsets.bottom)
+                // 位置固定：闲置时只压淡、不位移（Josh 2026-09-21）。
+                // 原来 92 → 36 会让三颗常用键在底栏淡出时整体往下坠一截。
+                .padding(.bottom, 92 + geo.safeAreaInsets.bottom)
                     .opacity(chromeVisible ? 1 : 0.55)
                     .animation(.easeInOut(duration: 0.4), value: chromeVisible)
             }
@@ -395,16 +411,12 @@ struct HomeView: View {
         return HStack(spacing: M.albumGap) {
             albumButton(MCI.musicNoteOutline, community: true, on: playingAlbum == "安静") { touch(); onPressAlbum("安静") }
             // 金句朗读只有和合本 / WEBP 两套：显示的是别的版本（法语等）时没有对得上的朗读，喇叭不出
-            if home.voiceAvailable {
-                albumButton(MI.volumeUp, on: home.voiceOn) { touch(); home.toggleVoice() }
-            }
+            // 朗读不可用（法语等没有对得上的朗读）时保留空槽，不塌缩 ——
+            // 塌缩会让左右两颗横向挪位（Josh 2026-09-21「不要动，不要移位置」）
+            albumButton(MI.volumeUp, on: home.voiceOn) { touch(); home.toggleVoice() }
+                .opacity(home.voiceAvailable ? 1 : 0)
+                .allowsHitTesting(home.voiceAvailable)
             albumButton(MCI.coffeeOutline, community: true, on: playingAlbum == "下午茶") { touch(); onPressAlbum("下午茶") }
-            // 设置（原右上齿轮）：字号 / 定时 / 环境音 / 场景都从这里展开。
-            // 它是低频的，闲置时跟着底栏一起走；左边三颗（音乐 / 朗读 / 下午茶）是常用键，留下（Josh 2026-09-18）
-            if chromeVisible {
-                Rectangle().fill(Color.white.opacity(0.45)).frame(width: 1, height: 22).shadow(color: .black.opacity(0.4), radius: 2)
-                albumButton(MI.settings, on: toolsOpen || ambient.isOn) { touch(); toolsOpen.toggle() }
-            }
         }
         .frame(height: M.albumBtn)
     }

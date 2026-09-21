@@ -62,10 +62,11 @@ struct PlaybackDock: View {
         if compact { compactBody } else { fullBody }
     }
 
+    /// 紧凑档：音乐页那套语言 —— 深底、白前景、白圆播放键、进度条白轨白填充，
+    /// transport 用 Spacer 均分（Josh 2026-09-21：「像音乐那样，更好看好操作」）。
+    /// 读经页（quiet）再去掉封面和章名，并贴底铺满；计划播放页保留封面章名。
     private var compactBody: some View {
-        // 几何按 Josh 2026-09-16 给的效果图逐项对齐：整块更紧凑，控件比之前小一档，
-        // 「下一章」带两行文字标签（效果图里的 Next Chapter）。
-        VStack(spacing: quiet ? 4 : 8) {
+        VStack(spacing: quiet ? 6 : 8) {
             HStack(spacing: quiet ? 0 : 10) {
                 if !quiet { artwork }
 
@@ -73,29 +74,35 @@ struct PlaybackDock: View {
                     if !title.isEmpty && !quiet {
                         Text(title)
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(quietFg(0.95))
+                            .foregroundStyle(.white.opacity(0.95))
                             .lineLimit(1)
                     }
+                    // 还没加载出时长前不画进度行（00:00 / —:— 是纯噪声）
                     if !quiet || audio.duration > 0 {
-                    HStack(spacing: 8) {
-                        timeText(elapsed)
-                        SeekableProgressBar(
-                            audio: audio,
-                            trackHeight: 2,
-                            trackColor: Color(parchment: 0xECD9B9, opacity: 0.26)
-                        )
-                        timeText(remaining)
-                    }
+                        HStack(spacing: 12) {
+                            timeText(elapsed)
+                                .frame(minWidth: ShellMetrics.timeLabelMinWidth, alignment: .leading)
+                            // 音乐页同款：轨 白 0.28 / 填充 白 0.92 / 高 3，触控框 24
+                            SeekableProgressBar(
+                                audio: audio,
+                                trackHeight: 3,
+                                trackColor: .white.opacity(0.28),
+                                fillColor: .white.opacity(0.92)
+                            )
+                            timeText(remaining)
+                                .frame(minWidth: ShellMetrics.timeLabelMinWidth, alignment: .trailing)
+                        }
                     }
                 }
             }
+
+            // transport：音乐页的布局 —— 两端是次要键，中间大播放键，全靠 Spacer 均分
             HStack(spacing: 0) {
                 Button { audio.cycleRate() } label: {
-                    SpeedRateImage(rate: Double(audio.rate), color: quietFg(0.66))
-                        .scaleEffect(0.82)
-                        // 视觉尺寸按效果图走，但点击框一律撑到 44 —— 上一轮照效果图把框也缩了，
-                        // Josh 真机反馈「图标都比较小，会误点」。图标小是设计，触控小是 bug。
-                        .frame(width: quiet ? 40 : 48, height: quiet ? 40 : 44)
+                    SpeedRateImage(rate: Double(audio.rate), color: .white.opacity(0.62))
+                        .scaleEffect(0.9)
+                        // 图标可以小，触控框一律 44（Josh 真机反馈过「图标小会误点」）
+                        .frame(width: 48, height: 44)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -103,77 +110,77 @@ struct PlaybackDock: View {
                 Spacer(minLength: 0)
 
                 Button { audio.cycleLoop() } label: {
-                    RepeatGlyph(badge: audio.loopMode.badge,
-                                color: quietFg(audio.loopMode == .forward ? 0.66 : 0.95),
-                                size: 19)
-                        .frame(width: quiet ? 40 : 48, height: quiet ? 40 : 44)
-                        .contentShape(Rectangle())
+                    ZStack {
+                        Circle().fill(.white.opacity(audio.loopMode == .forward ? 0 : 0.14))
+                        RepeatGlyph(badge: audio.loopMode.badge,
+                                    color: .white.opacity(audio.loopMode == .forward ? 0.48 : 1),
+                                    size: 22)
+                    }
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
 
+                Spacer(minLength: 0)
+
+                // 音乐页的播放键：白底 + 深墨图标（这里不用琥珀 —— 深底上白圆更像播放器）
                 Button {
                     if let onToggle { onToggle() } else { audio.toggle() }
                 } label: {
                     ZStack {
-                        Circle().fill(Brand.logo)
+                        Circle().fill(.white)
                         if audio.isLoading && audio.wantsPlayback {
-                            ProgressView().tint(theme.ink)
+                            ProgressView().tint(Color(rgb: 0x1C1410))
                         } else {
                             Image(systemName: audio.isPlaying ? "pause.fill" : "play.fill")
-                                .font(.system(size: quiet ? 16 : 19, weight: .bold))
-                                .foregroundStyle(theme.ink)
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundStyle(Color(rgb: 0x1C1410))
                         }
                     }
-                    .frame(width: quiet ? 36 : 42, height: quiet ? 36 : 42)
+                    .frame(width: 46, height: 46)
                     .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
-                .padding(.horizontal, quiet ? 12 : 18)
 
-                // 下一章：图标 + 两行小字标签（效果图里的 Next Chapter）
+                Spacer(minLength: 0)
+
                 Button(action: onSkipNext) {
-                    HStack(spacing: 5) {
-                        Image(systemName: "forward.end.fill")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(quietFg(0.78))
-                        if !quiet {
-                            Text(nextLabel)
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundStyle(quietFg(0.7))
-                                .lineLimit(2)
-                                .multilineTextAlignment(.leading)
-                                .fixedSize()
-                        }
-                    }
-                    .frame(height: quiet ? 40 : 44)
-                    .padding(.horizontal, 4)
-                    .contentShape(Rectangle())
+                    Image(systemName: "forward.end.fill")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(.white.opacity(available ? 0.92 : 0.3))
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .disabled(!available)
-                .opacity(available ? 1 : 0.35)
 
                 Spacer(minLength: 0)
 
                 Button(action: onSearch) {
                     Image(systemName: "magnifyingglass")
-                        .font(.system(size: 15, weight: .regular))
-                        .foregroundStyle(quietFg(0.66))
-                        .frame(width: quiet ? 40 : 48, height: quiet ? 40 : 44)
+                        .font(.system(size: 17, weight: .regular))
+                        .foregroundStyle(.white.opacity(0.62))
+                        .frame(width: 48, height: 44)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, quiet ? 6 : 8)
-        // 整块垫一层纸色底色玻璃（Josh 2026-09-16：「原来做的 GPT 图这里是有一层底色玻璃的」，
-        // 只垫文字行时，按钮行背后经文透出来太吵）。玻璃边缘仍由外层 askGlass 提供高光。
+        .padding(.horizontal, quiet ? 14 : 12)
+        .padding(.top, quiet ? 8 : 8)
+        // 贴底那一版下边不用留白，系统底栏紧接着
+        .padding(.bottom, quiet ? 6 : 8)
         .background(
-            // 安静档用 sheet 半径：外层 askGlassRect 就是这个半径，
-            // 用更小的 control 半径会在四角露出一圈玻璃（经文仍然透上来）。
-            RoundedRectangle(cornerRadius: AskCorner.sheet, style: .continuous)
-                .fill(quietFill)
+            // 贴底档只圆上面两角；浮层档四角都圆（半径对齐外层 askGlassRect，
+            // 小半径会在四角漏出玻璃，经文照样透上来）
+            UnevenRoundedRectangle(
+                topLeadingRadius: AskCorner.sheet,
+                bottomLeadingRadius: quiet ? 0 : AskCorner.sheet,
+                bottomTrailingRadius: quiet ? 0 : AskCorner.sheet,
+                topTrailingRadius: AskCorner.sheet,
+                style: .continuous
+            )
+            .fill(quietFill)
         )
     }
 
@@ -247,7 +254,7 @@ struct PlaybackDock: View {
         Text(s)
             .font(.system(size: compact ? 11 : ShellMetrics.timeFontSize, weight: compact ? .semibold : .medium))
             .monospacedDigit()
-            .foregroundStyle(compact ? quietFg(0.72) : theme.muted)
+            .foregroundStyle(compact ? .white.opacity(0.62) : theme.muted)
     }
 
     private var transport: some View {
@@ -426,6 +433,8 @@ struct SeekableProgressBar: View {
     /// 轨道高度（迷你坞 2、展开坞 3）
     var trackHeight: CGFloat
     var trackColor: Color
+    /// 填充色：默认 LOGO 黄（展开坞）；紧凑坞是深底白前景那套，传白 0.92
+    var fillColor: Color = Brand.logo
 
     @State private var dragFraction: Double?
 
@@ -437,7 +446,7 @@ struct SeekableProgressBar: View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
                 Capsule().fill(trackColor)
-                Capsule().fill(Brand.logo).frame(width: geo.size.width * fraction)
+                Capsule().fill(fillColor).frame(width: geo.size.width * fraction)
             }
             .frame(height: trackHeight)
             // 轨道在 44pt 高的透明框里垂直居中：视觉还是细线，手指有地方落

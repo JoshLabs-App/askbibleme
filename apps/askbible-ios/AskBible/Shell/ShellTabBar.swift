@@ -66,6 +66,8 @@ struct AskTabShell<Screen: View, Dock: View>: View {
     var locale: AppLocale
     /// 坞是否真的在显示（空坞也算「给了」，得另给一个明确的开关）
     var dockActive: Bool = false
+    /// 坞贴底铺满（读经页），而不是浮在底栏上方的玻璃卡片
+    var dockFlush: Bool = false
     /// 独立子页（读经计划目录 / 详情）与登录页不放底栏
     var showTabBar: Bool = true
     var onEnterPlan: () -> Void = {}
@@ -95,11 +97,18 @@ struct AskTabShell<Screen: View, Dock: View>: View {
                     // 玻璃才有东西可折射；滚动长度由各页的 `shellBottomInset()`（content margin）保证。
                     .overlay(alignment: .bottom) {
                         if dockActive {
-                            dock()
-                                .askGlassRect(tone: .light, radius: AskCorner.sheet)
-                                .askFloatingShadow()
-                                .padding(.horizontal, AskGlassMetrics.capsuleInset)
-                                .padding(.bottom, 4)
+                            if dockFlush {
+                                // 读经页：坞贴底铺满，不做浮层卡片。
+                                // Josh 2026-09-21「像音乐那样……而且固定在下方」——
+                                // 浮层卡片四周都有经文绕过去，视觉上一直在动；贴底那条才安静。
+                                dock()
+                            } else {
+                                dock()
+                                    .askGlassRect(tone: .light, radius: AskCorner.sheet)
+                                    .askFloatingShadow()
+                                    .padding(.horizontal, AskGlassMetrics.capsuleInset)
+                                    .padding(.bottom, 4)
+                            }
                         }
                     }
                     .tabItem { Label(tab.label(locale), systemImage: tab.symbol) }

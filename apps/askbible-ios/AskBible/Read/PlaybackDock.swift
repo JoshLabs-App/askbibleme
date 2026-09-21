@@ -61,7 +61,108 @@ struct PlaybackDock: View {
     private func quietFg(_ opacity: Double) -> Color { Color(parchment: 0xECD9B9, opacity: opacity) }
 
     var body: some View {
-        if compact { compactBody } else { fullBody }
+        if quiet { nativeBody } else if compact { compactBody } else { fullBody }
+    }
+
+    /// 读经 / 圣经页的坞：**苹果原生质感**——系统分隔线、SF Symbols、系统字体与 .secondary 层级，
+    /// 播放键是裸字形不是实心圆钮（Apple Music / Podcasts 的迷你栏就是这样）。
+    /// 底色跟页面一致（`theme.scriptureBackground`，不透明），贴底铺满。
+    /// Josh 2026-09-21：「改苹果原生，但是需要底色跟页面一致」。
+    private var nativeBody: some View {
+        VStack(spacing: 6) {
+            HStack(spacing: 10) {
+                Text(elapsed)
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .frame(minWidth: 36, alignment: .leading)
+                SeekableProgressBar(
+                    audio: audio,
+                    trackHeight: 4,
+                    trackColor: Color.primary.opacity(0.12),
+                    fillColor: theme.accentOt
+                )
+                Text(remaining)
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .frame(minWidth: 40, alignment: .trailing)
+            }
+            .frame(height: 22)
+
+            HStack(spacing: 0) {
+                // 语速：Podcasts 那种文字胶囊，比自绘的速度图更「系统」
+                Button { audio.cycleRate() } label: {
+                    Text(String(format: "%g\u{00D7}", audio.rate))
+                        .font(.footnote.weight(.semibold).monospacedDigit())
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 4)
+                        .background(Capsule().fill(Color.primary.opacity(0.07)))
+                        .frame(width: 60, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                Spacer(minLength: 0)
+
+                Button { audio.cycleLoop() } label: {
+                    Image(systemName: audio.loopMode.badge == "1" ? "repeat.1" : "repeat")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(audio.loopMode == .forward ? AnyShapeStyle(.secondary) : AnyShapeStyle(theme.accentOt))
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                Spacer(minLength: 0)
+
+                Button {
+                    if let onToggle { onToggle() } else { audio.toggle() }
+                } label: {
+                    Group {
+                        if audio.isLoading && audio.wantsPlayback {
+                            ProgressView()
+                        } else {
+                            Image(systemName: audio.isPlaying ? "pause.fill" : "play.fill")
+                                .font(.system(size: 30, weight: .regular))
+                                .foregroundStyle(theme.ink)
+                        }
+                    }
+                    .frame(width: 52, height: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                Spacer(minLength: 0)
+
+                Button(action: onSkipNext) {
+                    Image(systemName: "forward.end.fill")
+                        .font(.system(size: 20, weight: .regular))
+                        .foregroundStyle(theme.ink)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(!available)
+                .opacity(available ? 1 : 0.3)
+
+                Spacer(minLength: 0)
+
+                Button(action: onSearch) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 18, weight: .regular))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 6)
+        .padding(.bottom, 2)
+        // 底色跟页面一致，且必须不透明 —— 坞是浮在经文上的 overlay
+        .background(theme.scriptureBackground)
+        .overlay(alignment: .top) { Divider() }
     }
 
     /// 紧凑档：音乐页那套语言 —— 深底、白前景、白圆播放键、进度条白轨白填充，

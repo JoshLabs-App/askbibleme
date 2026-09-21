@@ -546,7 +546,8 @@ struct RootView: View {
             } dock: {
                 // 搜索 / 收藏页盖在上面时藏坞（RN 非章页只在播放中才出坞）
                 if readDockActive {
-                    compactDock(PlaybackDock(
+                    // 读经 / 圣经页：不套 compact，走安卓那套完整单栏坞（Josh 2026-09-21）
+                    PlaybackDock(
                         audio: audio,
                         available: audioURL != nil,
                         onSearch: {
@@ -557,7 +558,7 @@ struct RootView: View {
                         title: openedChapter.map { "\($0.book.name(displayLocale)) \($0.chapter)" } ?? "",
                         artworkSceneId: naturePrefs.sceneId,
                         locale: appLocale,
-                        quiet: true))
+                        quiet: true)
                 } else if planDockActive {
                     // 播放页的坞：左键是经文搜索（带当前章上下文）；播放键没建池时从选中章起播
                     compactDock(PlaybackDock(

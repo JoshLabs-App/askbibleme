@@ -49,6 +49,8 @@ struct PlaybackDock: View {
     /// 安静档（读经页）：去掉封面和章名，控件小一档、不带「下一章」文字，整块矮一截。
     /// Josh 2026-09-21：「播放栏太大了，也太吵，影响阅读」——读经页的主角是经文，
     /// 坞只需要够按；计划播放页不开这档（那页坞就是主角）。
+    /// 读经 / 圣经页的坞：走**安卓那套**完整单栏布局（`fullBody`，几何来自三端对拍的 ShellMetrics），
+    /// 贴底铺满、不透明纸底、顶一条 hairline。Josh 2026-09-21：「换回原来的，像安卓那样子的」。
     var quiet: Bool = false
 
     /// 安静档的底色：**不透明**深沉香木。玻璃底会把底下的经文透上来，字压字最难读——
@@ -206,6 +208,12 @@ struct PlaybackDock: View {
 
     private var fullBody: some View {
         VStack(spacing: 0) {
+            // 安卓 wrap.borderTop 那条 hairline：贴底档要靠它跟经文划界
+            if quiet {
+                Rectangle()
+                    .fill(theme.border)
+                    .frame(height: 1 / UIScreen.main.scale)
+            }
             VStack(spacing: 0) {
                 if let message = audio.errorMessage {
                     Text(message)
@@ -228,7 +236,10 @@ struct PlaybackDock: View {
                 .frame(height: 1 / UIScreen.main.scale)
                 .padding(.horizontal, 24)
         }
-        // 底色由 ShellTabBarHost 的玻璃胶囊承担；这里不铺任何底
+        // 浮层档的底色由 ShellTabBarHost 的玻璃胶囊承担；
+        // 贴底档自己铺一层**不透明**纸底（对应安卓的 bottomScrim）——
+        // 坞是浮在经文上的 overlay，透明底会让字压字（Josh 2026-09-21）
+        .background(quiet ? theme.scriptureBackground : Color.clear)
     }
 
     private var scrubber: some View {

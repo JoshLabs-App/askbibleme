@@ -69,6 +69,7 @@ struct PlaybackDock: View {
                             .foregroundStyle(theme.scripturePrimaryText)
                             .lineLimit(1)
                     }
+                    if !quiet || audio.duration > 0 {
                     HStack(spacing: 8) {
                         timeText(elapsed)
                         SeekableProgressBar(
@@ -78,11 +79,12 @@ struct PlaybackDock: View {
                         )
                         timeText(remaining)
                     }
+                    }
                 }
             }
             HStack(spacing: 0) {
                 Button { audio.cycleRate() } label: {
-                    SpeedRateImage(rate: Double(audio.rate), color: theme.scriptureSecondaryText.opacity(0.75))
+                    SpeedRateImage(rate: Double(audio.rate), color: theme.scriptureSecondaryText.opacity(quiet ? 0.55 : 0.75))
                         .scaleEffect(0.82)
                         // 视觉尺寸按效果图走，但点击框一律撑到 44 —— 上一轮照效果图把框也缩了，
                         // Josh 真机反馈「图标都比较小，会误点」。图标小是设计，触控小是 bug。
@@ -97,7 +99,7 @@ struct PlaybackDock: View {
                     RepeatGlyph(badge: audio.loopMode.badge,
                                 color: audio.loopMode == .forward ? theme.scriptureSecondaryText : theme.scripturePrimaryText,
                                 size: 19)
-                        .opacity(0.8)
+                        .opacity(quiet ? 0.6 : 0.8)
                         .frame(width: quiet ? 40 : 48, height: quiet ? 40 : 44)
                         .contentShape(Rectangle())
                 }
@@ -107,7 +109,7 @@ struct PlaybackDock: View {
                     if let onToggle { onToggle() } else { audio.toggle() }
                 } label: {
                     ZStack {
-                        Circle().fill(Brand.logo)
+                        Circle().fill(Brand.logo.opacity(quiet && !audio.isPlaying ? 0.82 : 1))
                         if audio.isLoading && audio.wantsPlayback {
                             ProgressView().tint(theme.ink)
                         } else {
@@ -150,7 +152,7 @@ struct PlaybackDock: View {
                 Button(action: onSearch) {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 15, weight: .regular))
-                        .foregroundStyle(theme.scriptureSecondaryText.opacity(0.8))
+                        .foregroundStyle(theme.scriptureSecondaryText.opacity(quiet ? 0.55 : 0.8))
                         .frame(width: quiet ? 40 : 48, height: quiet ? 40 : 44)
                         .contentShape(Rectangle())
                 }
@@ -163,7 +165,7 @@ struct PlaybackDock: View {
         // 只垫文字行时，按钮行背后经文透出来太吵）。玻璃边缘仍由外层 askGlass 提供高光。
         .background(
             RoundedRectangle(cornerRadius: AskCorner.control, style: .continuous)
-                .fill(theme.scriptureBackground.opacity(0.78))
+                .fill(theme.scriptureBackground.opacity(quiet ? 0.62 : 0.78))
         )
     }
 

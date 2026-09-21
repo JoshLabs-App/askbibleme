@@ -11,15 +11,26 @@
  * - **同一个 Audio 元素连播会互相掐断**：每个音效预留两个元素轮换。
  */
 
-export type AchievementCue = "xp" | "earn" | "levelUp";
+/**
+ * `chapter` = 读完一章：木与钟之间的一记小钵。GPT 2026-09-20：
+ * 「我读完这一章了」比「我获得了 200 XP」重要得多，这该是全 App 最完整的一次反馈。
+ */
+export type AchievementCue = "xp" | "chapter" | "earn" | "levelUp";
 
 const SRC: Record<AchievementCue, string> = {
   xp: "/sfx/xp.m4a",
+  chapter: "/sfx/chapter.m4a",
   earn: "/sfx/earn.m4a",
   levelUp: "/sfx/levelup.m4a",
 };
 
-const VOLUME: Record<AchievementCue, number> = { xp: 0.45, earn: 0.85, levelUp: 0.85 };
+// GPT 2026-09-20 建议木叩从 0.45 压到 0.30–0.35，免得久了变成「游戏奖励音」
+const VOLUME: Record<AchievementCue, number> = {
+  xp: 0.34,
+  chapter: 0.72,
+  earn: 0.85,
+  levelUp: 0.85,
+};
 
 export const ACHIEVEMENT_SOUND_KEY = "askbible-achievement-sound-v1";
 
@@ -64,10 +75,35 @@ function element(cue: AchievementCue): HTMLAudioElement | null {
   return pool[i] ?? null;
 }
 
-export function playAchievementCue(cue: AchievementCue): void {
+/**
+ * +XP 的反馈分两档（2026-09-20）：**声音标记里程碑，触感标记增量。**
+ * 小额 XP（读几节、听一小段）几十秒就来一次，连着几十分钟都在响，再轻也累；
+ * 但完全没反馈又会觉得「读了没记上」。所以小额只给一记轻触感、不出声，
+ * 只有整章读完这种大额才出声。
+ */
+export function playAchievementXp(milestone: boolean): void {
+  // 里程碑用小钵而不是木叩：木叩配不上「读完一章」这件事
+  if (milestone) playAchievementCue("chapter");
+  else playAchievementCue("xp", { silent: true });
+}
+
+/** 用户在系统里开了「减弱动态效果」：动效要收，声音不受影响（那是两种偏好） */
+export function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  try {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch {
+    return false;
+  }
+}
+
+export function playAchievementCue(
+  cue: AchievementCue,
+  opts: { silent?: boolean } = {},
+): void {
   if (typeof window === "undefined") return;
   vibrate(cue);
-  if (!achievementSoundEnabled()) return;
+  if (opts.silent || !achievementSoundEnabled()) return;
   if (cue === "xp") {
     const now = Date.now();
     if (now - lastXpAt < 280) return;
@@ -87,7 +123,8 @@ export function playAchievementCue(cue: AchievementCue): void {
 function vibrate(cue: AchievementCue): void {
   if (typeof navigator === "undefined" || typeof navigator.vibrate !== "function") return;
   // iOS Safari 没有 vibrate，安卓 Chrome 有；失败不影响音效
-  const pattern = cue === "xp" ? 12 : cue === "earn" ? 28 : [34, 70, 18, 60, 40];
+  const pattern =
+    cue === "xp" ? 12 : cue === "chapter" ? 22 : cue === "earn" ? 28 : [34, 70, 18, 60, 40];
   try {
     navigator.vibrate(pattern);
   } catch {
@@ -98,5 +135,5 @@ function vibrate(cue: AchievementCue): void {
 /** 预热：首次用户交互后调一次，让浏览器把音频解码好，第一声不至于迟到 */
 export function warmAchievementCues(): void {
   if (typeof window === "undefined") return;
-  for (const cue of ["xp", "earn", "levelUp"] as AchievementCue[]) element(cue);
+  for (const cue of ["xp", "chapter", "earn", "levelUp"] as AchievementCue[]) element(cue);
 }

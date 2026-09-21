@@ -150,7 +150,7 @@ struct XPFloater: View {
         ach.consume()
         seq += 1
         let id = seq
-        AchievementFeedback.shared.play(.xp)
+        AchievementFeedback.shared.playXP(milestone: n >= MedalXP.perChapterRead)
         // dampingFraction 0.52：比原来更弹一点，弹出来才「动态」
         withAnimation(.spring(response: 0.3, dampingFraction: 0.52)) {
             shown.append((id, "+\(n)", n >= MedalXP.perChapterRead))
@@ -171,6 +171,8 @@ struct EarnedToast: View {
     @State private var pop = false
     /// 升级金边的呼吸
     @State private var pulse = false
+    /// 升级卡上缓慢扫过的一道金光（-1 → 2 表示从左外扫到右外）
+    @State private var sweep: CGFloat = -1
 
     private func isLevelUp(_ e: AchievementStore.Event) -> Bool {
         if case .levelUp = e { return true }
@@ -206,13 +208,30 @@ struct EarnedToast: View {
             .background(Color(parchment: 0xFFFCF5), in: RoundedRectangle(cornerRadius: 16))
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(rgb: 0xFFB101, opacity: 0.35), lineWidth: 1))
             .shadow(color: .black.opacity(0.18), radius: 14, y: 4)
+            // 升级再多一道缓慢扫过的金光。不用粒子 —— 粒子是街机语气；
+            // 一道光扫过去像「金箔被光照到」，和羊皮卷 + 烫金是一路的。
+            .overlay(
+                GeometryReader { geo in
+                    if isLevelUp(e) {
+                        LinearGradient(
+                            colors: [.clear, Color.white.opacity(0.22), .clear],
+                            startPoint: .topLeading, endPoint: .bottomTrailing
+                        )
+                        .frame(width: geo.size.width * 0.45)
+                        .offset(x: sweep * geo.size.width)
+                        .blendMode(.plusLighter)
+                    }
+                }
+                .allowsHitTesting(false)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 16))
             // 升级那一下给一圈会呼吸的金边，比勋章更隆重
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(Color(rgb: 0xFFB101), lineWidth: isLevelUp(e) ? 2 : 0)
                     .opacity(pulse ? 0.15 : 0.9)
                     .animation(isLevelUp(e)
-                               ? .easeInOut(duration: 0.75).repeatForever(autoreverses: true)
+                               ? .easeInOut(duration: 1.35).repeatForever(autoreverses: true)
                                : .default,
                                value: pulse)
             )
@@ -225,6 +244,10 @@ struct EarnedToast: View {
                 pop = false
                 withAnimation(.spring(response: 0.34, dampingFraction: 0.55)) { pop = true }
                 pulse = isLevelUp(e)
+                if isLevelUp(e) {
+                    sweep = -1
+                    withAnimation(.easeInOut(duration: 0.62).delay(0.18)) { sweep = 2 }
+                }
                 try? await Task.sleep(for: .seconds(2.8))
                 withAnimation { drop(e) }
             }

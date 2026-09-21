@@ -14,7 +14,11 @@ import {
   subscribeAchievements,
   type AchievementEvent,
 } from "@/lib/achievements/achievement-store-web";
-import { playAchievementCue } from "@/lib/achievements/achievement-feedback-web";
+import {
+  playAchievementCue,
+  playAchievementXp,
+  prefersReducedMotion,
+} from "@/lib/achievements/achievement-feedback-web";
 import { getScriptureBookDisplayName } from "@/lib/bible/scripture-book-display-name";
 import type { AppLocale } from "@/lib/i18n/config";
 
@@ -57,8 +61,9 @@ export function AchievementFeedbackLayer() {
         }
       }
       if (xp.length) {
-        // 一批只响一次：一次抽干三条 XP 不该连响三下
-        playAchievementCue("xp");
+        // 一批只响一次：一次抽干三条 XP 不该连响三下。
+        // 只要这批里有一条够里程碑（整章）就出声，否则只给触感。
+        playAchievementXp(xp.some((f) => f.big));
         setFloaters((cur) => [...cur, ...xp].slice(-3));
       }
       if (others.length) setToasts((cur) => [...cur, ...others].slice(-6));
@@ -111,7 +116,10 @@ export function AchievementFeedbackLayer() {
                 transition: f.leaving
                   ? `transform ${FLOAT_OUT_MS}ms ease-out, opacity ${FLOAT_OUT_MS}ms ease-out`
                   : "none",
-                animation: f.leaving ? undefined : "askbible-xp-pop 420ms cubic-bezier(0.2,1.7,0.35,1)",
+                animation:
+                  f.leaving || prefersReducedMotion()
+                    ? undefined
+                    : "askbible-xp-pop 420ms cubic-bezier(0.2,1.7,0.35,1)",
               }}
             >
               {f.text}
@@ -137,22 +145,41 @@ function EarnedToast({
 }) {
   const d = describe(event, locale);
   if (!d) return null;
+  const isLevelUp = event.kind === "levelUp";
+  const calm = prefersReducedMotion();
   return (
     <div className="pointer-events-none fixed inset-x-0 z-[60] flex justify-center px-4" style={{ top: 8 }}>
       <button
         type="button"
         onClick={onDismiss}
-        className="pointer-events-auto flex w-full items-center gap-3 text-left"
+        className="pointer-events-auto relative flex w-full items-center gap-3 overflow-hidden text-left"
         style={{
           maxWidth: 340,
           padding: "10px 14px",
           borderRadius: 16,
           backgroundColor: "#FFFCF5",
-          border: "1px solid rgba(255,177,1,0.35)",
+          border: isLevelUp ? "2px solid #FFB101" : "1px solid rgba(255,177,1,0.35)",
           boxShadow: "0 4px 14px rgba(0,0,0,0.18)",
-          animation: "askbible-toast-in 260ms ease-out",
+          animation: calm
+            ? undefined
+            : `askbible-toast-in 260ms ease-out${isLevelUp ? ", askbible-toast-pulse 1350ms ease-in-out 260ms infinite alternate" : ""}`,
         }}
       >
+        {/* 升级多一道缓慢扫过的金光。不用粒子 —— 粒子是街机语气；
+            一道光扫过去像「金箔被光照到」，和羊皮卷 + 烫金是一路的。
+            开了「减弱动态效果」就不扫。 */}
+        {isLevelUp && !calm ? (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0"
+            style={{
+              width: "45%",
+              background:
+                "linear-gradient(115deg, transparent, rgba(255,255,255,0.22), transparent)",
+              animation: "askbible-toast-sweep 620ms ease-in-out 180ms 1",
+            }}
+          />
+        ) : null}
         {d.image ? (
           <MedalIcon imageKey={d.image} tier={d.tier} tierCount={d.tierCount} size={48} />
         ) : (
@@ -171,7 +198,11 @@ function EarnedToast({
             {d.subtitle}
           </span>
         </span>
-        <style>{`@keyframes askbible-toast-in{from{transform:translateY(-16px);opacity:0}to{transform:translateY(0);opacity:1}}`}</style>
+        <style>{`
+          @keyframes askbible-toast-in{from{transform:translateY(-16px);opacity:0}to{transform:translateY(0);opacity:1}}
+          @keyframes askbible-toast-sweep{from{transform:translateX(-120%)}to{transform:translateX(320%)}}
+          @keyframes askbible-toast-pulse{from{border-color:rgba(255,177,1,0.18)}to{border-color:rgba(255,177,1,0.95)}}
+        `}</style>
       </button>
     </div>
   );

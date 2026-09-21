@@ -18,8 +18,11 @@ final class AchievementFeedback {
     static let shared = AchievementFeedback()
 
     enum Cue {
-        /// +XP 的轻点。读 / 听的时候几秒一次，必须短且轻，不然很快就烦。
+        /// +XP 的轻叩。读 / 听的时候几秒一次，必须短且轻，不然很快就烦。
         case xp
+        /// 读完一章：木与钟之间的一记小钵。GPT 2026-09-20：
+        /// 「我读完这一章了」比「我获得了 200 XP」重要得多，这该是全 App 最完整的一次反馈。
+        case chapter
         /// 拿到勋章 / 卷印：单声钟
         case earn
         /// 升级：三声上行钟 + 更重的触感
@@ -28,6 +31,7 @@ final class AchievementFeedback {
         var file: String {
             switch self {
             case .xp: return "xp"
+            case .chapter: return "chapter"
             case .earn: return "earn"
             case .levelUp: return "levelup"
             }
@@ -54,9 +58,22 @@ final class AchievementFeedback {
 
     private init() {}
 
-    func play(_ cue: Cue) {
+    /// +XP 的反馈分两档（2026-09-20）：
+    /// **声音标记里程碑，触感标记增量。**
+    /// 小额 XP（读几节、听一小段）几十秒就来一次，连着几十分钟都在响，再轻也累；
+    /// 但完全没反馈又会觉得「读了没记上」。所以小额只给一记轻触感、不出声，
+    /// 只有整章读完这种大额才出声。
+    /// - Parameter milestone: 这次 XP 够不够「里程碑」（>= 整章的量）
+    func playXP(milestone: Bool) {
+        // 里程碑用小钵而不是木叩：木叩配不上「读完一章」这件事
+        if milestone { play(.chapter) } else { play(.xp, silent: true) }
+    }
+
+    func play(_ cue: Cue) { play(cue, silent: false) }
+
+    private func play(_ cue: Cue, silent: Bool) {
         haptic(cue)
-        guard Self.soundEnabled else { return }
+        guard !silent, Self.soundEnabled else { return }
         if cue == .xp {
             guard Date().timeIntervalSince(lastXPAt) > 0.28 else { return }
             lastXPAt = Date()
@@ -75,6 +92,9 @@ final class AchievementFeedback {
         switch cue {
         case .xp:
             UIImpactFeedbackGenerator(style: .light).impactOccurred(intensity: 0.5)
+        case .chapter:
+            // 「一次明确但轻柔的 impact」
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred(intensity: 0.8)
         case .earn:
             UINotificationFeedbackGenerator().notificationOccurred(.success)
         case .levelUp:
@@ -91,7 +111,8 @@ final class AchievementFeedback {
             guard let url = Bundle.main.url(forResource: name, withExtension: "m4a") else { return nil }
             let made = (0..<2).compactMap { _ -> AVAudioPlayer? in
                 let p = try? AVAudioPlayer(contentsOf: url)
-                p?.volume = name == "xp" ? 0.45 : 0.85
+                // GPT 2026-09-20 建议木叩从 0.45 压到 0.30–0.35，免得久了变成「游戏奖励音」
+            p?.volume = name == "xp" ? 0.34 : (name == "chapter" ? 0.72 : 0.85)
                 p?.prepareToPlay()   // 先解码好，按下去才是「立刻」响
                 return p
             }

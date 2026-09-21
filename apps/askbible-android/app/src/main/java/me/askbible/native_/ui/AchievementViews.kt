@@ -1,5 +1,13 @@
 package me.askbible.native_.ui
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import me.askbible.native_.data.AchievementFeedback
@@ -232,7 +240,7 @@ fun XPFloater(ach: AchievementStore, modifier: Modifier = Modifier) {
         val xp = head as? AchievementStore.Event.Xp ?: return@LaunchedEffect
         ach.consume()
         seq += 1
-        AchievementFeedback.play(context, AchievementFeedback.Cue.XP)
+        AchievementFeedback.playXp(context, xp.amount >= MedalXP.perChapterRead)
         shown = (shown + FloaterItem(seq, "+${xp.amount}", xp.amount >= MedalXP.perChapterRead)).takeLast(3)
     }
 
@@ -302,11 +310,42 @@ fun EarnedToast(
         modifier = modifier,
     ) {
         if (d != null) {
+            val levelUp = event is AchievementStore.Event.LevelUp
+            // 升级：金边呼吸 + 一道缓慢扫过的金光。不用粒子 —— 粒子是街机语气；
+            // 一道光扫过去像「金箔被光照到」，和羊皮卷 + 烫金是一路的。
+            val transition = rememberInfiniteTransition(label = "levelUpGlow")
+            val borderAlpha by if (levelUp) transition.animateFloat(
+                initialValue = 0.18f, targetValue = 0.95f,
+                animationSpec = infiniteRepeatable(tween(1350), RepeatMode.Reverse),
+                label = "borderAlpha",
+            ) else remember { mutableStateOf(0.35f) }
+            val sweep = remember(event) { Animatable(-1.2f) }
+            LaunchedEffect(event) {
+                if (!levelUp) return@LaunchedEffect
+                delay(180)
+                sweep.animateTo(3.2f, tween(620))
+            }
             Row(
                 Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
                     .background(theme.surfaceSolid.toColor())
-                    .border(1.dp, XPGold.copy(alpha = 0.35f), RoundedCornerShape(16.dp))
+                    .then(
+                        if (levelUp) Modifier.drawWithContent {
+                            drawContent()
+                            val w = size.width * 0.45f
+                            drawRect(
+                                brush = Brush.linearGradient(
+                                    listOf(Color.Transparent, Color.White.copy(alpha = 0.22f), Color.Transparent),
+                                    start = Offset(sweep.value * size.width, 0f),
+                                    end = Offset(sweep.value * size.width + w, size.height),
+                                ),
+                                topLeft = Offset(sweep.value * size.width, 0f),
+                                size = Size(w, size.height),
+                            )
+                        } else Modifier
+                    )
+                    .border(if (levelUp) 2.dp else 1.dp,
+                            XPGold.copy(alpha = borderAlpha), RoundedCornerShape(16.dp))
                     .clickableNoRipple { event?.let { ach.consumeThrough(it) } }
                     .padding(horizontal = 14.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,

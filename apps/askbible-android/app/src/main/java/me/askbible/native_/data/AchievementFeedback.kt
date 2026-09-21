@@ -22,7 +22,16 @@ import me.askbible.native_.R
  * 3. **可以关**：成就墙里一个开关，默认开。
  */
 object AchievementFeedback {
-    enum class Cue { XP, EARN, LEVEL_UP }
+    enum class Cue {
+        XP,
+        /**
+         * 读完一章：木与钟之间的一记小钵。GPT 2026-09-20：
+         * 「我读完这一章了」比「我获得了 200 XP」重要得多，这该是全 App 最完整的一次反馈。
+         */
+        CHAPTER,
+        EARN,
+        LEVEL_UP,
+    }
 
     const val SOUND_ENABLED_KEY = "askbible-achievement-sound-v1"
 
@@ -40,9 +49,22 @@ object AchievementFeedback {
             .edit().putBoolean(SOUND_ENABLED_KEY, on).apply()
     }
 
-    fun play(context: Context, cue: Cue) {
+    /**
+     * +XP 的反馈分两档（2026-09-20）：**声音标记里程碑，触感标记增量。**
+     * 小额 XP（读几节、听一小段）几十秒就来一次，连着几十分钟都在响，再轻也累；
+     * 但完全没反馈又会觉得「读了没记上」。所以小额只给一记轻触感、不出声，
+     * 只有整章读完这种大额才出声。
+     */
+    fun playXp(context: Context, milestone: Boolean) {
+        // 里程碑用小钵而不是木叩：木叩配不上「读完一章」这件事
+        if (milestone) play(context, Cue.CHAPTER) else play(context, Cue.XP, silent = true)
+    }
+
+    fun play(context: Context, cue: Cue) = play(context, cue, silent = false)
+
+    private fun play(context: Context, cue: Cue, silent: Boolean) {
         haptic(context, cue)
-        if (!soundEnabled(context)) return
+        if (silent || !soundEnabled(context)) return
         if (cue == Cue.XP) {
             val now = System.currentTimeMillis()
             if (now - lastXpAt < 280) return
@@ -50,7 +72,12 @@ object AchievementFeedback {
         }
         val p = ensurePool(context)
         val id = ids[cue] ?: return
-        val volume = if (cue == Cue.XP) 0.45f else 0.85f
+        // GPT 2026-09-20 建议木叩从 0.45 压到 0.30–0.35，免得久了变成「游戏奖励音」
+        val volume = when (cue) {
+            Cue.XP -> 0.34f
+            Cue.CHAPTER -> 0.72f
+            else -> 0.85f
+        }
         p.play(id, volume, volume, 1, 0, 1f)
     }
 
@@ -67,6 +94,7 @@ object AchievementFeedback {
             .build()
         val app = context.applicationContext
         ids[Cue.XP] = p.load(app, R.raw.sfx_xp, 1)
+        ids[Cue.CHAPTER] = p.load(app, R.raw.sfx_chapter, 1)
         ids[Cue.EARN] = p.load(app, R.raw.sfx_earn, 1)
         ids[Cue.LEVEL_UP] = p.load(app, R.raw.sfx_levelup, 1)
         pool = p
@@ -86,6 +114,8 @@ object AchievementFeedback {
         val effect = when (cue) {
             // +XP 只给很轻的一下，它来得太频繁
             Cue.XP -> VibrationEffect.createOneShot(12, 60)
+            // 「一次明确但轻柔的 impact」
+            Cue.CHAPTER -> VibrationEffect.createOneShot(22, 190)
             Cue.EARN -> VibrationEffect.createOneShot(28, VibrationEffect.DEFAULT_AMPLITUDE)
             // 升级：重—轻—重，做出「咚·哒·咚」的分量
             Cue.LEVEL_UP -> VibrationEffect.createWaveform(

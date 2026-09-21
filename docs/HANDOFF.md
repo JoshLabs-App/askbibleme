@@ -495,3 +495,123 @@ C=$(xcrun simctl get_app_container 4C1D3CEB-DA49-4605-A675-B7C31022B488 me.askbi
 1. 等同项目其它会话把编译修通，`xcodebuild` 跑一次，验证第 5 条（探索页格子确实不见了，且读经计划页的「麦克阿瑟研经法」链接仍能打开文章页）。
 2. 验证通过后提交（Josh 的规矩：说明改动 + 聊天确认 → 直接推 main）。
 3. `docs/OPEN-ITEMS.md` 里 2026-09-18 还剩「第 3 屏今日读经引导（已定为不做）」之外的活口，接手前扫一眼。
+
+---
+
+## 附：2026-09-19 ~ 20 这一轮（配色收敛 + 跟读按句 + 成就音效）交接
+
+### 当前状态
+
+**全部已提交并推送 main**，两台真机装过（iPhone 最后一版未装，见下一步 0）。
+本轮四个提交：`4630e1fd`（色板 + 跟读按句）、`038ae43b`（安卓 sideload 变体）、
+`b9376bc1`（高亮重叠 + 进度条可拖）、`7720806b`（成就音效 v1）、
+`4c608f4b`（开关色修正 + 状态色锁规则）、`74e758c7`（成就反馈 v2）。
+
+做完的四件事：
+
+1. **划重点四色板换新**（四端）。`#7BC96F`/`#0FBCDB`/`#F48FB1` →
+   `#A3B565` 橄榄绿 / `#4E86A0` 青石蓝 / `#C0625F` 石榴红，灯油黄 `#FFB103` 保留。
+   高亮一律「颜料 + alpha」铺在羊皮底上，**每端只留一个上色入口**：
+   - 网页 `lib/read/read-verse-text-highlights.ts` → `verseTextHighlightStyle()`（注入
+     `--vh-rgb`/`--vh-a`/`--vh-a-dark`，深浅由 CSS 切，JS 不参与）
+   - iOS `Model/VerseTextHighlights.swift` → `VerseHighlightRules.fillColor()`
+   - 安卓 `ui/ChapterFlowParagraph.kt` → `verseHighlightFill(hex, dark)`
+   - RN `src/read/read-verse-text-highlights.ts` → `verseTextHighlightFill()`
+   **四端各带一张旧→新 hex 迁移表**写在 `normalizeColor` 里，老用户画过的重点不会被
+   打回默认黄。测试 `lib/read/read-verse-text-highlights.test.ts` 5 条盯着这件事。
+2. **跟读高亮从「按节整行铺底」改成「按句、贴着字铺」**（四端）。
+   新增 `VerseSentences`（Swift / Kotlin / TS 三写 + RN 一份拷贝）：按 `。！？；!?;` 切句，
+   收尾 `」』”）` 并进本句，逗号顿号冒号**不**切。播放器新增节内进度
+   （`activeVerseProgress` / `activeVerseProgressAt`），节内按非空白字数比例插值定位当前句。
+   网页 `hooks/useReadChapterFollowSentence.ts`、RN `useReadChapterAudio.ts`
+   **顺带把关掉的跟读高亮重新打开了**（原来 `activeIndex` / `activeVerseIndex` 写死 null）。
+3. **全局只留一种绿**：`#34C759` 全下掉，收敛到仓库已有的
+   `READ_DONE_ACCENT = "#65775C"`，补了深色版 `READ_DONE_ACCENT_DARK = "#A8BC72"`。
+   状态色四档已锁成硬规则，见 `docs/DECISIONS.md` 同日那条。
+4. **成就反馈（XP / 勋章 / 升级）加声音 + 触感 + 动效**，v2 做了声音分层。
+   纲领：**小事靠触感，完成靠声音，成就靠钟声，升级靠光。**
+   三端各一个 `AchievementFeedback`（iOS `Model/`、安卓 `data/`、网页
+   `lib/achievements/achievement-feedback-web.ts`），四个音 `xp`/`chapter`/`earn`/`levelup`
+   由 `tools/gen-achievement-sfx.py` 本机合成（numpy，非谐波分音 + 合成混响），
+   三端各存一份：`apps/askbible-ios/AskBible/Resources/sfx/`、
+   `apps/askbible-android/app/src/main/res/raw/sfx_*.m4a`、`public/sfx/`。
+   开关在三端成就墙里，默认开，键 `askbible-achievement-sound-v1`。
+
+### 怎么验证
+
+```bash
+cd /Users/joshua/Desktop/APP/01AskBible
+npx tsc --noEmit -p tsconfig.json                      # 网页
+npx tsc --noEmit -p apps/askbible-mobile/tsconfig.json # RN
+npx vitest run                                          # 259 条
+npm run check:site-copy                                 # 文案真源与两端一致
+cd apps/askbible-ios && xcodebuild -project AskBible.xcodeproj -scheme AskBible \
+  -configuration Release -destination 'generic/platform=iOS' \
+  -allowProvisioningUpdates -derivedDataPath /tmp/claude-501/ios-rel build
+cd ../askbible-android && ./gradlew :app:assembleSideload
+```
+
+改了音效参数后重新生成并同步三端：
+
+```bash
+cd /tmp && python3 /Users/joshua/Desktop/APP/01AskBible/tools/gen-achievement-sfx.py
+for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 96k -ac 1 $f.m4a; done
+# 再 cp 到上面三个目录（安卓的文件名要加 sfx_ 前缀）
+```
+
+### 下一步（按顺序）
+
+0. **装最新版到 home iPhone**。本轮最后一版（`74e758c7`，成就反馈 v2）三星已装，
+   **iPhone 没装**——当时手机不在线。Release 包当时预编在 `/tmp/claude-501/ios-rel/`，
+   **那是临时目录，可能已被清**，按上面的命令重编一次再装即可。
+1. **「读完一章」的专属动效**（GPT 和我都认为最该补的一条）。现在章完成有
+   **声音（小钵）+ 触感**，但**没有专属动效**，还是复用 +XP 的飘字。
+   目标形态：阅读进度线完成 → 金色短暂亮起 → 回归静止，**不要弹 Toast**。
+   卡点：要先定动效挂在哪（章页底部进度条？顶部章节标题？），这要动读经页布局。
+2. **连续天数（streak）反馈**（价值最高）。现状：`streakDays()` 只参与算倍率，
+   **延续 / 中断都不发事件**，界面毫无动静。建议：延续 = 当天第一次完成时轻触感 + 小钵、
+   不弹卡片；**中断什么都不给**，安静归零，不要用声音惩罚用户。
+   要动 `AchievementStore` 发新事件，三端都要改。
+3. **今日计划完成的反馈**，建议和第 2 条一起做。
+4. **语义色四档抽成三端共享 token**（规则已锁，只剩结构性改动）。
+
+### 别踩的坑
+
+**这一轮新踩的，压缩后会丢，都记在这里：**
+
+- **模拟器坐标换算**：iPhone 17 Pro 截图宽 918px，设备点宽 402，**比例 0.4379**
+  （`点 = 图 × 0.4379`）。按 2x 或 3x 硬算全部打偏，我在这上面白点了七八次。
+  机型用 `plutil -p ~/Library/Developer/CoreSimulator/Devices/<UDID>/device.plist | grep deviceType` 查。
+- **`inspect` 动作在这台机器上不可用**（返回「use screenshot instead」），只能靠截图 + 换算。
+- **安卓真机装不上 release**：手机上的 `me.askbible` 是 **Play 商店版**
+  （`dumpsys package me.askbible | grep installerPackageName` = `com.android.vending`），
+  被 Play App Signing 重签过，本地 upload key 打的包**永远覆盖不上去**。
+  **不要卸载重装**（会清掉 Josh 的登录和设置）。用 `./gradlew :app:assembleSideload`
+  打 `.native` 后缀的并排包。**任务名是 `assembleSideload` 不是 `assembleSideloadRelease`**。
+- **adb 两个端口 5555 / 32929 连的是同一台机**（SM_S918W）。换端口解决不了签名问题。
+  端口会变，先跑 `~/bin/connect_devices.sh`。
+- **iOS `error 1016 (has not been unlocked recently)`**：手机自**重启以来一次都没解锁过**，
+  开发者配对凭据解密不出来，`xcodebuild` 会卡在等 destination 然后超时。
+  **没有绕过的办法**，只能请 Josh 解锁一次。日常锁屏安装是可以的，不要预先要求他解锁。
+- **iOS 覆盖安装这次没出问题**：`devicectl install` 直接盖上去、启动正常（验过进程存活 3 秒）。
+  7.1 说的「必须先卸载」这次没走，为的是保住登录状态。若日后出现秒退再按 7.1 卸载重装。
+- **双重压透明**：iOS `ChapterFlowParagraph.swift` 画划重点时原来有
+  `run.color.withAlphaComponent(0.45)`、安卓有 `c.copy(alpha = 0.45f)`——
+  颜色已由 `fillColor`/`verseHighlightFill` 带好 alpha，会被乘两次。两处都已删。
+- **逐行铺色不能纵向撑高**：原来 iOS `insetBy(dy: -1)`、安卓 `-1.dp/+2.dp`，
+  相邻两行重叠 2pt，半透明叠出一条深色带。已改成不纵向撑。
+- **Xcode 工程用 `PBXFileSystemSynchronizedRootGroup`**，往 `AskBible/` 下丢新 `.swift`
+  或 `Resources/sfx/*.m4a` **会自动纳入**，不用改 pbxproj。
+- **`SiteCopy` 是生成物**：改文案要改 `tools/native-copy-extra.json` 再
+  `npm run gen:site-copy`，`npm run check:site-copy` 自检。
+- **浏览器自动化 ChatGPT 的三个坑**（2026-09-20 实测）：
+  1. `form_input` 填的是隐藏 textarea，**真正的 composer 收不到**，页面看着是空的；
+     要先 `computer left_click` 点进输入框再用 `type`。
+  2. **回车不发送**（只插换行）。必须点发送按钮：
+     `document.querySelector('[data-testid="send-button"]')` 取 rect 再点。
+  3. **坐标要换算**：页面 CSS viewport 是 1024x768，但截图帧是 800x600，
+     **比例 0.78125**。直接用 `getBoundingClientRect` 的值会报「outside the coordinate frame」。
+  读回复用 `main.innerText` 切片，不要用 `article`（这个版本的 DOM 里查不到）。
+- **仓库里长期有别的会话在写** `docs/story-scripts/*.md` 和 `.gitignore`。
+  提交一律 `git commit -F - -- <自己的路径>`，**不要裸 `git commit`**、不要
+  `git add -A` 之后直接提交。本轮六次提交全绕开了那两个文件。

@@ -51,6 +51,12 @@ struct PlaybackDock: View {
     /// 坞只需要够按；计划播放页不开这档（那页坞就是主角）。
     var quiet: Bool = false
 
+    /// 安静档的底色：**不透明**深沉香木。玻璃底会把底下的经文透上来，字压字最难读——
+    /// Josh 2026-09-21：「透明玻璃在影响阅读，还不如原来的黑播放栏」。
+    private var quietFill: Color { Color(parchment: 0x241A13) }
+    /// 深底上的前景一律纸色，不能再用 theme 的墨色（那是给浅底用的）
+    private func quietFg(_ opacity: Double) -> Color { Color(parchment: 0xECD9B9, opacity: opacity) }
+
     var body: some View {
         if compact { compactBody } else { fullBody }
     }
@@ -75,7 +81,9 @@ struct PlaybackDock: View {
                         SeekableProgressBar(
                             audio: audio,
                             trackHeight: 2,
-                            trackColor: Color(parchment: 0x5c4030, opacity: 0.20)
+                            trackColor: quiet
+                                ? Color(parchment: 0xECD9B9, opacity: 0.26)
+                                : Color(parchment: 0x5c4030, opacity: 0.20)
                         )
                         timeText(remaining)
                     }
@@ -84,7 +92,7 @@ struct PlaybackDock: View {
             }
             HStack(spacing: 0) {
                 Button { audio.cycleRate() } label: {
-                    SpeedRateImage(rate: Double(audio.rate), color: theme.scriptureSecondaryText.opacity(quiet ? 0.55 : 0.75))
+                    SpeedRateImage(rate: Double(audio.rate), color: quiet ? quietFg(0.66) : theme.scriptureSecondaryText.opacity(0.75))
                         .scaleEffect(0.82)
                         // 视觉尺寸按效果图走，但点击框一律撑到 44 —— 上一轮照效果图把框也缩了，
                         // Josh 真机反馈「图标都比较小，会误点」。图标小是设计，触控小是 bug。
@@ -97,9 +105,11 @@ struct PlaybackDock: View {
 
                 Button { audio.cycleLoop() } label: {
                     RepeatGlyph(badge: audio.loopMode.badge,
-                                color: audio.loopMode == .forward ? theme.scriptureSecondaryText : theme.scripturePrimaryText,
+                                color: quiet
+                                    ? quietFg(audio.loopMode == .forward ? 0.66 : 0.95)
+                                    : (audio.loopMode == .forward ? theme.scriptureSecondaryText : theme.scripturePrimaryText),
                                 size: 19)
-                        .opacity(quiet ? 0.6 : 0.8)
+                        .opacity(quiet ? 1 : 0.8)
                         .frame(width: quiet ? 40 : 48, height: quiet ? 40 : 44)
                         .contentShape(Rectangle())
                 }
@@ -109,7 +119,7 @@ struct PlaybackDock: View {
                     if let onToggle { onToggle() } else { audio.toggle() }
                 } label: {
                     ZStack {
-                        Circle().fill(Brand.logo.opacity(quiet && !audio.isPlaying ? 0.82 : 1))
+                        Circle().fill(Brand.logo)
                         if audio.isLoading && audio.wantsPlayback {
                             ProgressView().tint(theme.ink)
                         } else {
@@ -129,7 +139,7 @@ struct PlaybackDock: View {
                     HStack(spacing: 5) {
                         Image(systemName: "forward.end.fill")
                             .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(theme.scriptureSecondaryText)
+                            .foregroundStyle(quiet ? quietFg(0.78) : theme.scriptureSecondaryText)
                         if !quiet {
                             Text(nextLabel)
                                 .font(.system(size: 10, weight: .medium))
@@ -152,7 +162,7 @@ struct PlaybackDock: View {
                 Button(action: onSearch) {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 15, weight: .regular))
-                        .foregroundStyle(theme.scriptureSecondaryText.opacity(quiet ? 0.55 : 0.8))
+                        .foregroundStyle(quiet ? quietFg(0.66) : theme.scriptureSecondaryText.opacity(0.8))
                         .frame(width: quiet ? 40 : 48, height: quiet ? 40 : 44)
                         .contentShape(Rectangle())
                 }
@@ -164,8 +174,10 @@ struct PlaybackDock: View {
         // 整块垫一层纸色底色玻璃（Josh 2026-09-16：「原来做的 GPT 图这里是有一层底色玻璃的」，
         // 只垫文字行时，按钮行背后经文透出来太吵）。玻璃边缘仍由外层 askGlass 提供高光。
         .background(
-            RoundedRectangle(cornerRadius: AskCorner.control, style: .continuous)
-                .fill(theme.scriptureBackground.opacity(quiet ? 0.62 : 0.78))
+            // 安静档用 sheet 半径：外层 askGlassRect 就是这个半径，
+            // 用更小的 control 半径会在四角露出一圈玻璃（经文仍然透上来）。
+            RoundedRectangle(cornerRadius: quiet ? AskCorner.sheet : AskCorner.control, style: .continuous)
+                .fill(quiet ? AnyShapeStyle(quietFill) : AnyShapeStyle(theme.scriptureBackground.opacity(0.78)))
         )
     }
 
@@ -239,7 +251,7 @@ struct PlaybackDock: View {
         Text(s)
             .font(.system(size: compact ? 11 : ShellMetrics.timeFontSize, weight: compact ? .semibold : .medium))
             .monospacedDigit()
-            .foregroundStyle(theme.muted)
+            .foregroundStyle(quiet ? quietFg(0.72) : theme.muted)
     }
 
     private var transport: some View {

@@ -53,7 +53,8 @@ struct PlaybackDock: View {
 
     /// 安静档的底色：**不透明**深沉香木。玻璃底会把底下的经文透上来，字压字最难读——
     /// Josh 2026-09-21：「透明玻璃在影响阅读，还不如原来的黑播放栏」。
-    private var quietFill: Color { Color(parchment: 0x241A13) }
+    /// 跟界面深色模式联动：夜里要比纸面（#1A1512）更暗一档，否则这条栏比周围还亮。
+    private var quietFill: Color { theme.isDark ? Color(parchment: 0x100C0A) : Color(parchment: 0x241A13) }
     /// 深底上的前景一律纸色，不能再用 theme 的墨色（那是给浅底用的）
     private func quietFg(_ opacity: Double) -> Color { Color(parchment: 0xECD9B9, opacity: opacity) }
 
@@ -72,7 +73,7 @@ struct PlaybackDock: View {
                     if !title.isEmpty && !quiet {
                         Text(title)
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(theme.scripturePrimaryText)
+                            .foregroundStyle(quietFg(0.95))
                             .lineLimit(1)
                     }
                     if !quiet || audio.duration > 0 {
@@ -81,9 +82,7 @@ struct PlaybackDock: View {
                         SeekableProgressBar(
                             audio: audio,
                             trackHeight: 2,
-                            trackColor: quiet
-                                ? Color(parchment: 0xECD9B9, opacity: 0.26)
-                                : Color(parchment: 0x5c4030, opacity: 0.20)
+                            trackColor: Color(parchment: 0xECD9B9, opacity: 0.26)
                         )
                         timeText(remaining)
                     }
@@ -92,7 +91,7 @@ struct PlaybackDock: View {
             }
             HStack(spacing: 0) {
                 Button { audio.cycleRate() } label: {
-                    SpeedRateImage(rate: Double(audio.rate), color: quiet ? quietFg(0.66) : theme.scriptureSecondaryText.opacity(0.75))
+                    SpeedRateImage(rate: Double(audio.rate), color: quietFg(0.66))
                         .scaleEffect(0.82)
                         // 视觉尺寸按效果图走，但点击框一律撑到 44 —— 上一轮照效果图把框也缩了，
                         // Josh 真机反馈「图标都比较小，会误点」。图标小是设计，触控小是 bug。
@@ -105,11 +104,8 @@ struct PlaybackDock: View {
 
                 Button { audio.cycleLoop() } label: {
                     RepeatGlyph(badge: audio.loopMode.badge,
-                                color: quiet
-                                    ? quietFg(audio.loopMode == .forward ? 0.66 : 0.95)
-                                    : (audio.loopMode == .forward ? theme.scriptureSecondaryText : theme.scripturePrimaryText),
+                                color: quietFg(audio.loopMode == .forward ? 0.66 : 0.95),
                                 size: 19)
-                        .opacity(quiet ? 1 : 0.8)
                         .frame(width: quiet ? 40 : 48, height: quiet ? 40 : 44)
                         .contentShape(Rectangle())
                 }
@@ -139,11 +135,11 @@ struct PlaybackDock: View {
                     HStack(spacing: 5) {
                         Image(systemName: "forward.end.fill")
                             .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(quiet ? quietFg(0.78) : theme.scriptureSecondaryText)
+                            .foregroundStyle(quietFg(0.78))
                         if !quiet {
                             Text(nextLabel)
                                 .font(.system(size: 10, weight: .medium))
-                                .foregroundStyle(theme.scriptureSecondaryText)
+                                .foregroundStyle(quietFg(0.7))
                                 .lineLimit(2)
                                 .multilineTextAlignment(.leading)
                                 .fixedSize()
@@ -162,7 +158,7 @@ struct PlaybackDock: View {
                 Button(action: onSearch) {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 15, weight: .regular))
-                        .foregroundStyle(quiet ? quietFg(0.66) : theme.scriptureSecondaryText.opacity(0.8))
+                        .foregroundStyle(quietFg(0.66))
                         .frame(width: quiet ? 40 : 48, height: quiet ? 40 : 44)
                         .contentShape(Rectangle())
                 }
@@ -176,8 +172,8 @@ struct PlaybackDock: View {
         .background(
             // 安静档用 sheet 半径：外层 askGlassRect 就是这个半径，
             // 用更小的 control 半径会在四角露出一圈玻璃（经文仍然透上来）。
-            RoundedRectangle(cornerRadius: quiet ? AskCorner.sheet : AskCorner.control, style: .continuous)
-                .fill(quiet ? AnyShapeStyle(quietFill) : AnyShapeStyle(theme.scriptureBackground.opacity(0.78)))
+            RoundedRectangle(cornerRadius: AskCorner.sheet, style: .continuous)
+                .fill(quietFill)
         )
     }
 
@@ -251,7 +247,7 @@ struct PlaybackDock: View {
         Text(s)
             .font(.system(size: compact ? 11 : ShellMetrics.timeFontSize, weight: compact ? .semibold : .medium))
             .monospacedDigit()
-            .foregroundStyle(quiet ? quietFg(0.72) : theme.muted)
+            .foregroundStyle(compact ? quietFg(0.72) : theme.muted)
     }
 
     private var transport: some View {

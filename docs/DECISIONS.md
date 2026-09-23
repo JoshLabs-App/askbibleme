@@ -951,3 +951,33 @@ Josh：「2 没关系的，那个是有授权的」——指 `cnv-zh-hant` / `cn
 `rcuv-zh-hant` / `rcuvss-zh-hans` 和修、`rcv-zh-hant` 恢复本、`mandarin-zh-hans`。
 
 **按他说的办，维持现状，不关闭。** OPEN-ITEMS 里那条相应关闭。
+
+### 补漏：原生 App 的取经路由绕过了那张替换表（2026-09-23 同日）
+
+上面那张 `LOCAL_SUBSTITUTE_TRANSLATION_IDS` 挂在 `loadChapterFromTranslation()` 里，
+**但原生 App 根本不走那个函数**：
+
+- iOS / 安卓取经文都是请求 `https://askbible.me/api/mobile/bible/youversion/chapter?versionId=48`
+  （见 `apps/askbible-ios/AskBible/Model/RemoteTranslations.swift`、
+  `apps/askbible-android/.../RemoteTranslations.kt`），传的是 **YouVersion 的数字版本号**；
+- 那个路由**直接调 provider**，不经过 `loadChapterFromTranslation`。
+
+所以头一版改完，网页端不抓网页了，**原生包还在抓**。已补：
+
+1. 新增 `localSubstituteForYouVersionVersionId(cwd, versionId)`，
+   **号码不硬编码第二遍**——从 registry 现查 id → remoteId 的对应，
+   上面那张表改了这里自动跟着变，不会漂。
+2. mobile chapter route 先查这个映射，命中就读本地库返回。
+
+**这两轮改动和已发版本的关系**（容易搞反，写清楚）：
+
+| 改动 | 已发出去的原生包（安卓 1.0.44 / iOS build 131） |
+|---|---|
+| NIV 等改走官方 API | ✅ **立刻生效，不用发新版** |
+| 和合本改读本地库 | ✅ **立刻生效，不用发新版** |
+
+原因都一样：原生包**自己不直接连 YouVersion**，是问 `askbible.me` 的接口拿经文，
+服务端一部署，手上的 App 就吃到了。
+
+**验证**：四项新测试全过，其中一项专门锁返回结构仍是 `{ok, verses:[{verse,text}]}`
+——已发出去的包按这个结构解析，**不能变**。`npx vitest run lib/bible app` 56 文件 242 项全过。

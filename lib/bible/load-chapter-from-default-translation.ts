@@ -54,6 +54,27 @@ const LOCAL_SUBSTITUTE_TRANSLATION_IDS: Record<string, string> = {
   "cunp-zh-hant": "cuv-trad",
 };
 
+/**
+ * 同一张表，但按 **YouVersion 的数字版本号**查。
+ *
+ * **为什么要这个**：原生 App（iOS / 安卓）取经文走的是
+ * `/api/mobile/bible/youversion/chapter?versionId=48`，传的是**数字版本号**，
+ * 那个路由直接调 provider、**不经过 `loadChapterFromTranslation`**，
+ * 所以上面那张按译本 id 查的表对它不生效——原生包会继续抓网页。
+ *
+ * 号码不在这里硬编码第二遍，**从注册表里现查**（registry 有 id → remoteId 的对应），
+ * 这样改了上面那张表，这里自动跟着变，不会漂。
+ */
+export function localSubstituteForYouVersionVersionId(cwd: string, versionId: string): string | null {
+  const wanted = String(versionId || "").trim();
+  if (!wanted) return null;
+  for (const [tid, localId] of Object.entries(LOCAL_SUBSTITUTE_TRANSLATION_IDS)) {
+    const meta = resolveBibleTranslationMeta(cwd, tid);
+    if (meta?.remoteId && String(meta.remoteId).trim() === wanted) return localId;
+  }
+  return null;
+}
+
 function isSelahBiblePayload(v: unknown): v is { format?: string; books: Record<string, Record<string, Record<string, string>>> } {
   if (!v || typeof v !== "object") return false;
   const o = v as Record<string, unknown>;

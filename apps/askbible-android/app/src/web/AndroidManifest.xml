@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  只属于下载页分发的 `web` 变体：自助更新要的权限和 FileProvider。
+
+  ★ 这两样**绝对不能放回 src/main**。2026-09-23 踩过：放在 main 里 Play 版也会带上
+  REQUEST_INSTALL_PACKAGES，上传直接被拒 ——
+  「This release includes the REQUEST_INSTALL_PACKAGES permission, which hasn't been
+  declared in Play Console.」而我们这个用途（自己下 APK 装）本来就不是 Play 允许的
+  申报理由，填表也过不了。商店版的更新走 PlayUpdateGate（Play 官方 In-App Update）。
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <application>
+        <!-- 把下载好的 APK 以 content:// 交给系统安装器；file:// 在 Android 7+ 会 FileUriExposedException -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.updates"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/update_paths" />
+        </provider>
+    </application>
+</manifest>

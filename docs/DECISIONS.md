@@ -696,3 +696,22 @@ manifest 里 `android:label` 此前硬写成「AskBible 原生」，**三个变�
 
 顺带：Josh 的三星已清空重装，现在**只装 `web` 变体**（me.askbible / 1.0.44），
 不再并排装两个。它带自助更新、不受 Play 管。
+
+## REQUEST_INSTALL_PACKAGES 只能放 web 变体（2026-09-23）
+
+自助更新要的 `REQUEST_INSTALL_PACKAGES` 和 FileProvider 一开始写在 `src/main`，
+结果 **Play 版也带上了**，上传被 Google 直接拒：
+
+> This release includes the REQUEST_INSTALL_PACKAGES permission,
+> which hasn't been declared in Play Console.
+
+去 Play Console 填申报表也没用 —— 「自己下载 APK 安装」不在允许的申报理由里。
+已挪到 `app/src/web/AndroidManifest.xml`，**别挪回 main**。
+验证方法：`unzip -p <aab> base/manifest/AndroidManifest.xml | strings | grep -c REQUEST_INSTALL_PACKAGES`
+应为 0，web APK 的 `aapt2 dump permissions` 应为 1。
+
+## 别用管道后面的退出码判断成功（2026-09-23）
+
+`bash submit-android-aab-play.sh | tail -20` 读到的 `$?` 是 **tail** 的退出码，
+fastlane 失败了也是 0。因此误报过一次「AAB 已上传」，Josh 两次 promote 都撞 404
+（Play 上压根没有 241）才发现。以后：**输出重定向到文件再 grep，退出码单独取**。

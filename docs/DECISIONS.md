@@ -732,3 +732,29 @@ Josh：「观感需要柔和一些」。原来是满金 `#FFB101` + 0.32s 进 / 
 
 查 API 复核过：production 和 internal 都是 241。商店用户会陆续收到，
 并且从这版起有 Play 官方的应用内更新（`PlayUpdateGate`）。
+
+## 成就大图 + 分享（2026-09-23）
+
+Josh：「成就墙里的图要跟听到一样，可以动态翻出来，展示大图，要能分享，直接存成图片」。
+
+- **版式直接抄 `03MyClass/android/.../MedalDetail.kt`**（听到那套），坐标、光束根数、
+  1080×1350 的画布尺寸全部一致，只把配色换成羊皮卷（canvas #ECD9B9 / ink #1C1410 /
+  金 #FFB103 / accent #D97707）。**要改版式记得三处一起改**：
+  安卓 `ui/MedalDetail.kt`、iOS `Read/MedalDetailView.swift`（`MedalCard.render`）。
+- **弹出方式**：回弹放大 + 淡入（spring），光束 14 秒转一圈。不是真的 3D 翻转 ——
+  听到那边也是这个，保持一致。
+- **落款名字只存本机**（安卓 SharedPreferences `askbible-profile`、iOS UserDefaults），
+  不进会员同步 blob —— 它只是印在图上的落款，不是账号资料。
+- **未获得的也能点开**，看大图和进度，但不给分享按钮（给一句「拿到之后可以做成一张图分享出去」）。
+
+### 两个平台各自的坑
+
+- **安卓**：`${applicationId}.fileprovider`（分享图）和 `${applicationId}.updates`
+  （web 变体装 APK）是两个 provider，但 manifest 合并器**按 `android:name` 认元素**，
+  两个都写 `androidx.core.content.FileProvider` 会直接报 authorities 冲突。
+  解法是给 update 那个做一个空子类 `UpdateFileProvider`。
+- **安卓存相册**只做 Android 10+（MediaStore + RELATIVE_PATH，不用存储权限）。
+  9 及以下返回失败 —— 不为一张分享图去要 WRITE_EXTERNAL_STORAGE。
+- **iOS** 用 `NSPhotoLibraryAddUsageDescription`（只写入），**不要**用
+  `NSPhotoLibraryUsageDescription`（那是读相册，权限更大、审核更啰嗦）。
+- **iOS** `??` 右边是 autoclosure，里面不能放 `await`，要拆成两句。

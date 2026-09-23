@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- 成就大图「保存到相册」：只写入、不读取，所以用 AddUsageDescription 这一条，
+	     不要用 NSPhotoLibraryUsageDescription（那是读相册的，权限更大、审核也更啰嗦）。 -->
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>把你的成就图保存到相册，方便分享。</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>UIBackgroundModes</key>

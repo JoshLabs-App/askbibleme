@@ -6,6 +6,8 @@ struct AchievementsView: View {
     @EnvironmentObject private var ach: AchievementStore
     @Environment(\.dismiss) private var dismiss
     private let cols = [GridItem(.adaptive(minimum: 92), spacing: 14)]
+    /// 点开勋章 / 印章 → 成就大图（可分享、可存相册）
+    @State private var detail: MedalDetail?
 
     var body: some View {
         ScrollView {
@@ -21,6 +23,11 @@ struct AchievementsView: View {
         .background(ParchmentBackground().ignoresSafeArea())
         .navigationTitle(SiteCopy.t("native.achievements"))
         .navigationBarTitleDisplayMode(.inline)
+        .overlay {
+            if let d = detail {
+                MedalDetailView(detail: d) { detail = nil }
+            }
+        }
     }
 
     /// 成就音效开关。放在成就墙里，而不是另开一个设置页 ——
@@ -88,6 +95,11 @@ struct AchievementsView: View {
             LazyVGrid(columns: cols, spacing: 18) {
                 ForEach(MedalCatalog.all) { def in
                     MedalCell(def: def, earned: ach.earned[def.key], current: ach.value(for: def.metric))
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            detail = Self.medalDetail(def, tier: ach.earned[def.key]?.tier ?? 0,
+                                                      current: ach.value(for: def.metric))
+                        }
                 }
             }
         }
@@ -100,6 +112,7 @@ struct AchievementsView: View {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 64), spacing: 10)], spacing: 14) {
                 ForEach(BibleCatalog.all, id: \.id) { book in
                     let file = MedalCatalog.seals[min(max(book.number, 1), MedalCatalog.seals.count) - 1]
+                    let lit = ach.seals[book.id] != nil
                     VStack(spacing: 4) {
                         MedalIcon(key: file, tier: ach.seals[book.id] != nil ? 1 : 0, size: 56)
                         Text(book.name(AppLocale.current))
@@ -108,9 +121,31 @@ struct AchievementsView: View {
                             .opacity(ach.seals[book.id] != nil ? 1 : 0.55)
                             .lineLimit(1).minimumScaleFactor(0.7)
                     }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        detail = MedalDetail(
+                            key: file, name: book.name(AppLocale.current), earned: lit,
+                            tier: SiteCopy.t(lit ? "native.medalSealLit" : "native.medalSealDark"),
+                            caption: "", fraction: lit ? 1 : 0)
+                    }
                 }
             }
         }
+    }
+
+    /// 勋章 → 大图数据：档位名走 localizedCondition，进度和格子里那条一致。
+    /// 和安卓 `medalDetailOf` 对等，改一边记得改另一边。
+    static func medalDetail(_ def: MedalDef, tier: Int, current: Int) -> MedalDetail {
+        let next: Int? = tier < def.tiers.count ? def.tiers[tier] : nil
+        let from = tier > 0 ? def.tiers[tier - 1] : 0
+        return MedalDetail(
+            key: def.key,
+            name: def.localizedName(),
+            earned: tier > 0,
+            tier: tier > 0 ? def.localizedCondition(tier: tier) : SiteCopy.t("native.medalNotEarned"),
+            caption: next.map { "\(current) / \($0)" } ?? "",
+            fraction: next.map { min(1, max(0, Double(current - from) / Double(max(1, $0 - from)))) } ?? 1,
+        )
     }
 
     private func sectionTitle(_ title: String, _ sub: String) -> some View {

@@ -290,3 +290,51 @@ Josh 2026-09-23「老的待办做掉」。三条都落地并各端编译通过�
 
 ### 已关闭
 - 2026-09-23 三条成就反馈待办 → 全部做完，见 `docs/DECISIONS.md` 同日那节。
+
+### 没有授权的 YouVersion 译本还在抓网页（2026-09-23）
+
+- **现状**：NIV 等**有授权**的译本已经改走官方 API（见 `docs/DECISIONS.md`
+  「NIV 等译本改走官方 API」）。但 registry 里还有 **10 个 `enabled: true` 的译本
+  不在 `YVP_APP_KEY` 的授权目录里**，它们目前**只有抓 bible.com 网页这一条路**：
+
+  | 译本 | 版本号 | 版权状态 | 建议 |
+  |---|---|---|---|
+  | `cunp-zh-hant` 和合本繁 | 46 | **公有领域**（1919） | **改读本地 `cuv-trad.sqlite`** |
+  | `cunp-zh-hant-god` 上帝版 | 414 | **公有领域** | 同上 |
+  | `cunpss-zh-hant` 和合本繁神版 | 47 | **公有领域** | 同上 |
+  | `cunpss-zh-hans` 和合本简 | 48 | **公有领域** | **改读本地 `cuv-simp.sqlite`** |
+  | `cnv-zh-hant` 新译本繁 | 40 | 有版权（环球圣经公会） | 关掉，或去谈授权 |
+  | `cnvs-zh-hans` 新译本简 | 41 | 有版权 | 同上 |
+  | `rcuv-zh-hant` 和修繁 | 139 | 有版权（香港圣经公会） | 同上 |
+  | `rcuvss-zh-hans` 和修简 | 140 | 有版权 | 同上 |
+  | `rcv-zh-hant` 恢复本 | 4230 | 有版权（水流职事站） | 同上 |
+  | `mandarin-zh-hans` | 3780 | 待查 | 同上 |
+
+- **影响**：前 4 个是**白抓**——和合本是公有领域，而且 `data/bible/sqlite/` 里
+  **本地已经有 `cuv-simp.sqlite` 和 `cuv-trad.sqlite`**，抓网页既慢又没必要。
+  后 6 个是真正的版权暴露面：AskBible 已经上架 App Store 和 Play，
+  理论上撞 App Store 5.2（知识产权）、YouVersion 服务条款、各家译本版权。
+
+- **需要 Josh 决定**：分两步，第一步我建议直接做、第二步要你拍板。
+  1. **和合本那 4 个改读本地 SQLite**（46 / 414 / 47 / 48）。纯技术改动，
+     没有版权问题、还更快，**建议直接做**。
+  2. **剩下 6 个怎么办**：
+     - **关掉**（`enabled: false`）——最干净，代价是用户少 6 个译本可选；
+     - **保持现状**——知情不动，风险自担；
+     - **去谈授权**——香港圣经公会 / 环球圣经公会都有非商业授权的口子，周期以月计。
+     我的推荐是**先关掉，同时去谈**：已上架的 App 留着未授权正文，风险不对称。
+
+### YouVersion 授权目录怎么重新生成（2026-09-23）
+
+`lib/bible/providers/youversion.ts` 里的 `YOUVERSION_LICENSED_VERSION_IDS` 是硬编码的快照。
+授权档位变了、或者 YouVersion 加减译本，照下面重拉（**`language_ranges[]` 必填**）：
+
+```bash
+set -a; . ./.env.local; set +a
+for L in eng zho; do
+  curl -s -H "X-YVP-App-Key: $YVP_APP_KEY" \
+    --get --data-urlencode "language_ranges[]=$L" \
+    https://api.youversion.com/v1/bibles \
+  | python3 -c "import sys,json;print([r['id'] for r in json.load(sys.stdin)['data']])"
+done
+```

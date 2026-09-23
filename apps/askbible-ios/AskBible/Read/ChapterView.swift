@@ -373,6 +373,16 @@ struct ChapterView: View {
                     Text(bookName)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(theme.ink)
+                        // 章末这块也跟着亮：完成是「滚到章末」触发的，那一刻标题早滚出屏幕了，
+                        // 只亮标题的话用户根本看不见（2026-09-23 安卓模拟器实测发现，iOS 同构）
+                        .overlay {
+                            Text(bookName)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(Color(rgb: 0xFFB101))
+                                .lineLimit(1)
+                                .opacity(chapterDoneGlow)
+                                .allowsHitTesting(false)
+                        }
                         .lineLimit(1)
                         .padding(.horizontal, 4)
                         .frame(maxWidth: 120)

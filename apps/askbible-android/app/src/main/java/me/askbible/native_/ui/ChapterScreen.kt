@@ -320,7 +320,9 @@ fun ChapterScreen(
             }
 
             item(key = "ending") {
-                EndingSection(bookName, neighbors, theme, onOpenCatalog, onNavigate, chromeLocale)
+                // 章末这块也跟着亮一下：完成是「滚到章末」触发的，那一刻标题早滚出屏幕了，
+                // 只亮标题的话用户根本看不见（2026-09-23 模拟器实测发现）。
+                EndingSection(bookName, neighbors, theme, onOpenCatalog, onNavigate, chromeLocale, glow)
                 // 看到章末 = 读完这一章（拖到底也算：读经本来就允许略读）
                 LaunchedEffect(bookId, chapter) {
                     val tag = "$bookId:$chapter"
@@ -449,6 +451,8 @@ private fun EndingSection(
     onOpenCatalog: () -> Unit,
     onNavigate: (String, Int) -> Unit,
     locale: AppLocale = AppLocale.ZH_CN,
+    /** 「读完这一章」的亮金进度（0…1）：章末这块也跟着亮，见 chapterDoneGlow 那段注释 */
+    glow: Float = 0f,
 ) {
     val faint = theme.faint.toColor()
     Column(Modifier.fillMaxWidth().padding(bottom = 30.dp)) {
@@ -470,7 +474,9 @@ private fun EndingSection(
             Text(
                 bookName,
                 Modifier.widthIn(max = 120.dp).padding(horizontal = 4.dp).clickableNoRipple(onOpenCatalog),
-                color = theme.ink.toColor(), fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
+                color = androidx.compose.ui.graphics.lerp(
+                    theme.ink.toColor(), androidx.compose.ui.graphics.Color(0xFFFFB101), glow),
+                fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
                 textAlign = TextAlign.Center, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
             )
             Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {

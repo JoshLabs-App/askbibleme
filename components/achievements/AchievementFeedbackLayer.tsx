@@ -73,7 +73,16 @@ export function AchievementFeedbackLayer() {
             leaving: false,
             streakDays: e.days,
           });
-        } else if (e.kind !== "chapterRead") {
+        } else if (e.kind === "chapterRead") {
+          // 读完这一章：给标题挂 1.85 秒的亮金动画，不弹任何卡片。
+          // 事件本来就是从这一章的页面发出来的，不用再核对卷章。
+          const root = document.documentElement;
+          root.classList.remove("ab-chapter-done");
+          // 强制重排，不然同一页连读两章时动画不会重新播
+          void root.offsetWidth;
+          root.classList.add("ab-chapter-done");
+          window.setTimeout(() => root.classList.remove("ab-chapter-done"), 1900);
+        } else {
           others.push(e);
         }
       }

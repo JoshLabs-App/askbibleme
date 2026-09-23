@@ -3759,3 +3759,26 @@ button.read-chapter-verse-num--xref {
 .dark .read-chapter-fallback-notice {
   color: color-mix(in srgb, rgb(214 198 180) 82%, transparent);
 }
+
+
+/* 「读完一章」的专属动效：标题短暂亮成金色再落回静止。
+   刻意不弹 Toast —— 这是读经页最核心的完成时刻，语气要克制（Josh 2026-09-20 定）。
+   和 iOS ChapterView / 安卓 ChapterScreen 的 chapterDoneGlow 是同一套动作。 */
+@keyframes ab-chapter-done-glow {
+  0% { color: inherit; }
+  18% { color: #ffb101; }
+  45% { color: #ffb101; }
+  100% { color: inherit; }
+}
+
+html.ab-chapter-done .read-chapter-title,
+html.ab-chapter-done .read-chapter-title-chapter {
+  animation: ab-chapter-done-glow 1.85s ease-in-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.ab-chapter-done .read-chapter-title,
+  html.ab-chapter-done .read-chapter-title-chapter {
+    animation: none;
+  }
+}

@@ -775,6 +775,7 @@ private fun RootScreen() {
                         // 结尾的上一章 / 下一章：手动翻页就退出计划流
                         BibleCatalog.book(id)?.let { b -> planFlowActive = false; listenBook = null; chapterFromPlan = false; chapter = ch; openedBook = b }
                     },
+                    achievements = achievements
                 )
             }
         }

@@ -59,6 +59,10 @@ struct ChapterView: View {
 
     @Environment(\.parchment) private var theme
     @EnvironmentObject private var store: ScriptureStore
+    @EnvironmentObject private var ach: AchievementStore
+    /// 「读完这一章」的专属动效：标题和细线短暂亮成金色再落回静止。
+    /// 刻意不弹卡片 —— 这是读经页最核心的完成时刻，语气要克制（Josh 2026-09-20 定）。
+    @State private var chapterDoneGlow: Double = 0
     @State private var verses: [LoadedVerse] = []
     @State private var xrefVerses: Set<Int> = []
     @State private var contrast: [Int: String] = [:]
@@ -94,12 +98,23 @@ struct ChapterView: View {
                             Text(ReadChrome.chapterTitle(bookName: bookName, chapter: chapter, locale: chromeLocale))
                                 .font(.system(size: m.chapterTitleSize, weight: .semibold))
                                 .foregroundStyle(theme.ink)
+                                .overlay {
+                                    // 金色那层叠在上面淡入淡出，不用 Color.mix（那是 iOS 18 才有的）
+                                    Text(ReadChrome.chapterTitle(bookName: bookName, chapter: chapter, locale: chromeLocale))
+                                        .font(.system(size: m.chapterTitleSize, weight: .semibold))
+                                        .foregroundStyle(Color(rgb: 0xFFB101))
+                                        .multilineTextAlignment(.center)
+                                        .opacity(chapterDoneGlow)
+                                        .allowsHitTesting(false)
+                                }
                                 .multilineTextAlignment(.center)
                                 .frame(maxWidth: .infinity)
                                 .padding(.horizontal, 42)
                                 .padding(.top, 4)
                                 .padding(.bottom, 24)
-                            Rectangle().fill(theme.border).frame(height: 1 / UIScreen.main.scale)
+                            Rectangle().fill(theme.border)
+                                .frame(height: 1 / UIScreen.main.scale)
+                                .overlay(Color(rgb: 0xFFB101).opacity(chapterDoneGlow))
                         }
                         .padding(.top, 59)
                         .padding(.bottom, 12)
@@ -174,6 +189,9 @@ struct ChapterView: View {
                 .parchmentFade(.chapter)
                 // 换章回到顶部：ScrollView 身份没变，不主动滚回去会停在上一章的滚动位置（计划流顺章时标题在屏外）
                 .onChange(of: "\(bookId).\(chapter)") { _, _ in proxy.scrollTo("chapter-top", anchor: .top) }
+                // 读完这一章：把 chapterRead 事件消费掉，标题和细线亮一下金色再落回去
+                .onChange(of: ach.pending.count) { _, _ in pumpChapterDoneGlow() }
+                .onAppear { pumpChapterDoneGlow() }
                 .onChange(of: verses) { _, _ in
                     // 搜索 / 收藏跳进来：经文装好后滚到那节所在的段
                     guard let f = focusVerse, let gi = groups.firstIndex(where: { $0.contains { $0.number == f } }) else { return }
@@ -239,6 +257,18 @@ struct ChapterView: View {
 
 
     /// 连排正文单独拆一个函数：和段落块写在一起时 SwiftUI 的类型推断会超时
+    /// 只认「当前这一章刚读完」这一条；别的章的事件留给别人，不在这里消费。
+    private func pumpChapterDoneGlow() {
+        guard case .chapterRead(let b, let c)? = ach.pending.first,
+              b.uppercased() == bookId.uppercased(), c == chapter else { return }
+        ach.consume()
+        withAnimation(.easeOut(duration: 0.32)) { chapterDoneGlow = 1 }
+        Task {
+            try? await Task.sleep(for: .seconds(0.62))
+            withAnimation(.easeInOut(duration: 0.9)) { chapterDoneGlow = 0 }
+        }
+    }
+
     private func flowParagraph(_ group: [LoadedVerse], metrics m: ReadTypographyMetrics) -> some View {
         let marks: Set<Int> = selecting ? selectedVerses : bookmarkedVerses
         return ChapterFlowParagraph(

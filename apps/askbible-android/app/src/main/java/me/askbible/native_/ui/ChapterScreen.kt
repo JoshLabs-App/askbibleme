@@ -1,5 +1,9 @@
 package me.askbible.native_.ui
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import kotlinx.coroutines.delay
+import me.askbible.native_.data.AchievementStore
 import me.askbible.native_.data.RemoteTranslations
 import me.askbible.native_.data.SiteCopy
 import androidx.compose.foundation.background
@@ -136,6 +140,8 @@ fun ChapterScreen(
     onReachedEnd: () -> Unit = {},
     /** 成就：滚过 n 节经文，给微反馈 XP（同一段只报一次） */
     onVersesRead: (Int) -> Unit = {},
+    /** 成就账本：只用来接「读完这一章」那条事件，做标题亮金的专属动效 */
+    achievements: AchievementStore? = null,
 ) {
     val context = LocalContext.current
     // 章页上的界面小字（署名、上一章 / 下一章）：法语等版本用英文，别在法语经文下面写中文
@@ -148,6 +154,21 @@ fun ChapterScreen(
     val groups = remember(verses, meta) { ChapterSegments.paragraphGroups(verses, meta) }
     val neighbors = remember(bookId, chapter) { ChapterNeighbor.resolve(bookId, chapter) }
     val listState = rememberLazyListState()
+
+    // 「读完这一章」的专属动效：标题和细线短暂亮成金色再落回静止。
+    // 刻意不弹卡片 —— 这是读经页最核心的完成时刻，语气要克制（Josh 2026-09-20 定）。
+    val chapterDoneGlow = remember { Animatable(0f) }
+    val pendingHead = achievements?.pending?.firstOrNull()
+    LaunchedEffect(pendingHead) {
+        val e = pendingHead as? AchievementStore.Event.ChapterRead ?: return@LaunchedEffect
+        // 只认当前这一章；别的章的事件留给别人，不在这里消费
+        if (!e.bookId.equals(bookId, ignoreCase = true) || e.chapter != chapter) return@LaunchedEffect
+        achievements.consume()
+        chapterDoneGlow.animateTo(1f, tween(320))
+        delay(620)
+        chapterDoneGlow.animateTo(0f, tween(900))
+    }
+    val glow = chapterDoneGlow.value
     // 成就上报去重：已报过的段 / 章末，换章自动作废（tag 里带卷章）
     val reportedGroups = remember { mutableStateOf(setOf<String>()) }
     val reportedEnd = remember { mutableStateOf("") }
@@ -242,12 +263,18 @@ fun ChapterScreen(
                     Text(
                         ReadChrome.chapterTitle(bookName, chapter, chromeLocale),
                         Modifier.fillMaxWidth().padding(start = 42.dp, end = 42.dp, top = 4.dp, bottom = 24.dp),
-                        color = theme.ink.toColor(),
+                        color = androidx.compose.ui.graphics.lerp(
+                            theme.ink.toColor(), androidx.compose.ui.graphics.Color(0xFFFFB101), glow),
                         fontSize = m.chapterTitleSize.sp,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Center,
                     )
-                    Box(Modifier.fillMaxWidth().height(0.5.dp).background(theme.border.toColor()))
+                    Box(
+                        Modifier.fillMaxWidth().height(0.5.dp).background(
+                            androidx.compose.ui.graphics.lerp(
+                                theme.border.toColor(), androidx.compose.ui.graphics.Color(0xFFFFB101), glow)
+                        )
+                    )
                 }
             }
 

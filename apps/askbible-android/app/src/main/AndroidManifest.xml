@@ -16,7 +16,7 @@
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:label="AskBible 原生"
+        android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <!-- singleTask：浏览器 OAuth 回调（askbible://auth/callback）走 onNewIntent 回到同一个实例，不再叠一个新页面 -->

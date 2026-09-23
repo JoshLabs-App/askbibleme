@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import me.askbible.native_.data.Parchment
 import me.askbible.native_.update.UpdateGate
 import me.askbible.native_.update.PlayUpdateGate
+import me.askbible.native_.update.MigrateGate
 import me.askbible.native_.data.MedalXP
 import me.askbible.native_.ui.AchievementsScreen
 import me.askbible.native_.ui.EarnedToast
@@ -131,6 +132,8 @@ class MainActivity : ComponentActivity() {
             RootScreen()
             // 站外分发版的自助更新弹窗；Play / sideload 变体里是空操作
             UpdateGate()
+            // 商店版 → 站外版的迁移提示；默认关，开关在远端 migrate.json
+            MigrateGate.Host()
         }
     }
 

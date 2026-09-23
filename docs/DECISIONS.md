@@ -621,3 +621,19 @@ Josh 2026-09-21：「1 深色要联动 2 也要改 3 暂时不动安卓」。
   不透明这条不能退（坞是 overlay，透明就字压字）。
 - **今天一共试了五版**，只有这版和两条硬约束活下来：**不用玻璃**、**贴底固定**。
   前四版（compact 安静档 / 深木底 / 音乐页白圆键 / 安卓完整单栏）都已作废，别再回头试。
+
+## 安卓站外分发版自助更新（2026-09-23）
+
+- **决定**：网页下载页装的安卓包，进 App 时自查 `version.json`，有新版就弹窗，
+  点「立即更新」→ DownloadManager 下载 → 拉起系统安装器覆盖升级。
+- **只在新的 `web` 构建变体里开**，靠 `BuildConfig.SELF_UPDATE` 开关。
+  **为什么必须分变体**：Google Play 政策禁止商店版 App 自带「下载 APK 就地安装」，
+  带了会被下架。`release`（Play）、`sideload`（真机侧载）、`debug` 全部关闭。
+  `web` 和 `release` 同 applicationId、同签名，所以能覆盖升级已有的网页版用户。
+- **服务端不用改**：`~/bin/deploy_android.py` 本来就在每次发版时写
+  `https://askbible-media.joshlabs.app/version.json`（version / versionCode / apkUrl / notes）。
+  `.android-deploy.json` 改成 `gradle_task: assembleWeb`，以后发版自动出带更新能力的包。
+- **不打扰的边界**：6 小时内只查一次；点「以后再说」会记下该 versionCode 不再弹。
+- **涉及文件**：`apps/askbible-android/app/src/main/java/me/askbible/native_/update/`（AppUpdater.kt / UpdateGate.kt）、
+  AndroidManifest（REQUEST_INSTALL_PACKAGES + FileProvider `${applicationId}.updates`）、
+  `res/xml/update_paths.xml`、`app/build.gradle.kts`、`.android-deploy.json`、MainActivity 挂 `UpdateGate()`。

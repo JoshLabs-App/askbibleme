@@ -35,10 +35,24 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = ".native"
+            buildConfigField("boolean", "SELF_UPDATE", "false")
         }
         release {
             isMinifyEnabled = false
             signingConfigs.findByName("upload")?.let { signingConfig = it }
+            // Play 版严禁自带「下载 APK 就地安装」，会被下架；商店渠道由 Play 自己推更新
+            buildConfigField("boolean", "SELF_UPDATE", "false")
+        }
+        /**
+         * 下载页（askbible-media.joshlabs.app/download.html）分发的包。
+         * 和 release 一样的 applicationId 和签名（所以能覆盖升级老的网页版），
+         * 唯一区别是开了 SELF_UPDATE：进 App 查 version.json，有新版就弹窗下载安装。
+         * deploy_android.py 走的就是这个变体（.android-deploy.json 的 gradle_task）。
+         */
+        create("web") {
+            initWith(getByName("release"))
+            matchingFallbacks += listOf("release")
+            buildConfigField("boolean", "SELF_UPDATE", "true")
         }
         /**
          * 侧载到真机用：和 release 完全一样（同一把 upload key、不开 minify），
@@ -54,6 +68,7 @@ android {
             initWith(getByName("release"))
             applicationIdSuffix = ".native"
             matchingFallbacks += listOf("release")
+            buildConfigField("boolean", "SELF_UPDATE", "false")
         }
     }
 
@@ -62,7 +77,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
-    buildFeatures { compose = true }
+    buildFeatures { compose = true; buildConfig = true }
 
     // 圣经库不能被压缩 —— SQLiteDatabase 要按文件随机读，压缩过的 asset 打不开
     androidResources { noCompress += listOf("sqlite") }

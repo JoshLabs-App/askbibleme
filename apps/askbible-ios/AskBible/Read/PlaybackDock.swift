@@ -594,9 +594,17 @@ struct SeekableProgressBar: View {
 @ViewBuilder
 func alignedParchment(theme: Parchment) -> some View {
     GeometryReader { g in
-        let screenH = UIScreen.main.bounds.height
+        // 按**整屏**画纸纹，再按坞在屏幕上的实际位置反向偏移，
+        // 坞露出的就是这张纸对应那一段 —— 和页面同图同段，接缝消失。
+        // 用 global frame 而不是「整屏高 − 坞高」：坞下面还压着系统底栏，
+        // 它的底边并不是屏幕底边，按差值算会错开一截（Josh 2026-09-23 看到的「下面变成两部分」）。
+        let screen = UIScreen.main.bounds.size
+        let origin = g.frame(in: .global).origin
         ParchmentBackground(theme: theme)
-            .frame(width: g.size.width, height: screenH)
-            .offset(y: -(screenH - g.size.height))
+            .frame(width: screen.width, height: screen.height)
+            .offset(x: -origin.x, y: -origin.y)
     }
+    // ★ 必须裁掉：background 的内容**不会**自动裁到宿主的框里，
+    //   整屏高的纸纹会从坞里溢出去往上盖住整页经文（Josh 2026-09-23「上面圣经内容不见了」）。
+    .clipped()
 }

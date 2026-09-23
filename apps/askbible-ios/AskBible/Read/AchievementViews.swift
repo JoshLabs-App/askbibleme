@@ -143,17 +143,29 @@ struct XPFloater: View {
     }
 
     private func pump() {
-        guard case .xp(let n, _)? = ach.pending.first else {
+        let text: String
+        let big: Bool
+        switch ach.pending.first {
+        case .xp(let n, _):
+            text = "+\(n)"
+            big = n >= MedalXP.perChapterRead
+            ach.consume()
+            AchievementFeedback.shared.playXP(milestone: big)
+        // 连续天数：只飘一条字 + 一声小钵，不弹卡片（Josh 2026-09-20 定的语气）
+        case .streak(let days):
+            text = SiteCopy.f("native.streakDays", ["n": String(days)])
+            big = true
+            ach.consume()
+            AchievementFeedback.shared.play(.earn)
+        default:
             // 非 XP 事件（勋章 / 升级）交给 EarnedToast，这里不动
             return
         }
-        ach.consume()
         seq += 1
         let id = seq
-        AchievementFeedback.shared.playXP(milestone: n >= MedalXP.perChapterRead)
         // dampingFraction 0.52：比原来更弹一点，弹出来才「动态」
         withAnimation(.spring(response: 0.3, dampingFraction: 0.52)) {
-            shown.append((id, "+\(n)", n >= MedalXP.perChapterRead))
+            shown.append((id, text, big))
             if shown.count > 3 { shown.removeFirst() }
         }
         Task {
@@ -180,7 +192,12 @@ struct EarnedToast: View {
     }
 
     private var first: AchievementStore.Event? {
-        ach.pending.first { if case .xp = $0 { return false }; if case .chapterRead = $0 { return false }; return true }
+        ach.pending.first {
+            if case .xp = $0 { return false }
+            if case .chapterRead = $0 { return false }
+            if case .streak = $0 { return false }
+            return true
+        }
     }
 
     var body: some View {

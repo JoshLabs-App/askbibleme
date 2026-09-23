@@ -23,6 +23,8 @@ final class AchievementStore: ObservableObject {
         case sealEarned(String)               // 卷 id
         case medal(key: String, tier: Int)
         case levelUp(Int)
+        /// 连续天数又续上了一天（days ≥ 2 才发，一天只发一次；中断时什么都不发）
+        case streak(Int)
     }
 
     // MARK: 落盘的 ledger
@@ -50,6 +52,8 @@ final class AchievementStore: ObservableObject {
         var comboCount: Int = 0
         /// 一天只发一次的「今天第一次打开」
         var lastOpenDay: String = ""
+        /// 连续天数提示一天只发一次；纯本地 UI 状态，不进会员同步 blob
+        var streakNotedDay: String = ""
         /// 历史最长连续天数：倍率只升不降（Josh 2026-09-18 A 方案）
         var bestStreakDays: Int = 0
         /// 当前在听的那一章，以及这一章已经给过几片听读 XP（防挂机刷分）
@@ -334,6 +338,13 @@ final class AchievementStore: ObservableObject {
         }
         // 连续天数的历史峰值：只升不降
         if streakDays > s.bestStreakDays { s.bestStreakDays = streakDays }
+        // 连续天数续上了：一天只提示一次。1 天不算「连续」，所以从 2 起。
+        // 中断时故意什么都不发 —— 不用声音惩罚用户（Josh 2026-09-20 定）。
+        let streakToday = PlanDates.localDateString(now())
+        if streakDays >= 2, s.streakNotedDay != streakToday {
+            s.streakNotedDay = streakToday
+            events.append(.streak(streakDays))
+        }
         earned = s.earned
         seals = s.seals
         chaptersReadCount = s.chaptersRead.count

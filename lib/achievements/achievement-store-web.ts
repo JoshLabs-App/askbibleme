@@ -39,7 +39,9 @@ export type AchievementEvent =
   | { kind: "chapterRead"; bookId: string; chapter: number }
   | { kind: "seal"; bookId: string }
   | { kind: "medal"; key: string; tier: number }
-  | { kind: "levelUp"; level: number };
+  | { kind: "levelUp"; level: number }
+  /** 连续天数又续上了一天（days ≥ 2 才发，一天只发一次；中断时什么都不发） */
+  | { kind: "streak"; days: number };
 
 type Ledger = {
   /** "GEN:1" → 首次读完的时间戳（秒） */
@@ -56,6 +58,8 @@ type Ledger = {
   comboCount: number;
   lastOpenDay: string;
   bestStreakDays: number;
+  /** 连续天数提示一天只发一次；纯本地 UI 状态，不进会员同步 blob */
+  streakNotedDay: string;
   listenChapterKey: string;
   listenChapterTicks: number;
 };
@@ -75,6 +79,7 @@ function emptyLedger(): Ledger {
     comboCount: 0,
     lastOpenDay: "",
     bestStreakDays: 0,
+    streakNotedDay: "",
     listenChapterKey: "",
     listenChapterTicks: 0,
   };
@@ -536,6 +541,13 @@ export function refreshAchievements(): AchievementEvent[] {
   }
   const streak = streakDays();
   if (streak > s.bestStreakDays) s.bestStreakDays = streak;
+  // 连续天数续上了：一天只提示一次。1 天不算「连续」，所以从 2 起。
+  // 中断时故意什么都不发 —— 不用声音惩罚用户（Josh 2026-09-20 定）。
+  const streakToday = toLocalDateString(new Date());
+  if (streak >= 2 && s.streakNotedDay !== streakToday) {
+    s.streakNotedDay = streakToday;
+    events.push({ kind: "streak", days: streak });
+  }
 
   const totalXP = baseXP() + s.bonusXP;
   const level = MedalLevels.level(totalXP);

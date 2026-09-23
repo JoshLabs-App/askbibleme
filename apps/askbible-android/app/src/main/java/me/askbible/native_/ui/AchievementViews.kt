@@ -236,12 +236,25 @@ fun XPFloater(ach: AchievementStore, modifier: Modifier = Modifier) {
 
     val context = LocalContext.current
     val head = ach.pending.firstOrNull()
+    val floaterLocale = AppLocale.current
     LaunchedEffect(head) {
-        val xp = head as? AchievementStore.Event.Xp ?: return@LaunchedEffect
-        ach.consume()
-        seq += 1
-        AchievementFeedback.playXp(context, xp.amount >= MedalXP.perChapterRead)
-        shown = (shown + FloaterItem(seq, "+${xp.amount}", xp.amount >= MedalXP.perChapterRead)).takeLast(3)
+        when (head) {
+            is AchievementStore.Event.Xp -> {
+                ach.consume()
+                seq += 1
+                AchievementFeedback.playXp(context, head.amount >= MedalXP.perChapterRead)
+                shown = (shown + FloaterItem(seq, "+${head.amount}", head.amount >= MedalXP.perChapterRead)).takeLast(3)
+            }
+            // 连续天数：只飘一条字 + 一声小钵，不弹卡片（Josh 2026-09-20 定的语气）
+            is AchievementStore.Event.Streak -> {
+                ach.consume()
+                seq += 1
+                AchievementFeedback.play(context, AchievementFeedback.Cue.EARN)
+                val text = SiteCopy.f("native.streakDays", mapOf("n" to head.days.toString()), floaterLocale)
+                shown = (shown + FloaterItem(seq, text, true)).takeLast(3)
+            }
+            else -> Unit
+        }
     }
 
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally,
@@ -286,7 +299,9 @@ fun EarnedToast(
     modifier: Modifier = Modifier,
 ) {
     val event = ach.pending.firstOrNull {
-        it !is AchievementStore.Event.Xp && it !is AchievementStore.Event.ChapterRead
+        it !is AchievementStore.Event.Xp &&
+            it !is AchievementStore.Event.ChapterRead &&
+            it !is AchievementStore.Event.Streak
     }
     val d = event?.let { describeEarned(it, ach.level, locale) }
 

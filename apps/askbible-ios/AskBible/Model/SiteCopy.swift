@@ -160,6 +160,7 @@ enum SiteCopy {
         "native.stepDayPrefix": ("第", "Day"),
         "native.stepDaySuffix": ("天", ""),
         "native.streakBonus": ("连续加成", "Streak bonus"),
+        "native.streakDays": ("连续 {{n}} 天", "{{n}}-day streak"),
         "native.syncIncomplete": ("同步未完成", "Sync incomplete"),
         "native.syncLast": ("上次 {{time}}", "Last {{time}}"),
         "native.syncNever": ("尚未同步", "Not synced yet"),

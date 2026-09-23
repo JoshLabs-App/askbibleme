@@ -36,6 +36,8 @@ class AchievementStore(context: Context) {
         data class SealEarned(val bookId: String) : Event()
         data class Medal(val key: String, val tier: Int) : Event()
         data class LevelUp(val level: Int) : Event()
+        /** 连续天数又续上了一天（days ≥ 2 才发，一天只发一次；中断时什么都不发） */
+        data class Streak(val days: Int) : Event()
     }
 
     /** 落盘的 ledger（字段名与 iOS Snapshot / 同步 JSON 一致） */
@@ -61,6 +63,8 @@ class AchievementStore(context: Context) {
         var comboCount: Int = 0,
         /** 一天只发一次的「今天第一次打开」 */
         var lastOpenDay: String = "",
+        /** 连续天数提示一天只发一次；纯本地 UI 状态，不进会员同步 blob */
+        var streakNotedDay: String = "",
         /** 历史最长连续天数：倍率只升不降（Josh 2026-09-18 A 方案） */
         var bestStreakDays: Int = 0,
         /** 当前在听的那一章，以及这一章已经给过几片听读 XP（防挂机刷分） */
@@ -138,6 +142,7 @@ class AchievementStore(context: Context) {
         snap.comboBookId = (o.opt("comboBookId") as? String).orEmpty()
         snap.comboCount = (MemberReadingSyncRules.num(o.opt("comboCount")) ?: 0.0).toInt()
         snap.lastOpenDay = (o.opt("lastOpenDay") as? String).orEmpty()
+        snap.streakNotedDay = (o.opt("streakNotedDay") as? String).orEmpty()
         snap.bestStreakDays = (MemberReadingSyncRules.num(o.opt("bestStreakDays")) ?: 0.0).toInt()
         snap.listenChapterKey = (o.opt("listenChapterKey") as? String).orEmpty()
         snap.listenChapterTicks = (MemberReadingSyncRules.num(o.opt("listenChapterTicks")) ?: 0.0).toInt()
@@ -165,6 +170,7 @@ class AchievementStore(context: Context) {
             .put("comboBookId", s.comboBookId)
             .put("comboCount", s.comboCount)
             .put("lastOpenDay", s.lastOpenDay)
+            .put("streakNotedDay", s.streakNotedDay)
             .put("bestStreakDays", s.bestStreakDays)
             .put("listenChapterKey", s.listenChapterKey)
             .put("listenChapterTicks", s.listenChapterTicks)
@@ -405,6 +411,14 @@ class AchievementStore(context: Context) {
         }
         // 连续天数的历史峰值：只升不降
         if (streakDays > s.bestStreakDays) { s.bestStreakDays = streakDays; dirty = true }
+        // 连续天数续上了：一天只提示一次。1 天不算「连续」，所以从 2 起。
+        // 中断时故意什么都不发 —— 不用声音惩罚用户（Josh 2026-09-20 定）。
+        val streakToday = PlanDates.localDateString(today())
+        if (streakDays >= 2 && s.streakNotedDay != streakToday) {
+            s.streakNotedDay = streakToday
+            dirty = true
+            events.add(Event.Streak(streakDays))
+        }
         earned = HashMap(s.earned)
         seals = HashMap(s.seals)
         chaptersReadCount = s.chaptersRead.size

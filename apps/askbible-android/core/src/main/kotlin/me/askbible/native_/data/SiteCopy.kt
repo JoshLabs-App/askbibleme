@@ -162,6 +162,7 @@ object SiteCopy {
         "native.stepDayPrefix" to Pair("第", "Day"),
         "native.stepDaySuffix" to Pair("天", ""),
         "native.streakBonus" to Pair("连续加成", "Streak bonus"),
+        "native.streakDays" to Pair("连续 {{n}} 天", "{{n}}-day streak"),
         "native.syncIncomplete" to Pair("同步未完成", "Sync incomplete"),
         "native.syncLast" to Pair("上次 {{time}}", "Last {{time}}"),
         "native.syncNever" to Pair("尚未同步", "Not synced yet"),

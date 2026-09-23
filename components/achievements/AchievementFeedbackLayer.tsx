@@ -28,7 +28,14 @@ const FLOAT_OUT_MS = 400;
 /** 获得提示停留时长（iOS：2.8 秒） */
 const TOAST_MS = 2800;
 
-type Floater = { id: number; text: string; big: boolean; leaving: boolean };
+type Floater = {
+  id: number;
+  text: string;
+  big: boolean;
+  leaving: boolean;
+  /** 连续天数飘字：文案在渲染时按当前语言取，不在抽干事件的 effect 里定——那里的 locale 是旧的 */
+  streakDays?: number;
+};
 
 /**
  * 成就的即时反馈层（对齐 iOS `XPFloater` + `EarnedToast`）。
@@ -55,6 +62,16 @@ export function AchievementFeedbackLayer() {
             text: `+${e.amount}`,
             big: e.amount >= MEDAL_XP.perChapterRead,
             leaving: false,
+          });
+        } else if (e.kind === "streak") {
+          // 连续天数：飘一条字，不弹卡片（Josh 2026-09-20 定的语气）
+          seqRef.current += 1;
+          xp.push({
+            id: seqRef.current,
+            text: "",
+            big: true,
+            leaving: false,
+            streakDays: e.days,
           });
         } else if (e.kind !== "chapterRead") {
           others.push(e);
@@ -122,7 +139,9 @@ export function AchievementFeedbackLayer() {
                     : "askbible-xp-pop 420ms cubic-bezier(0.2,1.7,0.35,1)",
               }}
             >
-              {f.text}
+              {f.streakDays != null
+                ? achCopy("native.streakDays", locale, { n: f.streakDays })
+                : f.text}
             </span>
           ))}
           <style>{`@keyframes askbible-xp-pop{from{transform:scale(.4) translateY(14px);opacity:0}60%{transform:scale(1.14) translateY(-4px);opacity:1}to{transform:scale(1) translateY(0);opacity:1}}`}</style>

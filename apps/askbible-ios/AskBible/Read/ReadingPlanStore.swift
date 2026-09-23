@@ -287,6 +287,20 @@ final class ReadingPlanStore: ObservableObject {
         return registryDay(prefs.planId, PlanPlay.registryDayIndex(prefs, dayCount: dayCount, contentAhead: ahead, now: now)) ?? []
     }
 
+    /// 今天该读的都读完了没有。没选计划、或今天本来就没内容时返回 false（没完成可言）。
+    /// 口径和月历标黄一致：以 `completed` 里的章为准，不看是读的还是听的。
+    var isTodayPlanComplete: Bool {
+        guard prefs.chosen == true else { return false }
+        let list = readings(atContentAhead: prefs.ahead)
+        guard !list.isEmpty else { return false }
+        for r in list {
+            for ch in r.startChapter...max(r.startChapter, r.endChapter) {
+                if !isCompleted(r.bookId, ch) { return false }
+            }
+        }
+        return true
+    }
+
     /// 「进度设置为今日」：把日历上选的那天定为今天该读的内容（setReadingPlanAheadDays）。
     /// 写 prefs.aheadDays，指针型计划再把指针跳到对应的计划天（保留已读章记录）。
     func setAheadDays(_ targetAhead: Int, now: Date = Date()) {

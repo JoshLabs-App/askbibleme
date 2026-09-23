@@ -133,6 +133,7 @@ enum SiteCopy {
         "native.noReadingRecord": ("还没有阅读记录", "No reading history yet"),
         "native.none": ("无", "None"),
         "native.online": ("在线", "Online"),
+        "native.planDayDone": ("今日计划完成", "Today's plan complete"),
         "native.readingSync": ("读经同步", "Reading sync"),
         "native.recentReading": ("最近阅读", "Recently read"),
         "native.register": ("注册", "Register"),

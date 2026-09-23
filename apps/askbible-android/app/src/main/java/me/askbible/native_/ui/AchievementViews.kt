@@ -253,6 +253,13 @@ fun XPFloater(ach: AchievementStore, modifier: Modifier = Modifier) {
                 val text = SiteCopy.f("native.streakDays", mapOf("n" to head.days.toString()), floaterLocale)
                 shown = (shown + FloaterItem(seq, text, true)).takeLast(3)
             }
+            // 今日计划完成：同样只飘一条字 + 一声小钵
+            is AchievementStore.Event.PlanDayDone -> {
+                ach.consume()
+                seq += 1
+                AchievementFeedback.play(context, AchievementFeedback.Cue.EARN)
+                shown = (shown + FloaterItem(seq, SiteCopy.t("native.planDayDone", floaterLocale), true)).takeLast(3)
+            }
             else -> Unit
         }
     }
@@ -301,7 +308,8 @@ fun EarnedToast(
     val event = ach.pending.firstOrNull {
         it !is AchievementStore.Event.Xp &&
             it !is AchievementStore.Event.ChapterRead &&
-            it !is AchievementStore.Event.Streak
+            it !is AchievementStore.Event.Streak &&
+            it !is AchievementStore.Event.PlanDayDone
     }
     val d = event?.let { describeEarned(it, ach.level, locale) }
 

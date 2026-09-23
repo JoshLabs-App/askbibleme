@@ -475,5 +475,9 @@
   "native.streakDays": {
     "zh": "连续 {{n}} 天",
     "en": "{{n}}-day streak"
+  },
+  "native.planDayDone": {
+    "zh": "今日计划完成",
+    "en": "Today's plan complete"
   }
 }

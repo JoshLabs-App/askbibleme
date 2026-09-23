@@ -157,6 +157,12 @@ struct XPFloater: View {
             big = true
             ach.consume()
             AchievementFeedback.shared.play(.earn)
+        // 今日计划完成：同样只飘一条字 + 一声小钵
+        case .planDayDone:
+            text = SiteCopy.t("native.planDayDone")
+            big = true
+            ach.consume()
+            AchievementFeedback.shared.play(.earn)
         default:
             // 非 XP 事件（勋章 / 升级）交给 EarnedToast，这里不动
             return
@@ -196,6 +202,7 @@ struct EarnedToast: View {
             if case .xp = $0 { return false }
             if case .chapterRead = $0 { return false }
             if case .streak = $0 { return false }
+            if case .planDayDone = $0 { return false }
             return true
         }
     }

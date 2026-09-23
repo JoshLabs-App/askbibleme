@@ -38,6 +38,8 @@ class AchievementStore(context: Context) {
         data class LevelUp(val level: Int) : Event()
         /** 连续天数又续上了一天（days ≥ 2 才发，一天只发一次；中断时什么都不发） */
         data class Streak(val days: Int) : Event()
+        /** 今天的计划读完了（一天只发一次） */
+        object PlanDayDone : Event()
     }
 
     /** 落盘的 ledger（字段名与 iOS Snapshot / 同步 JSON 一致） */
@@ -65,6 +67,8 @@ class AchievementStore(context: Context) {
         var lastOpenDay: String = "",
         /** 连续天数提示一天只发一次；纯本地 UI 状态，不进会员同步 blob */
         var streakNotedDay: String = "",
+        /** 今日计划完成提示一天只发一次；同样只在本地 */
+        var planDoneNotedDay: String = "",
         /** 历史最长连续天数：倍率只升不降（Josh 2026-09-18 A 方案） */
         var bestStreakDays: Int = 0,
         /** 当前在听的那一章，以及这一章已经给过几片听读 XP（防挂机刷分） */
@@ -143,6 +147,7 @@ class AchievementStore(context: Context) {
         snap.comboCount = (MemberReadingSyncRules.num(o.opt("comboCount")) ?: 0.0).toInt()
         snap.lastOpenDay = (o.opt("lastOpenDay") as? String).orEmpty()
         snap.streakNotedDay = (o.opt("streakNotedDay") as? String).orEmpty()
+        snap.planDoneNotedDay = (o.opt("planDoneNotedDay") as? String).orEmpty()
         snap.bestStreakDays = (MemberReadingSyncRules.num(o.opt("bestStreakDays")) ?: 0.0).toInt()
         snap.listenChapterKey = (o.opt("listenChapterKey") as? String).orEmpty()
         snap.listenChapterTicks = (MemberReadingSyncRules.num(o.opt("listenChapterTicks")) ?: 0.0).toInt()
@@ -171,6 +176,7 @@ class AchievementStore(context: Context) {
             .put("comboCount", s.comboCount)
             .put("lastOpenDay", s.lastOpenDay)
             .put("streakNotedDay", s.streakNotedDay)
+            .put("planDoneNotedDay", s.planDoneNotedDay)
             .put("bestStreakDays", s.bestStreakDays)
             .put("listenChapterKey", s.listenChapterKey)
             .put("listenChapterTicks", s.listenChapterTicks)
@@ -418,6 +424,12 @@ class AchievementStore(context: Context) {
             s.streakNotedDay = streakToday
             dirty = true
             events.add(Event.Streak(streakDays))
+        }
+        // 今天的计划读完了：收个尾，一天只发一次
+        if (s.planDoneNotedDay != streakToday && plans?.isTodayPlanComplete == true) {
+            s.planDoneNotedDay = streakToday
+            dirty = true
+            events.add(Event.PlanDayDone)
         }
         earned = HashMap(s.earned)
         seals = HashMap(s.seals)

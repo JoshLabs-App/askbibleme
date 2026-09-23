@@ -135,6 +135,7 @@ object SiteCopy {
         "native.noReadingRecord" to Pair("还没有阅读记录", "No reading history yet"),
         "native.none" to Pair("无", "None"),
         "native.online" to Pair("在线", "Online"),
+        "native.planDayDone" to Pair("今日计划完成", "Today's plan complete"),
         "native.readingSync" to Pair("读经同步", "Reading sync"),
         "native.recentReading" to Pair("最近阅读", "Recently read"),
         "native.register" to Pair("注册", "Register"),

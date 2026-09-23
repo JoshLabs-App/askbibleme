@@ -55,6 +55,8 @@ import me.askbible.native_.data.name
 @Composable
 fun AchievementsScreen(
     ach: AchievementStore,
+    /** 成就大图的落款：登录用户的称呼；没登录为空，图上就不印 */
+    userName: String = "",
     locale: AppLocale = AppLocale.current,
     theme: Parchment = Parchment.light,
     onBack: () -> Unit = {},
@@ -145,7 +147,7 @@ fun AchievementsScreen(
                  Modifier.size(22.dp), tint = theme.ink.toColor())
         }
 
-        detail?.let { MedalDetailDialog(it, locale, theme) { detail = null } }
+        detail?.let { MedalDetailDialog(it, userName, locale, theme) { detail = null } }
     }
 }
 

@@ -90,7 +90,8 @@ import kotlin.math.min
  * 版式抄的是「听到」(03MyClass) 的 MedalDetail —— Josh 2026-09-23「要跟听到一样」。
  * 区别只有配色：那边是暖棕，这边跟羊皮卷（canvas #ECD9B9 / ink #1C1410 / 金 #FFB103）。
  *
- * 名字只存本机（SharedPreferences askbible-profile），不进会员同步 —— 它只是印在图上的落款。
+ * 落款用的是**登录用户的称呼**（MemberAuthStore.user.name）—— Josh 2026-09-23：
+ * 「用户的名字在设置时就有了，这里不要另外写」。没登录就不印名字，也不额外催登录。
  */
 data class MedalDetail(
     val key: String,
@@ -101,30 +102,18 @@ data class MedalDetail(
     val fraction: Float,
 )
 
-// ---------- 落款名字 ----------
-private const val PROFILE_PREFS = "askbible-profile"
-private const val PROFILE_NAME = "displayName"
-
-fun savedDisplayName(ctx: Context): String =
-    ctx.getSharedPreferences(PROFILE_PREFS, Context.MODE_PRIVATE).getString(PROFILE_NAME, "").orEmpty()
-
-fun saveDisplayName(ctx: Context, v: String) {
-    ctx.getSharedPreferences(PROFILE_PREFS, Context.MODE_PRIVATE)
-        .edit().putString(PROFILE_NAME, v.trim().take(16)).apply()
-}
-
 // ---------- 大图 ----------
 @Composable
 fun MedalDetailDialog(
     d: MedalDetail,
+    /** 落款：登录用户的称呼；没登录传空字符串，图上就不印名字 */
+    name: String = "",
     locale: AppLocale = AppLocale.current,
     theme: Parchment = Parchment.light,
     onDismiss: () -> Unit,
 ) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
-    var name by remember { mutableStateOf(savedDisplayName(ctx)) }
-    var editing by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
 
     var shown by remember { mutableStateOf(false) }
@@ -197,15 +186,16 @@ fun MedalDetailDialog(
                     }
                 }
 
-                Text(
-                    if (name.isNotBlank()) name else SiteCopy.t("native.medalNamePrompt", locale),
-                    fontSize = 15.sp, color = theme.ink.toColor(), textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 12.dp)
-                        .clip(CircleShape)
-                        .background(theme.hover.toColor())
-                        .clickableNoRipple { editing = true }
-                        .padding(horizontal = 16.dp, vertical = 7.dp),
-                )
+                if (name.isNotBlank()) {
+                    Text(
+                        name,
+                        fontSize = 15.sp, color = theme.ink.toColor(), textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(top = 12.dp)
+                            .clip(CircleShape)
+                            .background(theme.hover.toColor())
+                            .padding(horizontal = 16.dp, vertical = 7.dp),
+                    )
+                }
 
                 if (d.earned) {
                     Row(Modifier.padding(top = 14.dp).fillMaxWidth(),
@@ -235,39 +225,6 @@ fun MedalDetailDialog(
         }
     }
 
-    if (editing) {
-        var draft by remember { mutableStateOf(name) }
-        AlertDialog(
-            onDismissRequest = { editing = false },
-            containerColor = theme.surfaceSolid.toColor(),
-            title = {
-                Text(SiteCopy.t("native.medalNameTitle", locale), fontSize = 17.sp,
-                     fontWeight = FontWeight.SemiBold, color = theme.ink.toColor())
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(SiteCopy.t("native.medalNameHint", locale), fontSize = 13.sp, color = theme.muted.toColor())
-                    BasicTextField(
-                        draft, { draft = it.take(16) }, singleLine = true,
-                        textStyle = TextStyle(color = theme.ink.toColor(), fontSize = 16.sp),
-                        cursorBrush = SolidColor(theme.accentOt.toColor()),
-                        modifier = Modifier.fillMaxWidth()
-                            .background(theme.hover.toColor(), RoundedCornerShape(12.dp)).padding(12.dp),
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton({ saveDisplayName(ctx, draft); name = draft.trim().take(16); editing = false }) {
-                    Text(SiteCopy.t("native.save", locale), color = theme.accentOt.toColor())
-                }
-            },
-            dismissButton = {
-                TextButton({ editing = false }) {
-                    Text(SiteCopy.t("native.cancel", locale), color = theme.muted.toColor())
-                }
-            },
-        )
-    }
 }
 
 @Composable

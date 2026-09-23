@@ -1016,7 +1016,8 @@ private fun RootScreen() {
 
         // 成就页：从探索页的等级条卡片进来，盖在最上面（返回键由 BackHandler 接）
         if (showAchievements) {
-            AchievementsScreen(achievements, appLocale, Parchment.light, onBack = { showAchievements = false })
+            AchievementsScreen(achievements, auth.user?.name.orEmpty(), appLocale, Parchment.light,
+                               onBack = { showAchievements = false })
         }
         // +XP 飘字 + 勋章 / 印章 / 升级提示（Josh 2026-09-18「要感觉到 XP 一直在增加」）
         Box(Modifier.fillMaxSize().statusBarsPadding(), contentAlignment = Alignment.TopCenter) {

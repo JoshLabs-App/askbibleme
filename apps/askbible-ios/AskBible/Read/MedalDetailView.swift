@@ -7,7 +7,8 @@ import UIKit
 /// 和安卓 `MedalDetail.kt` 是对等双写，版式抄的是「听到」(03MyClass)
 /// —— Josh 2026-09-23「要跟听到一样」。配色跟羊皮卷。
 ///
-/// 名字只存本机（UserDefaults），不进会员同步 —— 它只是印在图上的落款。
+/// 落款用的是**登录用户的称呼**（MemberAuthStore.user.name）—— Josh 2026-09-23：
+/// 「用户的名字在设置时就有了，这里不要另外写」。没登录就不印名字，也不额外催登录。
 struct MedalDetail: Identifiable, Equatable {
     var id: String { key }
     let key: String
@@ -18,22 +19,14 @@ struct MedalDetail: Identifiable, Equatable {
     let fraction: Double
 }
 
-enum MedalProfile {
-    private static let nameKey = "askbible-profile-display-name"
-    static var displayName: String {
-        get { UserDefaults.standard.string(forKey: nameKey) ?? "" }
-        set { UserDefaults.standard.set(String(newValue.trimmingCharacters(in: .whitespaces).prefix(16)), forKey: nameKey) }
-    }
-}
-
 struct MedalDetailView: View {
     let detail: MedalDetail
+    /// 落款：登录用户的称呼；没登录传空字符串，图上就不印名字
+    var name: String = ""
     var onDismiss: () -> Void
 
     @State private var shown = false
     @State private var spin: Double = 0
-    @State private var name = MedalProfile.displayName
-    @State private var editing = false
     @State private var busy = false
     @State private var toast: String?
     @State private var shareImage: UIImage?
@@ -63,13 +56,6 @@ struct MedalDetailView: View {
                     .padding(.bottom, 60)
                     .transition(.opacity)
             }
-        }
-        .alert(SiteCopy.t("native.medalNameTitle"), isPresented: $editing) {
-            TextField("", text: $name)
-            Button(SiteCopy.t("native.save")) { MedalProfile.displayName = name; name = MedalProfile.displayName }
-            Button(SiteCopy.t("native.cancel"), role: .cancel) { name = MedalProfile.displayName }
-        } message: {
-            Text(SiteCopy.t("native.medalNameHint"))
         }
         .sheet(item: Binding(get: { shareImage.map { SharePayload(image: $0, text: shareText) } },
                              set: { if $0 == nil { shareImage = nil } })) { payload in
@@ -114,15 +100,14 @@ struct MedalDetailView: View {
                 .padding(.top, 10)
             }
 
-            Button { editing = true } label: {
-                Text(name.isEmpty ? SiteCopy.t("native.medalNamePrompt") : name)
+            if !name.isEmpty {
+                Text(name)
                     .font(.system(size: 15))
                     .foregroundStyle(Color(parchment: 0x1C1410))
                     .padding(.horizontal, 16).padding(.vertical, 7)
                     .background(Color(parchment: 0x2A1810, opacity: 0.07), in: Capsule())
+                    .padding(.top, 12)
             }
-            .buttonStyle(.plain)
-            .padding(.top, 12)
 
             if detail.earned {
                 HStack(spacing: 10) {

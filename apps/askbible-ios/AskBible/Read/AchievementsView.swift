@@ -4,6 +4,8 @@ import SwiftUI
 /// 未获得的也全部列出来（压暗 + 进度条）——看得见下一档才有奔头。
 struct AchievementsView: View {
     @EnvironmentObject private var ach: AchievementStore
+    /// 成就大图的落款：登录用户的称呼；没登录就不印
+    @EnvironmentObject private var auth: MemberAuthStore
     @Environment(\.dismiss) private var dismiss
     private let cols = [GridItem(.adaptive(minimum: 92), spacing: 14)]
     /// 点开勋章 / 印章 → 成就大图（可分享、可存相册）
@@ -25,7 +27,7 @@ struct AchievementsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .overlay {
             if let d = detail {
-                MedalDetailView(detail: d) { detail = nil }
+                MedalDetailView(detail: d, name: auth.user?.name ?? "") { detail = nil }
             }
         }
     }

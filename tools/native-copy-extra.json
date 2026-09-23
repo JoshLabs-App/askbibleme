@@ -524,18 +524,6 @@
     "zh": "还没点亮",
     "en": "Not unlocked yet"
   },
-  "native.medalNamePrompt": {
-    "zh": "＋ 写上你的名字",
-    "en": "+ Add your name"
-  },
-  "native.medalNameTitle": {
-    "zh": "写上你的名字",
-    "en": "Add your name"
-  },
-  "native.medalNameHint": {
-    "zh": "会印在分享图上，只存在这台设备",
-    "en": "Printed on the share image; stays on this device"
-  },
   "native.medalShareText": {
     "zh": "{{who}}在 AskBible 拿到了「{{name}}」{{tier}}",
     "en": "{{who}}earned “{{name}}”{{tier}} on AskBible"

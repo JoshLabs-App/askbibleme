@@ -98,5 +98,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.media3:media3-exoplayer:1.5.1")
     implementation("androidx.media3:media3-session:1.5.1")
+    // 商店版的应用内更新（Play 官方；站外分发版走自家的 AppUpdater）
+    implementation("com.google.android.play:app-update-ktx:2.1.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

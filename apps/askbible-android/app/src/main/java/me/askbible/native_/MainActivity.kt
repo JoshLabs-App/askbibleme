@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.statusBarsPadding
 import me.askbible.native_.data.Parchment
 import me.askbible.native_.update.UpdateGate
+import me.askbible.native_.update.PlayUpdateGate
 import me.askbible.native_.data.MedalXP
 import me.askbible.native_.ui.AchievementsScreen
 import me.askbible.native_.ui.EarnedToast
@@ -124,6 +125,8 @@ class MainActivity : ComponentActivity() {
         // 全量在线译本目录先读盘：记住的远端译本要在 TranslationPrefs 解析之前就认得
         me.askbible.native_.data.RemoteTranslations.attach(cacheDir)
         OAuthCallbackBus.deliver(intent?.dataString)
+        // 商店版：Play 官方的应用内更新（web 变体里是空操作）
+        PlayUpdateGate.start(this)
         setContent {
             RootScreen()
             // 站外分发版的自助更新弹窗；Play / sideload 变体里是空操作

@@ -646,3 +646,18 @@ Josh 2026-09-21：「1 深色要联动 2 也要改 3 暂时不动安卓」。
   Josh 2026-09-23：**不推外部测试组**，就留在内部。
 - **Play 版不能带自助更新、也不能引导用户去站外下载**（政策红线，详见 OPEN-ITEMS 同日那节）。
   商店用户的更新只能靠 Play 自己推，方式是把同版本打成 AAB 传上去。
+
+## 三条成就反馈待办全部做完（2026-09-23）
+
+Josh「老的待办做掉」。共同的语气约束：**这三处都不弹卡片**，
+`EarnedToast` 明确排除新事件，一律走飘字 / 就地动效那条通道。
+
+- **连续天数**：`streakDays` 此前只参与算倍率，延续和中断都不发事件。
+  现在续上第 2 天起发 `streak` 事件（`streakNotedDay` 保证一天一次，只落本地不进同步 blob）。
+  **中断什么都不发** —— 不用声音惩罚用户。
+- **今日计划完成**：网页端早就有（`ReadChapterCompletionSection` 庆祝层 + `today-plan-complete.mp3`），
+  原生两端缺。新增 `ReadingPlanStore.isTodayPlanComplete`（口径同月历标黄：看 `completed` 里的章），
+  `AchievementStore.refresh` 里判一次发 `PlanDayDone`。
+- **「读完一章」动效**：挂在**章标题 + 它下面那条细线**，亮金 0.32s → 停 0.62s → 落回 0.9s。
+  **没有**新加「阅读进度线」——那要改读经页布局，收益不值，这条别再翻。
+  网页端用 `<html>` 上挂 1.85s 的 class + CSS 动画，尊重 `prefers-reduced-motion`。

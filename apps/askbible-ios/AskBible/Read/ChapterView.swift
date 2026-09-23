@@ -262,10 +262,12 @@ struct ChapterView: View {
         guard case .chapterRead(let b, let c)? = ach.pending.first,
               b.uppercased() == bookId.uppercased(), c == chapter else { return }
         ach.consume()
-        withAnimation(.easeOut(duration: 0.32)) { chapterDoneGlow = 1 }
+        // 柔和档（Josh 2026-09-23「观感需要柔和一些」）：峰值只到 0.55，
+        // 进场放慢到 0.52s、退场拉到 1.3s —— 是「被光照到」而不是「闪一下」
+        withAnimation(.easeInOut(duration: 0.52)) { chapterDoneGlow = 0.55 }
         Task {
-            try? await Task.sleep(for: .seconds(0.62))
-            withAnimation(.easeInOut(duration: 0.9)) { chapterDoneGlow = 0 }
+            try? await Task.sleep(for: .seconds(0.94))
+            withAnimation(.easeInOut(duration: 1.3)) { chapterDoneGlow = 0 }
         }
     }
 

@@ -164,9 +164,11 @@ fun ChapterScreen(
         // 只认当前这一章；别的章的事件留给别人，不在这里消费
         if (!e.bookId.equals(bookId, ignoreCase = true) || e.chapter != chapter) return@LaunchedEffect
         achievements.consume()
-        chapterDoneGlow.animateTo(1f, tween(320))
-        delay(620)
-        chapterDoneGlow.animateTo(0f, tween(900))
+        // 柔和档（Josh 2026-09-23「观感需要柔和一些」）：峰值只到 0.55，
+        // 进场放慢到 0.52s、退场拉到 1.3s —— 是「被光照到」而不是「闪一下」
+        chapterDoneGlow.animateTo(0.55f, tween(520))
+        delay(420)
+        chapterDoneGlow.animateTo(0f, tween(1300))
     }
     val glow = chapterDoneGlow.value
     // 成就上报去重：已报过的段 / 章末，换章自动作废（tag 里带卷章）

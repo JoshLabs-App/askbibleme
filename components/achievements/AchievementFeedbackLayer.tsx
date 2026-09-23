@@ -81,7 +81,7 @@ export function AchievementFeedbackLayer() {
           // 强制重排，不然同一页连读两章时动画不会重新播
           void root.offsetWidth;
           root.classList.add("ab-chapter-done");
-          window.setTimeout(() => root.classList.remove("ab-chapter-done"), 1900);
+          window.setTimeout(() => root.classList.remove("ab-chapter-done"), 2300);
         } else {
           others.push(e);
         }

@@ -914,3 +914,40 @@ curl -s -H "X-YVP-App-Key: $YVP_APP_KEY" \
 授权档位变了都会变），照上面那条命令重拉即可。
 
 **注意 `language_ranges[]` 是必填参数**，不带会 422；`/v1/bibles` 不带参数也报缺字段。
+
+---
+
+## 和合本改读本地库，不再抓网页（2026-09-23）
+
+Josh：「1 改」。和合本 1919 是**公有领域**，而 `data/bible/sqlite/` 里本来就有
+`cuv-simp` / `cuv-trad`，抓 bible.com 既慢、对方改版就断，纯属白抓。
+
+**做法**：`load-chapter-from-default-translation.ts` 加一张
+`LOCAL_SUBSTITUTE_TRANSLATION_IDS` 表，命中的译本转去读本地库，
+**名字仍然显示用户选的那个译本**。
+
+| 译本 | 本地 |
+|---|---|
+| `cunpss-zh-hans` 和合本简体神版 | `cuv-simp` |
+| `cunpss-zh-hant` 和合本繁體神版 | `cuv-trad` |
+| `cunp-zh-hant` 新標點和合本神版 | `cuv-trad` |
+
+对应关系核对过：本地两个库**都是神版**（神 3997 处、上帝 11 处），和上面三个的用字一致。
+
+**额外收获**：本地库带 `speechParts` / `themeRepeatCount` / `isGolden` 标注，
+远程那条路这些字段一直是空的。改过来之后这三个译本也能用上直接引语高亮和金句标记了
+（实测约 3:16 `themeRepeatCount=89`、`isGolden=true`）。
+
+**⚠️ `cunp-zh-hant-god`（上帝版，414）不在表里**：本地没有上帝版。
+**不要用「神→上帝」全文替换去凑**——经文里「假神」「别神」「事奉别神」这些不能换，
+替换会改错。它维持原样。
+
+**验证**：三项新测试（本地正文正确 / **全程零 fetch 调用** / 标注带回且逐节与 `cuv-simp` 完全一致）
+全过；`npx vitest run lib/bible` 9 个文件 37 项全过。临时测试已删。
+
+## 那几个版权译本：Josh 确认有授权（2026-09-23）
+
+Josh：「2 没关系的，那个是有授权的」——指 `cnv-zh-hant` / `cnvs-zh-hans` 新译本、
+`rcuv-zh-hant` / `rcuvss-zh-hans` 和修、`rcv-zh-hant` 恢复本、`mandarin-zh-hans`。
+
+**按他说的办，维持现状，不关闭。** OPEN-ITEMS 里那条相应关闭。

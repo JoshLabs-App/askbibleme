@@ -27,6 +27,33 @@ export type LoadedChapter = {
 
 const BOOK_RE = /^[A-Z0-9]{2,8}$/;
 
+/**
+ * 和合本那几个译本改读**本地库**，不再抓 bible.com（Josh 2026-09-23：「1 改」）。
+ *
+ * 和合本 1919 是**公有领域**，而 `data/bible/sqlite/` 里本来就有 `cuv-simp` / `cuv-trad`，
+ * 抓网页既慢、又会在对方改版时整个断掉，纯属白抓。
+ *
+ * 顺带一个好处：本地库带 `speech_spans` 和 `theme_repeat_count` 标注，
+ * 远程那条路这两个字段一直是空的——改过来之后这几个译本也能用上直接引语高亮。
+ *
+ * **对应关系**（2026-09-23 核对过，本地两个库都是**神版**：神 3997 处、上帝 11 处）：
+ *
+ * | 译本 | 本地 | 说明 |
+ * |---|---|---|
+ * | `cunpss-zh-hans` 和合本简体神版 | `cuv-simp` | 一致 |
+ * | `cunpss-zh-hant` 和合本繁體神版 | `cuv-trad` | 一致 |
+ * | `cunp-zh-hant` 新標點和合本神版 | `cuv-trad` | 同为繁體神版 |
+ *
+ * ⚠️ **`cunp-zh-hant-god`（上帝版）不在这张表里**，本地没有上帝版。
+ * 不要用「神→上帝」全文替换去凑——经文里「假神」「别神」「事奉别神」这些不能换，
+ * 替换会改错。它维持原样，处理方式见 `docs/OPEN-ITEMS.md`。
+ */
+const LOCAL_SUBSTITUTE_TRANSLATION_IDS: Record<string, string> = {
+  "cunpss-zh-hans": "cuv-simp",
+  "cunpss-zh-hant": "cuv-trad",
+  "cunp-zh-hant": "cuv-trad",
+};
+
 function isSelahBiblePayload(v: unknown): v is { format?: string; books: Record<string, Record<string, Record<string, string>>> } {
   if (!v || typeof v !== "object") return false;
   const o = v as Record<string, unknown>;
@@ -194,6 +221,17 @@ export async function loadChapterFromTranslation(
   const meta = resolveBibleTranslationMeta(cwd, tid);
   if (!meta) return null;
   if (meta.enabled === false) return null;
+
+  // 和合本那几个走本地库，不走远程（见 LOCAL_SUBSTITUTE_TRANSLATION_IDS 的说明）。
+  // 本地没有那份文件时不拦着，照旧落到下面的远程分支去。
+  const substitute = LOCAL_SUBSTITUTE_TRANSLATION_IDS[tid];
+  if (substitute && substitute !== tid) {
+    const local = await loadChapterFromTranslation(cwd, id, ch, substitute);
+    if (local?.verses?.length) {
+      // 经文用本地那份，名字仍然显示用户选的那个译本
+      return { ...local, translationId: tid, labelZh: meta.labelZh, labelEn: meta.labelEn };
+    }
+  }
 
   if (meta.provider && meta.provider !== "local") {
     const remote = await loadChapterFromRemoteProvider(meta, id, ch);

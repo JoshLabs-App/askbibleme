@@ -97,8 +97,11 @@ struct CatalogView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// 右栏：与章页同一套做法 —— 收起时只有一颗钮，点开才展开成玻璃簇。
-    /// 6 颗常驻玻璃钮会压住新约那一列的卷名（实测「马太福音」右侧被切）。
+    /// 右栏：收起时留三颗 —— 展开钮 + **搜索** + **最近读**（Josh 2026-09-23
+    /// 「打开圣经目录页时，搜索、最近读图标要放出来」）。这两件是进目录页最常做的事，
+    /// 藏在「⋮」后面等于多一次点击。
+    /// 其余四颗（设置 / 收藏 / 字号加减）仍然收着 —— 6 颗全常驻会压住新约那一列的卷名
+    /// （实测「马太福音」右侧被切），这条约束没变。
     private func rail(safeTop: CGFloat) -> some View {
         AskGlassGroup(spacing: 8) {
         VStack(spacing: ShellMetrics.topChromeGap) {
@@ -110,19 +113,23 @@ struct CatalogView: View {
             if railOpen {
                 railButton(MI.settings) { railOpen = false; onOpenSettings() }
                     .askGlassID("catalog-rail-settings", in: railNamespace)
-                railButton(MI.search) { railOpen = false; onOpenSearch() }
-                    .askGlassID("catalog-rail-search", in: railNamespace)
+            }
+            // 常驻：搜索
+            railButton(MI.search) { railOpen = false; onOpenSearch() }
+                .askGlassID("catalog-rail-search", in: railNamespace)
+            if railOpen {
                 railButton(MI.bookmarkBorder) { railOpen = false; onOpenFavorites() }
                     .askGlassID("catalog-rail-favorites", in: railNamespace)
                 railLabel("+") { if let n = size.next { size = n } }
                     .askGlassID("catalog-rail-bigger", in: railNamespace)
                 railLabel("\u{2212}") { if let p = size.previous { size = p } }
                     .askGlassID("catalog-rail-smaller", in: railNamespace)
-                railButton(MI.history) { railOpen = false; (onLastRead ?? {})() }
-                    .opacity(onLastRead == nil ? 0.4 : 1)
-                    .disabled(onLastRead == nil)
-                    .askGlassID("catalog-rail-history", in: railNamespace)
             }
+            // 常驻：最近读（没有历史时压淡并禁用，但槽位保留，不塌缩）
+            railButton(MI.history) { railOpen = false; (onLastRead ?? {})() }
+                .opacity(onLastRead == nil ? 0.4 : 1)
+                .disabled(onLastRead == nil)
+                .askGlassID("catalog-rail-history", in: railNamespace)
         }
         }
         .padding(.top, safeTop + ShellMetrics.topChromeOffset)

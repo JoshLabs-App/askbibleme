@@ -117,6 +117,11 @@ struct AskTabShell<Screen: View, Dock: View>: View {
         }
         // 选中态用琥珀（不是品牌黄）：系统栏是浅玻璃，#FFB101 在上面对比不够
         .tint(theme.isDark ? Brand.logo : theme.accentOt)
+        // 底栏那一圈（浮起的胶囊四周 + 它下面到屏幕底边那一条）此前露的是系统窗口的白，
+        // 羊皮纸只铺到内容区为止，看起来像页面下面垫了块白板（Josh 2026-09-23）。
+        // 在 TabView 底下垫一层 canvas 并铺到安全区外，深色模式跟着 theme 翻。
+        // 首页那张风景本来就 ignoresSafeArea，盖在这层上面，不受影响。
+        .background(theme.canvas.ignoresSafeArea())
     }
 }
 

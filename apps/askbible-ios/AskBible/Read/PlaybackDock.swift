@@ -160,8 +160,10 @@ struct PlaybackDock: View {
         .padding(.horizontal, 16)
         .padding(.top, 6)
         .padding(.bottom, 2)
-        // 底色跟页面一致，且必须不透明 —— 坞是浮在经文上的 overlay
-        .background(theme.scriptureBackground)
+        // 底色跟页面一致，且必须不透明 —— 坞是浮在经文上的 overlay。
+        // 用 `alignedParchment` 而不是纯色 canvas：页面是**带纸纹**的羊皮底，
+        // 坞铺一块纯色就成了一块板，Josh 2026-09-23「圣经页的播放栏还不是羊皮卷的」说的就是这个。
+        .background(alignedParchment(theme: theme))
         .overlay(alignment: .top) { Divider() }
     }
 
@@ -340,7 +342,7 @@ struct PlaybackDock: View {
         // 浮层档的底色由 ShellTabBarHost 的玻璃胶囊承担；
         // 贴底档自己铺一层**不透明**纸底（对应安卓的 bottomScrim）——
         // 坞是浮在经文上的 overlay，透明底会让字压字（Josh 2026-09-21）
-        .background(quiet ? theme.scriptureBackground : Color.clear)
+        .background(quiet ? AnyView(alignedParchment(theme: theme)) : AnyView(Color.clear))
     }
 
     private var scrubber: some View {
@@ -579,5 +581,22 @@ struct SeekableProgressBar: View {
             )
         }
         .frame(height: 44)
+    }
+}
+
+/// 贴底坞的羊皮底：**不能**直接塞一个 `ParchmentBackground`。
+/// 那张纸纹是按整屏 stretch 铺的，塞进只有百来点高的坞里会把整张纹理压扁，
+/// 和坞上方页面的纹理接不上，接缝一眼就看得出来。
+///
+/// 这里把纸纹按**整屏高度**画出来，再往上偏移，让坞露出的正好是这张纸最底下那一条 ——
+/// 和页面是同一张图的同一段，接缝消失。坞是贴着屏幕底的（dockFlush），所以偏移量
+/// 就是「整屏高 − 坞高」。
+@ViewBuilder
+func alignedParchment(theme: Parchment) -> some View {
+    GeometryReader { g in
+        let screenH = UIScreen.main.bounds.height
+        ParchmentBackground(theme: theme)
+            .frame(width: g.size.width, height: screenH)
+            .offset(y: -(screenH - g.size.height))
     }
 }

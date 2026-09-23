@@ -32,6 +32,11 @@ struct HomeView: View {
     @State private var idleEpoch = 0
     /// 闲置后收起菜单钮与专辑排，只留金句 + 底栏（DECISIONS 2026-09-16 首页方案 A）；点屏幕恢复
     @State private var chromeVisible = true
+    /// 底部安全区的**锁定值**：界面收起时系统底栏跟着隐藏，`geo.safeAreaInsets.bottom`
+    /// 会从「底栏高 + home 指示条」缩成「只剩 home 指示条」，于是三颗常用键整排往下坠一截
+    /// —— 这正是 Josh 2026-09-23 说的「隐藏其它图标时它会落到更底的位置」。
+    /// 只取见过的**最大值**，之后再也不跟着缩，位置就钉死了。
+    @State private var lockedBottomInset: CGFloat = 0
     /// 本次前台里已经点过或划走过回归卡，不再反复冒出来
     @State private var returnCardDone = false
     private var verse: GoldenVerse { home.verse }
@@ -127,7 +132,13 @@ struct HomeView: View {
                 }
                 // 位置固定：闲置时只压淡、不位移（Josh 2026-09-21）。
                 // 原来 92 → 36 会让三颗常用键在底栏淡出时整体往下坠一截。
-                .padding(.bottom, 92 + geo.safeAreaInsets.bottom)
+                // 2026-09-23 又发现第二个来源：底栏隐藏时安全区本身会缩，所以这里
+                // **不能直接用 geo.safeAreaInsets.bottom**，要用锁定过的那份。
+                .padding(.bottom, 92 + lockedBottomInset)
+                .onAppear { lockedBottomInset = max(lockedBottomInset, geo.safeAreaInsets.bottom) }
+                .onChange(of: geo.safeAreaInsets.bottom) { _, v in
+                    lockedBottomInset = max(lockedBottomInset, v)
+                }
                     .opacity(chromeVisible ? 1 : 0.55)
                     .animation(.easeInOut(duration: 0.4), value: chromeVisible)
             }

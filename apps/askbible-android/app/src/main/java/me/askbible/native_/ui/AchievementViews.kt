@@ -136,6 +136,7 @@ fun MedalIcon(
     tierCount: Int = 1,
     size: Dp = 64.dp,
     theme: Parchment = Parchment.light,
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     var image by remember(key) { mutableStateOf(MedalImages.cached(context, key)) }
@@ -150,7 +151,7 @@ fun MedalIcon(
     }
     val gray = remember { ColorMatrix().apply { setToSaturation(0f) } }
 
-    Box(Modifier.size(size), contentAlignment = Alignment.Center) {
+    Box(modifier.size(size), contentAlignment = Alignment.Center) {
         val bmp = image
         if (bmp != null) {
             Image(

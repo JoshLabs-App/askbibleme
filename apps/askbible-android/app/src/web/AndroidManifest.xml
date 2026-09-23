@@ -15,7 +15,7 @@
     <application>
         <!-- 把下载好的 APK 以 content:// 交给系统安装器；file:// 在 Android 7+ 会 FileUriExposedException -->
         <provider
-            android:name="androidx.core.content.FileProvider"
+            android:name="me.askbible.native_.update.UpdateFileProvider"
             android:authorities="${applicationId}.updates"
             android:exported="false"
             android:grantUriPermissions="true">

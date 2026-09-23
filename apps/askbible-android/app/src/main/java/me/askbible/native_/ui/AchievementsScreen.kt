@@ -60,6 +60,8 @@ fun AchievementsScreen(
     onBack: () -> Unit = {},
 ) {
     val insets = WindowInsets.systemBars.asPaddingValues()
+    // 点开勋章 / 印章 → 成就大图（可分享、可存相册）
+    var detail by remember { mutableStateOf<MedalDetail?>(null) }
     /** 勋章一行 3 枚、印章一行 5 枚：和 iOS 的自适应格子在手机宽度下的结果一致 */
     val medalRows = MedalCatalog.all.chunked(3)
     val sealRows = BibleCatalog.all.chunked(5)
@@ -91,7 +93,10 @@ fun AchievementsScreen(
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     for (def in medalRows[i]) {
                         Box(Modifier.weight(1f)) {
-                            MedalCell(def, ach.earned[def.key]?.tier ?: 0, ach.value(def.metric), locale, theme)
+                            val tier = ach.earned[def.key]?.tier ?: 0
+                            MedalCell(def, tier, ach.value(def.metric), locale, theme) {
+                                detail = medalDetailOf(def, tier, ach.value(def.metric), locale)
+                            }
                         }
                     }
                     // 最后一行不足 3 枚：补空位，别把剩下的拉宽
@@ -111,7 +116,10 @@ fun AchievementsScreen(
                     for (book in sealRows[i]) {
                         val file = MedalCatalog.seals[book.number.coerceIn(1, MedalCatalog.seals.size) - 1]
                         val lit = ach.seals[book.id] != null
-                        Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally,
+                        Column(Modifier.weight(1f).clickableNoRipple {
+                                   detail = sealDetailOf(file, book.name(locale), lit, locale)
+                               },
+                               horizontalAlignment = Alignment.CenterHorizontally,
                                verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             MedalIcon(file, if (lit) 1 else 0, 1, 52.dp, theme)
                             Text(book.name(locale), fontSize = 10.sp, maxLines = 1,
@@ -136,8 +144,35 @@ fun AchievementsScreen(
             Icon(Icons.Filled.ArrowBack, SiteCopy.t("native.closeMenu", locale),
                  Modifier.size(22.dp), tint = theme.ink.toColor())
         }
+
+        detail?.let { MedalDetailDialog(it, locale, theme) { detail = null } }
     }
 }
+
+/** 勋章 → 大图数据：档位名走 localizedCondition，进度和格子里那条一致 */
+private fun medalDetailOf(def: MedalDef, tier: Int, current: Int, locale: AppLocale): MedalDetail {
+    val next = if (tier < def.tiers.size) def.tiers[tier] else null
+    val from = if (tier > 0) def.tiers[tier - 1] else 0
+    return MedalDetail(
+        key = def.key,
+        name = def.localizedName(locale),
+        earned = tier > 0,
+        tier = if (tier > 0) def.localizedCondition(tier, locale)
+               else SiteCopy.t("native.medalNotEarned", locale),
+        caption = if (next != null) "$current / $next" else "",
+        fraction = if (next == null) 1f
+                   else ((current - from).toFloat() / maxOf(1, next - from).toFloat()).coerceIn(0f, 1f),
+    )
+}
+
+private fun sealDetailOf(file: String, bookName: String, lit: Boolean, locale: AppLocale) = MedalDetail(
+    key = file,
+    name = bookName,
+    earned = lit,
+    tier = SiteCopy.t(if (lit) "native.medalSealLit" else "native.medalSealDark", locale),
+    caption = "",
+    fraction = if (lit) 1f else 0f,
+)
 
 @Composable
 private fun Header(ach: AchievementStore, locale: AppLocale, theme: Parchment) {
@@ -187,13 +222,17 @@ private fun SectionTitle(title: String, sub: String, theme: Parchment) {
 
 /** 单枚勋章：图 + 名 + 「离下一档还差多少」的细进度条 */
 @Composable
-private fun MedalCell(def: MedalDef, tier: Int, current: Int, locale: AppLocale, theme: Parchment) {
+private fun MedalCell(
+    def: MedalDef, tier: Int, current: Int, locale: AppLocale, theme: Parchment,
+    onClick: () -> Unit = {},
+) {
     val next = if (tier < def.tiers.size) def.tiers[tier] else null
     val progress = if (next == null) 1f else {
         val from = if (tier > 0) def.tiers[tier - 1] else 0
         ((current - from).toFloat() / maxOf(1, next - from).toFloat()).coerceIn(0f, 1f)
     }
-    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally,
+    Column(Modifier.fillMaxWidth().clickableNoRipple(onClick),
+           horizontalAlignment = Alignment.CenterHorizontally,
            verticalArrangement = Arrangement.spacedBy(6.dp)) {
         MedalIcon(def.key, tier, def.tiers.size, 68.dp, theme)
         Text(def.localizedName(locale), fontSize = 12.sp, maxLines = 1, textAlign = TextAlign.Center,

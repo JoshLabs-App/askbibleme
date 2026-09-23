@@ -479,5 +479,69 @@
   "native.planDayDone": {
     "zh": "今日计划完成",
     "en": "Today's plan complete"
+  },
+  "native.medalShare": {
+    "zh": "分享成就",
+    "en": "Share"
+  },
+  "native.medalSaveToAlbum": {
+    "zh": "保存到相册",
+    "en": "Save to Photos"
+  },
+  "native.medalShareBusy": {
+    "zh": "生成中…",
+    "en": "Creating…"
+  },
+  "native.medalShareSaved": {
+    "zh": "已存进相册",
+    "en": "Saved to Photos"
+  },
+  "native.medalShareSaveFailed": {
+    "zh": "保存失败",
+    "en": "Couldn't save"
+  },
+  "native.medalShareFailed": {
+    "zh": "图片生成失败，稍后再试",
+    "en": "Couldn't create the image — try again later"
+  },
+  "native.medalLockedShareHint": {
+    "zh": "拿到之后可以做成一张图分享出去",
+    "en": "Once you earn it you can share it as an image"
+  },
+  "native.medalNotEarned": {
+    "zh": "还没拿到",
+    "en": "Not earned yet"
+  },
+  "native.medalEarned": {
+    "zh": "已获得",
+    "en": "Earned"
+  },
+  "native.medalSealLit": {
+    "zh": "已点亮这一卷",
+    "en": "Book unlocked"
+  },
+  "native.medalSealDark": {
+    "zh": "还没点亮",
+    "en": "Not unlocked yet"
+  },
+  "native.medalNamePrompt": {
+    "zh": "＋ 写上你的名字",
+    "en": "+ Add your name"
+  },
+  "native.medalNameTitle": {
+    "zh": "写上你的名字",
+    "en": "Add your name"
+  },
+  "native.medalNameHint": {
+    "zh": "会印在分享图上，只存在这台设备",
+    "en": "Printed on the share image; stays on this device"
+  },
+  "native.medalShareText": {
+    "zh": "{{who}}在 AskBible 拿到了「{{name}}」{{tier}}",
+    "en": "{{who}}earned “{{name}}”{{tier}} on AskBible"
+  },
+  "native.medalCardBrand": {
+    "zh": "AskBible · 读经",
+    "en": "AskBible · Daily Reading"
   }
 }

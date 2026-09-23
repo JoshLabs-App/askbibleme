@@ -637,3 +637,12 @@ Josh 2026-09-21：「1 深色要联动 2 也要改 3 暂时不动安卓」。
 - **涉及文件**：`apps/askbible-android/app/src/main/java/me/askbible/native_/update/`（AppUpdater.kt / UpdateGate.kt）、
   AndroidManifest（REQUEST_INSTALL_PACKAGES + FileProvider `${applicationId}.updates`）、
   `res/xml/update_paths.xml`、`app/build.gradle.kts`、`.android-deploy.json`、MainActivity 挂 `UpdateGate()`。
+
+## 1.0.44 发版 + Play 渠道边界（2026-09-23）
+
+- **安卓 1.0.44 (versionCode 241) 已发到下载页**（`assembleWeb` 变体，带自助更新），
+  `version.json` 线上已是 241，下载页加了「装完这版以后会自动提醒」的更新说明。
+- **iOS build 131 已上传 TestFlight**（MARKETING_VERSION 1.1.2）。
+  Josh 2026-09-23：**不推外部测试组**，就留在内部。
+- **Play 版不能带自助更新、也不能引导用户去站外下载**（政策红线，详见 OPEN-ITEMS 同日那节）。
+  商店用户的更新只能靠 Play 自己推，方式是把同版本打成 AAB 传上去。

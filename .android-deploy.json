@@ -16,5 +16,11 @@
   "min_android": "Android 8.0+",
   "gradle_task": "assembleWeb",
   "apk_rel_path": "app/build/outputs/apk/web/app-web.apk",
-  "notes": "新增：App 内自动检查更新，有新版直接下载安装，不用再回下载页。"
+  "notes": "新增：App 内自动检查更新，有新版直接下载安装，不用再回下载页。",
+  "changelog": [
+    "★ 装完这一版之后，以后出新版 App 会自己提醒你，点一下就更新，不用再回这个页面。",
+    "读经页、圣经页的播放栏重做，贴在底部、不再挡字。",
+    "首页设置入口挪到右上，其它按钮隐藏时图标不再跳位。"
+  ],
+  "intro": "AskBible 是一本能问问题的圣经：读经、听读、按计划跟进度，遇到不懂的地方随时问。"
 }

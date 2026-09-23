@@ -536,7 +536,8 @@ struct RootView: View {
                 selection: $tab,
                 locale: appLocale,
                 dockActive: readDockActive || planDockActive,
-                dockFlush: readDockActive,
+                // 三处都贴底铺满：浮层卡片会在坞和底栏之间留一道空（Josh 2026-09-23「中间不要留这么多空」）
+                dockFlush: readDockActive || planDockActive,
                 // 计划目录 / 详情是独立子页，不放底栏；播放页是主页级页面，底栏照常
                 showTabBar: !(tab == .plan && planRoute != .play && !showSearch) && authRoute == nil && !(tab == .music && musicChromeHidden) && !(tab == .home && homeChromeHidden),
                 // 中央键原来点一下进今日读经；改成普通 Tab 后由切到 .plan 触发同一个动作
@@ -546,8 +547,9 @@ struct RootView: View {
             } dock: {
                 // 搜索 / 收藏页盖在上面时藏坞（RN 非章页只在播放中才出坞）
                 if readDockActive {
-                    // 读经 / 圣经页：不套 compact，走安卓那套完整单栏坞（Josh 2026-09-21）
-                    PlaybackDock(
+                    // 读经 / 圣经 / 计划播放三处共用同一个坞：同骨架、同占位、同间距，
+                    // 只有底色跟页面走（Josh 2026-09-23）
+                    compactDock(PlaybackDock(
                         audio: audio,
                         available: audioURL != nil,
                         onSearch: {
@@ -558,7 +560,7 @@ struct RootView: View {
                         title: openedChapter.map { "\($0.book.name(displayLocale)) \($0.chapter)" } ?? "",
                         artworkSceneId: naturePrefs.sceneId,
                         locale: appLocale,
-                        quiet: true)
+                        quiet: true))
                 } else if planDockActive {
                     // 播放页的坞：左键是经文搜索（带当前章上下文）；播放键没建池时从选中章起播
                     compactDock(PlaybackDock(
@@ -573,7 +575,9 @@ struct RootView: View {
                         onToggle: planTogglePlay,
                         title: planDockTitle,
                         artworkSceneId: naturePrefs.sceneId,
-                        locale: appLocale))
+                        locale: appLocale,
+                        // 和读经页同一个占位：不出封面和章名，坞的高度三处一致
+                        quiet: true))
                 }
             }
             if let book = openedBook, openedChapter == nil {

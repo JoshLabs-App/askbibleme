@@ -45,6 +45,9 @@ struct PlaybackDock: View {
     /// 紧凑档：浮在系统底栏上方的迷你播放器。两行 —— 上行「封面 + 章名 + 进度 + 倒计时」，
     /// 下行「语速 / 循环 / 琥珀大播放键 / 下一章」。按 Josh 2026-09-16 圈定的参考图做。
     var compact: Bool = false
+    /// 深底页（音乐）用白前景；羊皮页用墨色前景。**只有这一个开关在分配色**，
+    /// 结构 / 占位 / 间距三处完全共用（Josh 2026-09-23「只用一套方案共用」）。
+    var onDark: Bool = false
 
     /// 安静档（读经页）：去掉封面和章名，控件小一档、不带「下一章」文字，整块矮一截。
     /// Josh 2026-09-21：「播放栏太大了，也太吵，影响阅读」——读经页的主角是经文，
@@ -60,116 +63,29 @@ struct PlaybackDock: View {
     /// 深底上的前景一律纸色，不能再用 theme 的墨色（那是给浅底用的）
     private func quietFg(_ opacity: Double) -> Color { Color(parchment: 0xECD9B9, opacity: opacity) }
 
+    // MARK: 一套骨架、两种配色（Josh 2026-09-23 定：结构统一，底色跟页面）
+    /// 前景：深底给白，羊皮给墨
+    private func fg(_ opacity: Double) -> Color {
+        onDark ? .white.opacity(opacity) : theme.ink.opacity(opacity)
+    }
+    /// 进度条轨
+    private var trackTint: Color { onDark ? .white.opacity(0.28) : theme.ink.opacity(0.16) }
+    /// 进度条填充
+    private var fillTint: Color { onDark ? .white.opacity(0.92) : theme.accentOt }
+    /// 大播放键的圆底 / 圆里的图标
+    private var playDisc: Color { onDark ? .white : theme.ink }
+    private var playGlyph: Color { onDark ? Color(rgb: 0x1C1410) : theme.canvas }
+
     var body: some View {
-        if quiet { nativeBody } else if compact { compactBody } else { fullBody }
+        // 读经 / 圣经 / 计划播放全部走 compactBody —— 一套骨架。
+        // fullBody 留给计划播放页那个整屏大播放器，不是坞。
+        if quiet || compact { compactBody } else { fullBody }
     }
 
-    /// 读经 / 圣经页的坞：**苹果原生质感**——系统分隔线、SF Symbols、系统字体与 .secondary 层级，
-    /// 播放键是裸字形不是实心圆钮（Apple Music / Podcasts 的迷你栏就是这样）。
-    /// 底色跟页面一致（`theme.scriptureBackground`，不透明），贴底铺满。
-    /// Josh 2026-09-21：「改苹果原生，但是需要底色跟页面一致」。
-    private var nativeBody: some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 10) {
-                Text(elapsed)
-                    .font(.caption2.monospacedDigit())
-                    .foregroundStyle(.secondary)
-                    .frame(minWidth: 36, alignment: .leading)
-                SeekableProgressBar(
-                    audio: audio,
-                    trackHeight: 4,
-                    trackColor: Color.primary.opacity(0.12),
-                    fillColor: theme.accentOt
-                )
-                Text(remaining)
-                    .font(.caption2.monospacedDigit())
-                    .foregroundStyle(.secondary)
-                    .frame(minWidth: 40, alignment: .trailing)
-            }
-            .frame(height: 22)
+    // 2026-09-23：原来这里还有一个 `nativeBody`（苹果原生质感那版），已删。
+    // Josh「保持整个 app 媒体栏占位一致，风格一致……只用一套方案共用」——
+    // 三份实现并存正是他要去掉的东西，别再加第四份。
 
-            HStack(spacing: 0) {
-                // 语速：Podcasts 那种文字胶囊，比自绘的速度图更「系统」
-                Button { audio.cycleRate() } label: {
-                    Text(String(format: "%g\u{00D7}", audio.rate))
-                        .font(.footnote.weight(.semibold).monospacedDigit())
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 9)
-                        .padding(.vertical, 4)
-                        .background(Capsule().fill(Color.primary.opacity(0.07)))
-                        .frame(width: 60, height: 44)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-
-                Spacer(minLength: 0)
-
-                Button { audio.cycleLoop() } label: {
-                    Image(systemName: audio.loopMode.badge == "1" ? "repeat.1" : "repeat")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(audio.loopMode == .forward ? AnyShapeStyle(.secondary) : AnyShapeStyle(theme.accentOt))
-                        .frame(width: 44, height: 44)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-
-                Spacer(minLength: 0)
-
-                Button {
-                    if let onToggle { onToggle() } else { audio.toggle() }
-                } label: {
-                    Group {
-                        if audio.isLoading && audio.wantsPlayback {
-                            ProgressView()
-                        } else {
-                            Image(systemName: audio.isPlaying ? "pause.fill" : "play.fill")
-                                .font(.system(size: 30, weight: .regular))
-                                .foregroundStyle(theme.ink)
-                        }
-                    }
-                    .frame(width: 52, height: 44)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-
-                Spacer(minLength: 0)
-
-                Button(action: onSkipNext) {
-                    Image(systemName: "forward.end.fill")
-                        .font(.system(size: 20, weight: .regular))
-                        .foregroundStyle(theme.ink)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .disabled(!available)
-                .opacity(available ? 1 : 0.3)
-
-                Spacer(minLength: 0)
-
-                Button(action: onSearch) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 18, weight: .regular))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.top, 6)
-        .padding(.bottom, 2)
-        // 底色跟页面一致，且必须不透明 —— 坞是浮在经文上的 overlay。
-        // 用 `alignedParchment` 而不是纯色 canvas：页面是**带纸纹**的羊皮底，
-        // 坞铺一块纯色就成了一块板，Josh 2026-09-23「圣经页的播放栏还不是羊皮卷的」说的就是这个。
-        .background(alignedParchment(theme: theme))
-        .overlay(alignment: .top) { Divider() }
-    }
-
-    /// 紧凑档：音乐页那套语言 —— 深底、白前景、白圆播放键、进度条白轨白填充，
-    /// transport 用 Spacer 均分（Josh 2026-09-21：「像音乐那样，更好看好操作」）。
-    /// 读经页（quiet）再去掉封面和章名，并贴底铺满；计划播放页保留封面章名。
     private var compactBody: some View {
         VStack(spacing: quiet ? 6 : 8) {
             HStack(spacing: quiet ? 0 : 10) {
@@ -179,7 +95,7 @@ struct PlaybackDock: View {
                     if !title.isEmpty && !quiet {
                         Text(title)
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(.white.opacity(0.95))
+                            .foregroundStyle(fg(0.95))
                             .lineLimit(1)
                     }
                     // 还没加载出时长前不画进度行（00:00 / —:— 是纯噪声）
@@ -191,8 +107,8 @@ struct PlaybackDock: View {
                             SeekableProgressBar(
                                 audio: audio,
                                 trackHeight: 3,
-                                trackColor: .white.opacity(0.28),
-                                fillColor: .white.opacity(0.92)
+                                trackColor: trackTint,
+                                fillColor: fillTint
                             )
                             timeText(remaining)
                                 .frame(minWidth: ShellMetrics.timeLabelMinWidth, alignment: .trailing)
@@ -204,7 +120,7 @@ struct PlaybackDock: View {
             // transport：音乐页的布局 —— 两端是次要键，中间大播放键，全靠 Spacer 均分
             HStack(spacing: 0) {
                 Button { audio.cycleRate() } label: {
-                    SpeedRateImage(rate: Double(audio.rate), color: .white.opacity(0.62))
+                    SpeedRateImage(rate: Double(audio.rate), color: fg(0.62))
                         .scaleEffect(0.9)
                         // 图标可以小，触控框一律 44（Josh 真机反馈过「图标小会误点」）
                         .frame(width: 48, height: 44)
@@ -216,9 +132,9 @@ struct PlaybackDock: View {
 
                 Button { audio.cycleLoop() } label: {
                     ZStack {
-                        Circle().fill(.white.opacity(audio.loopMode == .forward ? 0 : 0.14))
+                        Circle().fill(fg(audio.loopMode == .forward ? 0 : 0.12))
                         RepeatGlyph(badge: audio.loopMode.badge,
-                                    color: .white.opacity(audio.loopMode == .forward ? 0.48 : 1),
+                                    color: fg(audio.loopMode == .forward ? 0.48 : 1),
                                     size: 22)
                     }
                     .frame(width: 44, height: 44)
@@ -233,13 +149,13 @@ struct PlaybackDock: View {
                     if let onToggle { onToggle() } else { audio.toggle() }
                 } label: {
                     ZStack {
-                        Circle().fill(.white)
+                        Circle().fill(playDisc)
                         if audio.isLoading && audio.wantsPlayback {
-                            ProgressView().tint(Color(rgb: 0x1C1410))
+                            ProgressView().tint(playGlyph)
                         } else {
                             Image(systemName: audio.isPlaying ? "pause.fill" : "play.fill")
                                 .font(.system(size: 20, weight: .bold))
-                                .foregroundStyle(Color(rgb: 0x1C1410))
+                                .foregroundStyle(playGlyph)
                         }
                     }
                     .frame(width: 46, height: 46)
@@ -252,7 +168,7 @@ struct PlaybackDock: View {
                 Button(action: onSkipNext) {
                     Image(systemName: "forward.end.fill")
                         .font(.system(size: 20, weight: .medium))
-                        .foregroundStyle(.white.opacity(available ? 0.92 : 0.3))
+                        .foregroundStyle(fg(available ? 0.92 : 0.3))
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }
@@ -264,7 +180,7 @@ struct PlaybackDock: View {
                 Button(action: onSearch) {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 17, weight: .regular))
-                        .foregroundStyle(.white.opacity(0.62))
+                        .foregroundStyle(fg(0.62))
                         .frame(width: 48, height: 44)
                         .contentShape(Rectangle())
                 }
@@ -285,8 +201,27 @@ struct PlaybackDock: View {
                 topTrailingRadius: AskCorner.sheet,
                 style: .continuous
             )
-            .fill(quietFill)
+            .fill(Color.clear)
+            .background {
+                if onDark {
+                    quietFill
+                } else {
+                    // 羊皮页：和页面同图同段的纸纹（见 alignedParchment 的注释）
+                    alignedParchment(theme: theme)
+                }
+            }
+            .clipShape(
+                UnevenRoundedRectangle(
+                    topLeadingRadius: quiet ? 0 : AskCorner.sheet,
+                    bottomLeadingRadius: 0,
+                    bottomTrailingRadius: 0,
+                    topTrailingRadius: quiet ? 0 : AskCorner.sheet,
+                    style: .continuous
+                )
+            )
         )
+        // 顶上一条系统分隔线：贴底铺满的坞需要一条边把它和经文分开
+        .overlay(alignment: .top) { if !onDark { Divider() } }
     }
 
     /// 封面：用当前自然场景的缩略图（没有就画一本书的字形底）

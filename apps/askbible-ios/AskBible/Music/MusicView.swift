@@ -52,12 +52,16 @@ struct MusicView: View {
 
                 VStack(spacing: 0) {
                     Spacer()
+                    // 2026-09-23：这几段原来是 30 / 22 / 6，transport 和底栏之间空出一大截。
+                    // Josh「把它移到下面来就好，中间不要留这么多空，保持整个 app 媒体栏占位一致」——
+                    // 收紧到和读经坞同一个节奏（坞里是 8 / 6），moodRow 单独留多一点给专辑切换。
                     trackTitles
-                    moodRow.padding(.top, 30)
-                    scrubber.padding(.top, 22)
-                    transport.padding(.top, 6)
+                    moodRow.padding(.top, 18)
+                    scrubber.padding(.top, 12)
+                    transport.padding(.top, 4)
                 }
-                .padding(.bottom, ShellMetrics.dockBottomPad(safeBottom: safeBottom) + 12)
+                // 贴到底栏上方，不再额外抬 12 —— 和读经 / 计划坞的落位对齐
+                .padding(.bottom, ShellMetrics.dockBottomPad(safeBottom: safeBottom))
                 .opacity(uiVisible ? 1 : 0)
                 .allowsHitTesting(uiVisible)
             }

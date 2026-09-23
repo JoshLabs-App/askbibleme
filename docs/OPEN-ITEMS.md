@@ -271,8 +271,11 @@ adb -s <三星> install -r app/build/outputs/apk/sideload/app-sideload.apk
      加一个「去下载我们自己的版本」按钮同样会被拒审甚至下架。
 - **正路**：同一个版本号打成 AAB 传 Play，让 Play 自己推更新给商店用户。
   脚本已有：`scripts/build-android-aab-local.sh` + `scripts/submit-android-aab-play.sh`。
-- **需要 Josh 决定**：现在这个 1.0.44 (241) 要不要也传一份 AAB 上 Play。
-  **推荐**：传，两边版本别拉开太远。
+- **已传**：1.0.44 (241) 的 AAB 已上 Play 的 **internal 轨道**（2026-09-23）。
+  **提到 production 的命令这个会话跑不了**（被安全策略判成生产部署），要 Josh 自己跑：
+  `node scripts/promote-android-play-track.mjs 241 production`
+- **迁移提示**：Josh 要的「Play 版引导用户换到站外版」已实现但默认关，
+  开关和风险见 `docs/DECISIONS.md` 同日那节。
 
 ## 三条老待办：2026-09-23 全部做完
 

@@ -542,4 +542,8 @@ func alignedParchment(theme: Parchment) -> some View {
     // ★ 必须裁掉：background 的内容**不会**自动裁到宿主的框里，
     //   整屏高的纸纹会从坞里溢出去往上盖住整页经文（Josh 2026-09-23「上面圣经内容不见了」）。
     .clipped()
+    // ★★ `.clipped()` 只裁**画面**，不裁**命中区**。那张整屏大的纸纹仍然在整页范围内接触摸，
+    //    经文的 ScrollView 就滚不动了（Josh 2026-09-23「圣经页无法上下拉动」）。
+    //    底图本来也不该吃手势，直接关掉命中。
+    .allowsHitTesting(false)
 }

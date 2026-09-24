@@ -20,6 +20,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import me.askbible.native_.data.Parchment
+import me.askbible.native_.data.SiteCopy
+import me.askbible.native_.data.AppLocale
 import me.askbible.native_.ui.toColor
 
 /**
@@ -27,7 +29,7 @@ import me.askbible.native_.ui.toColor
  * 只在 `web` 变体生效（见 AppUpdater 的注释），Play 版这里永远拿到 null。
  */
 @Composable
-fun UpdateGate(theme: Parchment = Parchment.light) {
+fun UpdateGate(locale: AppLocale = AppLocale.current, theme: Parchment = Parchment.light) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var info by remember { mutableStateOf<AppUpdater.Info?>(null) }
@@ -43,15 +45,15 @@ fun UpdateGate(theme: Parchment = Parchment.light) {
         containerColor = theme.surfaceSolid.toColor(),
         titleContentColor = theme.ink.toColor(),
         textContentColor = theme.inkSoft.toColor(),
-        title = { Text("有新版本 ${pending.version}") },
+        title = { Text(SiteCopy.f("native.updateTitle", mapOf("version" to pending.version), locale)) },
         text = {
             Column(Modifier.fillMaxWidth()) {
                 Text(
                     when {
-                        failed -> "下载失败了，检查一下网络再试。"
-                        downloading -> "正在下载…"
+                        failed -> SiteCopy.t("native.updateFailed", locale)
+                        downloading -> SiteCopy.t("native.updateDownloading", locale)
                         pending.notes.isNotBlank() -> pending.notes
-                        else -> "更新后请在弹出的安装界面点「安装」。"
+                        else -> SiteCopy.t("native.updateHintAndroid", locale)
                     }
                 )
                 if (downloading) {
@@ -80,13 +82,13 @@ fun UpdateGate(theme: Parchment = Parchment.light) {
                         if (ok) info = null else failed = true
                     }
                 },
-            ) { Text(if (failed) "重试" else "立即更新", color = theme.accentOt.toColor()) }
+            ) { Text(if (failed) SiteCopy.t("native.updateRetry", locale) else SiteCopy.t("native.updateNow", locale), color = theme.accentOt.toColor()) }
         },
         dismissButton = {
             TextButton(
                 enabled = !downloading,
                 onClick = { AppUpdater.skip(context, pending); info = null },
-            ) { Text("以后再说", color = theme.muted.toColor()) }
+            ) { Text(SiteCopy.t("native.updateLater", locale), color = theme.muted.toColor()) }
         },
     )
 }

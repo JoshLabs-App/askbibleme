@@ -20,6 +20,7 @@ import me.askbible.native_.data.Parchment
 import me.askbible.native_.update.UpdateGate
 import me.askbible.native_.update.PlayUpdateGate
 import me.askbible.native_.update.MigrateGate
+import me.askbible.native_.update.RatePrompt
 import me.askbible.native_.data.MedalXP
 import me.askbible.native_.ui.AchievementsScreen
 import me.askbible.native_.ui.EarnedToast
@@ -128,6 +129,8 @@ class MainActivity : ComponentActivity() {
         OAuthCallbackBus.deliver(intent?.dataString)
         // 商店版：Play 官方的应用内更新（web 变体里是空操作）
         PlayUpdateGate.start(this)
+        // 记下「首次运行」时间，好评邀请要用（装机满 3 天才问）
+        RatePrompt.noteLaunch(this)
         setContent {
             RootScreen()
             // 站外分发版的自助更新弹窗；Play / sideload 变体里是空操作
@@ -374,6 +377,7 @@ private fun RootScreen() {
                 val readChapter = if (b != null) chapter else listenChapter
                 plans.markChapterRead(cb.id, readChapter)
                 achievements.noteChapterRead(cb.id, readChapter)
+                RatePrompt.maybeAsk(context, achievements.chaptersReadCount)
             }
             val next = planQueueIndex + 1
             if (next < planQueue.size) {
@@ -724,7 +728,11 @@ private fun RootScreen() {
                     achievements.noteChapterOpened(book.id, chapter)
                 }
                 ChapterScreen(
-                    onReachedEnd = { achievements.noteChapterRead(book.id, chapter) },
+                    onReachedEnd = {
+                        achievements.noteChapterRead(book.id, chapter)
+                        // 读完一章之后才问好评 —— 条件不够时 maybeAsk 自己什么都不做
+                        RatePrompt.maybeAsk(context, achievements.chaptersReadCount)
+                    },
                     onVersesRead = { achievements.noteVersesRead(it) },
                     highlights = highlights.chapter(translation.id, book.id, chapter),
                     paintColor = if (highlighting && !erasing) highlightColor else null,

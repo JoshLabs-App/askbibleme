@@ -100,5 +100,7 @@ dependencies {
     implementation("androidx.media3:media3-session:1.5.1")
     // 商店版的应用内更新（Play 官方；站外分发版走自家的 AppUpdater）
     implementation("com.google.android.play:app-update-ktx:2.1.0")
+    // 商店版的应用内评价（站外版没有这个入口，跳 Play 商店页）
+    implementation("com.google.android.play:review-ktx:2.0.2")
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

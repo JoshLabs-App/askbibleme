@@ -163,6 +163,7 @@ struct RootView: View {
             if let cur = audioTarget {
                 plans.markChapterRead(cur.book.id, cur.chapter)
                 achievements.noteChapterRead(bookId: cur.book.id, chapter: cur.chapter)
+                RatePrompt.maybeAsk(chaptersRead: achievements.chaptersReadCount)
             }
             let next = planQueueIndex + 1
             if next < planQueue.count {
@@ -532,6 +533,9 @@ struct RootView: View {
 
     private var content: some View {
         ZStack {
+            // 版本对照：有新版就提示并送去 App Store（零尺寸，不占布局）
+            AppUpdateGate()
+                .onAppear { RatePrompt.noteLaunch() }
             AskTabShell(
                 selection: $tab,
                 locale: appLocale,
@@ -886,7 +890,11 @@ struct RootView: View {
                         planFlowActive = false; listenChapter = nil; chapterFromPlan = false
                         openedChapter = (b, ch)
                     },
-                    onReachedEnd: { achievements.noteChapterRead(bookId: opened.book.id, chapter: opened.chapter) },
+                    onReachedEnd: {
+                        achievements.noteChapterRead(bookId: opened.book.id, chapter: opened.chapter)
+                        // 读完一章之后才问好评 —— 条件不够时 maybeAsk 自己什么都不做
+                        RatePrompt.maybeAsk(chaptersRead: achievements.chaptersReadCount)
+                    },
                     onVersesRead: { achievements.noteVersesRead($0) }
                 )
                 .onChange(of: "\(opened.book.id):\(opened.chapter)", initial: true) { _, _ in

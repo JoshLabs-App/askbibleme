@@ -39,7 +39,12 @@ final class HomeVerseController: ObservableObject {
     init() {
         entries = HomeVersePool.loadManifest()
         memory = Self.loadMemory()
+        // 念完一句 → 垫 5 秒静音（不是干等计时器，见 GoldenVersePlayer.playGap 的注释）
         player.onEnded = { [weak self] in self?.scheduleAdvanceAfterGap() }
+        player.onGapEnded = { [weak self] in
+            guard let self, self.voiceOn else { return }
+            self.advance(play: true)
+        }
         advance(play: false)
         startRotation()
     }
@@ -82,15 +87,14 @@ final class HomeVerseController: ObservableObject {
         player.play(url: url, title: verse.reference)
     }
 
+    /// 句间停顿：**播一段静音**顶住，播完由 `player.onGapEnded` 接下一句。
+    /// 不用 Timer —— 停顿期间真没声音的话 iOS 会把 App 挂起，计时器不再触发，
+    /// 下一句永远不来（Josh 2026-09-23：「念完一句就不往下走了」）。
     private func scheduleAdvanceAfterGap() {
         guard voiceOn else { return }
         gapTimer?.invalidate()
-        gapTimer = Timer.scheduledTimer(withTimeInterval: Self.gapSeconds, repeats: false) { [weak self] _ in
-            Task { @MainActor in
-                guard let self, self.voiceOn else { return }
-                self.advance(play: true)
-            }
-        }
+        gapTimer = nil
+        player.playGap()
     }
 
     // MARK: 轮播

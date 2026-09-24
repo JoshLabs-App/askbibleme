@@ -10,6 +10,10 @@ final class GoldenVersePlayer: ObservableObject {
     @Published private(set) var isLoading = false
 
     var onEnded: (() -> Void)?
+    /// 句间那 5 秒静音播完了（见 `playGap()`）
+    var onGapEnded: (() -> Void)?
+    /// 当前这条是不是静音垫片 —— 播完要走 onGapEnded，不是 onEnded
+    private var isGap = false
     /// 开播前先让整章朗读停下
     var onWillPlay: (() -> Void)?
 
@@ -19,6 +23,31 @@ final class GoldenVersePlayer: ObservableObject {
     private var title = ""
 
     func play(url: URL, title: String) {
+        isGap = false
+        playItem(url: url, title: title)
+    }
+
+    /**
+     句间停顿**播一段静音**，而不是停下来等计时器。
+
+     为什么非这样不可：停顿期间一旦真的没有声音，iOS 会把 App 挂起（锁屏 / 切后台时尤其快），
+     `Timer` 跟着不再触发，下一句永远不来 —— 现象就是「念完一句就不往下走了」
+     （Josh 2026-09-23 实测）。安卓那边同一天踩的是同一个坑，见
+     `GoldenVersePlayer.kt` 的 `wantsPlayback`。
+
+     垫一段 5 秒静音之后，播放链路从头到尾没断过，系统就不会挂起我们，锁屏也照常接下一句。
+     */
+    func playGap() {
+        guard let url = Bundle.main.url(forResource: "silence-5s", withExtension: "m4a") else {
+            // 资源缺失时退回「直接下一句」，总比卡死强
+            onGapEnded?()
+            return
+        }
+        isGap = true
+        playItem(url: url, title: title)
+    }
+
+    private func playItem(url: URL, title: String) {
         teardown()
         self.title = title
         onWillPlay?()
@@ -41,7 +70,7 @@ final class GoldenVersePlayer: ObservableObject {
                     // R2 上没这句（404）会走到这里：当作播完，别对着空文件干等
                     self.isLoading = false
                     self.isPlaying = false
-                    self.onEnded?()
+                    if self.isGap { self.onGapEnded?() } else { self.onEnded?() }
                 default:
                     break
                 }
@@ -52,8 +81,14 @@ final class GoldenVersePlayer: ObservableObject {
         ) { [weak self] _ in
             Task { @MainActor in
                 guard let self else { return }
-                self.isPlaying = false
-                self.onEnded?()
+                // 静音垫片播完不算「念完一句」：isPlaying 保持 true，
+                // 免得锁屏界面在这 5 秒里显示成暂停
+                if self.isGap {
+                    self.onGapEnded?()
+                } else {
+                    self.isPlaying = false
+                    self.onEnded?()
+                }
             }
         }
 
@@ -66,6 +101,7 @@ final class GoldenVersePlayer: ObservableObject {
     }
 
     func stop() {
+        isGap = false
         teardown()
         isPlaying = false
         isLoading = false

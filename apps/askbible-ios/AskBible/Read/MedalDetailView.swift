@@ -178,7 +178,7 @@ struct MedalDetailView: View {
         let who = name.isEmpty ? "" : "\(name) "
         let tier = detail.tier.isEmpty ? "" : " · \(detail.tier)"
         return SiteCopy.f("native.medalShareText", ["who": who, "name": detail.name, "tier": tier])
-            + "\nhttps://askbible.me\nhttps://askbible-media.joshlabs.app/download.html"
+            + "\nhttps://askbible.me/app"
     }
 
     private func run(_ then: @escaping (UIImage) -> Void) {
@@ -291,10 +291,9 @@ enum MedalCard {
                 path.stroke()
                 draw(name, at: 1112, cx: cx, w: w, font: font, color: UIColor(rgb: 0x5C4030))
             }
-            draw("askbible.me", at: 1222, cx: cx, w: w,
-                 font: .systemFont(ofSize: 32), color: UIColor(rgb: 0x5C4030).withAlphaComponent(0.9))
-            draw("askbible-media.joshlabs.app/download.html", at: 1272, cx: cx, w: w,
-                 font: .systemFont(ofSize: 28), color: UIColor(rgb: 0x5C4030).withAlphaComponent(0.62))
+            // 一行就够：askbible.me/app 就是下载页本身（自家站上），不再印又长又不像自家的桶域名
+            draw("askbible.me/app", at: 1240, cx: cx, w: w,
+                 font: .systemFont(ofSize: 34), color: UIColor(rgb: 0x5C4030).withAlphaComponent(0.9))
         }
     }
 

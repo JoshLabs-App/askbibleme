@@ -287,7 +287,7 @@ fun medalShareText(d: MedalDetail, name: String, locale: AppLocale = AppLocale.c
     val who = if (name.isBlank()) "" else "$name "
     val tier = if (d.tier.isBlank()) "" else " · ${d.tier}"
     return SiteCopy.f("native.medalShareText", mapOf("who" to who, "name" to d.name, "tier" to tier), locale) +
-        "\nhttps://askbible.me\nhttps://askbible-media.joshlabs.app/download.html"
+        "\nhttps://askbible.me/app"
 }
 
 private fun saveToGallery(ctx: Context, bmp: Bitmap): Boolean = runCatching {
@@ -389,11 +389,9 @@ private fun medalCardBitmap(ctx: Context, d: MedalDetail, name: String, locale: 
         p.color = 0xFF5C4030.toInt()
         g.drawText(name, cx, 1112f, p)
     }
+    // 一行就够：askbible.me/app 就是下载页本身（自家站上），不再印又长又不像自家的桶域名
     p.color = 0xE65C4030.toInt()
-    p.textSize = 32f
-    g.drawText("askbible.me", cx, 1222f, p)
-    p.color = 0x9E5C4030.toInt()
-    p.textSize = 28f
-    g.drawText("askbible-media.joshlabs.app/download.html", cx, 1272f, p)
+    p.textSize = 34f
+    g.drawText("askbible.me/app", cx, 1240f, p)
     return bmp
 }

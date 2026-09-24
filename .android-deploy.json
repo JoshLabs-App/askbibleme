@@ -1,7 +1,7 @@
 {
   "_note": "android_dir 相对于此文件所在目录（01AskBible/）",
   "app_name": "AskBible",
-  "version": "1.0.44",
+  "version": "1.0.45",
   "apk_prefix": "AskBible",
   "bucket": "askbible-media",
   "android_dir": "apps/askbible-android",
@@ -12,11 +12,12 @@
   "min_android": "Android 8.0+",
   "gradle_task": "assembleWeb",
   "apk_rel_path": "app/build/outputs/apk/web/app-web.apk",
-  "notes": "新增：App 内自动检查更新，有新版直接下载安装，不用再回下载页。",
+  "notes": "成就墙的勋章可以点开看大图了，还能做成一张图分享或存相册；连续天数、今日计划完成、读完一章都有了反馈。",
   "changelog": [
-    "★ 装完这一版之后，以后出新版 App 会自己提醒你，点一下就更新，不用再回这个页面。",
-    "读经页、圣经页的播放栏重做，贴在底部、不再挡字。",
-    "首页设置入口挪到右上，其它按钮隐藏时图标不再跳位。"
+    "成就墙：点勋章或书卷印章弹出大图，已获得的可以做成一张图分享出去、或存进相册。",
+    "连续天数终于看得见了——续上的那天会飘一句「连续 N 天」。",
+    "今日计划读完、读完一章，都有了收尾反馈。",
+    "★ 装完这一版之后，以后出新版 App 会自己提醒你，点一下就更新。"
   ],
   "intro": "AskBible 是一本能问问题的圣经：读经、听读、按计划跟进度，遇到不懂的地方随时问。",
   "icon_image": "apps/askbible-ios/AskBible/Assets.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png"

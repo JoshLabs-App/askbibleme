@@ -206,7 +206,8 @@ struct PlanPlayView: View {
                     let isCurrent = i == s.curriculumIndex
                     let done = i < s.curriculumIndex
                     Button {
-                        if !isCurrent { stageToConfirm = i }
+                        // 当前阶也能点：本阶从第 1 天重来
+                        if !isCurrent || s.dayInSegment > 1 { stageToConfirm = i }
                     } label: {
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
                             Text(locale.zh(PlanCopy.f("pages.read.ntDeepRepeatStageLabel", ["n": "\(i + 1)"])))

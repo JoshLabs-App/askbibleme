@@ -137,9 +137,15 @@ final class ReadingPlanStore: ObservableObject {
     /// 详情页「今日为第 N 天」：深读按选定日；三循环不显示；日课表按下标 + 1
     func currentPlanDay(_ planId: String, dayCount: Int) -> Int? {
         guard isActive(planId) else { return nil }
-        if prefs.isNtDeepRepeat { return ReadingPlanRules.effectiveEpochDay(prefs) }
+        if prefs.isNtDeepRepeat { return ntProgressDay() }
         if prefs.isTripleLoop { return nil }
         return ReadingPlanRules.dayIndex(prefs, dayCount: dayCount) + 1
+    }
+
+    /// 深读实际读到第几天：日历推算和指针进度取大的（读快了指针会超过日历）
+    func ntProgressDay(now: Date = Date()) -> Int {
+        let startedOn = Self.nonEmpty(prefs.startedOn) ?? nt.startedAt ?? PlanDates.localDateString(now)
+        return max(ReadingPlanRules.effectiveEpochDay(prefs), NtDeepRepeat.inferPlanDay(nt, startedOn: startedOn))
     }
 
     private func setActive(_ planId: String, anchor: PlanAnchor, dayCount: Int?, now: Date = Date(), pace: Int? = nil) {
@@ -158,22 +164,17 @@ final class ReadingPlanStore: ObservableObject {
         let safeStart = max(1, startDay)
         let backDated = PlanDates.addDays(Date(), -(safeStart - 1))
         if planId == ReadingPlanCatalog.ntDeepRepeatId {
-            let prev = storedPrefs
-            let switching = prev?.planId != planId
-            let paceChanged = prev?.planId == planId && prev?.ntDeepRepeatPace != pace
+            // 用户明确选了「从第 N 天开始」就按 N 重建进度；以前「同计划同节奏 + 第 1 天」不重建，
+            // 旧进度比日历第 1 天靠前，alignToCalendar 会留旧的，结果重新开始变成接着旧进度读。
+            // 已读章记录保留（只是历史，不影响今天读什么）。
+            let keys = nt.chaptersReadKeys
             setActive(planId, anchor: .fromToday, dayCount: dayCount, now: backDated, pace: pace)
-            if switching || paceChanged || safeStart > 1 {
-                let fresh: NtDeepRepeatState
-                if safeStart > 1 {
-                    var s = NtDeepRepeat.stateForPlanDay(safeStart, pace: pace, startedAt: PlanDates.localDateString(backDated), now: backDated)
-                    s.startedAt = PlanDates.localDateString(backDated)
-                    fresh = s
-                } else {
-                    fresh = NtDeepRepeat.defaultState(pace: pace, now: backDated)
-                }
-                persistNt(fresh)
-                reloadProgress()
-            }
+            let startedAt = PlanDates.localDateString(backDated)
+            var fresh = NtDeepRepeat.stateForPlanDay(safeStart, pace: pace, startedAt: startedAt, now: backDated)
+            fresh.startedAt = startedAt
+            fresh.chaptersReadKeys = keys
+            persistNt(NtDeepRepeat.normalize(fresh, now: backDated))
+            reloadProgress()
         } else if planId == ReadingPlanCatalog.tripleLoopId {
             setActive(planId, anchor: .calendarEaster, dayCount: 1)
         } else if anchor == .fromToday {
@@ -338,25 +339,17 @@ final class ReadingPlanStore: ObservableObject {
     }
 
     /// 深读：把第 index 阶设为今日新约读经（setNtDeepRepeatCurriculumStageAsToday）。
-    /// 该阶第一天早于日历天 → 把 startedOn 往前挪；晚于 → 记成 aheadDays。
+    /// 今天 = 该阶第 1 天：一律把 startedOn 倒推到「今天 − (计划天 − 1)」，清掉 aheadDays。
+    /// （RN 原版晚于日历时记成 aheadDays，结果显示「进度超前」，不像从今天开始；点当前阶 = 本阶从第 1 天重来）
     func setNtStageAsToday(_ index: Int, now: Date = Date()) {
         let pace = prefs.ntDeepRepeatPace ?? NtDeepRepeat.defaultPace
         let safeIndex = min(max(1, NtDeepRepeat.stageCount) - 1, max(0, index))
         let planDay = safeIndex * pace + 1
-        var startedAt = Self.nonEmpty(prefs.startedOn) ?? PlanDates.localDateString(now)
-        var probe = prefs; probe.startedOn = startedAt
-        let calendarDay = ReadingPlanRules.ntPlanDay(probe, now: now)
+        let startedAt = PlanDates.localDateString(PlanDates.addDays(now, -(planDay - 1)))
         var next = prefs
         next.chosen = true
-        if planDay < calendarDay {
-            startedAt = PlanDates.localDateString(PlanDates.addDays(now, -(planDay - 1)))
-            next.startedOn = startedAt
-            next.aheadDays = nil
-        } else {
-            let ahead = planDay - calendarDay
-            next.startedOn = startedAt
-            next.aheadDays = ahead > 0 ? ahead : nil
-        }
+        next.startedOn = startedAt
+        next.aheadDays = nil
         var s = NtDeepRepeat.stateForPlanDay(planDay, pace: pace, startedAt: startedAt, now: now)
         s.pace = pace; s.startedAt = startedAt; s.chaptersReadKeys = nt.chaptersReadKeys
         // RN 先写进度再写 prefs；writePrefs 会按新 prefs 重新对齐进度

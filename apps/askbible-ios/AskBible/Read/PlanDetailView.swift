@@ -16,6 +16,8 @@ struct PlanDetailView: View {
     @State private var anchor: PlanAnchor = .fromToday
     @State private var pace: Int = NtDeepRepeat.defaultPace
     @State private var startDay = 1
+    /// 52 阶列表点了哪一阶，等确认「设为今日」
+    @State private var stageToConfirm: Int?
     /// 轻松循环：今天算第 1 天（从创 1 / 太 1 / 伯 1 起），还是跟着复活节历元的日历位置
     @State private var tripleFromToday = false
 
@@ -56,6 +58,17 @@ struct PlanDetailView: View {
             .background(ParchmentBackground(theme: theme).ignoresSafeArea())
         }
         .onAppear(perform: loadSetup)
+        .alert(PlanCopy.t("pages.read.ntDeepRepeatSetStageAsTodayTitle"), isPresented: Binding(get: { stageToConfirm != nil }, set: { if !$0 { stageToConfirm = nil } })) {
+            Button(PlanCopy.t("pages.read.ntDeepRepeatSetStageAsTodayCancel"), role: .cancel) { stageToConfirm = nil }
+            Button(PlanCopy.t("pages.read.ntDeepRepeatSetStageAsTodayConfirm")) {
+                if let i = stageToConfirm { store.setNtStageAsToday(i); loadSetup() }
+                stageToConfirm = nil
+            }
+        } message: {
+            if let i = stageToConfirm, let seg = NtDeepRepeat.segment(i) {
+                Text(PlanCopy.f("pages.read.ntDeepRepeatSetStageAsTodayBody", ["n": "\(i + 1)", "range": NtDeepRepeat.stageRange(seg)]))
+            }
+        }
     }
 
     // MARK: 头部
@@ -245,7 +258,11 @@ struct PlanDetailView: View {
                 .font(.system(size: 16, weight: .medium)).foregroundStyle(theme.ink)
             if let current { Text(NtDeepRepeat.stageRange(current)).font(.system(size: 16)).foregroundStyle(theme.muted) }
             PlanDisclosure(openTitle: PlanText.t("ladderOpen"), closeTitle: PlanText.t("ladderClose")) {
-                VStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: 0) {
+                    if isActive {
+                        Text(PlanCopy.t("pages.read.ntDeepRepeatStagesBelowHint")).font(.system(size: 14)).foregroundStyle(theme.faint)
+                            .padding(.horizontal, 10).padding(.bottom, 6)
+                    }
                     ForEach(Array(NtDeepRepeat.curriculum.enumerated()), id: \.offset) { index, seg in
                         let isCurrent = index == progress.curriculumIndex
                         let isDone = index < progress.curriculumIndex
@@ -264,6 +281,9 @@ struct PlanDetailView: View {
                         }
                         .padding(.vertical, 8).padding(.horizontal, 10)
                         .background(RoundedRectangle(cornerRadius: 8).fill(isCurrent ? Color(parchment: 0xFFECBF, opacity: 0.6) : Color.clear))
+                        .contentShape(Rectangle())
+                        // 在用这个计划时，点任意一阶 = 今天从该阶第 1 天开始（当前阶 = 本阶重来）
+                        .onTapGesture { if isActive, !isCurrent || progress.dayInSegment > 1 { stageToConfirm = index } }
                     }
                 }
             }

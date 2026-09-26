@@ -209,7 +209,7 @@ fun PlanPlayScreen(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
                             .background(if (isCurrent) Color(0xE6FFECBF) else theme.surface.toColor().copy(alpha = 0.45f))
                             .border(if (isCurrent) 1.dp else 0.5.dp, if (isCurrent) Color(0xB3FFB101) else theme.border.toColor(), RoundedCornerShape(10.dp))
-                            .clickableNoRipple { if (!isCurrent) stageToConfirm = i }
+                            .clickableNoRipple { if (!isCurrent || s.dayInSegment > 1) stageToConfirm = i } // 当前阶也能点：本阶从第 1 天重来
                             .padding(horizontal = 12.dp, vertical = 9.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {

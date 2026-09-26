@@ -149,9 +149,15 @@ class ReadingPlanStore(context: Context) {
     /** 详情页「今日为第 N 天」：深读按选定日；三循环不显示；日课表按下标 + 1 */
     fun currentPlanDay(planId: String, dayCount: Int): Int? {
         if (!isActive(planId)) return null
-        if (prefs.isNtDeepRepeat) return ReadingPlanRules.effectiveEpochDay(prefs)
+        if (prefs.isNtDeepRepeat) return ntProgressDay()
         if (prefs.isTripleLoop) return null
         return ReadingPlanRules.dayIndex(prefs, dayCount) + 1
+    }
+
+    /** 深读实际读到第几天：日历推算和指针进度取大的（读快了指针会超过日历） */
+    fun ntProgressDay(): Int {
+        val startedOn = prefs.startedOn?.trim()?.takeIf { it.isNotEmpty() } ?: nt.startedAt ?: PlanDates.localDateString(LocalDate.now())
+        return maxOf(ReadingPlanRules.effectiveEpochDay(prefs), NtDeepRepeat.inferPlanDay(nt, startedOn))
     }
 
     private fun setActive(planId: String, anchor: PlanAnchor, dayCount: Int?, now: LocalDate = LocalDate.now(), pace: Int? = null) {
@@ -169,17 +175,16 @@ class ReadingPlanStore(context: Context) {
         val backDated = LocalDate.now().minusDays((safeStart - 1).toLong())
         when {
             planId == ReadingPlanCatalog.NT_DEEP_REPEAT_ID -> {
-                val prev = storedPrefs
-                val switching = prev?.planId != planId
-                val paceChanged = prev?.planId == planId && prev.ntDeepRepeatPace != pace
+                // 用户明确选了「从第 N 天开始」就按 N 重建进度；以前「同计划同节奏 + 第 1 天」不重建，
+                // 旧进度比日历第 1 天靠前，alignToCalendar 会留旧的，结果重新开始变成接着旧进度读。
+                // 已读章记录保留（只是历史，不影响今天读什么）。
+                val keys = nt.chaptersReadKeys
                 setActive(planId, PlanAnchor.FROM_TODAY, dayCount, backDated, pace)
-                if (switching || paceChanged || safeStart > 1) {
-                    val fresh = if (safeStart > 1)
-                        NtDeepRepeat.stateForPlanDay(safeStart, pace, PlanDates.localDateString(backDated), backDated).copy(startedAt = PlanDates.localDateString(backDated))
-                    else NtDeepRepeat.defaultState(pace, backDated)
-                    persistNt(fresh)
-                    reloadProgress()
-                }
+                val startedAt = PlanDates.localDateString(backDated)
+                val fresh = NtDeepRepeat.stateForPlanDay(safeStart, pace, startedAt, backDated)
+                    .copy(startedAt = startedAt, chaptersReadKeys = keys)
+                persistNt(NtDeepRepeat.normalize(fresh, backDated))
+                reloadProgress()
             }
             planId == ReadingPlanCatalog.TRIPLE_LOOP_ID -> setActive(planId, PlanAnchor.CALENDAR_EASTER, 1)
             anchor == PlanAnchor.FROM_TODAY -> setActive(planId, anchor, dayCount, backDated)
@@ -320,18 +325,13 @@ class ReadingPlanStore(context: Context) {
      * 该阶第一天早于日历天 → 把 startedOn 往前挪；晚于 → 记成 aheadDays。
      */
     fun setNtStageAsToday(index: Int, now: LocalDate = LocalDate.now()) {
+        // 今天 = 该阶第 1 天：一律把 startedOn 倒推到「今天 − (计划天 − 1)」，清掉 aheadDays
+        // （RN 原版晚于日历时记成 aheadDays，显示「进度超前」，不像从今天开始；点当前阶 = 本阶从第 1 天重来）
         val pace = prefs.ntDeepRepeatPace ?: NtDeepRepeat.DEFAULT_PACE
         val safeIndex = index.coerceIn(0, maxOf(1, NtDeepRepeat.STAGE_COUNT) - 1)
         val planDay = safeIndex * pace + 1
-        var startedAt = prefs.startedOn?.trim()?.takeIf { it.isNotEmpty() } ?: PlanDates.localDateString(now)
-        val calendarDay = ReadingPlanRules.ntPlanDay(prefs.copy(startedOn = startedAt), now)
-        val next = if (planDay < calendarDay) {
-            startedAt = PlanDates.localDateString(now.minusDays((planDay - 1).toLong()))
-            prefs.copy(startedOn = startedAt, aheadDays = null, chosen = true)
-        } else {
-            val ahead = planDay - calendarDay
-            prefs.copy(startedOn = startedAt, aheadDays = if (ahead > 0) ahead else null, chosen = true)
-        }
+        val startedAt = PlanDates.localDateString(now.minusDays((planDay - 1).toLong()))
+        val next = prefs.copy(startedOn = startedAt, aheadDays = null, chosen = true)
         val s = NtDeepRepeat.stateForPlanDay(planDay, pace, startedAt, now).copy(pace = pace, startedAt = startedAt, chaptersReadKeys = nt.chaptersReadKeys)
         // RN 先写进度再写 prefs；writePrefs 会按新 prefs 重新对齐进度
         persistNt(NtDeepRepeat.normalize(s, now))

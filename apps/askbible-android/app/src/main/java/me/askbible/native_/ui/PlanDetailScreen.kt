@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -223,11 +225,16 @@ fun PlanDetailScreen(
                              color = theme.ink.toColor(), fontSize = 16.sp, fontWeight = FontWeight.Medium)
                         if (current != null) Text(NtDeepRepeat.stageRange(current), color = theme.muted.toColor(), fontSize = 16.sp)
                         PlanDisclosure(PlanText.t("ladderOpen"), PlanText.t("ladderClose"), theme) {
+                            var stageToConfirm by remember { mutableStateOf<Int?>(null) }
                             Column {
+                                if (isActive) Text(PlanCopy.t("pages.read.ntDeepRepeatStagesBelowHint"), Modifier.padding(start = 10.dp, end = 10.dp, bottom = 6.dp),
+                                                   color = theme.faint.toColor(), fontSize = 14.sp)
                                 NtDeepRepeat.CURRICULUM.forEachIndexed { index, seg ->
                                     val isCurrent = index == progress.curriculumIndex
                                     val isDone = index < progress.curriculumIndex
                                     Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(if (isCurrent) Color(0x99FFECBF) else Color.Transparent)
+                                        // 在用这个计划时，点任意一阶 = 今天从该阶第 1 天开始（当前阶 = 本阶重来）
+                                        .clickableNoRipple { if (isActive && (!isCurrent || progress.dayInSegment > 1)) stageToConfirm = index }
                                         .padding(vertical = 8.dp, horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                         Text(PlanCopy.f("pages.read.ntDeepRepeatStageLabel", mapOf("n" to "${index + 1}")), Modifier.width(66.dp),
                                              color = if (isCurrent) theme.ink.toColor() else theme.faint.toColor(), fontSize = 15.sp, fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Normal)
@@ -238,6 +245,20 @@ fun PlanDetailScreen(
                                         else if (isDone) MaterialIcon(MI.CHECK, 18f, theme.faint.toColor())
                                     }
                                 }
+                            }
+                            stageToConfirm?.let { i ->
+                                val seg = NtDeepRepeat.segment(i)
+                                AlertDialog(
+                                    onDismissRequest = { stageToConfirm = null },
+                                    title = { Text(PlanCopy.t("pages.read.ntDeepRepeatSetStageAsTodayTitle")) },
+                                    text = { Text(PlanCopy.f("pages.read.ntDeepRepeatSetStageAsTodayBody", mapOf("n" to "${i + 1}", "range" to (seg?.let { NtDeepRepeat.stageRange(it) } ?: "")))) },
+                                    confirmButton = {
+                                        TextButton(onClick = { store.setNtStageAsToday(i); stageToConfirm = null }) { Text(PlanCopy.t("pages.read.ntDeepRepeatSetStageAsTodayConfirm")) }
+                                    },
+                                    dismissButton = {
+                                        TextButton(onClick = { stageToConfirm = null }) { Text(PlanCopy.t("pages.read.ntDeepRepeatSetStageAsTodayCancel")) }
+                                    },
+                                )
                             }
                         }
                     }

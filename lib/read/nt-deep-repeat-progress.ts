@@ -278,23 +278,11 @@ export function setNtDeepRepeatCurriculumStageAsToday(
   const safeIndex = Math.min(stageCount - 1, Math.max(0, Math.floor(curriculumIndex)));
   const planDay = safeIndex * pace + 1;
 
-  let startedAt = prefs.startedOn?.trim() || toLocalDateString(now);
-  const calendarDay = resolveNtDeepRepeatPlanDay({ ...prefs, startedOn: startedAt }, now);
-  let nextPrefs = { ...prefs, chosen: true as const };
-
-  if (planDay < calendarDay) {
-    startedAt = toLocalDateString(addLocalDays(now, -(planDay - 1)));
-    const { aheadDays: _omit, ...rest } = nextPrefs;
-    nextPrefs = { ...rest, startedOn: startedAt, chosen: true };
-  } else {
-    const ahead = planDay - calendarDay;
-    if (ahead > 0) {
-      nextPrefs = { ...nextPrefs, startedOn: startedAt, aheadDays: ahead };
-    } else {
-      const { aheadDays: _omit, ...rest } = nextPrefs;
-      nextPrefs = { ...rest, startedOn: startedAt, chosen: true };
-    }
-  }
+  // 今天 = 该阶第 1 天：一律把 startedOn 倒推，清掉 aheadDays。原来晚于日历时记成 aheadDays，
+  // 显示「进度超前」，不像从今天开始（2026-09-26）。
+  const startedAt = toLocalDateString(addLocalDays(now, -(planDay - 1)));
+  const { aheadDays: _omit, ...rest } = prefs;
+  const nextPrefs = { ...rest, startedOn: startedAt, chosen: true as const };
 
   const { stored } = refreshStoredSnapshot();
   const state = normalizeNtDeepRepeatReadingState({

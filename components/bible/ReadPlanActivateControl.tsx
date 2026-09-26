@@ -13,7 +13,9 @@ import {
 } from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
 import { isPointerReadingPlanId } from "@/lib/bible/reading-plans/pointer-reading-plan";
 import { isTripleLoopPlanId } from "@/lib/bible/reading-plans/triple-loop-plan";
+import { inferNtDeepRepeatPlanDayFromProgress } from "@/lib/read/nt-deep-repeat-effective-plan-day";
 import { activateNtDeepRepeatPlan } from "@/lib/read/nt-deep-repeat-plan-sync";
+import { readNtDeepRepeatProgress } from "@/lib/read/nt-deep-repeat-progress";
 import { resolveEffectiveEpochDay } from "@/lib/read/reading-plan-ahead";
 import type { ReadingPlanAnchor } from "@/lib/read/reading-plan-prefs";
 import {
@@ -85,7 +87,13 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
 
   const currentPlanDay = useMemo(() => {
     if (!isActive) return null;
-    if (isNtDeepRepeat) return resolveEffectiveEpochDay(effective);
+    if (isNtDeepRepeat) {
+      // 实际读到第几天：日历推算和指针进度取大的，只点「更新」不会把读快了的进度打回去
+      const epochDay = resolveEffectiveEpochDay(effective);
+      const startedOn = effective.startedOn?.trim();
+      if (!startedOn || typeof window === "undefined") return epochDay;
+      return Math.max(epochDay, inferNtDeepRepeatPlanDayFromProgress(readNtDeepRepeatProgress(), startedOn));
+    }
     if (isTripleLoop) return null;
     return resolveReadingPlanDayIndex(effective, dayCount) + 1;
   }, [isActive, effective, dayCount, isNtDeepRepeat, isTripleLoop]);

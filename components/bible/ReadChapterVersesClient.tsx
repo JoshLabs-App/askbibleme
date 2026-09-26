@@ -709,7 +709,7 @@ export function ReadChapterVersesClient({
                         translationId={translationId}
                         bookId={bookId}
                         chapter={chapter}
-                        searchFocus={searchFocusVerse === v.verse}
+                        searchFocus={searchFocusVerse === v.verse && !verseHasSearchKeyword(v.text, searchQueryFromUrl)}
                         searchKeyword={
                           searchFocusVerse === v.verse && searchQueryFromUrl
                             ? searchQueryFromUrl
@@ -773,7 +773,7 @@ export function ReadChapterVersesClient({
           translationId={translationId}
           headings={segmentMeta.headingByVerse.get(v.verse) ?? []}
           showParagraphBreak={i > 0 && segmentMeta.paragraphStarts.has(v.verse)}
-          searchFocus={searchFocusVerse === v.verse}
+          searchFocus={searchFocusVerse === v.verse && !verseHasSearchKeyword(v.text, searchQueryFromUrl)}
           searchKeyword={
             searchFocusVerse === v.verse && searchQueryFromUrl ? searchQueryFromUrl : null
           }
@@ -1092,4 +1092,13 @@ function ReadChapterVerseParagraph({
       </p>
     </Fragment>
   );
+}
+
+/**
+ * 搜索跳进来：那节里找得到关键词就只标关键词，不铺整节框（Josh 2026-09-26「不要整个四方格高亮」）；
+ * 找不到（在线译本借内置译本搜的）才退回整节框。
+ */
+function verseHasSearchKeyword(text: string, query: string | null | undefined): boolean {
+  const q = (query ?? "").trim().toLowerCase();
+  return q.length > 0 && text.toLowerCase().includes(q);
 }

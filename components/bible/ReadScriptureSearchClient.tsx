@@ -135,7 +135,7 @@ export function ReadScriptureSearchClient({ routeChapterRef: routeChapterRefProp
         );
         setResults(hits);
         setSearched(true);
-        pushRecentSearch(q);
+        // 不在这里记最近搜索：边输边搜会把每个半截词都存下来（Josh 2026-09-26）。点进经文才记
       } catch (e) {
         setResults([]);
         setSearched(true);
@@ -240,6 +240,7 @@ export function ReadScriptureSearchClient({ routeChapterRef: routeChapterRefProp
                 query.trim() ? `&q=${encodeURIComponent(query.trim())}` : ""
               }`}
               className="read-scripture-search-hit"
+              onClick={() => pushRecentSearch(query)}
             >
               <span className="read-scripture-search-hit-ref">
                 {hit.bookName} {hit.chapter}:{hit.verse}

@@ -317,11 +317,19 @@
   color: color-mix(in srgb, rgb(92 64 48) 82%, transparent);
 }
 
+/* 一行，左右滑：不换行，免得几行 chips 挡住下面的结果（Josh 2026-09-26） */
 .read-scripture-search-recent-list {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.4rem;
   margin-top: 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.read-scripture-search-recent-list::-webkit-scrollbar {
+  display: none;
 }
 
 .read-scripture-search-recent-chip {
@@ -334,6 +342,8 @@
   color: color-mix(in srgb, rgb(72 52 34) 88%, transparent);
   cursor: pointer;
   transition: opacity 0.15s ease;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .read-scripture-search-recent-chip:hover {
@@ -2271,9 +2281,12 @@
 .read-chapter-verse-search-keyword {
   color: color-mix(in srgb, rgb(139 90 43) 96%, rgb(92 58 28));
   font-weight: 700;
-  background: color-mix(in srgb, rgb(218 178 100) 22%, transparent);
-  border-radius: 0.12em;
-  padding: 0 0.06em;
+  /* 整节框去掉后只剩关键词这一处标记，和 App 同一种 LOGO 黄，淡了看不出来 */
+  background: color-mix(in srgb, rgb(255 177 3) 45%, transparent);
+  border-radius: 0.25em;
+  padding: 0 0.08em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 .dark .read-chapter-verse-search-keyword {

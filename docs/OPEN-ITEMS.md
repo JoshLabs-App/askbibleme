@@ -335,23 +335,21 @@ done
 
 ## Play 全屏意图权限被拒 + 站外分发金钥登记（2026-09-26）
 
-### 其它 App 下载页 APK 的签名金钥没登记（跨项目，截止 2026-09-30）
-- 现状（2026-09-26 从各下载页 `version.json` 拉线上 APK，用 apksigner 读出的真实指纹）：
-  | App | 包名 | Play 上登记情况 | 下载页 APK 的 SHA-256 |
-  |---|---|---|---|
-  | 截图译 | app.joshlabs.jietuyi | 包名已登记，这把金钥**不在**里面 | `C4:13:6D:98:8F:4B:84:1E:C5:79:D3:6A:FB:35:BD:9C:44:98:70:65:81:70:2F:1E:B0:EF:48:45:4E:64:BF:40` |
-  | PhotoPorter | app.joshlabs.phonexfer | 同上 | `CE:91:27:FF:4A:95:06:CC:37:64:E8:12:09:A5:5E:38:04:C4:B5:BA:DE:16:96:93:1E:C2:71:BD:C8:2E:9C:2A` |
-  | JoshMoney | ca.joshmoney.app | 同上 | `49:08:EA:91:69:C2:24:49:AA:0C:0B:99:B6:FD:32:3C:04:1A:E2:9C:CF:62:F7:8E:AD:70:23:F6:DE:16:C9:66` |
-  | 150英语 | com.joshua.english150 | **包名都没登记** | `FA:C6:17:45:DC:09:03:78:6F:B9:ED:E6:2A:96:2B:39:9F:73:48:F0:BB:6F:89:9B:83:32:66:75:91:03:3B:9C` |
-  | 查经 | app.joshlabs.chadao | **包名都没登记** | `91:98:36:08:38:EB:2A:88:20:D4:A0:BF:7D:F0:35:A4:3F:4E:01:CD:9F:A1:8F:A8:FF:E0:54:A0:4C:54:7D:2F` |
-  | 听到 | app.joshlabs.tingdao | **包名都没登记** | `29:8C:20:04:A4:C8:75:3D:8B:11:C6:CC:5C:A2:A6:D7:0A:92:BC:F4:98:D6:09:AC:B0:C0:3F:A8:E3:2F:70:8D` |
-  | Selah | my.selah.mobile | **包名都没登记** | `1C:FF:BA:0E:16:75:F2:FC:0B:5C:C1:3B:93:AB:57:DA:54:AB:E4:F1:C1:A1:4A:78:81:99:2D:97:1E:E9:E5:38` |
-  别学英语、Cabinet-X 没有下载页，不用处理。Claude 提交登记会被本机权限拦（算授权类操作），只能 Josh 点。
-- 影响：9-30 之后，特定国家/地区的认证安卓设备可能装不了这些下载页 APK。
-- 需要 Josh 做：Play 管理中心 → Android 开发人员验证。
-  前 3 个：点对应 App → 新增金钥 → 粘贴指纹。
-  后 4 个：「注册套件名称」→ 填包名 → 下一步按页面提示登记金钥（可能要求上传一个带验证码的 APK，卡住了叫 Claude 按提示打包）。
-  另：150英语那个指纹来自 `english150-build` 的 debug.keystore（下载页 APK 是 debug 签名），要不要换成正式 keystore 由 Josh 决定。
+### 站外分发登记还差 3 步 + 150英语金钥要换（跨项目，截止 2026-09-30）
+- 已做（2026-09-26）：截图译 / PhotoPorter / JoshMoney 补登了下载页金钥（审查中）；
+  「听到」`app.joshlabs.tingdao`、Selah `my.selah.mobile` 包名已注册、金钥已填（草稿，等上传验证 APK）。
+- 验证 APK 已做好放在 `~/Desktop/Play验证APK/`（线上 APK + `assets/adi-registration.properties`，
+  内容是账户验证码 `C4LSX2VUVAJI6AAAAAAAAAAAAA`，用原 keystore 重签，包名/指纹已核对）。
+  Claude 上传文件被本机权限拦下，需 Josh 操作：
+  1. 听到：Android 开发人员验证 → 听到 → 金钥那行点「验证」→ 拖 `adi-tingdao.apk` → 提交；
+  2. Selah：同上，拖 `adi-selah.apk`；
+  3. 查经 `app.joshlabs.chadao`：还没注册包名。「注册套件名称」→ 包名 `app.joshlabs.chadao`、名称「查经」→ 新增金钥
+     `91:98:36:08:38:EB:2A:88:20:D4:A0:BF:7D:F0:35:A4:3F:4E:01:CD:9F:A1:8F:A8:FF:E0:54:A0:4C:54:7D:2F` → 验证 → 拖 `adi-chadao.apk`。
+  都「已验证」后可删掉 `~/Desktop/Play验证APK/`。
+- **150英语不要登记现在这把金钥**：`FA:C6:17:45…` 是 React Native 模板自带的公开 debug 金钥
+  （`english150-build/android/app/build.gradle` 的 release 用的是 `signingConfigs.debug`），任何人都能拿它签冒充的更新包。
+  需要在 150英语线程里：新建正式 keystore（先 `ls ~/.config/android/` 确认不覆盖）→ release 改用它 → 发新版 → 更新加密备份 → 再登记新指纹。
+  影响：换金钥后已装旧版的用户覆盖不上，要先卸载再装（本地数据会清）。
 
 ### 已关闭
 - 【已关闭 2026-09-26】下载页 APK 签名金钥 `9A:4D…` 已由 Josh 登记到「Android 开发人员验证」，状态已验证。

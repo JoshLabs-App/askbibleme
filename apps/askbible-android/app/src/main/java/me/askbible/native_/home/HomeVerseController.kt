@@ -69,6 +69,7 @@ class HomeVerseController(private val context: Context, private val scope: Corou
 
     init {
         player.onEnded = { scheduleAdvanceAfterGap() }
+        player.wantsPlayback = { voiceOn }
         advance(play = false)
         startRotation()
     }

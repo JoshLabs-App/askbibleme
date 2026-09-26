@@ -32,6 +32,12 @@ class GoldenVersePlayer(context: Context) {
     var onEnded: (() -> Unit)? = null
     /** 开播前先让整章朗读停下 */
     var onWillPlay: (() -> Unit)? = null
+    /**
+     * 用户还开着朗读（HomeVerseController.voiceOn）。句间 5 秒停顿时播放器是 ENDED，
+     * 不靠它 Media3 会撤掉前台服务，下一句在后台再起前台被 Android 12+ 拒绝，
+     * 进程随即断网、每句都 Source error（三星 2026-09-22 关屏实测）。
+     */
+    var wantsPlayback: () -> Boolean = { false }
 
     private val player: ExoPlayer = ExoPlayer.Builder(context)
         .setMediaSourceFactory(
@@ -43,7 +49,7 @@ class GoldenVersePlayer(context: Context) {
         )
         .build()
     private val mediaSession = MediaSession.Builder(context, player).setId("golden").build()
-        .also { PlaybackSessions.register(it) }
+        .also { PlaybackSessions.register(it) { wantsPlayback() } }
 
     init {
         player.setAudioAttributes(

@@ -324,3 +324,16 @@ for L in eng zho; do
   | python3 -c "import sys,json;print([r['id'] for r in json.load(sys.stdin)['data']])"
 done
 ```
+
+## Play 测试轨道还挂着带全屏意图权限的旧包（2026-09-26）
+
+- 现状：Play 2026-08-25 以「全屏意图权限政策」拒了更新。正式版已换成不带该权限的 1.0.46 (243)，
+  但 alpha / beta 仍是 RN 的 127、TAIWAN 仍是 3、「623」轨道有个 60 的草稿，这些旧包大概率带
+  `USE_FULL_SCREEN_INTENT`（expo-notifications 默认会加）。Claude 用 API 改轨道时被本机权限拦下，没改成。
+- 影响：旧包不清掉，政策问题不会关闭，后续更新可能继续被拒。
+- 需要 Josh 决定：推荐二选一——
+  1. 放行 Claude 跑一次 API：把 internal / alpha / beta / TAIWAN 都设成 243，清空 623 草稿（一次 edit 提交，一次审核）；
+  2. 自己在 Play 管理中心操作：测试与发布 → 每条测试轨道「建立新版本」→ 从 App Bundle 库加 243 → 发布；623 的草稿点「捨棄」。
+  完成后到「政策审查状态」看这条是否变成已解决；必要时在问题详情页点「提出申诉 / 重新提交」。
+- 另：Play 首页横幅提醒 **2026-09-30 前**要在「Android 开发人员验证」页登记在 Play 以外分发的包名和签名金钥
+  （我们的下载页 APK 就是站外分发）。没登记的话，9-30 之后部分国家/地区经认证装置上可能装不了下载页的 APK。

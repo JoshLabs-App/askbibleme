@@ -1,7 +1,7 @@
 {
   "_note": "android_dir 相对于此文件所在目录（01AskBible/）",
   "app_name": "AskBible",
-  "version": "1.0.46",
+  "version": "1.0.47",
   "apk_prefix": "AskBible",
   "bucket": "askbible-media",
   "android_dir": "apps/askbible-android",
@@ -12,9 +12,10 @@
   "min_android": "Android 8.0+",
   "gradle_task": "assembleWeb",
   "apk_rel_path": "app/build/outputs/apk/web/app-web.apk",
-  "notes": "关屏只听金句时，可以一句接一句一直播下去；另有稳定性改进。",
+  "notes": "7 天连读可以从今天第 1 天重新开始；经文搜索点进去直接滚到那一节、只高亮搜的词。",
   "changelog": [
-    "关屏只听金句时，一句接一句一直播，不会播几句就断",
+    "7 天连读可以从今天第 1 天重新开始，任意一阶都能设为今天",
+    "经文搜索：点进经文直接滚到那一节，只高亮你搜的词；最近搜索一行左右滑",
     "稳定性改进"
   ],
   "intro": "AskBible 是一本能问问题的圣经：读经、听读、按计划跟进度，遇到不懂的地方随时问。",

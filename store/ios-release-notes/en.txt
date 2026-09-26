@@ -1,1 +1,5 @@
-Fixed an issue where the Study Guide and Reference editions could not load.
+• 7-day plans can restart from Day 1 today, and any stage can be set as today
+• Scripture search jumps straight to the verse and highlights only your search term; recent searches now sit in one scrollable row
+• New completion moments for finishing a chapter or today's plan; achievements open as a large card you can share
+• A calmer reading page and player; golden verses keep playing with the screen off
+• Stability improvements

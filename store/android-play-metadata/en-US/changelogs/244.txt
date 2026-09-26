@@ -1,0 +1,4 @@
+Version 1.0.47
+• 7-day plans can restart from Day 1 today; any stage can be set as today
+• Search jumps to the verse and highlights only your term; recent searches in one scrollable row
+• Stability improvements

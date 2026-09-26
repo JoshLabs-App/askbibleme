@@ -59,7 +59,7 @@ object ScriptureSearchRules {
 
 /** 最近搜索（RN scripture-recent-searches.ts）：去重（不分大小写）、最多 8 条、新的在前 */
 object RecentSearchRules {
-    const val MAX_ITEMS = 8
+    const val MAX_ITEMS = 10
 
     fun normalizeTerms(raw: List<String>): List<String> {
         val seen = HashSet<String>(); val out = ArrayList<String>()

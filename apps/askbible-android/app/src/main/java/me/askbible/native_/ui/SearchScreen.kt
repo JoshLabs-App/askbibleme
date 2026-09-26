@@ -19,8 +19,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.ui.layout.layout
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -75,7 +75,6 @@ import me.askbible.native_.data.SearchPrefs
  * 经文搜索页。对应 RN ReadScriptureSearchScreen，与 iOS 的 SearchView 对等：标题 / 引导语 / 范围分段（全本 · 旧约 · 新约 · 本章）/
  * 输入框 / 最近搜索 chips / 命中列表（书名 章:节 + 经文，关键词高亮）。输入停顿 360ms 后查库；字号随阅读档位。
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SearchScreen(
     prefs: SearchPrefs,
@@ -83,7 +82,8 @@ fun SearchScreen(
     size: ReadSize,
     chapterRef: SearchChapterRef?,
     onBack: () -> Unit,
-    onOpenHit: (ScriptureSearchHit) -> Unit,
+    /** 点了哪条命中 + 当时的关键词（章页只标关键词） */
+    onOpenHit: (ScriptureSearchHit, String) -> Unit,
     theme: Parchment = Parchment.light,
     /** 命中条目的书名按读经展示语言 */
     locale: AppLocale = AppLocale.ZH_CN,
@@ -110,7 +110,7 @@ fun SearchScreen(
         results = ScriptureDatabase.open(context, fallbackId ?: translationId)?.let { db -> try { db.search(q, prefs.scope, chapterRef) } finally { db.close() } } ?: emptyList()
         searched = true
         loading = false
-        prefs.push(q)
+        // 不在这里记最近搜索：边输边搜会把 A、AB、ABC… 每个半截词都存下来（Josh 2026-09-26）。点进经文才记
     }
     LaunchedEffect(query, prefs.scope) {
         if (query.trim().isEmpty()) { results = emptyList(); searched = false; return@LaunchedEffect }
@@ -170,12 +170,18 @@ fun SearchScreen(
 
                 if (prefs.recent.isNotEmpty()) {
                     Text(SiteCopy.t("pages.read.scriptureSearchRecentTitle", locale), Modifier.padding(top = 2.dp, bottom = 6.dp), color = theme.muted.toColor(), fontSize = sx(14f).sp, fontWeight = FontWeight.Medium)
-                    FlowRow(Modifier.fillMaxWidth().padding(bottom = 2.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        for (term in prefs.recent) {
+                    // 一行，左右滑，不换行挡住下面的结果；出血到屏幕边，首尾留 20 和正文对齐
+                    LazyRow(Modifier.fillMaxWidth().layout { measurable, constraints ->
+                                val extra = 40.dp.roundToPx()
+                                val p = measurable.measure(constraints.copy(maxWidth = constraints.maxWidth + extra, minWidth = constraints.minWidth + extra))
+                                layout(constraints.maxWidth, p.height) { p.place(-extra / 2, 0) }
+                            }.padding(bottom = 10.dp),
+                            contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(prefs.recent, key = { it }) { term ->
                             Text(term, Modifier.background(theme.surface.toColor(), CircleShape).border(0.5.dp, theme.border.toColor(), CircleShape)
                                     .clickableNoRipple { query = term; run(term) }
                                     .padding(horizontal = sx(12f).dp, vertical = sx(7f).dp),
-                                 color = theme.ink.toColor(), fontSize = sx(15f).sp, fontWeight = FontWeight.Medium)
+                                 color = theme.ink.toColor(), fontSize = sx(15f).sp, fontWeight = FontWeight.Medium, maxLines = 1)
                         }
                     }
                 }
@@ -195,7 +201,12 @@ fun SearchScreen(
                 }
             }
             items(results, key = { "${it.bookId}:${it.chapter}:${it.verse}" }) { hit ->
-                Column(Modifier.fillMaxWidth().clickableNoRipple { onOpenHit(hit) }) {
+                Column(Modifier.fillMaxWidth().clickableNoRipple {
+                    // 点进经文才算一次真正的搜索，这时才记进最近搜索
+                    val q = ScriptureSearchRules.normalize(query)
+                    prefs.push(q)
+                    onOpenHit(hit, q)
+                }) {
                     Box(Modifier.fillMaxWidth().height(0.5.dp).background(theme.border.toColor()))
                     Spacer(Modifier.height(sx(12f).dp))
                     Text("${BibleCatalog.book(hit.bookId)?.name(locale) ?: hit.bookName} ${hit.chapter}:${hit.verse}", color = theme.faint.toColor(), fontSize = size.metrics.verseNumFontSize.sp,

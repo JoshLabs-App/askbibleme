@@ -77,9 +77,9 @@ enum ScriptureSearchRules {
     }
 }
 
-/// 最近搜索（RN scripture-recent-searches.ts）：去重（不分大小写）、最多 8 条、新的在前
+/// 最近搜索（RN scripture-recent-searches.ts）：去重（不分大小写）、最多 10 条、新的在前
 enum RecentSearchRules {
-    static let maxItems = 8
+    static let maxItems = 10
 
     static func normalizeTerms(_ raw: [String]) -> [String] {
         var seen = Set<String>(); var out: [String] = []

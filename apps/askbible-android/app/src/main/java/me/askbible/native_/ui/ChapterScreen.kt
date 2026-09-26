@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -119,6 +120,8 @@ fun ChapterScreen(
     bookmarked: Set<Int> = emptySet(),
     /** 从搜索 / 收藏跳进来要定位并标出的那节 */
     focusVerse: Int? = null,
+    /** 从搜索跳进来时的关键词：那节里只标关键词，不铺整节框 */
+    focusKeyword: String? = null,
     onDoubleTapVerse: (LoadedVerse) -> Unit = {},
     onLongPressVerse: (LoadedVerse) -> Unit = {},
     /** 多节选择（Josh 2026-09-11「长按要能选多节一起复制」）：非空即进入选择态，单击整节切换 */
@@ -177,12 +180,6 @@ fun ChapterScreen(
     val scope = rememberCoroutineScope()
     // 搜索定位标记：进来时亮着，用户一动某节就灭
     var searchFocus by remember(bookId, chapter, focusVerse) { mutableStateOf(focusVerse) }
-    LaunchedEffect(bookId, chapter, focusVerse, groups.size) {
-        // 搜索 / 收藏跳进来：经文装好后滚到那节所在的段
-        val f = focusVerse ?: return@LaunchedEffect
-        val gi = groups.indexOfFirst { g -> g.any { it.number == f } }
-        if (gi >= 0) listState.animateScrollToItem(gi + 1)
-    }
     // 章末「读后两版」当前展开的是哪一版；换章清空
     var activeEdition by remember(bookId, chapter) { mutableStateOf<InfoEditionVariant?>(null) }
     // 换章回到顶部：LazyColumn 状态跨章复用，不主动滚回去会停在上一章的位置（计划流顺章时标题在屏外）
@@ -197,6 +194,25 @@ fun ChapterScreen(
     val density = LocalDensity.current
     val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val sbTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    LaunchedEffect(bookId, chapter, focusVerse, groups.size) {
+        // 搜索 / 收藏跳进来：先把那节所在的段滚进来，等排版报上那节的位置，再把那节对到视口中间。
+        // 只按段滚的话段首顶到视口顶，长段后半的节还在屏外（Josh 2026-09-26「要拉到这个经文的地方」）
+        val f = focusVerse ?: return@LaunchedEffect
+        val gi = groups.indexOfFirst { g -> g.any { it.number == f } }
+        if (gi < 0) return@LaunchedEffect
+        listState.scrollToItem(gi + 1)  // +1 跳过标题 item
+        var b = verseBounds[f]
+        var tries = 0
+        while (b == null && tries < 10) { kotlinx.coroutines.delay(50); b = verseBounds[f]; tries++ }
+        b ?: return@LaunchedEffect
+        val target: Float = with(density) {
+            val top = 56.dp.toPx() + sbTop.toPx()
+            val bottom = rootView.height - 72.dp.toPx() - navBarBottom.toPx()
+            top + (bottom - top) * 0.42f
+        }
+        val delta = (b.first + b.second) / 2 - target
+        if (kotlin.math.abs(delta) >= with(density) { 8.dp.toPx() }) listState.scrollBy(delta)
+    }
     LaunchedEffect(activeVerse, isPlaying) {
         val v = activeVerse ?: return@LaunchedEffect
         if (!isPlaying) return@LaunchedEffect
@@ -286,6 +302,7 @@ fun ChapterScreen(
             itemsIndexed(groups, key = { _, g -> g.first().number }) { gi, group ->
                 ParagraphBlock(group, gi, meta, locale, m, theme, xrefVerses, activeVerse, activeVerseProgress, contrast,
                     bookmarked = if (selectedVerses.isNotEmpty()) selectedVerses else bookmarked, searchFocus = searchFocus,
+                    searchKeyword = focusKeyword,
                     tapWholeVerse = selectedVerses.isNotEmpty(),
                     highlights = highlights, paintColor = paintColor, eraseMode = eraseMode, onPaint = onPaint,
                     paintDispatch = if (painting) paintDispatch else null,
@@ -380,6 +397,7 @@ private fun ParagraphBlock(
     eraseMode: Boolean = false,
     onPaint: (Int, IntRange) -> Unit = { _, _ -> },
     paintDispatch: MutableMap<Int, (Offset) -> Unit>? = null,
+    searchKeyword: String? = null,
 ) {
     val headings = (meta.headings[group.first().number] ?: emptyList()).map { locale.zh(it) }
     Column(Modifier.fillMaxWidth().padding(bottom = 14.dp)) {  // verseParagraphBlock.marginBottom
@@ -409,7 +427,7 @@ private fun ParagraphBlock(
                              onTapVerseNumber, onDoubleTapVerse, onLongPressVerse, onVerseBounds,
                              tapWholeVerse = tapWholeVerse,
                              highlights = highlights, paintColor = paintColor, eraseMode = eraseMode, onPaint = onPaint,
-                             paintDispatch = paintDispatch)
+                             paintDispatch = paintDispatch, searchKeyword = searchKeyword)
         // 副译本对照行：0.82× 字号，muted，上距 7（verseContrast）
         for (v in group) {
             val line = contrast[v.number] ?: continue

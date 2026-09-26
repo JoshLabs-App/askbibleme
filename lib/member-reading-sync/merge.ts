@@ -123,7 +123,7 @@ function mergeRecentSearches(a: unknown, b: unknown): unknown {
     if (seen.has(key)) continue;
     seen.add(key);
     merged.push(trimmed);
-    if (merged.length >= 8) break;
+    if (merged.length >= 10) break;
   }
   return { version: 1, terms: merged };
 }

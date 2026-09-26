@@ -24,6 +24,8 @@ struct ChapterView: View {
     @ObservedObject var bookmarks: VerseBookmarkStore
     /// 从搜索 / 收藏跳进来要定位并标出的那节
     var focusVerse: Int?
+    /// 从搜索跳进来时的关键词：那节里只标关键词，不铺整节框
+    var focusKeyword: String?
     /// 点了哪一节的节号 → 弹 xref 详情
     var onTapVerse: (Int) -> Void = { _ in }
     var onOpenSearch: () -> Void = {}
@@ -71,6 +73,8 @@ struct ChapterView: View {
     @State private var activeEdition: InfoEditionVariant?
     /// 搜索定位标记：进来时亮着，用户一动某节就灭
     @State private var searchFocus: Int?
+    /// 进来后还没滚到那节：由含那节的段落排好版后直接滚外层 ScrollView，滚完清掉
+    @State private var pendingFocusScroll = false
     /// 在线 / 下载型译本要等网络：loading 时给转圈，抓不到给「重试」
     enum LoadState { case idle, loading, failed }
     @State private var loadState: LoadState = .idle
@@ -192,11 +196,6 @@ struct ChapterView: View {
                 // 读完这一章：把 chapterRead 事件消费掉，标题和细线亮一下金色再落回去
                 .onChange(of: ach.pending.count) { _, _ in pumpChapterDoneGlow() }
                 .onAppear { pumpChapterDoneGlow() }
-                .onChange(of: verses) { _, _ in
-                    // 搜索 / 收藏跳进来：经文装好后滚到那节所在的段
-                    guard let f = focusVerse, let gi = groups.firstIndex(where: { $0.contains { $0.number == f } }) else { return }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { proxy.scrollTo(gi, anchor: .center) }
-                }
                 .onChange(of: audio.activeVerse) { _, verse in
                     // 跟读时把当前节所在的段滚到视野中部；用户手动滚动不打断（只在播放中跟随）
                     guard let verse, audio.isPlaying,
@@ -211,6 +210,7 @@ struct ChapterView: View {
         .task(id: "\(store.translation.id).\(store.secondary?.id ?? "-").\(bookId).\(chapter).\(reloadToken)") {
             activeEdition = nil
             searchFocus = focusVerse
+            pendingFocusScroll = focusVerse != nil
             xrefVerses = store.versesWithXrefs(bookId: bookId, chapter: chapter)
             let m = ChapterSegments.meta(bookId: bookId, chapter: chapter, english: locale == .en)
             // 西语等版本：段落照分，小标题不出（我们只有中英两套）
@@ -279,6 +279,10 @@ struct ChapterView: View {
             activeVerseProgress: audio.activeVerseProgress,
             bookmarked: marks,
             searchFocus: searchFocus,
+            // 搜索 / 收藏跳进来：由那节所在的段落按字形位置把那一行滚到视口中间（长段里也准）
+            searchKeyword: focusKeyword,
+            scrollToFocus: pendingFocusScroll,
+            onFocusScrolled: { pendingFocusScroll = false },
             tapWholeVerse: selecting,
             highlights: highlights,
             paintColor: paintColor,

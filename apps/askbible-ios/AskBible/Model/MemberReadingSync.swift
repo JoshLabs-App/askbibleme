@@ -148,7 +148,7 @@ enum MemberReadingSyncRules {
             let key = trimmed.lowercased()
             if seen.contains(key) { continue }
             seen.insert(key); merged.append(trimmed)
-            if merged.count >= 8 { break }
+            if merged.count >= 10 { break }
         }
         return ["version": 1, "terms": merged] as [String: Any]
     }

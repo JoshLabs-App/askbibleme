@@ -2,6 +2,8 @@ import SwiftUI
 
 /// 经文搜索页。对应 RN ReadScriptureSearchScreen：标题 / 引导语 / 范围分段（全本 · 旧约 · 新约 · 本章）/ 输入框 /
 /// 最近搜索 chips / 命中列表（书名 章:节 + 经文，关键词高亮）。输入停顿 360ms 后查库；字号随阅读档位。
+/// 最近搜索只在「点进某节经文」时才记（Josh 2026-09-26：边输边搜会把 A、AB、ABC… 每个半截词都存下来），
+/// chips 一行横向滑，不换行，免得挡住下面的结果。
 struct SearchView: View {
     @EnvironmentObject private var store: ScriptureStore
     @ObservedObject var prefs: SearchPrefs
@@ -11,7 +13,8 @@ struct SearchView: View {
     /// 命中条目的书名按读经展示语言
     var locale: AppLocale = .zhCN
     var onBack: () -> Void
-    var onOpenHit: (ScriptureSearchHit) -> Void
+    /// 点了哪条命中 + 当时的关键词（章页只标关键词）
+    var onOpenHit: (ScriptureSearchHit, String) -> Void
 
     @Environment(\.parchment) private var theme
     @State private var query = ""
@@ -79,16 +82,24 @@ struct SearchView: View {
                     if !prefs.recent.isEmpty {
                         Text(SiteCopy.t("pages.read.scriptureSearchRecentTitle", locale)).font(.system(size: sx(14), weight: .medium)).foregroundStyle(theme.muted)
                             .padding(.top, 2).padding(.bottom, 6)
-                        FlowChips(items: prefs.recent, spacing: 6) { term in
-                            Button { query = term; rerun() } label: {
-                                Text(term).font(.system(size: sx(15), weight: .medium)).foregroundStyle(theme.ink)
-                                    .padding(.horizontal, sx(12)).padding(.vertical, sx(7))
-                                    .background(Capsule().fill(theme.surface))
-                                    .overlay(Capsule().strokeBorder(theme.border, lineWidth: 1 / UIScreen.main.scale))
+                        // 一行，左右滑：出血到屏幕边，首尾留 20 和正文对齐
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 6) {
+                                ForEach(prefs.recent, id: \.self) { term in
+                                    Button { query = term; debounce?.cancel(); rerun() } label: {
+                                        Text(term).font(.system(size: sx(15), weight: .medium)).foregroundStyle(theme.ink)
+                                            .lineLimit(1)
+                                            .padding(.horizontal, sx(12)).padding(.vertical, sx(7))
+                                            .background(Capsule().fill(theme.surface))
+                                            .overlay(Capsule().strokeBorder(theme.border, lineWidth: 1 / UIScreen.main.scale))
+                                    }
+                                    .buttonStyle(.plain)
+                                }
                             }
-                            .buttonStyle(.plain)
+                            .padding(.horizontal, 20)
                         }
-                        .padding(.bottom, 2)
+                        .padding(.horizontal, -20)
+                        .padding(.bottom, 10)
                     }
 
                     if let fallbackNote {
@@ -106,7 +117,12 @@ struct SearchView: View {
                     }
 
                     ForEach(results) { hit in
-                        Button { onOpenHit(hit) } label: {
+                        Button {
+                            // 点进经文才算一次真正的搜索，这时才记进最近搜索
+                            let q = ScriptureSearchRules.normalize(query)
+                            prefs.push(q)
+                            onOpenHit(hit, q)
+                        } label: {
                             VStack(alignment: .leading, spacing: 3) {
                                 Text("\(BibleCatalog.book(id: hit.bookId)?.name(locale) ?? hit.bookName) \(hit.chapter):\(hit.verse)")
                                     .font(.system(size: size.metrics.verseNumFontSize, weight: .semibold)).foregroundStyle(theme.faint)
@@ -176,39 +192,5 @@ struct SearchView: View {
         results = hits
         searched = true
         loading = false
-        prefs.push(q)
     }
-}
-
-/// 自动换行的 chips（RN flexWrap）
-struct FlowChips<Content: View>: View {
-    let items: [String]
-    var spacing: CGFloat = 6
-    @ViewBuilder let content: (String) -> Content
-
-    var body: some View {
-        var width: CGFloat = 0, height: CGFloat = 0
-        return GeometryReader { geo in
-            ZStack(alignment: .topLeading) {
-                ForEach(items, id: \.self) { item in
-                    content(item)
-                        .alignmentGuide(.leading) { d in
-                            if abs(width - d.width) > geo.size.width { width = 0; height -= d.height + spacing }
-                            let result = width
-                            if item == items.last { width = 0 } else { width -= d.width + spacing }
-                            return result
-                        }
-                        .alignmentGuide(.top) { _ in
-                            let result = height
-                            if item == items.last { height = 0 }
-                            return result
-                        }
-                }
-            }
-        }
-        .frame(height: chipsHeight)
-    }
-
-    /// 粗估高度：每行 36，按平均 5 个 chip 一行算 —— 只影响布局占位，chips 少时够用
-    private var chipsHeight: CGFloat { CGFloat((items.count + 4) / 5) * 40 }
 }

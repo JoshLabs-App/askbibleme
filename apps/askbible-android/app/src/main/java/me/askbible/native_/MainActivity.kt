@@ -242,6 +242,8 @@ private fun RootScreen() {
     var showFavorites by remember { mutableStateOf(false) }
     // 从搜索 / 收藏跳进章页要定位的节
     var focusVerse by remember { mutableStateOf<Int?>(null) }
+    // 从搜索跳进章页时的关键词（章页只标它，不铺整节框）
+    var focusKeyword by remember { mutableStateOf<String?>(null) }
     // 长按弹出操作单的那节；收藏 / 复制后的轻提示
     var actionVerse by remember { mutableStateOf<LoadedVerse?>(null) }
     var toast by remember { mutableStateOf<String?>(null) }
@@ -353,7 +355,7 @@ private fun RootScreen() {
     }
     fun openPlanChapter(p: PlanPointer, autoPlay: Boolean) {
         val b = BibleCatalog.book(p.bookId) ?: return
-        focusVerse = null
+        focusVerse = null; focusKeyword = null
         autoPlayPending = autoPlay
         listenBook = b; listenChapter = p.chapter
         chapter = p.chapter
@@ -570,7 +572,7 @@ private fun RootScreen() {
         val b = q.getOrNull(index)?.let { BibleCatalog.book(it.bookId) } ?: return
         chapterFromPlan = true
         planFlowListen = false
-        focusVerse = null
+        focusVerse = null; focusKeyword = null
         if (!(planPoolMatchesView && index == planQueueIndex)) { planFlowActive = false; listenBook = null }
         chapter = q[index].chapter; openedBook = b
         tab = ShellTab.READ
@@ -622,7 +624,7 @@ private fun RootScreen() {
                 onReturnCardVisible = { homeReturnCardUp = it },
                 onResumeReading = { resume ->
                     planFlowActive = false; listenBook = null; chapterFromPlan = false
-                    pickingBook = null; focusVerse = null
+                    pickingBook = null; focusVerse = null; focusKeyword = null
                     tab = ShellTab.READ
                     // 没有记录（首次打开）就只进读经页，让用户自己挑，不替他定一卷
                     if (resume != null) BibleCatalog.book(resume.bookId)?.let { b ->
@@ -643,7 +645,7 @@ private fun RootScreen() {
                     // 探索页的收藏：跳到读经 Tab 的那一节
                     BibleCatalog.book(id)?.let { b ->
                         planFlowActive = false; listenBook = null; chapterFromPlan = false; pickingBook = null
-                        focusVerse = v; chapter = ch; openedBook = b; tab = ShellTab.READ
+                        focusVerse = v; focusKeyword = null; chapter = ch; openedBook = b; tab = ShellTab.READ
                     }
                 },
                 onOpenFavorites = { showFavorites = true; tab = ShellTab.READ },
@@ -657,12 +659,12 @@ private fun RootScreen() {
                 locale = displayLocale,
                 prefs = searchPrefs, translationId = translation.id, size = size, chapterRef = searchRef,
                 onBack = { showSearch = false },
-                onOpenHit = { hit ->
+                onOpenHit = { hit, keyword ->
                     // 播放页坞的搜索键：搜到的章在读经 Tab 打开，返回回计划页
                     showSearch = false
                     BibleCatalog.book(hit.bookId)?.let { b ->
                         planFlowActive = false; listenBook = null; pickingBook = null; chapterFromPlan = true; planFlowListen = false
-                        focusVerse = hit.verse; chapter = hit.chapter; openedBook = b; tab = ShellTab.READ
+                        focusVerse = hit.verse; focusKeyword = keyword; chapter = hit.chapter; openedBook = b; tab = ShellTab.READ
                     }
                 })
             else when (planRoute) {
@@ -684,10 +686,10 @@ private fun RootScreen() {
                 locale = displayLocale,
                 prefs = searchPrefs, translationId = translation.id, size = size, chapterRef = searchRef,
                 onBack = { showSearch = false },
-                onOpenHit = { hit ->
+                onOpenHit = { hit, keyword ->
                     showSearch = false
                     BibleCatalog.book(hit.bookId)?.let { b ->
-                        planFlowActive = false; listenBook = null; chapterFromPlan = false; pickingBook = null; focusVerse = hit.verse; chapter = hit.chapter; openedBook = b
+                        planFlowActive = false; listenBook = null; chapterFromPlan = false; pickingBook = null; focusVerse = hit.verse; focusKeyword = keyword; chapter = hit.chapter; openedBook = b
                     }
                 })
             else if (showFavorites) FavoritesScreen(
@@ -697,7 +699,7 @@ private fun RootScreen() {
                 onOpen = { item ->
                     showFavorites = false
                     BibleCatalog.book(item.bookId)?.let { b ->
-                        planFlowActive = false; listenBook = null; chapterFromPlan = false; pickingBook = null; focusVerse = item.verse; chapter = item.chapter; openedBook = b
+                        planFlowActive = false; listenBook = null; chapterFromPlan = false; pickingBook = null; focusVerse = item.verse; focusKeyword = null; chapter = item.chapter; openedBook = b
                     }
                 })
             else if (book == null) CatalogScreen(
@@ -708,7 +710,7 @@ private fun RootScreen() {
                     BibleCatalog.book(last.bookId)?.let { b ->
                         {
                             planFlowActive = false; listenBook = null; chapterFromPlan = false
-                            pickingBook = null; focusVerse = null
+                            pickingBook = null; focusVerse = null; focusKeyword = null
                             chapter = last.chapter; openedBook = b
                         }
                     }
@@ -772,6 +774,7 @@ private fun RootScreen() {
                     onTapVerse = { xrefVerse = it },
                     bookmarked = bookmarks.bookmarkedVerses(translation.id, book.id, chapter),
                     focusVerse = focusVerse,
+                    focusKeyword = focusKeyword,
                     onDoubleTapVerse = { v ->
                         // 双击收藏：新加时顺手复制（RN「已收藏，经文已复制」）
                         val added = bookmarks.toggle(book.id, book.name(displayLocale), chapter, v.number, translation.id, v.text)

@@ -18,8 +18,13 @@ struct ChapterFlowParagraph: UIViewRepresentable {
     var activeVerseProgress: Double = 0
     /// 已收藏的节：正文铺 verseBookmarkMarker 底（圆角 2），并压过跟读高亮（RN：bookmarked 时不画 audioActive）
     var bookmarked: Set<Int> = []
-    /// 搜索结果跳进来的那节：verseSearchFocusBg 整行框
+    /// 搜索结果跳进来的那节。带了关键词就只标这节里的关键词（Josh 2026-09-26「不要整个四方格高亮，
+    /// 只展示这个搜索的内容有高亮」）；这节里找不到关键词（在线译本借内置译本搜的）才退回整节框
     var searchFocus: Int? = nil
+    var searchKeyword: String? = nil
+    /// 为真时，这一段排好版后把外层 ScrollView 滚到那节关键词所在的行（居中）；滚完回调一次
+    var scrollToFocus = false
+    var onFocusScrolled: () -> Void = {}
     /// 点节号（有串珠的才亮）→ 经文关联
     /// 多节选择态：单击整节都算切换选中，不再只认节号（Josh 2026-09-11）
     var tapWholeVerse = false
@@ -54,6 +59,10 @@ struct ChapterFlowParagraph: UIViewRepresentable {
         /// 画一个圆角 8、横贯整行宽的框（Josh：读的时候的背景框要四角弧形）
         var activeRange: NSRange?
         var searchFocusRange: NSRange?
+        /// 搜索定位那节里关键词出现的区间（整段文本坐标）
+        var searchMatchRanges: [NSRange] = []
+        private var pendingFocusScroll = false
+        private var onFocusScrolled: () -> Void = {}
         /// 已收藏的节的正文区间（不含节号）
         var bookmarkRanges: [NSRange] = []
         /// 划重点：每段连续同色字符的区间（正文坐标已换算成整段文本坐标）
@@ -280,6 +289,41 @@ struct ChapterFlowParagraph: UIViewRepresentable {
             }
         }
 
+        /// 等这一段排好版、外层 ScrollView 算完内容高度，再把关键词那一行滚到视口中间。
+        /// 用段内的字形位置直接滚外层 UIScrollView：一段常有十几节，按段 id scrollTo 只能把整段居中，长段里那节会在屏外
+        func requestFocusScroll(onDone: @escaping () -> Void) {
+            guard !pendingFocusScroll else { return }
+            pendingFocusScroll = true
+            onFocusScrolled = onDone
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in self?.performFocusScroll(attempt: 0) }
+        }
+
+        private func performFocusScroll(attempt: Int) {
+            guard pendingFocusScroll else { return }
+            guard let target = searchMatchRanges.first ?? searchFocusRange else { pendingFocusScroll = false; return }
+            var sv: UIScrollView?
+            var view: UIView? = superview
+            while let v = view { if let s = v as? UIScrollView { sv = s; break }; view = v.superview }
+            // 还没进窗口 / 还没排版：稍后再试几次
+            guard let sv, window != nil, bounds.width > 0, sv.bounds.height > 0 else {
+                if attempt < 10 { DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in self?.performFocusScroll(attempt: attempt + 1) } }
+                else { pendingFocusScroll = false }
+                return
+            }
+            container.size = CGSize(width: bounds.width, height: .greatestFiniteMagnitude)
+            layoutManager.ensureLayout(for: container)
+            guard let line = rects(for: target).first else { pendingFocusScroll = false; return }
+            let inSV = convert(line, to: sv)
+            let inset = sv.adjustedContentInset
+            let minY = -inset.top
+            let maxY = max(minY, sv.contentSize.height + inset.bottom - sv.bounds.height)
+            let y = min(maxY, max(minY, inSV.midY - sv.bounds.height * 0.42))
+            pendingFocusScroll = false
+            sv.setContentOffset(CGPoint(x: sv.contentOffset.x, y: y), animated: false)
+            let done = onFocusScrolled
+            DispatchQueue.main.async { done() }
+        }
+
         func setText(_ text: NSAttributedString) {
             storage.setAttributedString(text)
             setNeedsDisplay()
@@ -308,8 +352,13 @@ struct ChapterFlowParagraph: UIViewRepresentable {
                     UIBezierPath(roundedRect: rect.insetBy(dx: -2, dy: -1), cornerRadius: 6).fill()
                 }
             }
-            // 搜索定位仍是圆角 8 整行框：要的是「跳到了这一节」的整节提示
-            if let r = searchFocusRange, r.length > 0 {
+            // 搜索定位：只给关键词铺底（和搜索结果列表同一种黄）；找不到关键词才退回圆角 8 整节框
+            if !searchMatchRanges.isEmpty {
+                Self.bookmarkFill.setFill()
+                for r in searchMatchRanges {
+                    for rect in rects(for: r) { UIBezierPath(roundedRect: rect.insetBy(dx: -2, dy: 0), cornerRadius: 4).fill() }
+                }
+            } else if let r = searchFocusRange, r.length > 0 {
                 let glyphs = layoutManager.glyphRange(forCharacterRange: r, actualCharacterRange: nil)
                 var box = layoutManager.boundingRect(forGlyphRange: glyphs, in: container)
                 box.origin.x = 0
@@ -360,7 +409,19 @@ struct ChapterFlowParagraph: UIViewRepresentable {
 
     func updateUIView(_ v: FlowTextView, context: Context) {
         let built = build()
-        v.setText(built.text)
+        let focusRange = searchFocus.flatMap { f in built.ranges.first { $0.verse == f }?.range }
+        let matches = searchFocus.map { Self.keywordRanges(verse: $0, keyword: searchKeyword, verses: verses, textRanges: built.textRanges) } ?? []
+        if matches.isEmpty {
+            v.setText(built.text)
+        } else {
+            // 关键词再加粗压成正文最深色，和搜索结果列表一致
+            let text = NSMutableAttributedString(attributedString: built.text)
+            for r in matches {
+                text.addAttributes([.font: UIFont.systemFont(ofSize: metrics.verseFontSize, weight: .bold),
+                                    .foregroundColor: UIColor(theme.ink)], range: r)
+            }
+            v.setText(text)
+        }
         v.ranges = built.ranges
         v.numberRanges = built.numberRanges
         v.onTapVerseNumber = onTapVerseNumber
@@ -384,7 +445,9 @@ struct ChapterFlowParagraph: UIViewRepresentable {
             }
             return NSRange(location: loc, length: len)
         }
-        v.searchFocusRange = searchFocus.flatMap { f in built.ranges.first { $0.verse == f }?.range }
+        v.searchFocusRange = focusRange
+        v.searchMatchRanges = matches
+        if scrollToFocus, focusRange != nil { v.requestFocusScroll(onDone: onFocusScrolled) }
         // 收藏高亮盖住整节（含节号与节末空格）：Josh 2026-09-11「标高亮时连节号也一起包含进去，
         // 不会在两句中断开」——原来只铺正文段，节号和两节之间会露白
         v.bookmarkRanges = built.ranges.filter { bookmarked.contains($0.verse) }.map(\.range)
@@ -407,6 +470,25 @@ struct ChapterFlowParagraph: UIViewRepresentable {
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: FlowTextView, context: Context) -> CGSize? {
         let width = proposal.width ?? UIScreen.main.bounds.width - 40
         return CGSize(width: width, height: uiView.height(for: width))
+    }
+
+    /// 那一节正文里关键词出现的所有位置（不分大小写），换算成整段文本坐标。
+    /// 正文按神言 / 人言分段拼接时长度要和原文一致，对不上就不标（退回整节框）
+    static func keywordRanges(verse: Int, keyword: String?, verses: [LoadedVerse], textRanges: [(verse: Int, range: NSRange)]) -> [NSRange] {
+        let q = ScriptureSearchRules.normalize(keyword ?? "")
+        guard !q.isEmpty, let body = textRanges.first(where: { $0.verse == verse })?.range,
+              let text = verses.first(where: { $0.number == verse })?.text else { return [] }
+        let ns = text as NSString
+        guard ns.length == body.length else { return [] }
+        var out: [NSRange] = []
+        var from = 0
+        while from < ns.length {
+            let r = ns.range(of: q, options: [.caseInsensitive], range: NSRange(location: from, length: ns.length - from))
+            if r.location == NSNotFound || r.length == 0 { break }
+            out.append(NSRange(location: body.location + r.location, length: r.length))
+            from = r.location + r.length
+        }
+        return out
     }
 
     /// 把「节内字符下标 → 颜色」压成连续同色的区间，换算到整段文本坐标，少画几次。

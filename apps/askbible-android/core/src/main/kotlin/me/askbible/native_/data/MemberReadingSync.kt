@@ -153,7 +153,7 @@ object MemberReadingSyncRules {
             val key = trimmed.lowercase()
             if (!seen.add(key)) continue
             merged.add(trimmed)
-            if (merged.size >= 8) break
+            if (merged.size >= 10) break
         }
         return JSONObject().put("version", 1).put("terms", JSONArray(merged))
     }

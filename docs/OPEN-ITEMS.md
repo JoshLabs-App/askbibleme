@@ -5,6 +5,12 @@
 
 ## 待决
 
+### O-3 网页版经文搜索也是「边输边存」最近搜索（2026-09-26）
+- **现状**：原生 iOS / 安卓已改成点进经文才记、一行横滑、最多 10 条、章页只标关键词（见 DECISIONS D-3）。
+  网页 `components/bible/ReadScriptureSearchClient.tsx` 仍在停顿自动搜时 `pushRecentSearch`，chips 也是换行排。
+- **影响**：网页用户同样会存下一串半截词；登录后会经云同步带到手机上（手机端不会再产生，但会收到）。
+- **要 Josh 决定**：网页要不要照原生改（推荐：要，改动小）。
+
 ### RN 版目录的「›」要不要一起去掉
 - **现状**：原生 iOS / Android 已去掉行尾箭头，RN 版 `apps/askbible-mobile/src/read/BibleCatalogBookRow.tsx` 的 `bookChevron` 还在。
 - **影响**：三端目录外观不一致；RN 版正在被原生替代，改与不改都不阻塞。

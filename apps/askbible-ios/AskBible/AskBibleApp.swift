@@ -123,6 +123,8 @@ struct RootView: View {
     @State private var showFavorites = false
     /// 从搜索 / 收藏跳进章页要定位的节
     @State private var focusVerse: Int?
+    /// 从搜索跳进章页时的关键词（章页只标它，不铺整节框）
+    @State private var focusKeyword: String?
     /// 长按弹出操作单的那节；收藏 / 复制后的轻提示
     @State private var actionVerse: LoadedVerse?
     /// 多节选择（章页底部条），空集合 = 不在选择态
@@ -304,7 +306,7 @@ struct RootView: View {
 
     private func openPlanChapter(_ p: PlanPointer, autoPlay: Bool) {
         guard let b = BibleCatalog.book(id: p.bookId) else { return }
-        focusVerse = nil
+        focusVerse = nil; focusKeyword = nil
         autoPlayPending = autoPlay
         listenChapter = (b, p.chapter)
         openedChapter = (b, p.chapter)
@@ -375,7 +377,7 @@ struct RootView: View {
         guard q.indices.contains(index), let b = BibleCatalog.book(id: q[index].bookId) else { return }
         chapterFromPlan = true
         planFlowHost = .chapter
-        focusVerse = nil
+        focusVerse = nil; focusKeyword = nil
         if !(planPoolMatchesView && index == planQueueIndex) { planFlowActive = false; listenChapter = nil }
         openedChapter = (b, q[index].chapter)
         tab = .read
@@ -800,7 +802,7 @@ struct RootView: View {
                 lastRead: activity.recent.first,
                 onResumeReading: { resume in
                     planFlowActive = false; listenChapter = nil; chapterFromPlan = false
-                    focusVerse = nil
+                    focusVerse = nil; focusKeyword = nil
                     openedBook = nil
                     tab = .read
                     // 没有记录（首次打开）就只进读经页，让用户自己挑，不替他定一卷
@@ -819,11 +821,11 @@ struct RootView: View {
             if showSearch {
                 SearchView(prefs: searchPrefs, size: readSize, chapterRef: searchRef, locale: displayLocale,
                            onBack: { showSearch = false },
-                           onOpenHit: { hit in
+                           onOpenHit: { hit, keyword in
                                showSearch = false
                                guard let b = BibleCatalog.book(id: hit.bookId) else { return }
                                planFlowActive = false; listenChapter = nil; chapterFromPlan = false; openedBook = nil
-                               focusVerse = hit.verse
+                               focusVerse = hit.verse; focusKeyword = keyword
                                openedChapter = (b, hit.chapter)
                            })
                 .edgeSwipeBack { showSearch = false }
@@ -834,7 +836,7 @@ struct RootView: View {
                                   showFavorites = false
                                   guard let b = BibleCatalog.book(id: item.bookId) else { return }
                                   planFlowActive = false; listenChapter = nil; chapterFromPlan = false; openedBook = nil
-                                  focusVerse = item.verse
+                                  focusVerse = item.verse; focusKeyword = nil
                                   openedChapter = (b, item.chapter)
                               })
                 .edgeSwipeBack { showFavorites = false }
@@ -864,6 +866,7 @@ struct RootView: View {
                     audio: audio,
                     bookmarks: bookmarks,
                     focusVerse: focusVerse,
+                    focusKeyword: focusKeyword,
                     onTapVerse: { xrefVerse = $0 },
                     onOpenSearch: { searchRef = SearchChapterRef(bookId: opened.book.id, chapter: opened.chapter); showSearch = true },
                     onOpenFavorites: { showFavorites = true },
@@ -916,7 +919,7 @@ struct RootView: View {
                         BibleCatalog.book(id: last.bookId).map { b in
                             {
                                 planFlowActive = false; listenChapter = nil; chapterFromPlan = false
-                                focusVerse = nil
+                                focusVerse = nil; focusKeyword = nil
                                 openedBook = nil
                                 openedChapter = (b, last.chapter)
                             }
@@ -929,12 +932,12 @@ struct RootView: View {
                 // 播放页坞的搜索键：搜到的章在读经 Tab 打开，返回回计划页
                 SearchView(prefs: searchPrefs, size: readSize, chapterRef: searchRef, locale: displayLocale,
                            onBack: { showSearch = false },
-                           onOpenHit: { hit in
+                           onOpenHit: { hit, keyword in
                                showSearch = false
                                guard let b = BibleCatalog.book(id: hit.bookId) else { return }
                                planFlowActive = false; listenChapter = nil; openedBook = nil
                                chapterFromPlan = true; planFlowHost = .chapter
-                               focusVerse = hit.verse
+                               focusVerse = hit.verse; focusKeyword = keyword
                                openedChapter = (b, hit.chapter)
                                tab = .read
                            })
@@ -977,7 +980,7 @@ struct RootView: View {
                             guard let b = BibleCatalog.book(id: id) else { return }
                             planFlowActive = false; listenChapter = nil; chapterFromPlan = false
                             openedBook = nil
-                            focusVerse = verse
+                            focusVerse = verse; focusKeyword = nil
                             openedChapter = (b, ch)
                             tab = .read
                         },

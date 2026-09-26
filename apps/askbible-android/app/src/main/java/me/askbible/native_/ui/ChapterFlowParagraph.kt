@@ -31,6 +31,7 @@ import me.askbible.native_.data.LoadedVerse
 import me.askbible.native_.data.Parchment
 import me.askbible.native_.data.VerseHighlightRules
 import me.askbible.native_.data.VerseSentences
+import me.askbible.native_.data.ScriptureSearchRules
 import me.askbible.native_.data.ReadTypographyMetrics
 import me.askbible.native_.data.SpeechKind
 
@@ -58,7 +59,8 @@ fun ChapterFlowParagraph(
     activeVerseProgress: Double = 0.0,
     /** 已收藏的节：正文铺 verseBookmarkMarker 底（圆角 2），并压过跟读高亮（RN：bookmarked 时不画 audioActive） */
     bookmarked: Set<Int> = emptySet(),
-    /** 搜索结果跳进来的那节：verseSearchFocusBg 整行框 */
+    /** 搜索结果跳进来的那节。带了关键词就只标这节里的关键词（Josh 2026-09-26「不要整个四方格高亮，
+     *  只展示这个搜索的内容有高亮」）；这节里找不到关键词（在线译本借内置译本搜的）才退回整节框 */
     searchFocus: Int? = null,
     /** 点节号（有串珠的才亮）→ 经文关联 */
     onTapVerseNumber: (Int) -> Unit = {},
@@ -79,6 +81,8 @@ fun ChapterFlowParagraph(
     onPaint: (Int, IntRange) -> Unit = { _, _ -> },
     /** 由 ChapterScreen 统一维护的 dispatch 表；key = 段落首节号，value = 接受根坐标触点的回调 */
     paintDispatch: MutableMap<Int, (Offset) -> Unit>? = null,
+    /** 从搜索跳进来时的关键词 */
+    searchKeyword: String? = null,
 ) {
     val ranges = ArrayList<Pair<Int, IntRange>>(verses.size)
     val numberRanges = ArrayList<Pair<Int, IntRange>>(verses.size)
@@ -135,6 +139,28 @@ fun ChapterFlowParagraph(
         if (from in body && to in body && to >= from) from..to else whole
     }
     val focusRange = searchFocus?.let { f -> ranges.firstOrNull { it.first == f }?.second }
+    // 那节正文里关键词出现的所有位置（不分大小写），整段文本坐标；正文长度对不上就不标（退回整节框）
+    val focusMatches: List<IntRange> = run {
+        val f = searchFocus ?: return@run emptyList()
+        val q = ScriptureSearchRules.normalize(searchKeyword ?: "")
+        val body = textRanges.firstOrNull { it.first == f }?.second ?: return@run emptyList()
+        val vt = verses.firstOrNull { it.number == f }?.text ?: return@run emptyList()
+        if (q.isEmpty() || vt.length != body.last - body.first + 1) return@run emptyList()
+        val out = ArrayList<IntRange>()
+        var from = 0
+        while (from < vt.length) {
+            val i = vt.indexOf(q, from, ignoreCase = true)
+            if (i < 0) break
+            out.add((body.first + i) until (body.first + i + q.length))
+            from = i + q.length
+        }
+        out
+    }
+    // 关键词再加粗压成正文最深色，和搜索结果列表一致
+    val shownText = if (focusMatches.isEmpty()) text else buildAnnotatedString {
+        append(text)
+        for (r in focusMatches) addStyle(SpanStyle(color = theme.ink.toColor(), fontWeight = FontWeight.Bold), r.first, r.last + 1)
+    }
     // 收藏高亮盖住整节（含节号与节末空格）：Josh 2026-09-11「标高亮时连节号也一起包含进去，
     // 不会在两句中断开」——原来只铺正文段，节号和两节之间会露白
     val bookmarkRanges = ranges.filter { it.first in bookmarked }.map { it.second }
@@ -201,7 +227,7 @@ fun ChapterFlowParagraph(
         onDispose { paintDispatch?.remove(firstVerse) }
     }
     Text(
-        text,
+        shownText,
         Modifier.fillMaxWidth()
             .onGloballyPositioned { coords ->
                 val rootPos = coords.positionInRoot()
@@ -218,8 +244,23 @@ fun ChapterFlowParagraph(
             .drawBehind {
                 val l = layout ?: return@drawBehind
                 // 圆角 8 整行框：跟读高亮 #FFB103 / 搜索定位 verseSearchFocusBg（RN verseAudioFollowOverlay / verseSearchFocusBg）
-                // 搜索定位仍是圆角 8 整行框：要的是「跳到了这一节」的整节提示
-                focusRange?.takeIf { !it.isEmpty() }?.let { r ->
+                // 搜索定位：只给关键词铺底（和搜索结果列表同一种黄，圆角 4）；找不到关键词才退回圆角 8 整节框
+                for (r in focusMatches) {
+                    if (r.isEmpty()) continue
+                    val first = l.getLineForOffset(r.first); val last = l.getLineForOffset(r.last)
+                    for (line in first..last) {
+                        val left = if (line == first) l.getHorizontalPosition(r.first, true) else l.getLineLeft(line)
+                        val right = if (line != last) l.getLineRight(line) else {
+                            val lineEnd = l.getLineEnd(line, visibleEnd = false)
+                            if (r.last + 1 < lineEnd) l.getHorizontalPosition(r.last + 1, true) else l.getLineRight(line)
+                        }
+                        if (right <= left) continue
+                        drawRoundRect(bookmarkFill, topLeft = Offset(left - 2.dp.toPx(), l.getLineTop(line)),
+                                      size = Size(right - left + 4.dp.toPx(), l.getLineBottom(line) - l.getLineTop(line)),
+                                      cornerRadius = CornerRadius(4.dp.toPx()))
+                    }
+                }
+                focusRange?.takeIf { !it.isEmpty() && focusMatches.isEmpty() }?.let { r ->
                     val top = l.getLineTop(l.getLineForOffset(r.first))
                     val bottom = l.getLineBottom(l.getLineForOffset(r.last))
                     drawRoundRect(focusFill, topLeft = Offset(0f, top), size = Size(size.width, bottom - top), cornerRadius = CornerRadius(8.dp.toPx()))

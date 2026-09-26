@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SCRIPTURE_SEARCH_MIN_LEN } from "../bible/scripture-search";
 
 export const SCRIPTURE_RECENT_SEARCHES_STORAGE_KEY = "askbible-mobile-scripture-recent-searches-v1";
-export const SCRIPTURE_RECENT_SEARCH_MAX_ITEMS = 8;
+export const SCRIPTURE_RECENT_SEARCH_MAX_ITEMS = 10;
 
 export type ScriptureRecentSearchesRecord = {
   version: 1;

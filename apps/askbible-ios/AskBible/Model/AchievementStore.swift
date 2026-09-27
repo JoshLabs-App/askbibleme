@@ -102,7 +102,8 @@ final class AchievementStore: ObservableObject {
         self.plans = plans
         self.bookmarks = bookmarks
         self.highlights = highlights
-        refresh()
+        // 启动这次只定基线：等级 / 勋章按账本算好，但什么都不弹不响（D-4）
+        refresh(announce: false)
     }
 
     private func persist() {
@@ -319,14 +320,17 @@ final class AchievementStore: ObservableObject {
             emit(.sealEarned(id))
             emit(.xp(MedalXP.perSeal + MedalXP.perBookCompleted, reason: "book"))
         }
-        refresh()
+        refresh(streak: true)
     }
 
     // MARK: 评估 + 刷新
 
-    /// 重算勋章 / XP / 等级；新达成的档位入队。云端同步进来也调一次，漏发的在这里补上。
+    /// 重算勋章 / XP / 等级；新达成的档位入队。
+    /// - announce: false = 只定基线不发事件。启动、云端同步并入时用——
+    ///   那不是用户「此刻」做成的事，弹出来就是打开 App 被庆祝（D-4，Josh 2026-09-27）。
+    /// - streak: 只有读完一章才顺带报「连续 N 天」，打开 / 翻页不报（D-4）。
     @discardableResult
-    func refresh() -> [Event] {
+    func refresh(announce: Bool = true, streak: Bool = false) -> [Event] {
         let beforeLevel = level
         var events: [Event] = []
         for def in MedalCatalog.all {
@@ -345,7 +349,7 @@ final class AchievementStore: ObservableObject {
         // 连续天数续上了：一天只提示一次。1 天不算「连续」，所以从 2 起。
         // 中断时故意什么都不发 —— 不用声音惩罚用户（Josh 2026-09-20 定）。
         let streakToday = PlanDates.localDateString(now())
-        if streakDays >= 2, s.streakNotedDay != streakToday {
+        if streak, streakDays >= 2, s.streakNotedDay != streakToday {
             s.streakNotedDay = streakToday
             events.append(.streak(streakDays))
         }
@@ -360,6 +364,7 @@ final class AchievementStore: ObservableObject {
         totalXP = baseXP + s.bonusXP
         level = MedalLevels.level(xp: totalXP)
         if level > beforeLevel { events.append(.levelUp(level)) }
+        guard announce else { return [] }
         for e in events { emit(e) }
         return events
     }
@@ -429,7 +434,8 @@ final class AchievementStore: ObservableObject {
             for (k, v) in m where n.seals[k] == nil { n.seals[k] = MemberReadingSyncRules.num(v) ?? 0 }
         }
         s = n
-        refresh()
+        // 别台设备的进度并进来：静默记上，不弹不响（D-4）
+        refresh(announce: false)
     }
 
     /// 换帐号 / 退出：成就跟着帐号走，清空本机
@@ -438,6 +444,6 @@ final class AchievementStore: ObservableObject {
         s = Snapshot()
         suppressChangeNotify = false
         pending = []
-        refresh()
+        refresh(announce: false)
     }
 }

@@ -40,7 +40,7 @@ struct AchievementsView: View {
             set: { on in
                 AchievementFeedback.soundEnabled = on
                 // 打开的当下响一声，让人知道是什么声
-                if on { AchievementFeedback.shared.play(.earn) }
+                if on { AchievementFeedback.shared.play(.chapter) }
             }
         )) {
             VStack(alignment: .leading, spacing: 2) {

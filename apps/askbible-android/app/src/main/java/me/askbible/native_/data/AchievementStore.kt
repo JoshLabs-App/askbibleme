@@ -115,7 +115,8 @@ class AchievementStore(context: Context) {
         this.plans = plans
         this.bookmarks = bookmarks
         this.highlights = highlights
-        refresh()
+        // 启动这次只定基线：等级 / 勋章按账本算好，但什么都不弹不响（D-4）
+        refresh(announce = false)
     }
 
     // ---- 落盘 ----
@@ -395,13 +396,18 @@ class AchievementStore(context: Context) {
             emit(Event.SealEarned(id))
             emit(Event.Xp(MedalXP.perSeal + MedalXP.perBookCompleted, "book"))
         }
-        refresh()
+        refresh(streak = true)
     }
 
     // ---- 评估 + 刷新 ----
 
-    /** 重算勋章 / XP / 等级；新达成的档位入队。云端同步进来也调一次，漏发的在这里补上。 */
-    fun refresh(): List<Event> {
+    /**
+     * 重算勋章 / XP / 等级；新达成的档位入队。
+     * - announce = false：只定基线不发事件。启动、云端同步并入时用——
+     *   那不是用户「此刻」做成的事，弹出来就是打开 App 被庆祝（D-4，Josh 2026-09-27）。
+     * - streak：只有读完一章才顺带报「连续 N 天」，打开 / 翻页不报（D-4）。
+     */
+    fun refresh(announce: Boolean = true, streak: Boolean = false): List<Event> {
         val beforeLevel = level
         val events = ArrayList<Event>()
         for (def in MedalCatalog.all) {
@@ -420,7 +426,7 @@ class AchievementStore(context: Context) {
         // 连续天数续上了：一天只提示一次。1 天不算「连续」，所以从 2 起。
         // 中断时故意什么都不发 —— 不用声音惩罚用户（Josh 2026-09-20 定）。
         val streakToday = PlanDates.localDateString(today())
-        if (streakDays >= 2 && s.streakNotedDay != streakToday) {
+        if (streak && streakDays >= 2 && s.streakNotedDay != streakToday) {
             s.streakNotedDay = streakToday
             dirty = true
             events.add(Event.Streak(streakDays))
@@ -437,9 +443,10 @@ class AchievementStore(context: Context) {
         totalXP = baseXP + s.bonusXP
         level = MedalLevels.level(totalXP)
         if (level > beforeLevel) events.add(Event.LevelUp(level))
-        for (e in events) emit(e)
         if (events.any { it is Event.Medal }) dirty = true
         if (dirty) persist()
+        if (!announce) return emptyList()
+        for (e in events) emit(e)
         return events
     }
 
@@ -529,7 +536,8 @@ class AchievementStore(context: Context) {
             suppressChangeNotify = false
         }
         dirty = true
-        refresh()
+        // 别台设备的进度并进来：静默记上，不弹不响（D-4）
+        refresh(announce = false)
     }
 
     /** 换帐号 / 退出：成就跟着帐号走，清空本机 */
@@ -539,6 +547,6 @@ class AchievementStore(context: Context) {
         dirty = true
         suppressChangeNotify = false
         pending = emptyList()
-        refresh()
+        refresh(announce = false)
     }
 }

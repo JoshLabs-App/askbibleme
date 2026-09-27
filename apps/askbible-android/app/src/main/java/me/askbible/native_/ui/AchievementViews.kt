@@ -246,15 +246,14 @@ fun XPFloater(ach: AchievementStore, modifier: Modifier = Modifier) {
                 AchievementFeedback.playXp(context, head.amount >= MedalXP.perChapterRead)
                 shown = (shown + FloaterItem(seq, "+${head.amount}", head.amount >= MedalXP.perChapterRead)).takeLast(3)
             }
-            // 连续天数：只飘一条字 + 一声小钵，不弹卡片（Josh 2026-09-20 定的语气）
+            // 连续天数：只在读完一章时跟着飘一句，不出声不震——那一章的小钵已经响过了（D-4）
             is AchievementStore.Event.Streak -> {
                 ach.consume()
                 seq += 1
-                AchievementFeedback.play(context, AchievementFeedback.Cue.EARN)
                 val text = SiteCopy.f("native.streakDays", mapOf("n" to head.days.toString()), floaterLocale)
                 shown = (shown + FloaterItem(seq, text, true)).takeLast(3)
             }
-            // 今日计划完成：同样只飘一条字 + 一声小钵
+            // 今日计划完成：只飘一条字 + 触感（D-4 起不出声）
             is AchievementStore.Event.PlanDayDone -> {
                 ach.consume()
                 seq += 1

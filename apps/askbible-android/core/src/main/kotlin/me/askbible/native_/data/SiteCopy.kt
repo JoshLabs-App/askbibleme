@@ -73,7 +73,7 @@ object SiteCopy {
         "mobile.update" to Pair("保存设置", "Save settings"),
         "mobile.use" to Pair("设为当前计划", "Use this plan"),
         "native.achievementSound" to Pair("成就音效", "Achievement sounds"),
-        "native.achievementSoundHint" to Pair("加经验、拿勋章、升级时响一声；手机调静音时不响", "A chime on XP, medals and level-ups. Silent when your phone is muted."),
+        "native.achievementSoundHint" to Pair("读完一章时响一声；手机调静音时不响", "A soft chime when you finish a chapter. Silent when your phone is muted."),
         "native.achievements" to Pair("成就", "Achievements"),
         "native.achievementsSub" to Pair("勋章、书卷印章与等级", "Medals, book seals and levels"),
         "native.albumAfternoon" to Pair("休闲", "Leisure"),

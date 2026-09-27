@@ -282,7 +282,7 @@ private fun SoundToggle(locale: AppLocale, theme: Parchment) {
                 on = it
                 AchievementFeedback.setSoundEnabled(context, it)
                 // 打开的当下响一声，让人知道是什么声
-                if (it) AchievementFeedback.play(context, AchievementFeedback.Cue.EARN)
+                if (it) AchievementFeedback.play(context, AchievementFeedback.Cue.CHAPTER)
             },
             colors = SwitchDefaults.colors(checkedTrackColor = XPGold),
         )

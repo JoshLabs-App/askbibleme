@@ -64,7 +64,10 @@ object AchievementFeedback {
 
     private fun play(context: Context, cue: Cue, silent: Boolean) {
         haptic(context, cue)
+        // 全 App 只有「读完一章」出声；升级 / 勋章 / 计划完成只给触感（D-4，Josh 2026-09-27
+        // 「一打开就有升级声音，有点吵，太像游戏」）。earn / levelup 音档留着备用，不再播。
         if (silent || !soundEnabled(context)) return
+        if (cue != Cue.CHAPTER && cue != Cue.XP) return
         if (cue == Cue.XP) {
             val now = System.currentTimeMillis()
             if (now - lastXpAt < 280) return
@@ -117,10 +120,8 @@ object AchievementFeedback {
             // 「一次明确但轻柔的 impact」
             Cue.CHAPTER -> VibrationEffect.createOneShot(22, 190)
             Cue.EARN -> VibrationEffect.createOneShot(28, VibrationEffect.DEFAULT_AMPLITUDE)
-            // 升级：重—轻—重，做出「咚·哒·咚」的分量
-            Cue.LEVEL_UP -> VibrationEffect.createWaveform(
-                longArrayOf(0, 34, 70, 18, 60, 40), intArrayOf(0, 255, 0, 140, 0, 255), -1
-            )
+            // 升级：一次轻触感就够，「咚·哒·咚」是街机语气（D-4）
+            Cue.LEVEL_UP -> VibrationEffect.createOneShot(28, VibrationEffect.DEFAULT_AMPLITUDE)
         }
         runCatching { v.vibrate(effect) }
     }

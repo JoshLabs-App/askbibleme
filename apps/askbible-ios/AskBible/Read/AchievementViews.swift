@@ -151,13 +151,12 @@ struct XPFloater: View {
             big = n >= MedalXP.perChapterRead
             ach.consume()
             AchievementFeedback.shared.playXP(milestone: big)
-        // 连续天数：只飘一条字 + 一声小钵，不弹卡片（Josh 2026-09-20 定的语气）
+        // 连续天数：只在读完一章时跟着飘一句，不出声不震——那一章的小钵已经响过了（D-4）
         case .streak(let days):
             text = SiteCopy.f("native.streakDays", ["n": String(days)])
             big = true
             ach.consume()
-            AchievementFeedback.shared.play(.earn)
-        // 今日计划完成：同样只飘一条字 + 一声小钵
+        // 今日计划完成：只飘一条字 + 触感（D-4 起不出声）
         case .planDayDone:
             text = SiteCopy.t("native.planDayDone")
             big = true

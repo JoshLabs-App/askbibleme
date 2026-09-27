@@ -5,8 +5,8 @@
     "en": "Achievement sounds"
   },
   "native.achievementSoundHint": {
-    "zh": "加经验、拿勋章、升级时响一声；手机调静音时不响",
-    "en": "A chime on XP, medals and level-ups. Silent when your phone is muted."
+    "zh": "读完一章时响一声；手机调静音时不响",
+    "en": "A soft chime when you finish a chapter. Silent when your phone is muted."
   },
   "native.achievements": {
     "zh": "成就",

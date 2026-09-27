@@ -73,7 +73,9 @@ final class AchievementFeedback {
 
     private func play(_ cue: Cue, silent: Bool) {
         haptic(cue)
-        guard !silent, Self.soundEnabled else { return }
+        // 全 App 只有「读完一章」出声；升级 / 勋章 / 计划完成只给触感（D-4，Josh 2026-09-27
+        // 「一打开就有升级声音，有点吵，太像游戏」）。earn / levelup 音档留着备用，不再播。
+        guard !silent, cue == .chapter || cue == .xp, Self.soundEnabled else { return }
         if cue == .xp {
             guard Date().timeIntervalSince(lastXPAt) > 0.28 else { return }
             lastXPAt = Date()
@@ -98,11 +100,8 @@ final class AchievementFeedback {
         case .earn:
             UINotificationFeedbackGenerator().notificationOccurred(.success)
         case .levelUp:
-            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-            Task {
-                try? await Task.sleep(for: .milliseconds(140))
-                UINotificationFeedbackGenerator().notificationOccurred(.success)
-            }
+            // 一次轻触感就够，重击 + 连响是街机语气（D-4）
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
         }
     }
 

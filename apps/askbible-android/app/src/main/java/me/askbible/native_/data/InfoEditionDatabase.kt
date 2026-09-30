@@ -25,10 +25,13 @@ class InfoEditionDatabase private constructor(private val db: SQLiteDatabase) {
 
         @Volatile private var shared: InfoEditionDatabase? = null
 
+        /** 重新下载后丢掉旧句柄（iOS resetShared） */
+        fun resetShared() { shared = null }
+
         fun open(context: Context): InfoEditionDatabase? {
             shared?.let { return it }
             val file = InfoEditionDownloader.localFile(context)
-            if (!file.exists() || file.length() == 0L) return null
+            if (!InfoEditionDownloader.isInstalled(context)) return null
             return try {
                 InfoEditionDatabase(SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READONLY)).also { shared = it }
             } catch (_: Exception) { null }

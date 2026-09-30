@@ -168,11 +168,9 @@ private fun EditionBlock(
     val context = LocalContext.current
     val dlState = InfoEditionDownloader.state
 
-    LaunchedEffect(dlState) {
-        if (dlState is InfoEditionDownloader.State.Idle) {
-            InfoEditionDownloader.download(context)
-        }
-    }
+    // 只在 Idle（首次 / 点了重试）时发起；下载本身不挂在这个 effect 上，进度变化不会把它取消
+    val idle = dlState is InfoEditionDownloader.State.Idle
+    LaunchedEffect(idle) { if (idle) InfoEditionDownloader.download(context) }
 
     val content = remember(bookId, chapter, variant, english, dlState) {
         if (dlState is InfoEditionDownloader.State.Done)

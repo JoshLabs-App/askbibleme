@@ -50,12 +50,13 @@ class TranslationDownloader(private val context: Context) {
                     }
                 }
                 if (!tmp.renameTo(dest)) { tmp.copyTo(dest, overwrite = true); tmp.delete() }
+                // 完成状态在 IO 块里写：调用方被取消时 withContext 会丢掉返回值，写在外面就永远卡「下载中」
+                states[t.id] = State.Done
                 true
             } catch (e: Exception) {
                 states[t.id] = State.Failed(e.message ?: "download failed"); false
             }
         }
-        if (ok) states[t.id] = State.Done
         return ok
     }
 

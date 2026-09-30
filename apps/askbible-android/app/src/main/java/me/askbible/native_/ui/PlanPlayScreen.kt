@@ -83,6 +83,11 @@ fun PlanPlayScreen(
     theme: Parchment = Parchment.light,
     /** 习惯统计里的已读日（云端同步下来的也在）；月历标黄 = 它 ∪ 播放页点听日（RN habitCompletedDates） */
     habitDates: Set<String> = emptySet(),
+    /** 每日灵修卡片（D-7：入口只在计划页；只在中文界面，壳里决定 show） */
+    showDevotional: Boolean = false,
+    devotionalPlayer: me.askbible.native_.audio.DevotionalPlayer? = null,
+    onOpenDevotional: (java.time.LocalDate) -> Unit = {},
+    onRetryDevotional: () -> Unit = {},
 ) {
     val prefs = store.prefs
     val committedAhead = prefs.ahead
@@ -188,6 +193,12 @@ fun PlanPlayScreen(
                     }
                     Spacer(Modifier.height(4.dp))
                 }
+            }
+            if (showDevotional && devotionalPlayer != null) item {
+                // 跟日历选中的那天走（今天 + 往前 / 往后翻的天数）
+                val date = java.time.LocalDate.now().plusDays(viewAhead.toLong())
+                DevotionalCard(me.askbible.native_.data.SolidJoys.day(date), devotionalPlayer, theme,
+                               onOpen = { onOpenDevotional(date) }, onRetry = onRetryDevotional)
             }
             if (prefs.isNtDeepRepeat) {
                 // 深读 52 阶（RN ReadNtDeepRepeatStagesBelowToday）：点选某阶设为今日

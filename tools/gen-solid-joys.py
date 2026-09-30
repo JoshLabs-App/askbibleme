@@ -163,6 +163,8 @@ def main():
             problems.append(f"{md} 出处认不出书卷：{d['ref']}")
         d["title"] = TITLE_FIX.get(md, d["title"])
         d["audio"] = (audio.get(md) or {}).get("mp3")
+        # 音频时长（秒）：卡片上显示「约 N 分钟」。befaithful-audio.json 里的 sec 是用 ffprobe 读各 mp3 开头估的
+        d["audioSec"] = (audio.get(md) or {}).get("sec")
     no_audio = [md for md in sorted(by_md) if not by_md[md]["audio"]]
     if audio and no_audio:
         problems.append(f"没有音频的日子：{' '.join(no_audio)}")

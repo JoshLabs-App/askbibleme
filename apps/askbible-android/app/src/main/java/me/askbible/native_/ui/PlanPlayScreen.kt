@@ -97,7 +97,8 @@ fun PlanPlayScreen(
     val needsConfirm = browsingAway && viewAhead >= 0
     val dayCount = ReadingPlanCatalog.plan(prefs.planId)?.dayCount ?: prefs.dayCount
     val planName = locale.zh(ReadingPlanCatalog.plan(prefs.planId)?.title ?: PlanCopy.t("pages.read.planPlayTitle"))
-    val dayMeta = locale.zh(PlanCopy.f("pages.read.todayPlanDayMeta", mapOf("n" to "${PlanPlay.planDayNumber(prefs, dayCount, contentAhead, tripleBaseDay = store.triplePlanDay())}")))
+    // 「计划第 N 天」：原来的「第 N 天」常被看成今年第几天（D-8）
+    val dayMeta = locale.zh(me.askbible.native_.data.SiteCopy.f("native.planDayMeta", mapOf("n" to "${PlanPlay.planDayNumber(prefs, dayCount, contentAhead, tripleBaseDay = store.triplePlanDay())}"), locale))
     var stageToConfirm by remember { mutableStateOf<Int?>(null) }
     var lastRowTap by remember { mutableStateOf<Pair<Int, Long>?>(null) }
     val ink = theme.ink.toColor()
@@ -304,21 +305,35 @@ fun PlanMonthCalendar(
                     val day = cell.day
                     if (day == null) { Spacer(Modifier.weight(1f).height(44.dp)); continue }
                     val disabled = !cell.selectable
+                    // 颜色只各管一件事（D-8）：黑 = 今天，黄 = 已读，描边 = 正在看的那天；原来选中也涂黄，和「已读」分不清
                     val todayFill = cell.isToday
-                    val accentFill = !todayFill && (cell.isSelected || cell.isListened)
+                    val accentFill = !todayFill && cell.isListened
+                    val viewing = cell.isSelected && !todayFill
                     val fadeDisabled = disabled && !cell.isListened
                     Box(
                         Modifier.weight(1f).padding(horizontal = 2.dp, vertical = 2.dp).height(40.dp).clip(RoundedCornerShape(7.dp))
                             .background(if (todayFill) ink else if (accentFill) Brand.logo.toColor() else Color.Transparent)
+                            .then(if (viewing) Modifier.border(2.dp, ink, RoundedCornerShape(7.dp)) else Modifier)
                             .alpha(if (fadeDisabled) 0.35f else 1f)
                             .clickableNoRipple { if (!disabled) onSelectAhead(cell.ahead) },
                         contentAlignment = Alignment.Center,
                     ) {
                         Text("$day", color = if (todayFill) theme.surfaceSolid.toColor() else if (fadeDisabled) theme.faint.toColor() else ink,
-                             fontSize = 18.sp, fontWeight = if (todayFill || accentFill) FontWeight.Bold else FontWeight.Medium)
+                             fontSize = 18.sp, fontWeight = if (todayFill || accentFill || viewing) FontWeight.Bold else FontWeight.Medium)
                     }
                 }
             }
+        }
+        // 图例：三种标记各是什么意思
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+            val muted = theme.muted.toColor()
+            @Composable fun Legend(mod: Modifier, key: String) {
+                Box(Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).then(mod))
+                Text(locale.zh(me.askbible.native_.data.SiteCopy.t("native.$key", locale)), Modifier.padding(start = 5.dp, end = 16.dp), color = muted, fontSize = 13.sp)
+            }
+            Legend(Modifier.background(ink), "planLegendToday")
+            Legend(Modifier.background(Brand.logo.toColor()), "planLegendRead")
+            Legend(Modifier.border(1.5.dp, ink, RoundedCornerShape(3.dp)), "planLegendViewing")
         }
     }
 }

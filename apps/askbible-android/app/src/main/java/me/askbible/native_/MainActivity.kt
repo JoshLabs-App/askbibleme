@@ -107,6 +107,7 @@ import me.askbible.native_.ui.ChapterPickerSheet
 import me.askbible.native_.ui.ChapterScreen
 import me.askbible.native_.ui.ExploreScreen
 import me.askbible.native_.ui.DevotionalScreen
+import me.askbible.native_.ui.DevotionalDock
 import me.askbible.native_.ui.HomeScreen
 import me.askbible.native_.ui.MusicScreen
 import me.askbible.native_.ui.ParchmentBackground
@@ -444,11 +445,11 @@ private fun RootScreen() {
         // 首页最多两路有声（homeGoldenVerseTwoSourceMutex）：开音乐时金句+环境音都在 → 关环境音；
         // 开金句时音乐+环境音都在 → 关环境音；开环境音时人声+音乐都在 → 停音乐。
         // 读经朗读与音乐可以同时放：音乐压到 30%，不再直接暂停（Josh 2026-09-11）；金句人声仍然互斥
-        audio.onWillPlay = { music.setDucked(true); home.stopVoice(); devotional.pause() }
+        audio.onWillPlay = { music.setDucked(true); home.stopVoice(); devotional.stop() }
         audio.onStopped = { music.setDucked(false) }
         audio.onFinished = { if (planFlowActive) skipNext() }
         music.onWillPlay = { music.setDucked(audio.isPlaying); if (home.voiceOn && ambient.isOn) ambient.stop() }
-        home.player.onWillPlay = { audio.pause(); devotional.pause(); if (music.isPlaying && ambient.isOn) ambient.stop() }
+        home.player.onWillPlay = { audio.pause(); devotional.stop(); if (music.isPlaying && ambient.isOn) ambient.stop() }
         // 灵修朗读也是人声：和整章朗读 / 金句互斥，音乐压低
         devotional.onWillPlay = { audio.pause(); home.stopVoice(); music.setDucked(true) }
         devotional.onStopped = { music.setDucked(audio.isPlaying) }
@@ -560,6 +561,8 @@ private fun RootScreen() {
         planQueue.getOrNull(planQueueIndex) == PlanPointer(targetBook.id, targetChapter)
     val onPlanTab = tab == ShellTab.PLAN
     val showPlanDock = onPlanTab && planRoute == "play" && !showSearch && planPageQueue.isNotEmpty()
+    // 灵修在播（或暂停在半路）时，计划页的坞换成灵修的（D-8）；× 关掉后恢复读经坞
+    val showDevotionalDock = showPlanDock && devotional.currentKey != null
     // 播放页当前高亮那章有没有整章音源（UST 等无音源译本：播放键置灰，与章页一致；RN 朗读永远跟随正文译本、不跨译本回退）
     val planActiveAudioAvailable = planPageQueue.getOrNull(planActiveIndex)?.let { p ->
         BibleCatalog.book(p.bookId)?.let { b -> ChapterAudioSource.resolve(translation.id, b.id, b.number, b.nameEn, p.chapter) != null }
@@ -835,6 +838,10 @@ private fun RootScreen() {
                     onSkipNext = skipNext,
                 )
                 // RN shellTabBarStyles.wrap.gap：坞与 Tab 行之间 6
+                Spacer(Modifier.height(ShellMetrics.tabBarDockGap.dp))
+            } else if (showDevotionalDock) {
+                DevotionalDock(devotional, me.askbible.native_.data.Parchment.light,
+                               onOpen = { devotional.currentKey?.let { md -> devotionalDate = me.askbible.native_.data.SolidJoys.dateForKey(md) }; planRoute = "devotional" })
                 Spacer(Modifier.height(ShellMetrics.tabBarDockGap.dp))
             } else if (showPlanDock) {
                 // 播放页的坞：左键是经文搜索（带当前章上下文）；播放键没建池时从选中章起播

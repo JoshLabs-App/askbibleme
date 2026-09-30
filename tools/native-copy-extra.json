@@ -583,5 +583,21 @@
   "native.rateLater": {
     "zh": "以后再说",
     "en": "Not now"
+  },
+  "native.planDayMeta": {
+    "zh": "计划第 {{n}} 天",
+    "en": "Plan day {{n}}"
+  },
+  "native.planLegendToday": {
+    "zh": "今天",
+    "en": "Today"
+  },
+  "native.planLegendRead": {
+    "zh": "已读",
+    "en": "Read"
+  },
+  "native.planLegendViewing": {
+    "zh": "正在看",
+    "en": "Viewing"
   }
 }

@@ -34,6 +34,8 @@ data class DevotionalDay(
     val refChapter: Int?,
     val paragraphs: List<String>,
     val audio: String?,
+    /** 音频时长（秒），卡片显示「约 N 分钟」 */
+    val audioSec: Int?,
 ) {
     /** 「10月1日」 */
     val dateLabel: String get() = md.split("-").let { "${it[0].toInt()}月${it[1].toInt()}日" }
@@ -71,7 +73,21 @@ object SolidJoys {
         return days[md]
     }
 
+    /** R2 上的文件名（远端不带版本号，内容更新直接覆盖） */
     private fun fileFor(locale: AppLocale) = if (locale == AppLocale.ZH_TW) "solid-joys-zh-tw.json" else "solid-joys-zh.json"
+
+    /**
+     * 本机缓存的数据版本：数据加了字段（如 v2 的 audioSec）就 +1，老缓存换名作废、自动重下。
+     * 只改文字不加字段时不必动它——那种更新目前到不了已下载过的手机（OPEN-ITEMS O-7）。
+     */
+    private const val CACHE_VERSION = 2
+    private fun cacheName(remote: String) = remote.removeSuffix(".json") + ".v$CACHE_VERSION.json"
+
+    /** md → 今年那一天（坞上点篇名回到灵修页用） */
+    fun dateForKey(md: String): LocalDate = md.split("-").let { LocalDate.of(LocalDate.now().year, it[0].toInt(), it[1].toInt()) }
+
+    /** 按 md（"09-30"）取，播放坞用 */
+    fun dayByKey(md: String): DevotionalDay? = (state as? State.Ready)?.days?.get(md)
 
     /** 有缓存读缓存，没有就下载；同一版已在下载或已就绪不重复做。失败后再调一次即重试；切简繁会换一份 */
     fun ensureLoaded(context: Context, locale: AppLocale) {
@@ -83,7 +99,10 @@ object SolidJoys {
         val app = context.applicationContext
         state = State.Loading
         job = scope.launch {
-            val file = File(app.filesDir, name)
+            // 清掉旧版本的缓存
+            app.filesDir.listFiles { f -> f.name.startsWith("solid-joys-zh") && f.name != cacheName(name) && !f.name.endsWith(".part") &&
+                (f.name.startsWith(name.removeSuffix(".json") + ".") || f.name == name) }?.forEach { it.delete() }
+            val file = File(app.filesDir, cacheName(name))
             state = try {
                 if (!file.exists() || file.length() == 0L) download(BASE + name, file)
                 State.Ready(name, parse(file.readText()))
@@ -120,6 +139,7 @@ object SolidJoys {
                 refChapter = o.optInt("refChapter", 0).takeIf { it > 0 },
                 paragraphs = paras,
                 audio = o.optString("audio").takeIf { it.startsWith("http") },
+                audioSec = o.optInt("audioSec", 0).takeIf { it > 0 },
             )
             out[d.md] = d
         }

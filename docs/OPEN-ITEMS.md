@@ -5,6 +5,18 @@
 
 ## 待决
 
+### O-4 YouTube 放松长视频：第 1 集发布进度（2026-09-27）
+
+- **现状（2026-09-28）**：第 1 集三个版本全部重做（背景不抖、出处改成和经文同样式 80 px、「金句朗读」）。流水线 `00/youtube/ep01-pipeline.sh`，日志 `00/youtube/ep01-pipeline.log`，依次：中文朗读版（Josh 定：新版直接 public；旧版 9vRemMVgasY 已由 Claude 改成 private，**等 Josh 自己在 Studio 删除**——永久删除 Claude 不能代做）→ 中文纯音乐版（public，@AskBible.me_Still）→ 英文纯音乐版（public，AskBibleEN）。每个渲染完就上传，日志 `00/youtube/{ep01,ep01-music,en-ep01}-upload.log`。2026-09-28 01:27 Josh 要求暂停 2 小时：进程用 `kill -STOP` 冻结，进程号在 `00/youtube/.paused-pids`；约 03:27 自动 `kill -CONT` 恢复。如果中途关机或重启，重新跑 `ep01-pipeline.sh` 之前要先把脚本开头的 `rm -rf` 那一行去掉，否则做好的分段会被删。
+- **第 1 集已公开**：中文金句朗读版 https://youtu.be/hONRUf7CahU 、中文纯音乐版 https://youtu.be/kUo71ybnbv4 ；英文纯音乐版排队上传中。旧版 9vRemMVgasY 是私享，等 Josh 删除。
+- ~~AskBibleEN 必须先电话验证~~：已关闭 2026-09-28，验证不了，改为全部传 @AskBible.me_Still，按播放列表分版本（见 DECISIONS）。
+- **第 1 集按新断行重做（2026-09-28）**：中文纯音乐版、中文朗读版重新渲染上传，新版上线后，旧版（hONRUf7CahU、kUo71ybnbv4）会被自动改成私享，**要 Josh 在 Studio 永久删除**，连同更早的 9vRemMVgasY。英文版 noduqGNNgOQ 没有水印，Josh 2026-09-28 决定也重做；新版上线后旧版自动改成私享。
+- **频道外观（2026-09-28 完成）**：横幅（API）和头像（Studio）都换成方案 A；首页已打开，依次是 4 个播放列表分区：中文金句朗读 / 中文纯音乐 / 英文 / 繁体，已发布。
+- **进度（2026-09-30 09:05）**：第 1 集 4 版、第 2 集 3 版已公开（见 `00/youtube/series-state.json`）；批量进程 09-29 01:28 后中断（第 2 集朗读版渲染到第 285 段），已重启续做，分段自动跳过已完成的。09:35 起每集加英文朗读、繁体朗读两个版本（D-5），共 54 支；先补第 1 集这两个版本，再续做第 2 集简体朗读（已渲染的分段保留）。
+- **全系列**：`scripts/youtube-series-run.py` 已在后台排队（等第 1 集的 pipeline 结束才开始），日志 `00/youtube/series-run.log`，进度 `00/youtube/series-state.json`。中断后重跑同一条命令会跳过已完成的。
+- **下一步**：Josh 2026-09-27 说「发布」，两个纯音乐版已改成传完直接 public（不再先 private 等他看）。传完把链接发给他。之后做第 2 集（场景自动轮换为云海）。
+- **别踩的坑**：**背景抖动**有两个原因：①放慢 0.75 倍会重复帧；②`-stream_loop` + `-ss` 跳转再用 `fps` 补帧，会在某些帧接错。改法：先把一圈原片转成全 I 帧无损中间文件（`00/youtube/loops/<场景>.mkv`，约 560 MB/场景），每段用 `trim=start_frame` 按帧号截取。验证方法：逐帧比较相邻帧差，超过中位数 4 倍的跳动应该是 0 处。4K 多段并行渲染比串行还慢；同一个可变字体文件的多个字重会互相覆盖（画每段字之前都要重设字重）；让 GPT 看图用 Claude in Chrome 上传（memory `reference_chatgpt_image_review`）；上传被中途停掉时，YouTube 会先留下一个半截的私享条目，比如 oNtcRwC4CuA，Josh 说保留。
+
 ### O-3 网页版经文搜索也是「边输边存」最近搜索（2026-09-26）— 已关闭 2026-09-26：Josh「你处理」，网页照原生改完（点进经文才记、一行横滑、章页有关键词时不铺整节框）
 - **现状**：原生 iOS / 安卓已改成点进经文才记、一行横滑、最多 10 条、章页只标关键词（见 DECISIONS D-3）。
   网页 `components/bible/ReadScriptureSearchClient.tsx` 仍在停顿自动搜时 `pushRecentSearch`，chips 也是换行排。

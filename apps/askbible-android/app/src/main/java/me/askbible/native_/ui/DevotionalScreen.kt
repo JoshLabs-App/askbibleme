@@ -67,9 +67,9 @@ fun DevotionalCard(
     val ink = theme.ink.toColor(); val muted = theme.muted.toColor()
     Column(Modifier.fillMaxWidth().padding(top = 26.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("今日灵修", color = ink, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            Text(zh("今日灵修"), color = ink, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.weight(1f))
-            Text(SolidJoys.TITLE, color = muted, fontSize = 13.sp)
+            Text(zh(SolidJoys.TITLE), color = muted, fontSize = 13.sp)
         }
         Spacer(Modifier.height(8.dp))
         val shape = RoundedCornerShape(12.dp)
@@ -90,8 +90,8 @@ fun DevotionalCard(
                                  maxLines = 2, overflow = TextOverflow.Ellipsis)
                         }
                     }
-                    state is SolidJoys.State.Failed -> Text("灵修没有载入，点这里重试", color = muted, fontSize = 15.sp)
-                    else -> Text("正在准备今日灵修…", color = muted, fontSize = 15.sp)
+                    state is SolidJoys.State.Failed -> Text(zh("灵修没有载入，点这里重试"), color = muted, fontSize = 15.sp)
+                    else -> Text(zh("正在准备今日灵修…"), color = muted, fontSize = 15.sp)
                 }
             }
             if (day?.audio != null) {
@@ -142,7 +142,7 @@ fun DevotionalScreen(
                     Box(Modifier.align(Alignment.CenterStart).size(44.dp).clickableNoRipple(onBack), contentAlignment = Alignment.CenterStart) {
                         MaterialIcon(MI.ARROW_BACK, 24f, ink)
                     }
-                    Text(SolidJoys.TITLE, color = muted, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                    Text(zh(SolidJoys.TITLE), color = muted, fontSize = 15.sp, fontWeight = FontWeight.Medium)
                 }
                 // 日期：‹ 10月1日 ›（前后一天；今天之外显示「回到今天」）
                 Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -152,7 +152,7 @@ fun DevotionalScreen(
                     Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("${date.monthValue}月${date.dayOfMonth}日", color = muted, fontSize = 15.sp, fontWeight = FontWeight.Medium)
                         if (date != LocalDate.now()) {
-                            Text("回到今天", Modifier.padding(top = 2.dp).clickableNoRipple { onDate(LocalDate.now()) },
+                            Text(zh("回到今天"), Modifier.padding(top = 2.dp).clickableNoRipple { onDate(LocalDate.now()) },
                                  color = ACCENT, fontSize = 13.sp, fontWeight = FontWeight.Medium)
                         }
                     }
@@ -163,7 +163,7 @@ fun DevotionalScreen(
             }
             if (day == null) {
                 item {
-                    Text(if (SolidJoys.state is SolidJoys.State.Failed) "灵修没有载入，请检查网络后返回重试" else "正在准备今日灵修…",
+                    Text(if (SolidJoys.state is SolidJoys.State.Failed) zh("灵修没有载入，请检查网络后返回重试") else zh("正在准备今日灵修…"),
                          Modifier.fillMaxWidth().padding(top = 60.dp), color = muted, fontSize = 15.sp, textAlign = TextAlign.Center)
                 }
                 return@LazyColumn
@@ -194,8 +194,8 @@ fun DevotionalScreen(
                 // 署名（授权条件，固定显示）
                 Box(Modifier.fillMaxWidth().padding(top = 24.dp).height(0.5.dp).background(theme.border.toColor()))
                 Column(Modifier.fillMaxWidth().padding(top = 14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("原作：${SolidJoys.CREDIT_AUTHOR}", color = faint, fontSize = 13.sp)
-                    Text("译文与音频：${SolidJoys.CREDIT_TRANSLATION}", color = faint, fontSize = 13.sp)
+                    Text(zh("原作：") + SolidJoys.CREDIT_AUTHOR, color = faint, fontSize = 13.sp)
+                    Text(zh("译文与音频：${SolidJoys.CREDIT_TRANSLATION}"), color = faint, fontSize = 13.sp)
                     Text("befaithful.net", Modifier.clickableNoRipple {
                         runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SolidJoys.CREDIT_LINK))) }
                     }, color = ACCENT, fontSize = 13.sp, fontWeight = FontWeight.Medium)
@@ -228,7 +228,7 @@ private fun DevotionalAudioBar(day: DevotionalDay, player: DevotionalPlayer, the
         }
         Column(Modifier.weight(1f).padding(start = 10.dp)) {
             if (mine && player.failed) {
-                Text("音频暂时无法播放，文字照常可读", color = muted, fontSize = 13.sp)
+                Text(zh("音频暂时无法播放，文字照常可读"), color = muted, fontSize = 13.sp)
             } else {
                 Slider(
                     value = dragging ?: if (dur > 0) (pos.toFloat() / dur).coerceIn(0f, 1f) else 0f,
@@ -248,5 +248,8 @@ private fun DevotionalAudioBar(day: DevotionalDay, player: DevotionalPlayer, the
         }
     }
 }
+
+/** 固定文案跟界面语言（繁体界面转繁）；灵修正文本身已按界面语言下载对应的一份 */
+private fun zh(text: String) = me.askbible.native_.data.AppLocale.current.zh(text)
 
 private fun clock(ms: Long): String { val s = ms / 1000; return "%d:%02d".format(s / 60, s % 60) }

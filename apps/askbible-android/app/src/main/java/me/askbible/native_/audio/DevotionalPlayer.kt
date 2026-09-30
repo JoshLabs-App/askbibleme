@@ -80,7 +80,7 @@ class DevotionalPlayer(context: Context, private val scope: CoroutineScope) {
             currentKey = key; failed = false; positionMs = 0; durationMs = 0
             player.setMediaItem(
                 MediaItem.Builder().setUri(url)
-                    .setMediaMetadata(MediaMetadata.Builder().setTitle(title).setArtist("约翰·派博每日灵修").build())
+                    .setMediaMetadata(MediaMetadata.Builder().setTitle(title).setArtist(me.askbible.native_.data.AppLocale.current.zh(me.askbible.native_.data.SolidJoys.TITLE)).build())
                     .build()
             )
             player.prepare()

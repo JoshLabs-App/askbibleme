@@ -11,10 +11,10 @@
 
 用法：
   python3 tools/gen-solid-joys.py
-  npx --no-install wrangler r2 object put askbible-media/devotionals/solid-joys-zh.json \
-    --file private/solid-joys-zh/solid-joys-zh.json --content-type "application/json; charset=utf-8" \
-    --cache-control "public, max-age=3600" --remote
-App 读的地址：https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/devotionals/solid-joys-zh.json
+  for f in solid-joys-zh solid-joys-zh-tw; do npx --no-install wrangler r2 object put askbible-media/devotionals/$f.json \
+    --file private/solid-joys-zh/$f.json --content-type "application/json; charset=utf-8" \
+    --cache-control "public, max-age=3600" --remote; done
+App 读的地址：https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/devotionals/solid-joys-zh(-tw).json（繁体界面读 -tw）
 （App 有缓存就不重下；改了内容要让用户拿到新版，得在 App 里加版本检查，目前没做）
 """
 import datetime
@@ -27,6 +27,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "private/solid-joys-zh/docx/all"
 OUT = ROOT / "private/solid-joys-zh/solid-joys-zh.json"
+# 繁体界面用：同一份数据整份转字形（opencc-js cn→tw，和 scripts/import-open-bible.mjs 同一设置；只转字形不改用词）
+OUT_TW = ROOT / "private/solid-joys-zh/solid-joys-zh-tw.json"
 # 日期 → befaithful.net 上的 mp3 地址（从专辑 /node/299 的列表页抓的，365 集文件名都和日期对得上）。
 # 音频直接引用他们的地址，不自己托管（DECISIONS D-6）
 AUDIO = ROOT / "private/solid-joys-zh/befaithful-audio.json"
@@ -175,6 +177,20 @@ def main():
         },
         "days": days,
     }, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+
+    subprocess.run(["node", "-e", (
+        "const O=require('opencc-js');const fs=require('fs');"
+        "const c=O.Converter({from:'cn',to:'tw'});"
+        f"let t=c(fs.readFileSync({json.dumps(str(OUT))},'utf8'));"
+        # opencc-js 词库的几处缺陷（2026-09-30 逐条看过）：灵修→靈脩（台湾教会通用「靈修」）；
+        # 「神里面 / 教会里 / 快乐里」有 39 处没转成「裡」。距离单位和人名（英里 / 鄰里 / 百里 / 居里扭）保留「里」
+        "t=t.replace(/靈脩/g,'靈修').replace(/里/g,'裡')"
+        ".replace(/(英|鄰|百|公|千|萬|故)裡/g,'$1里').replace(/裡程/g,'里程').replace(/居裡扭/g,'居里扭')"
+        # 「就是只想 / 不是只喜欢」的「只」是「只有」，opencc 当成量词转成了「隻」
+        ".replace(/是隻/g,'是只');"
+        f"fs.writeFileSync({json.dumps(str(OUT_TW))},t)"
+    )], cwd=ROOT, check=True)
+    json.loads(OUT_TW.read_text(encoding="utf-8"))  # 转完仍是合法 JSON
 
     chars = sum(len("".join(d["paragraphs"])) for d in days)
     print(f"{len(files)} 个文件 → {len(days)} 天，正文约 {chars} 字，{OUT.stat().st_size // 1024} KB → {OUT.relative_to(ROOT)}")

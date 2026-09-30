@@ -412,7 +412,7 @@ private fun RootScreen() {
     LaunchedEffect(translation.id) { home.setSource(translation) }
     // 每日灵修数据：第一次进计划页才下载（中文界面才有）
     LaunchedEffect(tab, appLocale) {
-        if (tab == ShellTab.PLAN && me.askbible.native_.data.SolidJoys.availableFor(appLocale)) me.askbible.native_.data.SolidJoys.ensureLoaded(context)
+        if (tab == ShellTab.PLAN && me.askbible.native_.data.SolidJoys.availableFor(appLocale)) me.askbible.native_.data.SolidJoys.ensureLoaded(context, appLocale)
     }
     // 切界面语言：探索页与首页左上菜单共用（RN applyLocaleWithTranslationPrefs：
     // 语言、主译本（自动）、副译本清空、首页金句译本与朗读一起换；之后手动改译本不再受语言影响）
@@ -704,7 +704,7 @@ private fun RootScreen() {
                     onStageSet = { planViewAhead = 0; planCursor = 0 }, habitDates = activity.completedDateSet,
                     showDevotional = me.askbible.native_.data.SolidJoys.availableFor(appLocale), devotionalPlayer = devotional,
                     onOpenDevotional = { devotionalDate = it; planRoute = "devotional" },
-                    onRetryDevotional = { me.askbible.native_.data.SolidJoys.ensureLoaded(context) })
+                    onRetryDevotional = { me.askbible.native_.data.SolidJoys.ensureLoaded(context, appLocale) })
             }
             ShellTab.READ -> if (showSearch) SearchScreen(
                 locale = displayLocale,

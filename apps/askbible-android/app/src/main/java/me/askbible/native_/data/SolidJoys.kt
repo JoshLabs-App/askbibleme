@@ -22,6 +22,8 @@ import java.time.LocalDate
  * 仓库是公开的，全文不进仓库、不随包内置，首次进计划页时下载，存在 filesDir 里离线可读。
  * 音频不在我们这里：每天的 mp3 直接引用 befaithful.net（DECISIONS D-6）。
  * 入口只在读经计划页（D-7），只在中文界面出现（授权只给中文版，见 docs/content-permissions.md）。
+ * 繁体界面读 solid-joys-zh-tw.json：生成数据时用 opencc 整份转好字形并人工修过几处（Josh 2026-09-30「要转」），
+ * 不在运行时逐字转——界面文案用的 ZhTw 逐字表对 20 万字的正文不够准。
  */
 data class DevotionalDay(
     val md: String,
@@ -38,8 +40,7 @@ data class DevotionalDay(
 }
 
 object SolidJoys {
-    private const val URL_JSON = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/devotionals/solid-joys-zh.json"
-    private const val FILE = "solid-joys-zh.json"
+    private const val BASE = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/devotionals/"
 
     const val TITLE = "约翰·派博每日灵修"
     const val CREDIT_AUTHOR = "John Piper / Desiring God"
@@ -49,7 +50,7 @@ object SolidJoys {
     sealed class State {
         object Idle : State()
         object Loading : State()
-        data class Ready(val days: Map<String, DevotionalDay>) : State()
+        data class Ready(val file: String, val days: Map<String, DevotionalDay>) : State()
         data class Failed(val message: String) : State()
     }
 
@@ -58,6 +59,7 @@ object SolidJoys {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var job: Job? = null
+    private var loadingFile: String? = null
 
     /** 授权只给中文版：英文界面整块不出现 */
     fun availableFor(locale: AppLocale) = locale != AppLocale.EN
@@ -69,16 +71,22 @@ object SolidJoys {
         return days[md]
     }
 
-    /** 有缓存读缓存，没有就下载；已在下载或已就绪不重复做。失败后再调一次即重试 */
-    fun ensureLoaded(context: Context) {
-        if (state is State.Ready || job?.isActive == true) return
+    private fun fileFor(locale: AppLocale) = if (locale == AppLocale.ZH_TW) "solid-joys-zh-tw.json" else "solid-joys-zh.json"
+
+    /** 有缓存读缓存，没有就下载；同一版已在下载或已就绪不重复做。失败后再调一次即重试；切简繁会换一份 */
+    fun ensureLoaded(context: Context, locale: AppLocale) {
+        val name = fileFor(locale)
+        if ((state as? State.Ready)?.file == name) return
+        if (job?.isActive == true && loadingFile == name) return
+        job?.cancel()
+        loadingFile = name
         val app = context.applicationContext
         state = State.Loading
         job = scope.launch {
-            val file = File(app.filesDir, FILE)
+            val file = File(app.filesDir, name)
             state = try {
-                if (!file.exists() || file.length() == 0L) download(file)
-                State.Ready(parse(file.readText()))
+                if (!file.exists() || file.length() == 0L) download(BASE + name, file)
+                State.Ready(name, parse(file.readText()))
             } catch (e: Exception) {
                 // 缓存坏了就删掉，下次重新下
                 file.delete()
@@ -87,8 +95,8 @@ object SolidJoys {
         }
     }
 
-    private fun download(dest: File) {
-        val conn = URL(URL_JSON).openConnection() as HttpURLConnection
+    private fun download(url: String, dest: File) {
+        val conn = URL(url).openConnection() as HttpURLConnection
         conn.connectTimeout = 20_000; conn.readTimeout = 60_000
         if (conn.responseCode !in 200..299) throw IllegalStateException("HTTP ${conn.responseCode}")
         val tmp = File(dest.path + ".part")

@@ -92,6 +92,24 @@ export function memoryNamespaceFromScope(scope: VerseScopeV1): string {
   return scopeIdFromPrefs(scope);
 }
 
+/**
+ * 默认停留从 7 秒改成 10 秒（对齐安卓，DECISIONS D-11）。旧默认 7 是跟着整份偏好一起存进去的，
+ * 分不出是不是用户自己选的：在下一次写偏好之前，读到 7 一律当成旧默认、按 10 用；
+ * 之后用户在菜单里再选 7 秒照常生效（写的时候会立这个标记）。
+ */
+const STABLE_SEC_DEFAULT_LIFTED_KEY = "askbible-home-verse-stable-default10-v1";
+const LEGACY_DEFAULT_STABLE_SEC = 7;
+
+function liftLegacyDefaultStableSec(sec: number): number {
+  if (sec !== LEGACY_DEFAULT_STABLE_SEC) return sec;
+  try {
+    if (window.localStorage.getItem(STABLE_SEC_DEFAULT_LIFTED_KEY) === "1") return sec;
+  } catch {
+    return sec;
+  }
+  return HOME_VERSE_DEFAULT_STABLE_SEC;
+}
+
 export function readHomePrayerVersePrefs(): HomePrayerVersePrefsV1 {
   if (typeof window === "undefined") return DEFAULT_HOME_PRAYER_PREFS;
   try {
@@ -101,7 +119,7 @@ export function readHomePrayerVersePrefs(): HomePrayerVersePrefsV1 {
     if (p?.version !== 1) return DEFAULT_HOME_PRAYER_PREFS;
     const verseScope = normalizeScope(p.verseScope);
     const verseDisplay: VerseDisplayModeV1 = p.verseDisplay === "bilingual" ? "bilingual" : "primary";
-    const homeVerseStableSec = normalizeHomeVerseStableSec(p.homeVerseStableSec);
+    const homeVerseStableSec = liftLegacyDefaultStableSec(normalizeHomeVerseStableSec(p.homeVerseStableSec));
     const normalizedPrimary = normalizeVerseZhTranslationId(p.verseTextZhTranslationId);
     const normalizedContrast = normalizeVerseEnTranslationId(p.verseTextEnTranslationId);
     const modeFromStorage = normalizePrimaryTranslationMode(p.primaryTranslationMode);
@@ -163,6 +181,7 @@ export function writeHomePrayerVersePrefs(next: HomePrayerVersePrefsV1): void {
       goldenVerseTextEffect: normalizeGoldenVerseTextEffect(next.goldenVerseTextEffect),
     };
     window.localStorage.setItem(HOME_PRAYER_PREFS_STORAGE_KEY, JSON.stringify(normalized));
+    window.localStorage.setItem(STABLE_SEC_DEFAULT_LIFTED_KEY, "1");
     persistVerseDisplayToCookie(next.verseDisplay);
     window.dispatchEvent(new Event(HOME_PRAYER_PREFS_UPDATED_EVENT));
   } catch {

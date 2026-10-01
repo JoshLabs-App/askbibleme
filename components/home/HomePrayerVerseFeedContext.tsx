@@ -141,17 +141,30 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
     const baseFadeMs = natureHomeVerseTimingOverride?.fadeMs ?? HOME_VERSE_FADE_MS;
     const fadeMs = prefersReducedMotion ? Math.min(800, baseFadeMs) : baseFadeMs;
 
+    /**
+     * 自然首页（带 timing override）：换一句的周期就是「停留秒数」本身，淡入淡出算在里面，
+     * 和安卓 `HomeVerseController`「不出声时每 10 秒换一句」一致（DECISIONS D-11）。
+     * 以前这里每轮等了两遍停留时间（换完先等「淡入 + 停留」，回到 step 又等一遍「停留」），
+     * 默认 7 秒实际要 15 秒多才换，看起来像是不往下走。其它页面的节奏不动。
+     */
+    const natureCycle = natureHomeVerseTimingOverride != null;
+    const holdMs = Math.max(1000, homeVerseStableMs - 2 * fadeMs);
+
     const step = () => {
-      tid = window.setTimeout(() => {
-        if (cancelled) return;
-        setHomeVerseVisible(false);
-        tid = window.setTimeout(() => {
+      tid = window.setTimeout(
+        () => {
           if (cancelled) return;
-          setActiveIndex((i) => (i + 1) % nVerses);
-          requestAnimationFrame(() => setHomeVerseVisible(true));
-          tid = window.setTimeout(step, fadeMs + homeVerseStableMs);
-        }, fadeMs);
-      }, homeVerseStableMs);
+          setHomeVerseVisible(false);
+          tid = window.setTimeout(() => {
+            if (cancelled) return;
+            setActiveIndex((i) => (i + 1) % nVerses);
+            requestAnimationFrame(() => setHomeVerseVisible(true));
+            if (natureCycle) step();
+            else tid = window.setTimeout(step, fadeMs + homeVerseStableMs);
+          }, fadeMs);
+        },
+        natureCycle ? fadeMs + holdMs : homeVerseStableMs,
+      );
     };
 
     step();
@@ -159,7 +172,7 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
       cancelled = true;
       if (tid !== undefined) window.clearTimeout(tid);
     };
-  }, [prefersReducedMotion, locale, bilingual, nVerses, verseKeysSig, natureHomeVerseTimingOverride?.fadeMs, homeVerseStableMs, verseAudioSequenceActive]);
+  }, [prefersReducedMotion, locale, bilingual, nVerses, verseKeysSig, natureHomeVerseTimingOverride, homeVerseStableMs, verseAudioSequenceActive]);
 
   useEffect(() => {
     setActiveIndex((i) => Math.min(i, Math.max(0, nVerses - 1)));

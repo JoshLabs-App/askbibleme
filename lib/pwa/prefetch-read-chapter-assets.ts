@@ -15,7 +15,9 @@ const PARCHMENT_ASSETS = [
 function prefetchUrl(url: string): void {
   if (!url.trim()) return;
   try {
-    void fetch(url, { mode: "same-origin", credentials: "same-origin", cache: "default" });
+    // 预取失败（离线、被重定向到别的域、文件还没有）不该冒成「未处理的 Promise 报错」；
+    // 外面的 try/catch 只接得住同步异常，接不住 fetch 返回的 Promise。
+    void fetch(url, { mode: "same-origin", credentials: "same-origin", cache: "default" }).catch(() => {});
   } catch {
     /* ignore */
   }

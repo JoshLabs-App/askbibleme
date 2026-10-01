@@ -9,6 +9,7 @@ import { ReadScriptureAudioDockStrip } from "@/components/bible/ReadScriptureAud
 import { ScriptureAudioDockStrip } from "@/components/bible/ScriptureAudioDockStrip";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
+import { ShellMaterialCommunityIcon } from "@/components/shell/ShellMaterialCommunityIcon";
 import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
 import { isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
 import { isReadPlanPlayPath, readPlanPlayHref } from "@/lib/read/read-plan-play-route";
@@ -312,7 +313,8 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
             .join(" ")}
         >
           {readFabUsesScripture ? (
-            <ShellMaterialIcon
+            /* account-voice 是社区图标（MDI），Material Icons 字体里没有这个字形，用 ShellMaterialIcon 画不出来 */
+            <ShellMaterialCommunityIcon
               name="account-voice"
               size={SHELL_PLAY_ICON_SIZE_PX}
               color={fabActive ? "var(--brand-logo-background)" : SHELL_TAB_BAR_ICON}

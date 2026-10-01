@@ -179,6 +179,8 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
   const natureVerseFitBoxRef = useRef<HTMLDivElement>(null);
   const natureVerseFitMeasureRef = useRef<HTMLDivElement>(null);
   const [natureVerseFitCompress, setNatureVerseFitCompress] = useState(1);
+  /** 当前缩放的同步副本：适配时要用它把量到的尺寸除回「没缩之前」 */
+  const natureVerseFitCompressRef = useRef(1);
   const [verseTightLineClamp, setVerseTightLineClamp] = useState(false);
   /** 点主画面：收起底栏、场景条与环境音；再点恢复 */
   const [homeChromeHidden, setHomeChromeHidden] = useState(false);
@@ -946,6 +948,17 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
     );
   };
 
+  /** 换了一节 / 换了字号档位：先放开行数限制，下面的适配再按这一节的真实大小重新判断 */
+  useLayoutEffect(() => {
+    setVerseTightLineClamp(false);
+  }, [activeIndex, verseTextZoom, bilingual, hasNatureVisual]);
+
+  /**
+   * 金句装不下所在区域时整体缩小（先限行数，再等比缩）。
+   * 量的是「没缩之前」的大小：外层 transform 会把 getBoundingClientRect 一起缩小，所以要除回当前缩放，
+   * 否则缩过一次之后下一次会以为装得下、又放回原大，字就被区域裁掉一半。
+   * 字体是后到的（宋体 webfont swap 之后字会变宽），内容和区域两个都要盯，字体到了也重算。
+   */
   useLayoutEffect(() => {
     if (!hasNatureVisual) return;
     const box = natureVerseFitBoxRef.current;
@@ -955,36 +968,39 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
     const applyFit = () => {
       const bw = box.clientWidth;
       const bh = box.clientHeight;
+      const current = natureVerseFitCompressRef.current || 1;
+      const r = inner.getBoundingClientRect();
+      const w = r.width / current;
+      const h = r.height / current;
+      if (!(bw >= 8 && bh >= 8 && w >= 0.5 && h >= 0.5)) return;
 
-      setVerseTightLineClamp(false);
-      setNatureVerseFitCompress(1);
-      void inner.offsetWidth;
-      let r = inner.getBoundingClientRect();
-      if (!(bw >= 8 && bh >= 8 && r.width >= 0.5 && r.height >= 0.5)) return;
-
-      let raw = Math.min(bw / r.width, bh / r.height);
-      const needsClamp = raw < 0.998;
-      if (needsClamp) {
-        setVerseTightLineClamp(true);
-        void inner.offsetWidth;
-        r = inner.getBoundingClientRect();
-        raw = Math.min(bw / r.width, bh / r.height);
-      }
+      const raw = Math.min(bw / w, bh / h);
+      if (raw < 0.998 && !verseTightLineClamp) setVerseTightLineClamp(true);
 
       const next = Math.min(1, Math.max(NATURE_VERSE_FIT_COMPRESS_MIN, Number.isFinite(raw) ? raw : 1));
-      setNatureVerseFitCompress((prev) => (Math.abs(prev - next) < 0.004 ? prev : next));
+      if (Math.abs(current - next) >= 0.004) {
+        natureVerseFitCompressRef.current = next;
+        setNatureVerseFitCompress(next);
+      }
     };
 
     applyFit();
     const ro = new ResizeObserver(() => applyFit());
     ro.observe(box);
-    return () => ro.disconnect();
+    ro.observe(inner);
+    const fonts = typeof document !== "undefined" ? document.fonts : undefined;
+    fonts?.addEventListener?.("loadingdone", applyFit);
+    return () => {
+      ro.disconnect();
+      fonts?.removeEventListener?.("loadingdone", applyFit);
+    };
   }, [
     hasNatureVisual,
     bilingual,
     homeVerseVisible,
     verseTextZoom,
     activeIndex,
+    verseTightLineClamp,
     natureVerseAppearance.fontFamily,
     natureVerseAppearance.textEffect,
   ]);

@@ -5,7 +5,8 @@ import { useEffect, useSyncExternalStore } from "react";
 const STORAGE_KEY = "askbible-home-verse-advance-gap-sec-v1";
 const UPDATED_EVENT = "askbible:home-verse-advance-gap-updated";
 const OPTIONS = [3, 5, 7, 10, 15] as const;
-const DEFAULT_GAP_SEC = 3;
+/** 朗读时一句读完停多久再换下一句（安卓 `HomeVerseController.GAP_MS` = 5 秒） */
+const DEFAULT_GAP_SEC = 5;
 
 let cached = DEFAULT_GAP_SEC;
 let hydrated = false;

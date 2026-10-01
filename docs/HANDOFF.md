@@ -620,7 +620,17 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
 
 ## 附：2026-10-01 官网 + 网页版搬到 /web 交接
 
-**当前状态**：做完、本机验过、已提交在分支 `claude/upbeat-mayer-752c72`，**等 Josh 确认才合 main 上线**（OPEN-ITEMS O-9）。决定见 DECISIONS D-10。
+**当前状态（2026-10-01 傍晚）**：官网（D-10）和网页版首页对齐安卓（D-11）都做完、本机验过、已提交在分支 `claude/upbeat-mayer-752c72`
+（worktree `.claude/worktrees/strange-dewdney-3855d7`），**没合 main、没推送，等 Josh 说「上线」**（OPEN-ITEMS O-9、O-10）。
+
+**下一步（按顺序）**：
+1. **探索页对齐安卓**（Josh：「探索页内容也太多了，没有对齐」）——差异已查清，**等 Josh 选做法**：
+   安卓 `ExploreScreen.kt` 是「问候 → 三个统计数（今年第几天 / 读经天 / 连续天）→ 使用时长 → 成就 → 最近阅读 → 收藏 → 查经资料文章格子」；
+   网页 `/explore` 是「问候 → 成就 → 最近阅读 → 11 个格子」，其中 8 个功能格子（欢迎 / 读经计划 / 数算年日 / 祷告与经文 / 圣经人物 / 历代信经 / 窄门之路 / 赞美敬拜）
+   安卓没有——安卓代码注释写着「按 Josh 的决定只留网站，App 暂不放（2026-09-09）」，所以去不去掉要他重新拍板；网页还缺统计行、使用时长、收藏。
+2. Josh 逐页看网页版时再提的不一致，照「以安卓代码为准」处理，改完记进 D-11 或新开一条决定。
+3. Josh 说「上线」后：合 main、推送（Vercel 自动部署），提醒他点一次手机主屏上已装的图标。
+
 
 - `askbible.me/` = 官网：`app/(site)/page.tsx` → `components/site/SiteHome.tsx`（样式 `site-home.css`，新文案 `site-home-copy.ts`；
   四条原则 / 怎样陪你 / 我们不是什么直接复用 `components/about/about-page-copy.ts`）。

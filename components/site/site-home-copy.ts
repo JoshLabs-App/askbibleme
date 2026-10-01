@@ -34,7 +34,7 @@ export type SiteHomeCopy = {
 export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
   "zh-CN": {
     heroTitle: "安静地，回到经文。",
-    heroSub: "一个让人重新进入圣经的安静入口。不靠压力，不靠打卡。",
+    heroSub: "一个让人重新进入圣经的安静入口。",
     ctaWeb: "进入网页版",
     ctaVersions: "下载 App",
     quote: "「我进去待一下。」",
@@ -69,7 +69,7 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
   },
   en: {
     heroTitle: "Quietly, back to Scripture.",
-    heroSub: "A quiet entry back into Scripture. No pressure, no streaks.",
+    heroSub: "A quiet entry back into Scripture.",
     ctaWeb: "Open the web app",
     ctaVersions: "Get the app",
     quote: "“I’ll just step in for a while.”",

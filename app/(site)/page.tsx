@@ -12,7 +12,7 @@ import { WEB_APP_HOME_PATH } from "@/lib/web-app-home-path";
  */
 const TITLE = `${ASKBIBLE_PRODUCT_NAME} · 安静地，回到经文`;
 const DESCRIPTION =
-  "一个让人重新进入圣经的安静入口。不靠压力，不靠打卡。网页、iPhone、iPad、Android 都可以用。";
+  "一个让人重新进入圣经的安静入口。网页、iPhone、iPad、Android 都可以用。";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },

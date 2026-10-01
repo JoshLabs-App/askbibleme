@@ -139,7 +139,7 @@ export function AppInstallGuidePage() {
       href: APP_INSTALL_ANDROID_URL,
       actionIcon: "google-play",
       external: true,
-      secondaryLabel: isZh ? "直接下载 APK 安装包" : "Download the APK directly",
+      secondaryLabel: isZh ? "下载最新版安装包（与商店版二选一）" : "Download the latest APK (instead of the store version)",
       secondaryHref: APP_INSTALL_ANDROID_APK_URL,
       secondaryIcon: "android",
     };

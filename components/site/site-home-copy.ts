@@ -23,6 +23,8 @@ export type SiteHomeCopy = {
   storePlaySub: string;
   storeApkName: string;
   storeApkSub: string;
+  /** 首屏入口下面的一行小字：安卓两个版本二选一 */
+  storesAndroidNote: string;
   quote: string;
   quoteNote: string;
   beliefsHeading: string;
@@ -45,9 +47,10 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
     storeWebSub: "无需安装",
     phoneAlt: "AskBible.me App 打开后的画面",
     storeIosSub: "iPhone / iPad",
-    storePlaySub: "Android",
-    storeApkName: "安卓安装包",
-    storeApkSub: "直接下载",
+    storePlaySub: "Android 商店版",
+    storeApkName: "安卓下载",
+    storeApkSub: "最新版",
+    storesAndroidNote: "安卓的商店版和最新版二选一，不能互相覆盖安装。",
     quote: "「我进去待一下。」",
     quoteNote: "而不是「我要开始学习」。",
     beliefsHeading: "我们的理念",
@@ -66,14 +69,14 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
       action: "前往 App Store",
     },
     versionPlay: {
-      title: "Android",
-      body: "在 Google Play 下载。",
+      title: "Android 商店版",
+      body: "在 Google Play 下载，由商店推送更新。和最新版二选一。",
       action: "前往 Google Play",
     },
     versionApk: {
-      title: "Android 安装包",
-      body: "用不了 Google Play 时，直接下载安装包。",
-      action: "下载安装包",
+      title: "Android 最新版",
+      body: "直接下载安装，新版最先到，App 里会提示更新。和商店版二选一，不能互相覆盖安装。",
+      action: "下载最新版",
     },
     footerAbout: "关于",
     languageLabel: "语言",
@@ -85,9 +88,10 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
     storeWebSub: "Nothing to install",
     phoneAlt: "The AskBible.me app when you open it",
     storeIosSub: "iPhone / iPad",
-    storePlaySub: "Android",
+    storePlaySub: "Android · store",
     storeApkName: "Android APK",
-    storeApkSub: "Direct download",
+    storeApkSub: "Latest version",
+    storesAndroidNote: "On Android, pick the store version or the latest version. One can't be installed over the other.",
     quote: "“I’ll just step in for a while.”",
     quoteNote: "Not “I have to start studying.”",
     beliefsHeading: "What we believe",
@@ -106,14 +110,14 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
       action: "Go to the App Store",
     },
     versionPlay: {
-      title: "Android",
-      body: "Get it on Google Play.",
+      title: "Android · store version",
+      body: "Get it on Google Play; updates come through the store. Choose this or the latest version, not both.",
       action: "Go to Google Play",
     },
     versionApk: {
-      title: "Android APK",
-      body: "No Google Play? Download the installer directly.",
-      action: "Download the APK",
+      title: "Android · latest version",
+      body: "Download and install it directly. New releases land here first and the app tells you when to update. It can't be installed over the store version.",
+      action: "Download the latest",
     },
     footerAbout: "About",
     languageLabel: "Language",

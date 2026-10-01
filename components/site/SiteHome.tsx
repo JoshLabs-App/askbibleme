@@ -219,6 +219,7 @@ export function SiteHome() {
                   </span>
                 </Link>
               </div>
+              <p className="site-home__stores-note">{copy.storesAndroidNote}</p>
             </div>
             </div>
             {/*

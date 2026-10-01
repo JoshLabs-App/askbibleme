@@ -116,6 +116,8 @@ export default async function AppDownloadPage() {
       <p style={{ margin: "14px 0 0", fontSize: 13, color: "#6E5240", lineHeight: 1.8 }}>
         装完之后有新版会在 App 里提示，点一下就更新。
         <br />
+        这里是最新版，和 Google Play 商店版二选一；已经装了商店版的，请继续在商店里更新。
+        <br />
         iPhone / iPad 请到 App Store 搜「AskBible」。
       </p>
 

@@ -230,6 +230,14 @@ html.dark .site-home__phone {
   gap: 10px;
 }
 
+.site-home__stores-note {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--sh-muted);
+}
+
 .site-home__store {
   display: flex;
   align-items: center;

@@ -333,10 +333,10 @@ export function HomeVerseRotator({
       const wt = nhBoldFx ? "font-black" : "font-bold";
       /**
        * Josh 2026-10-01：「经文实际要更小一些，不是铺满屏，而是一个有品味、有呼吸感的空间」。
-       * 手机约 20px，大屏最多 26px；一行最多 17 个字（`max-w-[17em]`），不横着铺满；行距、字距放松一点。
-       * （前两版 24→46px、24→34px 都嫌大。）宋体见 globals.css `.font-verse-song`。
+       * 手机约 17px，大屏最多 20px；一行最多 17 个字（`max-w-[17em]`），不横着铺满；行距、字距放松一点。
+       * （前三版 24→46px、24→34px、20→26px 都嫌大。）宋体见 globals.css `.font-verse-song`。
        */
-      return `m-0 mx-auto max-w-[17em] font-verse-song text-[clamp(1.25rem,0.9vmin+1.06rem,1.625rem)] ${wt} leading-[1.7] tracking-[0.04em] text-white`;
+      return `m-0 mx-auto max-w-[17em] font-verse-song text-[clamp(1.0625rem,0.4vmin+0.97rem,1.25rem)] ${wt} leading-[1.7] tracking-[0.04em] text-white`;
     }
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
@@ -415,7 +415,7 @@ export function HomeVerseRotator({
     if (nhMobileVideo) {
       const wt = nhBoldFx ? "font-black" : "font-bold";
       /** 出处 = 正文的 0.75 倍（安卓 18sp : 24sp），上间距 12 : 18 */
-      return `mt-[0.9em] font-verse-song text-[clamp(0.875rem,0.63vmin+0.74rem,1.125rem)] ${wt} leading-[1.45] tracking-[0.12em] text-white/85`;
+      return `mt-[0.9em] font-verse-song text-[clamp(0.8125rem,0.3vmin+0.74rem,0.9375rem)] ${wt} leading-[1.45] tracking-[0.12em] text-white/85`;
     }
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
@@ -479,7 +479,7 @@ export function HomeVerseRotator({
   const secondaryRefClass = (() => {
     if (nhMobileVideo) {
       const wt = nhBoldFx ? "font-black" : "font-bold";
-      return `${bilingual ? "mt-1" : "mt-1.5"} font-verse-song text-[clamp(0.8rem,0.5vmin+0.68rem,1rem)] ${wt} leading-[1.45] text-white`;
+      return `${bilingual ? "mt-1" : "mt-1.5"} font-verse-song text-[clamp(0.75rem,0.25vmin+0.69rem,0.875rem)] ${wt} leading-[1.45] text-white`;
     }
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";

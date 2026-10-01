@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -165,12 +166,14 @@ fun HomeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 val shadow = Shadow(Color(0x8C000000), Offset(0f, 2f), 8f)
+                val context = LocalContext.current
                 Text(
                     verse.text,
                     style = TextStyle(
                         color = Color.White,
                         fontSize = HomeVerseTypography.bodySize(textScale).sp,
                         lineHeight = HomeVerseTypography.bodyLineHeight(textScale).sp,
+                        fontFamily = VerseFont.family(context, verse.text),
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
                         shadow = shadow,
@@ -183,6 +186,7 @@ fun HomeScreen(
                         color = Color.White,
                         fontSize = HomeVerseTypography.refSize(textScale).sp,
                         lineHeight = HomeVerseTypography.refLineHeight(textScale).sp,
+                        fontFamily = VerseFont.family(context, verse.reference),
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
                         shadow = shadow,

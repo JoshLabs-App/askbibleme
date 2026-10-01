@@ -620,19 +620,15 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
 
 ## 附：2026-10-01 官网 + 网页版搬到 /web 交接
 
-**当前状态（2026-10-01 夜）**：官网（D-10）、网页版首页对齐安卓（D-11）、探索页照安卓（D-12）、撤掉网页专有设置（D-13、D-18）、
+**当前状态（2026-10-01 夜）**：原生首页金句换思源宋体（D-19，两端已改，iPhone 已装、三星没装）、官网（D-10）、网页版首页对齐安卓（D-11）、探索页照安卓（D-12）、撤掉网页专有设置（D-13、D-18）、
 菜单「回主页」（D-14）、官网手机模型放真的网页版（D-15）、下载入口加图标（D-16）、安卓「最新版 / 商店版」二选一（D-17）都做完、本机验过、
 已提交在分支 `claude/upbeat-mayer-752c72`（worktree `.claude/worktrees/strange-dewdney-3855d7`），**没合 main、没推送，等 Josh 说「上线」**（OPEN-ITEMS O-9）。
 
 **下一步（按顺序）**：
-1. **原生 App 的金句换成思源宋体 700（Josh 已定「要」，D-18 第 4 条），代码还没动，从这里接着做**：
-   - 字体：网页用的那份是 `scripts/build-verse-font.py` 从 `01youtube/tools/fonts/NotoSerifSC-VF.ttf` 取 700 字重、子集到站内中文译本用到的全部字（产物和用法见 D-11「字体怎么来的」、`app/globals.css` `.font-verse-song`）。
-     原生要的是能打进包里的 TTF / OTF（不是 woff2），先看脚本能不能顺手多出一份。
-   - 安卓：`apps/askbible-android`，金句在 `ui/HomeScreen.kt`（现在 24sp 系统黑体粗体），字体放 `res/font/`。
-   - iOS：`apps/askbible-ios`，首页金句对应的 SwiftUI 视图，字体进 bundle 并在 Info.plist 的 `UIAppFonts` 登记。
-   - 只换字体，**字号不动**（原生 24sp 是定好的；网页有意比原生小，见 D-11）。繁体、英文金句怎么显示要一起看。
-   - 做完按老规矩装机：home iPhone + 三星，Release 包；三星装 `sideload` 变体（包名 `me.askbible.native`），别盖商店版。
-     动手前 `ListAgents` 看有没有别的会话在改原生。
+1. **三星装原生金句宋体版（D-19，OPEN-ITEMS O-15）**：两端代码已改完并提交在本分支，home iPhone 已装 1.1.2 (133)；三星 10-01 晚不在线没装。
+   三星上线后打 `sideload` 变体（包名 `me.askbible.native`，别盖商店版）。这个 worktree 里没有 `apps/askbible-mobile/android/keystore.properties`
+   （不进仓库），先从主目录拷过来再打，不然出来的包没签名；本机没有 `local.properties` 时用 `ANDROID_HOME` 指 SDK。
+   Josh 看过手机后要是对英文金句用系统衬线体有意见，改 `VerseFont`（安卓 `ui/VerseFont.kt`、iOS `Theme/VerseFont.swift`）。
 2. Josh 逐页看网页版时再提的不一致，照「以安卓代码为准」处理。
 3. Josh 说「上线」后：合 main、推送（Vercel 自动部署），提醒他点一次手机主屏上已装的图标。
 4. 待他决定的：O-13（菜单里的「金句停顿」要不要也去掉）、O-14（首页水合报错要不要修）、D-14 的「主页」是不是指官网。
@@ -647,6 +643,8 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
 - `askbible.me/web` = 网页版首页：`app/(app-shell)/web/page.tsx`（从 `(app-shell)/page.tsx` 原样搬过来）。常量 `lib/web-app-home-path.ts`。
 - `askbible.me/app` = 安卓下载页，没动。
 
+**原生金句字体怎么验**：安卓 `./gradlew :app:compileSideloadKotlin`；iOS `xcodebuild … -configuration Release -destination generic/platform=iOS build`（手机连不上时用通用目标编，再 `devicectl` 装）。
+
 **验证**：`npx tsc --noEmit`、`npx vitest run`；`npm run dev` 后看 `http://localhost:3450/`、`/web`、`/index`（应跳 `/web`）、`/manifest.webmanifest`（`start_url` 应是 `/web`）。
 
 **别踩的坑**：
@@ -658,7 +656,8 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
 5. 繁体靠 `toZhTwText` 逐字表转，新文案里出现表里没有的字就不会转。加文案后用 opencc-js 对照一遍（这次补了「优 缓 样 浏 槛」和「放松 / 轻松 / 日历」）。
 6. **网页版首页已向安卓看齐（D-11）**：改首页按键 / 底栏时以安卓 `HomeScreen.kt`、`ShellTabBar.kt` 为准，别再往网页首页加安卓没有的键。
    底部工具的展开状态在 `NatureVideoExperience`（`sceneToolsOpen`），开关是右上角 `NatureHomeToolsToggle`。
-   金句字体 `.font-verse-song` 在 `app/globals.css`，字体文件由 `scripts/build-verse-font.py` 生成。留下的待决定项见 OPEN-ITEMS O-10。
+   金句字体 `.font-verse-song` 在 `app/globals.css`，字体文件由 `scripts/build-verse-font.py` 生成。
+   同一个脚本也出原生用的 `AskBibleSong-Bold.ttf`（两端各一份），新增中文译本后重跑要把三个文件一起提交；跑的时候把主目录的 `public/scripture` 作为参数传进去。留下的待决定项见 OPEN-ITEMS O-10。
 7. **探索页的统计数和进度条是和读经页共用的组件**（`ReadTodayReadingStats` / `ReadYearDayTimeline`，`ReadTodayPlanPanel` 也在用）：
    探索页的尺寸是在 `explore-parchment.css` 里用 `.explore-habit-*` 包一层覆盖的，别去改组件本身。
 8. 探索页左右留白：外层羊皮卷栏有 20，`.explore-home` 只补 2（合计安卓的 22）。

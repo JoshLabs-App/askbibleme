@@ -8,7 +8,7 @@ enum IconFont {
     static let community = register("MaterialCommunityIcons")
 
     /// 运行时注册字体并取 PostScript 名，省掉 Info.plist 的 UIAppFonts
-    private static func register(_ file: String) -> String {
+    static func register(_ file: String) -> String {
         let url = Bundle.main.url(forResource: file, withExtension: "ttf", subdirectory: "Fonts")
             ?? Bundle.main.url(forResource: file, withExtension: "ttf")
         guard let url else { return "" }

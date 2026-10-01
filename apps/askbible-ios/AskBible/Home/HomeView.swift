@@ -234,14 +234,14 @@ struct HomeView: View {
         let scale = prefs.textScale
         return VStack(spacing: 0) {
             Text(verse.text)
-                .font(.system(size: HomeVerseTypography.bodySize(scale: scale), weight: .bold))
+                .font(VerseFont.font(for: verse.text, size: HomeVerseTypography.bodySize(scale: scale)))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
                 .lineSpacing(HomeVerseTypography.bodyLineHeight(scale: scale) - HomeVerseTypography.bodySize(scale: scale))
                 .verseTextShadow()
 
             Text(verse.reference)
-                .font(.system(size: HomeVerseTypography.refSize(scale: scale), weight: .bold))
+                .font(VerseFont.font(for: verse.reference, size: HomeVerseTypography.refSize(scale: scale)))
                 .foregroundStyle(.white)
                 .kerning(0.1)
                 .padding(.top, HomeVerseTypography.refTopGap(scale: scale))

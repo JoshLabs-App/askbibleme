@@ -191,6 +191,13 @@ export function ShellNavDrawerContent({ onClose }: Props) {
         </>
       ) : null}
       <div className="h-1" aria-hidden />
+      {/* 回官网主页（askbible.me/）：网页版首页是 /web，这里故意写 "/"，不是 WEB_APP_HOME_PATH */}
+      <ShellNavDrawerMenuRow
+        label={zh ? "回主页" : "Back to homepage"}
+        detail="askbible.me"
+        href="/"
+        onClick={onClose}
+      />
       <ShellNavDrawerMenuRow
         label={t("install.menuAction")}
         href="/install"

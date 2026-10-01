@@ -17,21 +17,12 @@ import {
 } from "@/lib/nature/root-theme";
 import { DEFAULT_BRAND_COLORS } from "@/lib/site-branding-colors";
 import {
-  mergeNatureVisualPrefs,
-  readNatureVisualLevels,
-  writeNatureVisualLevels,
-  type NatureVisualLevel,
-} from "@/lib/nature/nature-visual-level-prefs";
-import {
   NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX,
   NATURE_HOME_TEXT_SCALE_STEPS,
   natureHomeTextScaleAtStep,
   readNatureHomeTextScaleStepIndex,
 } from "@/lib/home/nature-home-text-scale-prefs";
-import {
-  NATURE_HOME_VERSE_APPEARANCE_UPDATED_EVENT,
-  readNatureHomeVerseAppearance,
-} from "@/lib/home/nature-home-verse-appearance-prefs";
+import { DEFAULT_NATURE_HOME_VERSE_APPEARANCE } from "@/lib/home/nature-home-verse-appearance-prefs";
 import { NATURE_HOME_VERSE_FADE_MS } from "@/components/home/home-verse-constants";
 import { setNatureHomeVerseTimingOverride } from "@/lib/home/nature-home-verse-timing-override";
 import {
@@ -144,8 +135,6 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
 
   const [natureBgSoftFocus, setNatureBgSoftFocus] = useState(false);
   const [homeSettingsOpen, setHomeSettingsOpen] = useState(false);
-  const [dimLevel, setDimLevel] = useState<NatureVisualLevel>(0);
-  const [blurLevel, setBlurLevel] = useState<NatureVisualLevel>(0);
   const [softFocusCommittedOpacity, setSoftFocusCommittedOpacity] = useState(0);
   const [softFocusCommittedBlur, setSoftFocusCommittedBlur] = useState(0);
   const [softFocusDraftOpacity, setSoftFocusDraftOpacity] = useState(0);
@@ -154,7 +143,11 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
   const [textScaleStepIndex, setTextScaleStepIndex] = useState(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX);
   /** 底部「字号与定时 · 环境音 · 场景」三排是否展开；开关在右上角齿轮（对齐安卓 `HomeScreen.toolsOpen`） */
   const [sceneToolsOpen, setSceneToolsOpen] = useState(false);
-  const [natureVerseAppearance, setNatureVerseAppearance] = useState(() => readNatureHomeVerseAppearance());
+  /**
+   * 暗度 / 模糊 / 金句特效这几项网页专有设置已撤（DECISIONS D-13，安卓首页没有）：
+   * 浏览器里存着或从云端同步来的旧值不再生效，一律按默认显示。
+   */
+  const natureVerseAppearance = DEFAULT_NATURE_HOME_VERSE_APPEARANCE;
   const [videoBroken, setVideoBroken] = useState(false);
   const [dwellVideoAllowed, setDwellVideoAllowed] = useState(false);
   const [dwellPolicyResolved, setDwellPolicyResolved] = useState(false);
@@ -842,40 +835,10 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
     return () => mq.removeEventListener("change", sync);
   }, []);
 
-  useEffect(() => {
-    const levels = readNatureVisualLevels();
-    const prefs = mergeNatureVisualPrefs(levels.dimLevel, levels.blurLevel);
-    setDimLevel(levels.dimLevel);
-    setBlurLevel(levels.blurLevel);
-    setSoftFocusCommittedOpacity(prefs.overlayOpacity);
-    setSoftFocusCommittedBlur(prefs.blurPx);
-    setSoftFocusDraftOpacity(prefs.overlayOpacity);
-    setSoftFocusDraftBlur(prefs.blurPx);
-    setNatureBgSoftFocus(levels.dimLevel > 0 || levels.blurLevel > 0);
-  }, []);
-
   useLayoutEffect(() => {
     setTextScaleStepIndex(readNatureHomeTextScaleStepIndex());
   }, []);
 
-  useEffect(() => {
-    const syncAppearance = () => setNatureVerseAppearance(readNatureHomeVerseAppearance());
-    window.addEventListener(NATURE_HOME_VERSE_APPEARANCE_UPDATED_EVENT, syncAppearance);
-    return () => window.removeEventListener(NATURE_HOME_VERSE_APPEARANCE_UPDATED_EVENT, syncAppearance);
-  }, []);
-
-
-  const applyVisualLevels = useCallback((nextDim: NatureVisualLevel, nextBlur: NatureVisualLevel) => {
-    const prefs = mergeNatureVisualPrefs(nextDim, nextBlur);
-    writeNatureVisualLevels({ dimLevel: nextDim, blurLevel: nextBlur });
-    setDimLevel(nextDim);
-    setBlurLevel(nextBlur);
-    setSoftFocusCommittedOpacity(prefs.overlayOpacity);
-    setSoftFocusCommittedBlur(prefs.blurPx);
-    setSoftFocusDraftOpacity(prefs.overlayOpacity);
-    setSoftFocusDraftBlur(prefs.blurPx);
-    setNatureBgSoftFocus(nextDim > 0 || nextBlur > 0);
-  }, []);
 
   const onHomeSettingsOpenChange = useCallback(
     (open: boolean) => {
@@ -916,7 +879,6 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
 
   const onNatureHomePrefsChanged = useCallback(() => {
     setTextScaleStepIndex(readNatureHomeTextScaleStepIndex());
-    setNatureVerseAppearance(readNatureHomeVerseAppearance());
     setNatureHomePrefsVersion((v) => v + 1);
   }, []);
 

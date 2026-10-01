@@ -332,10 +332,11 @@ export function HomeVerseRotator({
     if (nhMobileVideo) {
       const wt = nhBoldFx ? "font-black" : "font-bold";
       /**
-       * 手机 24px（安卓 `HomeVerseTypography` 24sp），屏幕大一点字跟着大一点，封顶 34px
-       * （第一版封顶 46px，Josh 2026-10-01：太大、超出区域）。宋体见 globals.css `.font-verse-song`。
+       * Josh 2026-10-01：「经文实际要更小一些，不是铺满屏，而是一个有品味、有呼吸感的空间」。
+       * 手机约 20px，大屏最多 26px；一行最多 17 个字（`max-w-[17em]`），不横着铺满；行距、字距放松一点。
+       * （前两版 24→46px、24→34px 都嫌大。）宋体见 globals.css `.font-verse-song`。
        */
-      return `m-0 font-verse-song text-[clamp(1.5rem,1.5vmin+1.15rem,2.125rem)] ${wt} leading-[1.55] text-white`;
+      return `m-0 mx-auto max-w-[17em] font-verse-song text-[clamp(1.25rem,0.9vmin+1.06rem,1.625rem)] ${wt} leading-[1.7] tracking-[0.04em] text-white`;
     }
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
@@ -414,7 +415,7 @@ export function HomeVerseRotator({
     if (nhMobileVideo) {
       const wt = nhBoldFx ? "font-black" : "font-bold";
       /** 出处 = 正文的 0.75 倍（安卓 18sp : 24sp），上间距 12 : 18 */
-      return `mt-[0.667em] font-verse-song text-[clamp(1.125rem,1.125vmin+0.8625rem,1.59375rem)] ${wt} leading-[1.45] text-white`;
+      return `mt-[0.9em] font-verse-song text-[clamp(0.875rem,0.63vmin+0.74rem,1.125rem)] ${wt} leading-[1.45] tracking-[0.12em] text-white/85`;
     }
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
@@ -478,7 +479,7 @@ export function HomeVerseRotator({
   const secondaryRefClass = (() => {
     if (nhMobileVideo) {
       const wt = nhBoldFx ? "font-black" : "font-bold";
-      return `${bilingual ? "mt-1" : "mt-1.5"} font-verse-song text-[clamp(0.9rem,0.9vmin+0.69rem,1.275rem)] ${wt} leading-[1.45] text-white`;
+      return `${bilingual ? "mt-1" : "mt-1.5"} font-verse-song text-[clamp(0.8rem,0.5vmin+0.68rem,1rem)] ${wt} leading-[1.45] text-white`;
     }
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";

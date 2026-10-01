@@ -1,5 +1,6 @@
 "use client";
 
+import { ShellMaterialCommunityIcon } from "@/components/shell/ShellMaterialCommunityIcon";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -27,6 +28,9 @@ type PlatformGuide = {
   external?: boolean;
   secondaryLabel?: string;
   secondaryHref?: string;
+  /** 按钮前的图标（MDI 名）：苹果 / Google Play / 安卓 */
+  actionIcon: string;
+  secondaryIcon?: string;
 };
 
 function detectPlatform(): Platform {
@@ -59,6 +63,7 @@ function PlatformCard({ guide }: { guide: PlatformGuide }) {
           : {})}
         className="mt-6 inline-flex w-full items-center justify-center rounded-full border border-[rgba(120,53,15,0.22)] bg-[rgba(255,252,245,0.88)] px-4 py-3 text-[15px] font-semibold text-[#2b1d15] transition hover:border-[rgba(120,53,15,0.32)] active:scale-[0.99]"
       >
+        <ShellMaterialCommunityIcon name={guide.actionIcon} size={20} className="mr-2" />
         {guide.actionLabel}
       </a>
       {guide.secondaryLabel && guide.secondaryHref ? (
@@ -68,6 +73,9 @@ function PlatformCard({ guide }: { guide: PlatformGuide }) {
           rel="noopener noreferrer"
           className="mt-2.5 inline-flex w-full items-center justify-center rounded-full border border-[rgba(120,53,15,0.14)] bg-transparent px-4 py-3 text-[14px] font-medium text-[rgba(43,29,21,0.72)] transition hover:border-[rgba(120,53,15,0.28)] hover:text-[#2b1d15] active:scale-[0.99]"
         >
+          {guide.secondaryIcon ? (
+            <ShellMaterialCommunityIcon name={guide.secondaryIcon} size={18} className="mr-2" />
+          ) : null}
           {guide.secondaryLabel}
         </a>
       ) : null}
@@ -105,6 +113,7 @@ export function AppInstallGuidePage() {
           ],
       actionLabel: isZh ? "前往 App Store" : "Open App Store",
       href: APP_INSTALL_IOS_URL,
+      actionIcon: "apple",
       external: true,
     };
 
@@ -128,9 +137,11 @@ export function AppInstallGuidePage() {
           ],
       actionLabel: isZh ? "前往 Google Play" : "Open Google Play",
       href: APP_INSTALL_ANDROID_URL,
+      actionIcon: "google-play",
       external: true,
       secondaryLabel: isZh ? "直接下载 APK 安装包" : "Download the APK directly",
       secondaryHref: APP_INSTALL_ANDROID_APK_URL,
+      secondaryIcon: "android",
     };
 
     if (platform === "android") return [android, ios];

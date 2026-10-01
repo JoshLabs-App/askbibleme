@@ -624,6 +624,7 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
 （worktree `.claude/worktrees/strange-dewdney-3855d7`），**没合 main、没推送，等 Josh 说「上线」**（OPEN-ITEMS O-9、O-10、O-11、O-12）。
 同晚又做了四件：网页专有设置面板删掉（D-13）、金句再缩小到 17–20px（D-11 第四次修正）、左上菜单加「回主页」回官网（D-14）、
 官网手机模型里改放真的网页版首页（D-15，`components/site/SitePhoneLiveScreen.tsx`）。
+再之后：官网首页、`/install`、`/app` 的下载入口都加了图标（D-16）。
 
 **下一步（按顺序）**：
 1. Josh 逐页看网页版时再提的不一致，照「以安卓代码为准」处理，改完记进 D-11 / D-12 或新开一条决定。

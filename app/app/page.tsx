@@ -73,7 +73,9 @@ export default async function AppDownloadPage() {
         href={apk}
         style={{
           marginTop: 10,
-          display: "inline-block",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
           padding: "15px 44px",
           borderRadius: 999,
           background: "#D97707",
@@ -84,6 +86,7 @@ export default async function AppDownloadPage() {
           boxShadow: "0 6px 20px rgba(217,119,7,.32)",
         }}
       >
+        <span className="mdi mdi-android" style={{ fontSize: 22, lineHeight: 1 }} aria-hidden />
         下载安卓版
       </a>
 

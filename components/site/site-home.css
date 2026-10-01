@@ -232,11 +232,11 @@ html.dark .site-home__phone {
 
 .site-home__store {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   min-height: 68px;
-  padding: 10px 6px;
+  padding: 10px 8px;
   border: 1px solid var(--sh-line);
   border-radius: 14px;
   background: var(--sh-card);
@@ -270,6 +270,23 @@ html.dark .site-home__phone {
   transform: scale(0.98);
 }
 
+/* 入口前的图标：网页版是 AskBible 自己的图标（圆角方块），其余是单色的商店 / 系统标 */
+.site-home__entry-icon {
+  flex-shrink: 0;
+}
+
+.site-home__entry-icon--app {
+  display: block;
+  border-radius: 23%;
+}
+
+.site-home__store-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
 .site-home__store-name {
   font-size: 15px;
   font-weight: 600;
@@ -283,6 +300,31 @@ html.dark .site-home__phone {
   line-height: 1.4;
   color: var(--sh-muted);
   white-space: nowrap;
+}
+
+/* 英文名字长（Open the web app），加了图标后窄屏放不下，字收一点 */
+.site-home--en .site-home__store {
+  gap: 7px;
+  padding-inline: 5px;
+}
+
+.site-home--en .site-home__store-name {
+  font-size: 13px;
+}
+
+.site-home--en .site-home__store-sub {
+  font-size: 10.5px;
+}
+
+@media (max-width: 380px) {
+  .site-home--en .site-home__store {
+    gap: 6px;
+    padding-inline: 4px;
+  }
+
+  .site-home--en .site-home__store-name {
+    font-size: 12.5px;
+  }
 }
 
 /* ── 通用分节 ───────────────────────────────────── */
@@ -441,6 +483,11 @@ html.dark .site-home__phone {
 
 .site-home__version:active {
   transform: scale(0.99);
+}
+
+.site-home__version-text {
+  flex: 1;
+  min-width: 0;
 }
 
 .site-home__version-title {

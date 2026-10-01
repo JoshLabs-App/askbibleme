@@ -7,6 +7,7 @@ import { ABOUT_PAGE_COPY } from "@/components/about/about-page-copy";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { SITE_HOME_COPY, type SiteHomeVersionCopy } from "@/components/site/site-home-copy";
 import { SitePhoneLiveScreen } from "@/components/site/SitePhoneLiveScreen";
+import { ShellMaterialCommunityIcon } from "@/components/shell/ShellMaterialCommunityIcon";
 import { APP_INSTALL_ANDROID_URL, APP_INSTALL_IOS_URL } from "@/lib/app-install-urls";
 import { ASKBIBLE_PRODUCT_NAME } from "@/lib/askbible-product-name";
 import type { AppLocale } from "@/lib/i18n/config";
@@ -26,6 +27,28 @@ const ANDROID_APK_PAGE_PATH = "/app";
 
 const APP_SCREEN_IMAGE_SRC = "/site/app-screen-home.webp";
 
+/**
+ * 各版本入口前面的图标（Josh 2026-10-01：「有图标的都把图标上」，DECISIONS D-16）：
+ * 网页版用 AskBible 自己的图标，其余是 App 里同一套 MDI 图标字体里的苹果 / Google Play / 安卓标。
+ */
+type EntryIconKind = "web" | "ios" | "play" | "apk";
+
+const ENTRY_MDI_ICON: Record<Exclude<EntryIconKind, "web">, string> = {
+  ios: "apple",
+  play: "google-play",
+  apk: "android",
+};
+
+function EntryIcon({ kind, size }: { kind: EntryIconKind; size: number }) {
+  if (kind === "web") {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img className="site-home__entry-icon site-home__entry-icon--app" src="/branding/app-icon.png" alt="" width={size} height={size} />
+    );
+  }
+  return <ShellMaterialCommunityIcon className="site-home__entry-icon" name={ENTRY_MDI_ICON[kind]} size={size} />;
+}
+
 function mapStrings<T>(value: T, fn: (text: string) => string): T {
   if (typeof value === "string") return fn(value) as T;
   if (Array.isArray(value)) return value.map((item) => mapStrings(item, fn)) as T;
@@ -40,15 +63,18 @@ function mapStrings<T>(value: T, fn: (text: string) => string): T {
 function VersionEntry({
   copy,
   href,
+  icon,
   external = false,
 }: {
   copy: SiteHomeVersionCopy;
   href: string;
+  icon: EntryIconKind;
   external?: boolean;
 }) {
   const inner = (
     <>
-      <span>
+      <EntryIcon kind={icon} size={34} />
+      <span className="site-home__version-text">
         <span className="site-home__version-title font-serif">{copy.title}</span>
         <span className="site-home__version-body">{copy.body}</span>
       </span>
@@ -155,8 +181,11 @@ export function SiteHome() {
             <div className="site-home__stores-block">
               <div className="site-home__stores">
                 <Link className="site-home__store site-home__store--primary" href={WEB_APP_HOME_PATH}>
-                  <span className="site-home__store-name">{copy.ctaWeb}</span>
-                  <span className="site-home__store-sub">{copy.storeWebSub}</span>
+                  <EntryIcon kind="web" size={26} />
+                  <span className="site-home__store-text">
+                    <span className="site-home__store-name">{copy.ctaWeb}</span>
+                    <span className="site-home__store-sub">{copy.storeWebSub}</span>
+                  </span>
                 </Link>
                 <a
                   className="site-home__store"
@@ -164,8 +193,11 @@ export function SiteHome() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <span className="site-home__store-name">App Store</span>
-                  <span className="site-home__store-sub">{copy.storeIosSub}</span>
+                  <EntryIcon kind="ios" size={26} />
+                  <span className="site-home__store-text">
+                    <span className="site-home__store-name">App Store</span>
+                    <span className="site-home__store-sub">{copy.storeIosSub}</span>
+                  </span>
                 </a>
                 <a
                   className="site-home__store"
@@ -173,12 +205,18 @@ export function SiteHome() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <span className="site-home__store-name">Google Play</span>
-                  <span className="site-home__store-sub">{copy.storePlaySub}</span>
+                  <EntryIcon kind="play" size={26} />
+                  <span className="site-home__store-text">
+                    <span className="site-home__store-name">Google Play</span>
+                    <span className="site-home__store-sub">{copy.storePlaySub}</span>
+                  </span>
                 </a>
                 <Link className="site-home__store" href={ANDROID_APK_PAGE_PATH}>
-                  <span className="site-home__store-name">{copy.storeApkName}</span>
-                  <span className="site-home__store-sub">{copy.storeApkSub}</span>
+                  <EntryIcon kind="apk" size={26} />
+                  <span className="site-home__store-text">
+                    <span className="site-home__store-name">{copy.storeApkName}</span>
+                    <span className="site-home__store-sub">{copy.storeApkSub}</span>
+                  </span>
                 </Link>
               </div>
             </div>
@@ -248,10 +286,10 @@ export function SiteHome() {
             </h2>
             <p className="site-home__intro">{copy.versionsIntro}</p>
             <div className="site-home__versions">
-              <VersionEntry copy={copy.versionWeb} href={WEB_APP_HOME_PATH} />
-              <VersionEntry copy={copy.versionIos} href={APP_INSTALL_IOS_URL} external />
-              <VersionEntry copy={copy.versionPlay} href={APP_INSTALL_ANDROID_URL} external />
-              <VersionEntry copy={copy.versionApk} href={ANDROID_APK_PAGE_PATH} />
+              <VersionEntry copy={copy.versionWeb} href={WEB_APP_HOME_PATH} icon="web" />
+              <VersionEntry copy={copy.versionIos} href={APP_INSTALL_IOS_URL} icon="ios" external />
+              <VersionEntry copy={copy.versionPlay} href={APP_INSTALL_ANDROID_URL} icon="play" external />
+              <VersionEntry copy={copy.versionApk} href={ANDROID_APK_PAGE_PATH} icon="apk" />
             </div>
             <p className="site-home__closing">{about.closing}</p>
           </section>

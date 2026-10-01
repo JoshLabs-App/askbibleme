@@ -13,7 +13,17 @@ function isFirstOpenHintEnabled(): boolean {
 
 type GatePhase = "loading" | "first-hint" | "devotion" | "done";
 
+/** 被嵌在别的页面里（官网手机模型，DECISIONS D-15）：那里只是展示首页，不弹首次引导，也不改引导的完成状态。 */
+function isEmbeddedInFrame(): boolean {
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+}
+
 function resolveInitialPhase(firstHintEnabled: boolean): GatePhase {
+  if (isEmbeddedInFrame()) return "done";
   if (firstHintEnabled && shouldShowFirstOpenHint()) return "first-hint";
   if (shouldShowOnboardingDevotionIntro()) return "devotion";
   return "done";

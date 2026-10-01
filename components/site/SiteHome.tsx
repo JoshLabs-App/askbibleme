@@ -6,6 +6,7 @@ import { useEffect, useMemo } from "react";
 import { ABOUT_PAGE_COPY } from "@/components/about/about-page-copy";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { SITE_HOME_COPY, type SiteHomeVersionCopy } from "@/components/site/site-home-copy";
+import { SitePhoneLiveScreen } from "@/components/site/SitePhoneLiveScreen";
 import { APP_INSTALL_ANDROID_URL, APP_INSTALL_IOS_URL } from "@/lib/app-install-urls";
 import { ASKBIBLE_PRODUCT_NAME } from "@/lib/askbible-product-name";
 import type { AppLocale } from "@/lib/i18n/config";
@@ -183,20 +184,11 @@ export function SiteHome() {
             </div>
             </div>
             {/*
-              手机模型（Josh 2026-10-01）：里面放 App 打开后的真实画面。
-              图是 App Store 上架页的第一张官方截图，换图只换 `public/site/app-screen-home.webp`。
+              手机模型（Josh 2026-10-01）：里面是真的网页版首页，不是一张图（DECISIONS D-15）。
+              垫底的截图是 `public/site/app-screen-home.webp`，网页版没加载出来时才看得到。
             */}
             <div className="site-home__phone">
-              <div className="site-home__phone-screen">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={APP_SCREEN_IMAGE_SRC}
-                  alt={copy.phoneAlt}
-                  width={600}
-                  height={1299}
-                  decoding="async"
-                />
-              </div>
+              <SitePhoneLiveScreen posterSrc={APP_SCREEN_IMAGE_SRC} alt={copy.phoneAlt} />
             </div>
           </section>
 

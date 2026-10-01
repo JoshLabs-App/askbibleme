@@ -622,7 +622,8 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
 
 **当前状态（2026-10-01 晚）**：官网（D-10）、网页版首页对齐安卓（D-11）、**探索页完全照安卓（D-12）**都做完、本机验过、已提交在分支 `claude/upbeat-mayer-752c72`
 （worktree `.claude/worktrees/strange-dewdney-3855d7`），**没合 main、没推送，等 Josh 说「上线」**（OPEN-ITEMS O-9、O-10、O-11、O-12）。
-同晚又做了三件：网页专有设置面板删掉（D-13）、金句再缩小到 17–20px（D-11 第四次修正）、左上菜单加「回主页」回官网（D-14）。
+同晚又做了四件：网页专有设置面板删掉（D-13）、金句再缩小到 17–20px（D-11 第四次修正）、左上菜单加「回主页」回官网（D-14）、
+官网手机模型里改放真的网页版首页（D-15，`components/site/SitePhoneLiveScreen.tsx`）。
 
 **下一步（按顺序）**：
 1. Josh 逐页看网页版时再提的不一致，照「以安卓代码为准」处理，改完记进 D-11 / D-12 或新开一条决定。
@@ -654,4 +655,5 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
 7. **探索页的统计数和进度条是和读经页共用的组件**（`ReadTodayReadingStats` / `ReadYearDayTimeline`，`ReadTodayPlanPanel` 也在用）：
    探索页的尺寸是在 `explore-parchment.css` 里用 `.explore-habit-*` 包一层覆盖的，别去改组件本身。
 8. 探索页左右留白：外层羊皮卷栏有 20，`.explore-home` 只补 2（合计安卓的 22）。
+10. 官网手机模型里是 iframe 内嵌的 `/web`（D-15）：给站点加 `X-Frame-Options` / `frame-ancestors` 这类响应头时要放行同源，不然手机里只剩垫底截图。
 9. 暗度 / 模糊 / 金句特效在网页首页已经不读偏好了（D-13），但 `lib/` 里的读写函数别删，会员同步还在用它们和 RN / iOS 互通。

@@ -147,10 +147,34 @@ html.dark .site-home__phone {
 }
 
 .site-home__phone-screen {
+  position: relative;
+  display: block;
   overflow: hidden;
   border-radius: 37px;
   aspect-ratio: 600 / 1299;
   background: var(--sh-bg-deep);
+}
+
+/* 真的网页版首页：按 390 × 844 排版再缩进来（缩放比例由组件算），只看不能点 */
+.site-home__phone-live {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 0;
+  transform-origin: 0 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+}
+
+.site-home__phone-live[data-ready="1"] {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-home__phone-live {
+    transition: none;
+  }
 }
 
 .site-home__phone-screen img {

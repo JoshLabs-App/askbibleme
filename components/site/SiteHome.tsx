@@ -23,6 +23,8 @@ const LANGS: { locale: AppLocale; label: string }[] = [
 /** 安卓安装包走自己站上的下载页（地址印在分享图上，见 DECISIONS 2026-09-23） */
 const ANDROID_APK_PAGE_PATH = "/app";
 
+const APP_SCREEN_IMAGE_SRC = "/site/app-screen-home.webp";
+
 function mapStrings<T>(value: T, fn: (text: string) => string): T {
   if (typeof value === "string") return fn(value) as T;
   if (Array.isArray(value)) return value.map((item) => mapStrings(item, fn)) as T;
@@ -141,6 +143,7 @@ export function SiteHome() {
 
         <main>
           <section className="site-home__hero">
+            <div className="site-home__hero-text">
             <div className="site-home__rule" aria-hidden />
             <h1 className="site-home__title font-serif">{copy.heroTitle}</h1>
             <p className="site-home__sub">{copy.heroSub}</p>
@@ -176,6 +179,23 @@ export function SiteHome() {
                   <span className="site-home__store-name">{copy.storeApkName}</span>
                   <span className="site-home__store-sub">{copy.storeApkSub}</span>
                 </Link>
+              </div>
+            </div>
+            </div>
+            {/*
+              手机模型（Josh 2026-10-01）：里面放 App 打开后的真实画面。
+              图是 App Store 上架页的第一张官方截图，换图只换 `public/site/app-screen-home.webp`。
+            */}
+            <div className="site-home__phone">
+              <div className="site-home__phone-screen">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={APP_SCREEN_IMAGE_SRC}
+                  alt={copy.phoneAlt}
+                  width={600}
+                  height={1299}
+                  decoding="async"
+                />
               </div>
             </div>
           </section>

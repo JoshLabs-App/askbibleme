@@ -17,6 +17,8 @@ export type SiteHomeCopy = {
   heroSub: string;
   ctaWeb: string;
   storeWebSub: string;
+  /** 首屏手机模型里那张图的说明（读屏用） */
+  phoneAlt: string;
   storeIosSub: string;
   storePlaySub: string;
   storeApkName: string;
@@ -41,6 +43,7 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
     heroSub: "一个让人重新进入圣经的安静入口。",
     ctaWeb: "进入网页版",
     storeWebSub: "无需安装",
+    phoneAlt: "AskBible.me App 打开后的画面",
     storeIosSub: "iPhone / iPad",
     storePlaySub: "Android",
     storeApkName: "安卓安装包",
@@ -80,6 +83,7 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
     heroSub: "A quiet entry back into Scripture.",
     ctaWeb: "Open the web app",
     storeWebSub: "Nothing to install",
+    phoneAlt: "The AskBible.me app when you open it",
     storeIosSub: "iPhone / iPad",
     storePlaySub: "Android",
     storeApkName: "Android APK",

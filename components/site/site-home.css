@@ -110,11 +110,57 @@ html.dark .site-home {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: calc(100dvh - 82px - env(safe-area-inset-top, 0px));
-  padding-top: 24px;
-  padding-bottom: 64px;
+  padding-bottom: 84px;
   text-align: center;
+}
+
+/* 手机上：文字和四个入口占第一屏，下面留一截让手机模型的顶露出来，提示往下还有 */
+.site-home__hero-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: calc(100dvh - 82px - 96px - env(safe-area-inset-top, 0px));
+  padding: 24px 0 40px;
+}
+
+/* ── 手机模型 ───────────────────────────────────── */
+.site-home__phone {
+  --sh-phone-bezel: #1c1410;
+  flex-shrink: 0;
+  width: min(280px, 72vw);
+  padding: 9px;
+  border-radius: 46px;
+  background: var(--sh-phone-bezel);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.06) inset,
+    0 44px 80px -36px rgb(60 40 20 / 0.55),
+    0 18px 36px -24px rgb(60 40 20 / 0.4);
+}
+
+html.dark .site-home__phone {
+  --sh-phone-bezel: #0d0a08;
+  box-shadow:
+    0 0 0 1px rgb(216 200 180 / 0.2),
+    0 44px 80px -36px rgb(0 0 0 / 0.8);
+}
+
+.site-home__phone-screen {
+  overflow: hidden;
+  border-radius: 37px;
+  aspect-ratio: 600 / 1299;
+  background: var(--sh-bg-deep);
+}
+
+.site-home__phone-screen img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
 }
 
 .site-home__rule {
@@ -462,24 +508,26 @@ html.dark .site-home {
   }
 }
 
-.site-home__hero > * {
+.site-home__hero-text > *,
+.site-home__phone {
   animation: site-home-rise 0.9s ease both;
 }
 
-.site-home__hero > :nth-child(3) {
+.site-home__hero-text > :nth-child(3) {
   animation-delay: 0.12s;
 }
 
-.site-home__hero > :nth-child(4) {
+.site-home__hero-text > :nth-child(4) {
   animation-delay: 0.24s;
 }
 
-.site-home__hero > :nth-child(5) {
+.site-home__phone {
   animation-delay: 0.36s;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .site-home__hero > * {
+  .site-home__hero-text > *,
+  .site-home__phone {
     animation: none;
   }
 
@@ -503,15 +551,6 @@ html.dark .site-home {
   }
 
 
-  .site-home__stores-block {
-    max-width: 720px;
-  }
-
-  .site-home__stores {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 12px;
-  }
-
   .site-home__principles {
     grid-template-columns: 1fr 1fr;
     column-gap: 64px;
@@ -525,5 +564,40 @@ html.dark .site-home {
   .site-home__versions {
     grid-template-columns: 1fr 1fr;
     gap: 16px;
+  }
+}
+
+/* 宽屏：左边一句话和四个入口，右边手机模型 */
+@media (min-width: 900px) {
+  .site-home__hero {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 72px;
+    min-height: calc(100dvh - 82px);
+    padding-bottom: 64px;
+    text-align: left;
+  }
+
+  .site-home__hero-text {
+    align-items: flex-start;
+    width: auto;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .site-home__rule {
+    margin-left: 0;
+  }
+
+  .site-home__title {
+    font-size: clamp(2.6rem, 4.6vw, 3.9rem);
+  }
+
+  .site-home__sub {
+    margin-left: 0;
+  }
+
+  .site-home__phone {
+    width: 300px;
   }
 }

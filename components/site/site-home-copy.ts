@@ -16,7 +16,12 @@ export type SiteHomeCopy = {
   heroTitle: string;
   heroSub: string;
   ctaWeb: string;
+  /** 首屏三个下载入口上面的小标 */
   ctaVersions: string;
+  storeIosSub: string;
+  storePlaySub: string;
+  storeApkName: string;
+  storeApkSub: string;
   quote: string;
   quoteNote: string;
   beliefsHeading: string;
@@ -37,6 +42,10 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
     heroSub: "一个让人重新进入圣经的安静入口。",
     ctaWeb: "进入网页版",
     ctaVersions: "下载 App",
+    storeIosSub: "iPhone / iPad",
+    storePlaySub: "Android",
+    storeApkName: "安卓安装包",
+    storeApkSub: "直接下载",
     quote: "「我进去待一下。」",
     quoteNote: "而不是「我要开始学习」。",
     beliefsHeading: "我们的理念",
@@ -72,6 +81,10 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
     heroSub: "A quiet entry back into Scripture.",
     ctaWeb: "Open the web app",
     ctaVersions: "Get the app",
+    storeIosSub: "iPhone / iPad",
+    storePlaySub: "Android",
+    storeApkName: "Android APK",
+    storeApkSub: "Direct download",
     quote: "“I’ll just step in for a while.”",
     quoteNote: "Not “I have to start studying.”",
     beliefsHeading: "What we believe",

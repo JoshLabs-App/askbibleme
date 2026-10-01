@@ -70,7 +70,7 @@ function VersionEntry({
 
 /**
  * 官网 `askbible.me/`：一句话理念 + 各版本入口（D-10）。
- * 首页规则照 `docs/04-ux-philosophy.md`：一个场景、一句话、一个入口。
+ * 首屏：一句话 + 主入口「进入网页版」+ 三个 App 下载入口（Josh 2026-10-01 要各版本下载在首屏直接可见）。
  */
 export function SiteHome() {
   const { locale, setLocale } = useLocale();
@@ -148,9 +148,34 @@ export function SiteHome() {
               <Link className="site-home__btn" href={WEB_APP_HOME_PATH}>
                 {copy.ctaWeb}
               </Link>
-              <a className="site-home__textlink" href="#versions">
-                {copy.ctaVersions}
-              </a>
+            </div>
+            {/* Josh 2026-10-01：各版本的下载要在首屏直接看得到，不藏在页面最下面 */}
+            <div className="site-home__stores-block">
+              <p className="site-home__stores-label">{copy.ctaVersions}</p>
+              <div className="site-home__stores">
+                <a
+                  className="site-home__store"
+                  href={APP_INSTALL_IOS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span className="site-home__store-name">App Store</span>
+                  <span className="site-home__store-sub">{copy.storeIosSub}</span>
+                </a>
+                <a
+                  className="site-home__store"
+                  href={APP_INSTALL_ANDROID_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span className="site-home__store-name">Google Play</span>
+                  <span className="site-home__store-sub">{copy.storePlaySub}</span>
+                </a>
+                <Link className="site-home__store" href={ANDROID_APK_PAGE_PATH}>
+                  <span className="site-home__store-name">{copy.storeApkName}</span>
+                  <span className="site-home__store-sub">{copy.storeApkSub}</span>
+                </Link>
+              </div>
             </div>
           </section>
 

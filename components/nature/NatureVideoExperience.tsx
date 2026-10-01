@@ -133,13 +133,6 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
   const introStillLoadStartedAtRef = useRef(0);
   const playbackWaitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [natureBgSoftFocus, setNatureBgSoftFocus] = useState(false);
-  const [homeSettingsOpen, setHomeSettingsOpen] = useState(false);
-  const [softFocusCommittedOpacity, setSoftFocusCommittedOpacity] = useState(0);
-  const [softFocusCommittedBlur, setSoftFocusCommittedBlur] = useState(0);
-  const [softFocusDraftOpacity, setSoftFocusDraftOpacity] = useState(0);
-  const [softFocusDraftBlur, setSoftFocusDraftBlur] = useState(0);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [textScaleStepIndex, setTextScaleStepIndex] = useState(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX);
   /** 底部「字号与定时 · 环境音 · 场景」三排是否展开；开关在右上角齿轮（对齐安卓 `HomeScreen.toolsOpen`） */
   const [sceneToolsOpen, setSceneToolsOpen] = useState(false);
@@ -360,12 +353,6 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
     },
   );
 
-  useEffect(() => {
-    if (!hasNatureVisual) {
-      setNatureBgSoftFocus(false);
-      setHomeSettingsOpen(false);
-    }
-  }, [hasNatureVisual]);
   /** 低电量：仅静图，不挂载解码 `<video>` */
   const posterOnlyLowPower = mediaPolicy.lowBatteryStatic && hasStillIntro;
 
@@ -827,53 +814,19 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
     };
   }, []);
 
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setPrefersReducedMotion(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
-
   useLayoutEffect(() => {
     setTextScaleStepIndex(readNatureHomeTextScaleStepIndex());
   }, []);
 
 
-  const onHomeSettingsOpenChange = useCallback(
-    (open: boolean) => {
-      if (open) {
-        setSoftFocusDraftOpacity(softFocusCommittedOpacity);
-        setSoftFocusDraftBlur(softFocusCommittedBlur);
-      } else {
-        setSoftFocusDraftOpacity(softFocusCommittedOpacity);
-        setSoftFocusDraftBlur(softFocusCommittedBlur);
-      }
-      setHomeSettingsOpen(open);
-    },
-    [softFocusCommittedOpacity, softFocusCommittedBlur],
-  );
-
-  const softFocusLayerVisible = natureBgSoftFocus || homeSettingsOpen;
-  const softFocusDisplayOpacity = homeSettingsOpen ? softFocusDraftOpacity : softFocusCommittedOpacity;
-  const softFocusDisplayBlur = homeSettingsOpen ? softFocusDraftBlur : softFocusCommittedBlur;
-
-  const effectiveNatureSoftFocusBlurPx = prefersReducedMotion
-    ? Math.min(softFocusDisplayBlur, 10)
-    : softFocusDisplayBlur;
-
   /** 与 iOS 一致：沉浸态先恢复控件；普通态点主画面切换背景音乐。 */
   const onNatureVideoBlankClick = useCallback(() => {
-    if (homeSettingsOpen) {
-      onHomeSettingsOpenChange(false);
-      return;
-    }
     if (homeChromeHidden) {
       setHomeChromeHidden(false);
       return;
     }
     if (!verseAudioSequenceActive) void togglePlayMusic();
-  }, [homeChromeHidden, homeSettingsOpen, onHomeSettingsOpenChange, togglePlayMusic, verseAudioSequenceActive]);
+  }, [homeChromeHidden, togglePlayMusic, verseAudioSequenceActive]);
 
   const verseTextZoom = natureHomeTextScaleAtStep(textScaleStepIndex);
 
@@ -1052,19 +1005,6 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
               />
             ) : null}
           </div>
-          {softFocusLayerVisible ? (
-            <div
-              className="pointer-events-none absolute inset-0 z-[8]"
-              style={
-                {
-                  backgroundColor: `rgba(0,0,0,${softFocusDisplayOpacity})`,
-                  backdropFilter: `blur(${effectiveNatureSoftFocusBlurPx}px)`,
-                  WebkitBackdropFilter: `blur(${effectiveNatureSoftFocusBlurPx}px)`,
-                } satisfies CSSProperties
-              }
-              aria-hidden
-            />
-          ) : null}
           {videoBroken && hasConfiguredVideoSrc ? (
             <p
               className="pointer-events-none absolute bottom-[max(5.25rem,calc(env(safe-area-inset-bottom,0px)+4.75rem))] left-3 right-3 z-[3] text-center text-[12px] leading-snug text-amber-100/80 sm:left-6 sm:right-6 sm:text-[13px]"

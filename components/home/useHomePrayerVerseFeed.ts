@@ -31,8 +31,8 @@ import {
 } from "@/lib/home-prayer-pools/home-verse-pool-menu-scopes";
 import { EXPLORE_CURATED_700_POOL_SCOPE_ID } from "@/lib/scripture/explore-curated-pool-scope-id";
 import {
+  DEFAULT_HOME_VERSE_POOL_SCOPE,
   HOME_VERSE_POOL_SCOPE_UPDATED_EVENT,
-  hydrateHomeVersePoolScope,
 } from "@/lib/home/home-verse-pool-scope-prefs";
 import { useHomeVerseStableMs } from "@/components/home/useHomeVerseStableMs";
 import { buildFixedVerseFlow } from "@/lib/home-listening/fixed-verse-flow";
@@ -143,7 +143,8 @@ export function useHomePrayerVerseFeed({ fallbackByLocale, locale }: Args): {
       const remoteConfig = await readVerifiedHomePrayerPoolConfig();
       if (cancelled) return;
       const scopeId = pickScopeIdForFeed(localScopeId, remoteConfig);
-      const menuScope = hydrateHomeVersePoolScope();
+      /** 「首页经文范围」设置已撤（D-18）：和安卓一样只有一个金句池，存着的旧范围不再读 */
+      const menuScope = DEFAULT_HOME_VERSE_POOL_SCOPE;
       scopeIdRef.current = scopeId;
       menuScopeRef.current = menuScope;
       let manifest = await fetchHomePrayerManifest(staticPoolScopeIdForMenuScope(menuScope));

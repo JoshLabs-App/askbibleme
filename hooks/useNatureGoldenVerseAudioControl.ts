@@ -4,13 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { useMediaPlaybackCoordinator } from "@/components/media/MediaPlaybackCoordinatorProvider";
-import { buildGoldenVerseAudioRemoteSrc } from "@/lib/bible/golden-verse-audio";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { buildGoldenVerseAudioRemoteSrc, type GoldenVerseAudioTranslationId } from "@/lib/bible/golden-verse-audio";
 import { isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
 import { addHomeListeningSeconds } from "@/lib/home-listening/progress";
-import {
-  HOME_GOLDEN_VERSE_AUDIO_PREFS_EVENT,
-  readHomeGoldenVerseAudioTranslationId,
-} from "@/lib/home/home-golden-verse-audio-prefs";
 
 function normalizeAudioSrc(src: string): string {
   try {
@@ -34,9 +31,12 @@ export function useNatureGoldenVerseAudioControl(verseKey?: string | null) {
   const [active, setActive] = useState(false);
   const [ready, setReady] = useState(false);
   const [preparing, setPreparing] = useState(false);
-  const [audioTranslationId, setAudioTranslationId] = useState(() =>
-    readHomeGoldenVerseAudioTranslationId(),
-  );
+  /**
+   * 朗读用哪种语言跟着首页金句的语言走（界面英文读英文，中文读中文），和安卓一致（D-18）；
+   * 原来菜单里单独的「金句朗读 中文 / 英文」开关已撤，存着的旧值不再读。
+   */
+  const { locale } = useLocale();
+  const audioTranslationId: GoldenVerseAudioTranslationId = locale === "en" ? "web-en" : "cuv-simp";
   const musicVolumeBeforeRef = useRef<number | null>(null);
   const lastAudioTimeRef = useRef(0);
   const unflushedListeningSecondsRef = useRef(0);
@@ -48,12 +48,6 @@ export function useNatureGoldenVerseAudioControl(verseKey?: string | null) {
 
   useEffect(() => {
     setReady(true);
-  }, []);
-
-  useEffect(() => {
-    const refresh = () => setAudioTranslationId(readHomeGoldenVerseAudioTranslationId());
-    window.addEventListener(HOME_GOLDEN_VERSE_AUDIO_PREFS_EVENT, refresh);
-    return () => window.removeEventListener(HOME_GOLDEN_VERSE_AUDIO_PREFS_EVENT, refresh);
   }, []);
 
   const flushListeningTime = useCallback(() => {

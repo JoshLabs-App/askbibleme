@@ -16,12 +16,13 @@ import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { AuthParchmentChrome } from "@/components/shell/AuthParchmentChrome";
 import { isMemberRegisterEnabledClient } from "@/lib/member-register-enabled";
+import { WEB_APP_HOME_PATH } from "@/lib/web-app-home-path";
 
 function LoginPageInner() {
   const { t } = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextRaw = searchParams.get("next")?.trim() || "/";
+  const nextRaw = searchParams.get("next")?.trim() || WEB_APP_HOME_PATH;
   const safeNext =
     nextRaw.startsWith("/") && !nextRaw.startsWith("//") && nextRaw !== "/login" ? nextRaw : "/";
 
@@ -80,7 +81,7 @@ function LoginPageInner() {
       <AuthParchmentChrome>
         <div className="narrow-parchment-root w-full px-1 py-8 text-center">
           <p className="max-w-sm text-[15px] leading-relaxed">{t("auth.notConfigured")}</p>
-          <Link href="/" className={`mt-8 inline-block ${authLinkClass}`}>
+          <Link href={WEB_APP_HOME_PATH} className={`mt-8 inline-block ${authLinkClass}`}>
             {t("auth.backHome")}
           </Link>
         </div>
@@ -133,7 +134,7 @@ function LoginPageInner() {
             </Link>
           </div>
         ) : null}
-        <Link href="/" className={`mt-8 block text-center ${authLinkClass}`}>
+        <Link href={WEB_APP_HOME_PATH} className={`mt-8 block text-center ${authLinkClass}`}>
           {t("auth.backHome")}
         </Link>
       </div>

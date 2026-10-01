@@ -3,9 +3,10 @@
 import { useCallback, useRef, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { isNatureHomeShellPath } from "@/components/home/HomeDockChromeContext";
+import { WEB_APP_HOME_PATH } from "@/lib/web-app-home-path";
 
 /** 与 `HomeShellFloatingRouteNav` 左→右（不含中央播放；不含放松入口）一致 */
-const ROUTE_SWIPE_ORDER = ["/", "/scenes", "/read", "/explore"] as const;
+const ROUTE_SWIPE_ORDER = [WEB_APP_HOME_PATH, "/scenes", "/read", "/explore"] as const;
 
 const SWIPE_MIN_DX = 56;
 

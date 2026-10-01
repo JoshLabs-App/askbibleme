@@ -5,8 +5,12 @@ import { natureSettingsRevision } from "@/lib/nature/nature-settings-revision";
 import { readNatureSettings } from "@/lib/nature/read-nature-settings";
 import { SITE_METADATA_DEFAULT_TITLE } from "@/lib/site-metadata-defaults";
 
+/**
+ * 网页版首页：`askbible.me/web`。根路径 `/` 是官网（`app/(site)/page.tsx`，DECISIONS D-10）。
+ * 标题用 absolute：这里已不是根段，不写的话会套上模板变成「AskBible.me | AskBible.me」。
+ */
 export const metadata: Metadata = {
-  title: SITE_METADATA_DEFAULT_TITLE,
+  title: { absolute: SITE_METADATA_DEFAULT_TITLE },
   description: "全屏自然影像与轮播经文。",
 };
 

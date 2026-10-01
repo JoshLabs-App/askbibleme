@@ -24,6 +24,7 @@ import {
   shellTabMaterialIcon,
   type ShellTabMaterialIconName,
 } from "@/lib/shell/shell-chrome-icons";
+import { WEB_APP_HOME_PATH, isWebAppHomePath } from "@/lib/web-app-home-path";
 
 type NavItemDef = {
   href: string;
@@ -33,9 +34,9 @@ type NavItemDef = {
 };
 
 const homeItem: NavItemDef = {
-  href: "/",
+  href: WEB_APP_HOME_PATH,
   labelKey: "nav.home",
-  match: (p) => p === "/" || p === "" || p === "/nature" || p.startsWith("/nature/"),
+  match: (p) => isWebAppHomePath(p) || p === "" || p === "/nature" || p.startsWith("/nature/"),
   materialIcon: shellTabMaterialIcon("home"),
 };
 
@@ -61,7 +62,7 @@ const exploreItem: NavItemDef = {
 };
 
 function shellHref(path: string, shellRoot: string): string {
-  if (!shellRoot) return path;
+  if (!shellRoot) return path === "/" ? WEB_APP_HOME_PATH : path;
   if (path === "/") return shellRoot;
   return `${shellRoot}${path}`;
 }

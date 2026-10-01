@@ -1,6 +1,7 @@
 import { AuthMethodDivider } from "@/components/auth/GoogleSignInButton";
 import { AppleSignInButton } from "@/components/auth/AppleSignInButton";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { WEB_APP_HOME_PATH } from "@/lib/web-app-home-path";
 
 export { AuthMethodDivider };
 
@@ -9,7 +10,7 @@ type Props = {
   className?: string;
 };
 
-export function SocialSignInButtons({ nextPath = "/", className }: Props) {
+export function SocialSignInButtons({ nextPath = WEB_APP_HOME_PATH, className }: Props) {
   return (
     <div className={`flex flex-col gap-3 ${className ?? ""}`}>
       <GoogleSignInButton nextPath={nextPath} />

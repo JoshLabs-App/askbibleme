@@ -39,6 +39,10 @@ const ZH_TW_OVERRIDES: Record<string, string> = {
 };
 
 const ZH_TW_PHRASE_REPLACEMENTS: ReadonlyArray<readonly [string, string]> = [
+  // 「松」本字是松树，只在「放松 / 轻松」里取「鬆」；「历」默认取「歷」，日历取「曆」。
+  ["放松", "放鬆"],
+  ["轻松", "輕鬆"],
+  ["日历", "日曆"],
   ["圣经", "聖經"],
   ["旧约", "舊約"],
   ["新约", "新約"],
@@ -602,6 +606,11 @@ const ZH_TW_CHAR_MAP: Record<string, string> = {
   阶: "階",
   编: "編",
   换: "換",
+  优: "優",
+  缓: "緩",
+  样: "樣",
+  浏: "瀏",
+  槛: "檻",
 };
 
 export function toZhTwText(input: string): string {

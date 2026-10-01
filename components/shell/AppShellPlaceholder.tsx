@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { WEB_APP_HOME_PATH } from "@/lib/web-app-home-path";
 
 type Props = {
   titleKey: string;
@@ -31,7 +32,7 @@ export function AppShellPlaceholder({
   titleKey,
   leadKey,
   bodyKey,
-  ctaHref = "/",
+  ctaHref = WEB_APP_HOME_PATH,
   ctaLabelKey = "chrome.backHome",
   secondaryCtaHref,
   secondaryCtaLabelKey,

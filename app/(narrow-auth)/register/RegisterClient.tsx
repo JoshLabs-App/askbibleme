@@ -16,6 +16,7 @@ import { AuthMethodDivider, SocialSignInButtons } from "@/components/auth/Social
 import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { AuthParchmentChrome } from "@/components/shell/AuthParchmentChrome";
+import { WEB_APP_HOME_PATH } from "@/lib/web-app-home-path";
 
 type Props = {
   registerOpen: boolean;
@@ -33,7 +34,7 @@ export function RegisterClient({ registerOpen }: Props) {
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
-    if (user) router.replace("/");
+    if (user) router.replace(WEB_APP_HOME_PATH);
   }, [user, router]);
 
   const onSubmit = useCallback(
@@ -57,7 +58,7 @@ export function RegisterClient({ registerOpen }: Props) {
           return;
         }
         await refresh();
-        router.replace("/");
+        router.replace(WEB_APP_HOME_PATH);
       } catch {
         setError(t("auth.errorNetwork"));
       } finally {
@@ -90,7 +91,7 @@ export function RegisterClient({ registerOpen }: Props) {
       <AuthParchmentChrome>
         <div className="narrow-parchment-root w-full px-1 py-8 text-center">
           <p className="max-w-sm text-[15px] leading-relaxed">{t("auth.notConfigured")}</p>
-          <Link href="/" className={`mt-8 inline-block ${authLinkClass}`}>
+          <Link href={WEB_APP_HOME_PATH} className={`mt-8 inline-block ${authLinkClass}`}>
             {t("auth.backHome")}
           </Link>
         </div>
@@ -151,7 +152,7 @@ export function RegisterClient({ registerOpen }: Props) {
         <Link href="/login" className={`mt-6 block text-center ${authLinkClass}`}>
           {t("auth.registerGoLogin")}
         </Link>
-        <Link href="/" className={`mt-4 block text-center ${authLinkClass}`}>
+        <Link href={WEB_APP_HOME_PATH} className={`mt-4 block text-center ${authLinkClass}`}>
           {t("auth.backHome")}
         </Link>
       </div>

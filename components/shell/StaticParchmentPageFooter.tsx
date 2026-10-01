@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
+import { WEB_APP_HOME_PATH } from "@/lib/web-app-home-path";
 
 const COPY = {
   "zh-CN": {
@@ -58,7 +59,7 @@ export function StaticParchmentPageFooter() {
         {copy.install}
       </Link>
       <Link
-        href="/"
+        href={WEB_APP_HOME_PATH}
         className="underline decoration-[rgba(77,53,34,0.25)] underline-offset-4 transition hover:text-[#2b1d15]"
       >
         {copy.home}

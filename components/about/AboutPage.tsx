@@ -16,6 +16,7 @@ import {
   type SolutionCard,
 } from "@/lib/onboarding/onboarding-devotion-data";
 import { ASKBIBLE_PRODUCT_NAME } from "@/lib/askbible-product-name";
+import { WEB_APP_HOME_PATH } from "@/lib/web-app-home-path";
 
 const LOGO_GOLD = "#ffb101";
 
@@ -215,7 +216,7 @@ export function AboutPage() {
 
         <div className="mt-8 flex flex-col items-stretch gap-3">
           <Link
-            href="/"
+            href={WEB_APP_HOME_PATH}
             className="inline-flex min-h-[50px] items-center justify-center rounded-full px-5 text-[15px] font-bold tracking-[0.02em] text-[#fffdf8] transition hover:brightness-[0.98] active:scale-[0.99]"
             style={{ backgroundColor: LOGO_GOLD }}
           >

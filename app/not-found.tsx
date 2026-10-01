@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { WEB_APP_HOME_PATH } from "@/lib/web-app-home-path";
 
 export default function NotFound() {
   return (
@@ -32,7 +33,7 @@ export default function NotFound() {
         这个页面不存在，或者已经挪走了。
       </p>
       <Link
-        href="/"
+        href={WEB_APP_HOME_PATH}
         style={{
           marginTop: "0.5rem",
           display: "inline-flex",

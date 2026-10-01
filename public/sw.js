@@ -164,7 +164,7 @@ function isRscRequest(request, url) {
 }
 
 function isAppShellPath(pathname) {
-  if (pathname === "/" || pathname === "/music" || pathname === "/offline") return true;
+  if (pathname === "/web" || pathname === "/music" || pathname === "/offline") return true;
   if (pathname === "/read" || pathname.startsWith("/read/")) return true;
   return false;
 }

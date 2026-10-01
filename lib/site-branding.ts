@@ -11,6 +11,7 @@ import {
   isValidHex6,
   normalizeBrandColors,
 } from "@/lib/site-branding-colors";
+import { WEB_APP_HOME_PATH } from "@/lib/web-app-home-path";
 
 export type { SiteBrandingState } from "@/lib/site-branding-colors";
 
@@ -183,7 +184,8 @@ export async function buildManifestBody(): Promise<MetadataRoute.Manifest> {
     name: SITE_METADATA_DEFAULT_TITLE,
     short_name: SITE_METADATA_DEFAULT_TITLE,
     description: "安静回到经文的入口 — 正在成型。",
-    start_url: "/",
+    /** 根路径是官网；装到主屏的应用直接开网页版。`id` / `scope` 不能动，否则已装的会被当成另一个应用。 */
+    start_url: WEB_APP_HOME_PATH,
     /** `fullscreen` 会隐藏 Android 状态栏（含系统时间）；`standalone` 与 iOS 主屏「半透明顶栏」观感更接近 */
     display: "standalone",
     display_override: ["standalone", "minimal-ui", "fullscreen"],

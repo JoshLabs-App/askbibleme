@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { usePathname } from "next/navigation";
+import { isWebAppHomePath } from "@/lib/web-app-home-path";
 
 type Value = {
   /** 场景条已完全展开且不透明（用于 a11y、pointer-events） */
@@ -57,11 +58,11 @@ function usePrefersReducedMotion(): boolean {
 const NATURE_DOCK_MANUAL_FADE_IN_MS = 320;
 const NATURE_DOCK_MANUAL_FADE_OUT_MS = 220;
 
-/** 自然首页 `/`、`/nature` 等：底区场景卡首轮进入时定时展示；点主画面可即时展开/收起（打断自动序列）。 */
+/** 自然首页 `/web`、`/nature` 等（根路径 `/` 是官网，不算）：底区场景卡首轮进入时定时展示；点主画面可即时展开/收起（打断自动序列）。 */
 export function isNatureHomeShellPath(pathname: string) {
   const p = pathname || "";
   return (
-    p === "/" ||
+    isWebAppHomePath(p) ||
     p === "" ||
     p === "/nature" ||
     p.startsWith("/nature/") ||

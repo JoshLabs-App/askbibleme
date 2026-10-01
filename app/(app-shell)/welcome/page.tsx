@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import { ExploreParchmentChrome } from "@/components/explore/ExploreParchmentChrome";
 import { OnboardingDevotionIntro } from "@/components/onboarding/OnboardingDevotionIntro";
+import { WEB_APP_HOME_PATH } from "@/lib/web-app-home-path";
 
 /** 对齐 App `/welcome`：欢迎 / 引导页（非 Tab 栈）。 */
 export default function WelcomePage() {
@@ -16,7 +17,7 @@ export default function WelcomePage() {
       router.back();
       return;
     }
-    router.replace("/");
+    router.replace(WEB_APP_HOME_PATH);
   }, [isGate, router]);
 
   return (

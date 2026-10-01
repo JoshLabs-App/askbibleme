@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { WEB_APP_HOME_PATH } from "@/lib/web-app-home-path";
 
 export function OfflinePageClient() {
   const { t } = useLocale();
@@ -13,7 +14,7 @@ export function OfflinePageClient() {
       </h1>
       <p className="mt-3 text-[14px] leading-relaxed text-ink/75">{t("chrome.offlinePageBody")}</p>
       <Link
-        href="/"
+        href={WEB_APP_HOME_PATH}
         className="mt-8 inline-flex min-h-[44px] items-center justify-center rounded-full border border-border/60 bg-canvas/90 px-5 text-[14px] font-medium text-ink"
       >
         {t("chrome.offlinePageHome")}

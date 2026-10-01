@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { WEB_APP_HOME_PATH } from "@/lib/web-app-home-path";
 
 export default function GlobalError({
   error,
@@ -66,7 +67,7 @@ export default function GlobalError({
           重试
         </button>
         <a
-          href="/"
+          href={WEB_APP_HOME_PATH}
           style={{
             display: "inline-flex",
             minHeight: 48,

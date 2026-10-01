@@ -615,3 +615,24 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
 - **仓库里长期有别的会话在写** `docs/story-scripts/*.md` 和 `.gitignore`。
   提交一律 `git commit -F - -- <自己的路径>`，**不要裸 `git commit`**、不要
   `git add -A` 之后直接提交。本轮六次提交全绕开了那两个文件。
+
+---
+
+## 附：2026-10-01 官网 + 网页版搬到 /web 交接
+
+**当前状态**：做完、本机验过、已提交在分支 `claude/upbeat-mayer-752c72`，**等 Josh 确认才合 main 上线**（OPEN-ITEMS O-9）。决定见 DECISIONS D-10。
+
+- `askbible.me/` = 官网：`app/(site)/page.tsx` → `components/site/SiteHome.tsx`（样式 `site-home.css`，新文案 `site-home-copy.ts`；
+  四条原则 / 怎样陪你 / 我们不是什么直接复用 `components/about/about-page-copy.ts`）。
+- `askbible.me/web` = 网页版首页：`app/(app-shell)/web/page.tsx`（从 `(app-shell)/page.tsx` 原样搬过来）。常量 `lib/web-app-home-path.ts`。
+- `askbible.me/app` = 安卓下载页，没动。
+
+**验证**：`npx tsc --noEmit`、`npx vitest run`；`npm run dev` 后看 `http://localhost:3450/`、`/web`、`/index`（应跳 `/web`）、`/manifest.webmanifest`（`start_url` 应是 `/web`）。
+
+**别踩的坑**：
+1. 网页版里「回首页」一律用 `WEB_APP_HOME_PATH`，别再写 `"/"`。`public/sw.js` 和 `lib/read/parchment-shell-boot.ts` 是纯字符串脚本，里面的 `/web` 是写死的，改路径要一起改。
+2. 根布局里的 Provider（音乐、羊皮卷外壳）对官网也生效，所以「是不是自然首页」的判断里 `/` 和 `/web` 要分清：
+   `isNatureHomeShellPath` 不含 `/`（官网不预取风景视频、不出底栏）；羊皮卷外壳的排除名单两个都含（官网自己管底色）。
+3. manifest 的 `id` / `scope` 不能跟着 `start_url` 改，改了已装的 PWA 会被当成另一个应用。
+4. 官网深色时会临时改 `<html>` 底色和 `theme-color`，离开时还原（`SiteHome` 里的 effect）。
+5. 繁体靠 `toZhTwText` 逐字表转，新文案里出现表里没有的字就不会转。加文案后用 opencc-js 对照一遍（这次补了「优 缓 样 浏 槛」和「放松 / 轻松 / 日历」）。

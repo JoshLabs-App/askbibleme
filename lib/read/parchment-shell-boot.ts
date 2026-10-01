@@ -18,7 +18,7 @@ export const PARCHMENT_SHELL_BOOT_SCRIPT = `
   if (p === "") p = "/";
 
   function isExcluded(path) {
-    if (path === "/" || path === "/nature" || path.indexOf("/nature/") === 0) return true;
+    if (path === "/" || path === "/web" || path === "/nature" || path.indexOf("/nature/") === 0) return true;
     if (path === "/tv" || path.indexOf("/tv/") === 0) return true;
     if (path === "/scenes" || path.indexOf("/scenes/") === 0) return true;
     if (path === "/music" || path.indexOf("/music/") === 0) return true;

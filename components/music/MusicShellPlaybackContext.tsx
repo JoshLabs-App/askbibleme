@@ -89,6 +89,7 @@ import {
   teardownShellMediaSessionWeb,
 } from "@/lib/music/shell-media-session-web";
 import { useTodayPlanScriptureResumePersistence } from "@/hooks/useTodayPlanScriptureResumePersistence";
+import { isWebAppHomePath } from "@/lib/web-app-home-path";
 
 function audioUrlEquals(el: HTMLAudioElement, candidate: string): boolean {
   const c = candidate.trim();
@@ -554,7 +555,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
 
   useEffect(() => {
     const p = pathname;
-    if (p !== "/" && p !== "/nature") {
+    if (p !== "/" && !isWebAppHomePath(p) && p !== "/nature") {
       setShellAudioHomePrimed(true);
     }
   }, [pathname]);
@@ -738,7 +739,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     const a = audioRef.current;
     if (!a) return;
     a.preload = "none";
-    const isHomeNature = pathname === "/" || pathname === "/nature";
+    const isHomeNature = pathname === "/" || isWebAppHomePath(pathname) || pathname === "/nature";
     const bindSrc =
       !effectiveSrc.trim() || !isHomeNature || shellAudioHomePrimed ? effectiveSrc.trim() : "";
 

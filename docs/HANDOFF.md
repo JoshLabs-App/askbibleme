@@ -636,3 +636,6 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
 3. manifest 的 `id` / `scope` 不能跟着 `start_url` 改，改了已装的 PWA 会被当成另一个应用。
 4. 官网深色时会临时改 `<html>` 底色和 `theme-color`，离开时还原（`SiteHome` 里的 effect）。
 5. 繁体靠 `toZhTwText` 逐字表转，新文案里出现表里没有的字就不会转。加文案后用 opencc-js 对照一遍（这次补了「优 缓 样 浏 槛」和「放松 / 轻松 / 日历」）。
+6. **网页版首页已向安卓看齐（D-11）**：改首页按键 / 底栏时以安卓 `HomeScreen.kt`、`ShellTabBar.kt` 为准，别再往网页首页加安卓没有的键。
+   底部工具的展开状态在 `NatureVideoExperience`（`sceneToolsOpen`），开关是右上角 `NatureHomeToolsToggle`。
+   金句字体 `.font-verse-song` 在 `app/globals.css`，字体文件由 `scripts/build-verse-font.py` 生成。留下的待决定项见 OPEN-ITEMS O-10。

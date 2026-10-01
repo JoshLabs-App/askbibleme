@@ -204,9 +204,10 @@ export function AppShellTopBar({
   const natureHomeShell = isNatureHomeShellPath(pathname);
   const readHomeShell = isReadBibleHomePath(pathname);
   const goldenVerseShell = pathname === "/verse" || pathname.startsWith("/verse/");
-  const showImmersiveToggle = natureHomeShell || readHomeShell || goldenVerseShell;
   const insetClockEnv = useShellInsetClockEnvironment();
   const { immersive, setImmersive } = useAppImmersive();
+  /** 自然首页和安卓一样右上只有齿轮，不常驻沉浸键；已经在沉浸里时仍给一个退出口 */
+  const showImmersiveToggle = (natureHomeShell && immersive) || readHomeShell || goldenVerseShell;
   const showTopShellTime =
     !immersive && !hideTopShellInsetTime && (insetClockEnv || landscapeImmersive || showTopInsetTime);
   const { t } = useLocale();

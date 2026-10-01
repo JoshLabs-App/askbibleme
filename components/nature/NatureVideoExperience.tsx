@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
-import { NatureHomeSettingsControl } from "@/components/nature/NatureHomeSettingsControl";
+import { NatureHomeToolsToggle } from "@/components/nature/NatureHomeToolsToggle";
 import { useHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
 import type { NatureSettingsV2 } from "@/lib/nature/types";
@@ -152,6 +152,8 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
   const [softFocusDraftBlur, setSoftFocusDraftBlur] = useState(0);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [textScaleStepIndex, setTextScaleStepIndex] = useState(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX);
+  /** 底部「字号与定时 · 环境音 · 场景」三排是否展开；开关在右上角齿轮（对齐安卓 `HomeScreen.toolsOpen`） */
+  const [sceneToolsOpen, setSceneToolsOpen] = useState(false);
   const [natureVerseAppearance, setNatureVerseAppearance] = useState(() => readNatureHomeVerseAppearance());
   const [videoBroken, setVideoBroken] = useState(false);
   const [dwellVideoAllowed, setDwellVideoAllowed] = useState(false);
@@ -938,6 +940,8 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
         onPrefsChanged={onNatureHomePrefsChanged}
         onSelectScene={(id) => selectScene(id)}
         onToggleAmbientSlot={onToggleAmbientSlot}
+        sceneToolsOpen={sceneToolsOpen}
+        onSceneToolsOpenChange={setSceneToolsOpen}
       />
     );
   };
@@ -993,15 +997,10 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
         showTopInsetTime={false}
         hideTopShellInsetTime={!landscapeImmersive}
         rightAccessory={
-          <NatureHomeSettingsControl
-              open={homeSettingsOpen}
-              onOpenChange={onHomeSettingsOpenChange}
-              hasNatureVisual={hasNatureVisual}
-              dimLevel={dimLevel}
-              blurLevel={blurLevel}
-              onDimLevelChange={(level) => applyVisualLevels(level, blurLevel)}
-              onBlurLevelChange={(level) => applyVisualLevels(dimLevel, level)}
-              onPrefsChanged={onNatureHomePrefsChanged}
+          <NatureHomeToolsToggle
+            open={sceneToolsOpen}
+            ambientActive={Boolean(activeAmbientSlotId)}
+            onToggle={() => setSceneToolsOpen((open) => !open)}
           />
         }
       />

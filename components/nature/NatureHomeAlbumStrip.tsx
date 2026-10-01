@@ -3,10 +3,7 @@
 import { useCallback, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { MusicAlbumGlyph } from "@/components/music/MusicAlbumGlyph";
-import {
-  MusicHomeTransportButtonRow,
-  type MusicHomeTransportSideSlot,
-} from "@/components/music/MusicHomeTransportButtonRow";
+import type { MusicHomeTransportSideSlot } from "@/components/music/MusicHomeTransportButtonRow";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
 import {
@@ -29,7 +26,8 @@ import {
 const INK = "#FFFFFF";
 const MUTED = "rgba(255,255,255,0.48)";
 const LOGO_COLOR = "var(--brand-logo-background)";
-const HOME_ALBUM_ICON_SIZE = 28;
+/** 安卓 `ShellMetrics.tabIconSize`：三个键的图标一样大 */
+const HOME_ALBUM_ICON_SIZE = 36;
 const HOME_ALBUMS = ["安静", "下午茶"];
 
 type Props = {
@@ -39,21 +37,18 @@ type Props = {
   onToggleGoldenVerse: () => void;
   onPauseVerseTransport?: () => void;
   onResumeVerseTransport?: () => void;
-  sceneToolsOpen: boolean;
-  onToggleSceneTools: () => void;
-  ambientActive?: boolean;
 };
 
+/**
+ * 首页最下一排：安静 / 金句朗读 / 下午茶 三个开关，和安卓 `HomeScreen` 的 HomeNatureAlbumStrip 一致
+ * （52 触控、间距 28、图标 36，开着亮 LOGO 黄）。场景与音效的开关在右上角齿轮，这里不再放播放键和齿轮。
+ */
 export function NatureHomeAlbumStrip({
   goldenVersePlaying,
   goldenVerseAudible = false,
   goldenVersePreparing = false,
   onToggleGoldenVerse,
-  onPauseVerseTransport,
   onResumeVerseTransport,
-  sceneToolsOpen,
-  onToggleSceneTools,
-  ambientActive = false,
 }: Props) {
   const { locale } = useLocale();
   const playback = useMusicShellPlayback();
@@ -147,62 +142,34 @@ export function NatureHomeAlbumStrip({
     ) : (
       <ShellMaterialIcon
         name="volume-up"
-        size={HOME_ALBUM_ICON_SIZE + 8}
+        size={HOME_ALBUM_ICON_SIZE}
         color={verseColor}
         legibilityShadow
       />
     ),
   };
 
-  const settingsLit = sceneToolsOpen || ambientActive;
-  const settingsColor = settingsLit ? LOGO_COLOR : INK;
-  const settingsSlot: MusicHomeTransportSideSlot = {
-    onPress: onToggleSceneTools,
-    selected: settingsLit,
-    accessibilityLabel: sceneToolsOpen
-      ? zh
-        ? "收起场景与音效"
-        : "Hide scenes and sounds"
-      : zh
-        ? "场景与音效"
-        : "Scenes and sounds",
-    icon: <ShellMaterialIcon name="settings" size={HOME_ALBUM_ICON_SIZE + 8} color={settingsColor} legibilityShadow />,
-  };
+  const slots: { key: string; slot: MusicHomeTransportSideSlot }[] = [
+    { key: "calm", slot: albumSlot("安静", HOME_ALBUM_ICON_SIZE) },
+    { key: "verse", slot: verseSlot },
+    { key: "tea", slot: albumSlot("下午茶", HOME_ALBUM_ICON_SIZE) },
+  ];
 
   return (
-    <MusicHomeTransportButtonRow
-      playing={transportPlaying}
-      canTogglePlayback={storeTracks.length > 0}
-      onTogglePlay={() => {
-        const albumSelected = selectedAlbum != null;
-        const action = resolveHomeCenterPlayAction({
-          musicOn,
-          verseAudible: goldenVerseAudible,
-          albumSelected,
-          verseSelected: goldenVersePlaying,
-        });
-        if (action === "pause") {
-          setPausedAlbum(selectedAlbum);
-          if (musicOn) playback.pausePlayback();
-          if (goldenVersePlaying) onPauseVerseTransport?.();
-          return;
-        }
-        if (action === "resume") {
-          if (albumSelected) void playback.togglePlayMusic();
-          if (goldenVersePlaying) onResumeVerseTransport?.();
-          return;
-        }
-        const started = playAlbum(DEFAULT_MUSIC_ALBUM);
-        if (started) setPausedAlbum(DEFAULT_MUSIC_ALBUM);
-      }}
-      playAccessibilityLabel={zh ? "播放音乐" : "Play music"}
-      pauseAccessibilityLabel={zh ? "暂停音乐" : "Pause music"}
-      sides={{
-        start: albumSlot("安静", HOME_ALBUM_ICON_SIZE),
-        beforePlay: albumSlot("下午茶", HOME_ALBUM_ICON_SIZE),
-        afterPlay: verseSlot,
-        end: settingsSlot,
-      }}
-    />
+    <div className="nature-home-album-strip" data-shell-swipe-nav-exclude>
+      {slots.map(({ key, slot }) => (
+        <button
+          key={key}
+          type="button"
+          onClick={slot.onPress}
+          disabled={slot.disabled}
+          aria-pressed={slot.selected}
+          aria-label={slot.accessibilityLabel}
+          className="nature-home-album-strip__btn"
+        >
+          {slot.icon}
+        </button>
+      ))}
+    </div>
   );
 }

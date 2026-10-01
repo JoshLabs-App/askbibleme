@@ -288,3 +288,37 @@
     transition: none;
   }
 }
+
+/* 专辑条：安卓 HomeNatureAlbumStrip 逐值（52 触控、间距 28） */
+.nature-home-album-strip {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  height: 52px;
+  pointer-events: auto;
+}
+
+.nature-home-album-strip__btn {
+  display: inline-flex;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  touch-action: manipulation;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.nature-home-album-strip__btn:active:not(:disabled) {
+  opacity: 0.82;
+  transform: scale(0.97);
+}
+
+.nature-home-album-strip__btn:disabled {
+  cursor: not-allowed;
+}

@@ -140,11 +140,15 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
   const { left: navLeft, right: navRight } = buildNavItems(shellRoot);
   const onReadTab =
     navRight.find((item) => item.labelKey === "nav.read")?.match(pathname) ?? false;
-  const readFabUsesScripture = onReadTab;
+  /**
+   * 中间键一律是「读经计划」（account-voice），和安卓 `ShellTabBar` 一致（DECISIONS D-11）。
+   * 以前只有圣经页是它，首页 / 音乐 / 探索是音乐播放键；音乐改由首页的专辑键和音乐页自己控制。
+   */
+  const readFabUsesScripture: boolean = true;
   const musicActive = playing && !isCuvChapterAudioEffectiveSrc(effectiveSrc);
   const scriptureActive = playing && isCuvChapterAudioEffectiveSrc(effectiveSrc);
   const canPlayFab = readFabUsesScripture ? true : canPlayMusic;
-  const fabActive = readFabUsesScripture ? isPlanPlay || scriptureActive : musicActive;
+  const fabActive = readFabUsesScripture ? isPlanPlay || (onReadTab && scriptureActive) : musicActive;
 
   const showFullScriptureDock =
     onReadTab &&

@@ -16,8 +16,7 @@ export type SiteHomeCopy = {
   heroTitle: string;
   heroSub: string;
   ctaWeb: string;
-  /** 首屏三个下载入口上面的小标 */
-  ctaVersions: string;
+  storeWebSub: string;
   storeIosSub: string;
   storePlaySub: string;
   storeApkName: string;
@@ -41,7 +40,7 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
     heroTitle: "安静地，回到经文。",
     heroSub: "一个让人重新进入圣经的安静入口。",
     ctaWeb: "进入网页版",
-    ctaVersions: "下载 App",
+    storeWebSub: "无需安装",
     storeIosSub: "iPhone / iPad",
     storePlaySub: "Android",
     storeApkName: "安卓安装包",
@@ -80,7 +79,7 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
     heroTitle: "Quietly, back to Scripture.",
     heroSub: "A quiet entry back into Scripture.",
     ctaWeb: "Open the web app",
-    ctaVersions: "Get the app",
+    storeWebSub: "Nothing to install",
     storeIosSub: "iPhone / iPad",
     storePlaySub: "Android",
     storeApkName: "Android APK",

@@ -6,10 +6,8 @@ import { ReadTodayReadingStats } from "@/components/bible/ReadTodayReadingStats"
 import { ReadYearDayTimeline } from "@/components/bible/ReadYearDayTimeline";
 import { ExploreRecentBookmarks } from "@/components/explore/ExploreRecentBookmarks";
 import { ExploreRecentChapters } from "@/components/explore/ExploreRecentChapters";
-import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useReadingHabitStats } from "@/hooks/useReadingHabitStats";
-import { formatMemberJourneyDuration } from "@/lib/explore/member-journey-duration";
 import {
   formatScriptureListenDuration,
   getScriptureListenTotalSec,
@@ -20,12 +18,14 @@ import {
   getAppUsageTotalSec,
   subscribeAppUsageTime,
 } from "@/lib/shell/app-usage-time-web";
-import { toZhTwText } from "@/lib/i18n/zh-tw-text";
+import { achCopy } from "@/lib/achievements/achievement-copy";
 
-/** 探索首页上部：习惯统计 + 最近阅读/收藏（对齐 App `ExploreReadingHabitStats`）。 */
+/**
+ * 探索首页上部，顺序照安卓 `ExploreScreen.kt`（D-12）：
+ * 年度进度 → 三个统计数 → 成就 → 使用时长 / 累计听 → 最近阅读 → 收藏。
+ */
 export function ExploreReadingHabitStats() {
-  const { locale, t } = useLocale();
-  const { user } = useAskbibleUser();
+  const { locale } = useLocale();
   const { yearDay, snapshot, completedDates } = useReadingHabitStats();
   const storedSec = useSyncExternalStore(subscribeAppUsageTime, getAppUsageTotalSec, () => 0);
   const [usageSec, setUsageSec] = useState(storedSec);
@@ -37,34 +37,28 @@ export function ExploreReadingHabitStats() {
     return () => window.clearInterval(id);
   }, [storedSec]);
 
-  const usageLabel = locale === "en" ? "Time in app" : locale === "zh-TW" ? toZhTwText("使用时长") : "使用时长";
+  const usageLabel = achCopy("native.usageTime", locale);
   const usageValue = formatAppUsageDuration(usageSec, locale);
-  const listenDurationLabel = formatScriptureListenDuration(listenTotalSec, locale);
-  const listenLine = t("pages.read.planPlayListenTotalLabel", { duration: listenDurationLabel });
-  const journeyValue =
-    user?.createdAt != null && user.createdAt.trim()
-      ? formatMemberJourneyDuration(user.createdAt, locale)
-      : null;
-  const journeyLabel =
-    locale === "en" ? "Walking together" : locale === "zh-TW" ? toZhTwText("一起走过") : "一起走过";
+  const listenLine = achCopy("native.listenTotal", locale, {
+    duration: formatScriptureListenDuration(listenTotalSec, locale),
+  });
 
   return (
     <div className="explore-habit-stats">
       <div className="explore-habit-stats-inner">
-        <AchievementLevelCard />
-        <ReadYearDayTimeline completedDates={completedDates} />
-        <ReadTodayReadingStats yearDay={yearDay} snapshot={snapshot} />
+        <div className="explore-habit-timeline">
+          <ReadYearDayTimeline completedDates={completedDates} />
+        </div>
+        <div className="explore-habit-stat-row">
+          <ReadTodayReadingStats yearDay={yearDay} snapshot={snapshot} />
+        </div>
+        <div className="explore-habit-level-card">
+          <AchievementLevelCard />
+        </div>
         <p className="explore-habit-meta-line">
-          {usageLabel}
-          <span className="explore-habit-meta-value"> {usageValue}</span>
+          {usageLabel}&nbsp;&nbsp;{usageValue}
         </p>
         <p className="explore-habit-meta-line">{listenLine}</p>
-        {journeyValue ? (
-          <p className="explore-habit-meta-line explore-habit-meta-line--journey">
-            {journeyLabel}
-            <span className="explore-habit-meta-value"> {journeyValue}</span>
-          </p>
-        ) : null}
         <ExploreRecentChapters />
         <ExploreRecentBookmarks />
       </div>

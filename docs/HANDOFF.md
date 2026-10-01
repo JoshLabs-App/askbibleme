@@ -620,20 +620,18 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
 
 ## 附：2026-10-01 官网 + 网页版搬到 /web 交接
 
-**当前状态（2026-10-01 傍晚）**：官网（D-10）和网页版首页对齐安卓（D-11）都做完、本机验过、已提交在分支 `claude/upbeat-mayer-752c72`
-（worktree `.claude/worktrees/strange-dewdney-3855d7`），**没合 main、没推送，等 Josh 说「上线」**（OPEN-ITEMS O-9、O-10）。
+**当前状态（2026-10-01 晚）**：官网（D-10）、网页版首页对齐安卓（D-11）、**探索页完全照安卓（D-12）**都做完、本机验过、已提交在分支 `claude/upbeat-mayer-752c72`
+（worktree `.claude/worktrees/strange-dewdney-3855d7`），**没合 main、没推送，等 Josh 说「上线」**（OPEN-ITEMS O-9、O-10、O-11）。
 
 **下一步（按顺序）**：
-1. **探索页对齐安卓——Josh 已选「完全照安卓」（DECISIONS D-12），代码还没动，从这里接着做**：
-   - 参照：安卓 `apps/askbible-android/app/src/main/java/me/askbible/native_/ui/ExploreScreen.kt`（313 行，顺序是
-     问候 → 三个统计数 → 使用时长 → 成就 → 最近阅读 → 收藏 → 查经资料文章格子，3 列、64 圆角方块 + 两行标签）。
-   - 网页：`app/(app-shell)/explore/page.tsx`（35 行，往下找它渲染的组件）。现状是「问候 → 成就 → 最近阅读（3 条）→ 11 个格子」。
-   - 要做：①格子只留查经资料文章（现有 3 个：让经文发声 / 圣经的模型 / 正式研读），去掉 欢迎 / 读经计划 / 数算年日 / 祷告与经文 / 圣经人物 / 历代信经 / 窄门之路 / 赞美敬拜
-     这 8 个功能格子（页面不删）；②补安卓有而网页没有的：统计行（今年第几天 / 读经天 / 连续天）、使用时长一行、收藏（带「更多」）；③顺序和样式照安卓。
-   - 做完按老规矩：`npx tsc --noEmit`、`npx vitest run`、预览里用 `javascript_tool` 量 DOM（不看截图），提交用 `git commit -m ... -- <路径>`，不推送。
-2. Josh 逐页看网页版时再提的不一致，照「以安卓代码为准」处理，改完记进 D-11 或新开一条决定。
-3. Josh 说「上线」后：合 main、推送（Vercel 自动部署），提醒他点一次手机主屏上已装的图标。
+1. Josh 逐页看网页版时再提的不一致，照「以安卓代码为准」处理，改完记进 D-11 / D-12 或新开一条决定。
+2. Josh 说「上线」后：合 main、推送（Vercel 自动部署），提醒他点一次手机主屏上已装的图标。
+3. 上线并确认那 8 个功能入口不再放回探索页后，删 O-11 列的三个死文件。
 
+**探索页（D-12）改在哪**：`components/explore/ExploreHomeContent.tsx`（只留文章格子）、`ExploreReadingHabitStats.tsx`（顺序）、
+`ExploreRecentChapters.tsx` / `ExploreRecentBookmarks.tsx`（空状态、「更多」）、`app/(app-shell)/explore/explore-parchment.css`（尺寸）。
+验证：`/explore` 在 375 宽下量 DOM——标题 x=22、进度条 x=52、统计 / 成就卡 x=24、最近阅读 / 收藏 x=26、格子 x=22 且只有 3 个；
+各块间距 26 / 22 / 20 / 18 / 6 / 20 / 8 / 20 / 4 / 68，和 `ExploreScreen.kt` 里的 Spacer 一一对应。
 
 - `askbible.me/` = 官网：`app/(site)/page.tsx` → `components/site/SiteHome.tsx`（样式 `site-home.css`，新文案 `site-home-copy.ts`；
   四条原则 / 怎样陪你 / 我们不是什么直接复用 `components/about/about-page-copy.ts`）。
@@ -652,3 +650,6 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
 6. **网页版首页已向安卓看齐（D-11）**：改首页按键 / 底栏时以安卓 `HomeScreen.kt`、`ShellTabBar.kt` 为准，别再往网页首页加安卓没有的键。
    底部工具的展开状态在 `NatureVideoExperience`（`sceneToolsOpen`），开关是右上角 `NatureHomeToolsToggle`。
    金句字体 `.font-verse-song` 在 `app/globals.css`，字体文件由 `scripts/build-verse-font.py` 生成。留下的待决定项见 OPEN-ITEMS O-10。
+7. **探索页的统计数和进度条是和读经页共用的组件**（`ReadTodayReadingStats` / `ReadYearDayTimeline`，`ReadTodayPlanPanel` 也在用）：
+   探索页的尺寸是在 `explore-parchment.css` 里用 `.explore-habit-*` 包一层覆盖的，别去改组件本身。
+8. 探索页左右留白：外层羊皮卷栏有 20，`.explore-home` 只补 2（合计安卓的 22）。

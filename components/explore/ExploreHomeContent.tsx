@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { EXPLORE_ENTRIES, SCRIPTURE_ANTHOLOGY_IDS } from "@/lib/explore/exploreEntries";
-import { ExploreEntryIcon } from "@/components/explore/ExploreEntryIcon";
 import { ExploreGreetingNameModal } from "@/components/explore/ExploreGreetingNameModal";
 import { ExploreReadingHabitStats } from "@/components/explore/ExploreReadingHabitStats";
 import { ShellMaterialCommunityIcon } from "@/components/shell/ShellMaterialCommunityIcon";
@@ -25,32 +23,33 @@ import {
   writeExploreDisplayName,
 } from "@/lib/explore/explore-birth-year-prefs";
 import { formatGreetingDisplayName } from "@/lib/read/greeting-display-name";
-import { asExploreEntryIconShape, type ExploreStagedEntry } from "@/lib/explore/explore-staged-entries";
-import { useExploreStagedEntries } from "@/hooks/useExploreStagedEntries";
 import { useExploreHomeContentRefresh } from "@/hooks/useExploreHomeContentRefresh";
 import {
   isReadingPlannerExploreSlug,
   readingPlannerHref,
 } from "@/lib/explore/reading-planner-routes";
-import { toZhTwText } from "@/lib/i18n/zh-tw-text";
+import { achCopy } from "@/lib/achievements/achievement-copy";
 
 type Props = {
   exploreModulesBundle: ExploreModulesBundle;
   featuredByLocale: Record<AppLocale, ExploreFeaturedArticleView[]>;
 };
 
+/**
+ * 探索页以安卓 `ExploreScreen.kt` 为准（DECISIONS D-12）：
+ * 问候 → 年度进度 + 三个统计数 → 成就 → 使用时长 → 最近阅读 → 收藏 → 查经资料文章格子。
+ * 欢迎 / 读经计划 / 圣经人物等功能格子不在这里出入口（页面本身还在）。
+ */
 export function ExploreHomeContent({ exploreModulesBundle, featuredByLocale }: Props) {
   const router = useRouter();
   const { t, locale } = useLocale();
   const { user } = useAskbibleUser();
-  const { featuredArticles: liveFeaturedArticles, exploreModulesBundle: liveModulesBundle } =
-    useExploreHomeContentRefresh({
-      initialModulesBundle: exploreModulesBundle,
-      initialFeaturedByLocale: featuredByLocale,
-    });
+  const { featuredArticles: liveFeaturedArticles } = useExploreHomeContentRefresh({
+    initialModulesBundle: exploreModulesBundle,
+    initialFeaturedByLocale: featuredByLocale,
+  });
   const [exploreDisplayName, setExploreDisplayName] = useState<string | null>(null);
   const [nameEditorOpen, setNameEditorOpen] = useState(false);
-  const { entries: stagedEntries, labelFor: stagedLabelFor } = useExploreStagedEntries(liveModulesBundle);
 
   useEffect(() => {
     setExploreDisplayName(readExploreDisplayName());
@@ -58,28 +57,11 @@ export function ExploreHomeContent({ exploreModulesBundle, featuredByLocale }: P
 
   const rawGreetingName = (exploreDisplayName?.trim() || user?.name || "").trim();
   const greetingName = user
-    ? formatGreetingDisplayName(rawGreetingName) ||
-      (locale === "en" ? "friend" : locale === "zh-TW" ? toZhTwText("用户") : "用户")
+    ? formatGreetingDisplayName(rawGreetingName) || achCopy("native.authDefaultName", locale)
     : "";
   const greetingTitle = user
-    ? locale === "en"
-      ? `Hello, ${greetingName}`
-      : locale === "zh-TW"
-        ? toZhTwText(`你好，${greetingName}`)
-        : `你好，${greetingName}`
-    : locale === "en"
-      ? "Sign in to unlock more"
-      : locale === "zh-TW"
-        ? toZhTwText("请登录，解锁更多")
-        : "请登录，解锁更多";
-
-  const scriptureAnthologyEntries = SCRIPTURE_ANTHOLOGY_IDS.map((id) =>
-    EXPLORE_ENTRIES.find((entry) => entry.id === id),
-  ).filter((entry): entry is (typeof EXPLORE_ENTRIES)[number] => Boolean(entry));
-
-  const topEntries = EXPLORE_ENTRIES.filter(
-    (entry) => !SCRIPTURE_ANTHOLOGY_IDS.includes(entry.id as (typeof SCRIPTURE_ANTHOLOGY_IDS)[number]),
-  );
+    ? achCopy("native.authGreetingNamed", locale, { name: greetingName })
+    : achCopy("native.authGreetingGuest", locale);
 
   const gridFeaturedArticles = liveFeaturedArticles.filter(
     (article) => !isReadingPlannerExploreSlug(article.slug),
@@ -89,24 +71,6 @@ export function ExploreHomeContent({ exploreModulesBundle, featuredByLocale }: P
     if (user) setNameEditorOpen(true);
     else router.push("/login");
   }, [router, user]);
-
-  const renderEntryTile = (entry: (typeof EXPLORE_ENTRIES)[number]) => (
-    <Link key={entry.id} href={entry.href} className="explore-icon-tile">
-      <span aria-hidden className="explore-icon-circle">
-        <ExploreEntryIcon entry={entry} size={28} />
-      </span>
-      <span className="explore-icon-label">{t(entry.labelKey)}</span>
-    </Link>
-  );
-
-  const renderStagedEntryTile = (entry: ExploreStagedEntry) => (
-    <Link key={entry.id} href={entry.href} className="explore-icon-tile">
-      <span aria-hidden className="explore-icon-circle">
-        <ExploreEntryIcon entry={asExploreEntryIconShape(entry)} size={28} />
-      </span>
-      <span className="explore-icon-label">{stagedLabelFor(entry)}</span>
-    </Link>
-  );
 
   const renderFeaturedArticleTile = (article: ExploreFeaturedArticleView) => {
     const icon = isExploreFeaturedArticleSlug(article.slug)
@@ -143,9 +107,6 @@ export function ExploreHomeContent({ exploreModulesBundle, featuredByLocale }: P
 
       <section className="explore-page-section">
         <div className="explore-icon-grid">
-          {topEntries.map(renderEntryTile)}
-          {scriptureAnthologyEntries.map(renderEntryTile)}
-          {stagedEntries.map(renderStagedEntryTile)}
           {gridFeaturedArticles.map(renderFeaturedArticleTile)}
         </div>
       </section>

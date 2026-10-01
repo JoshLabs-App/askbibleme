@@ -41,32 +41,38 @@
   text-decoration-color: var(--prayer-line-emphasis) !important;
 }
 
+/* 外层羊皮卷栏已有 20 的左右留白，这里补 2 凑成安卓的 22；内容区最宽 448 - 44 = 404。 */
 .prayer-on-parchment .explore-home {
   box-sizing: border-box;
   width: 100%;
-  max-width: 448px;
+  max-width: 408px;
   margin-inline: auto;
   flex: 1;
-  padding-inline: 22px;
+  padding-inline: 2px;
   padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
 }
 
+/*
+ * 探索首页的尺寸一律照安卓 `ExploreScreen.kt`（DECISIONS D-12）。
+ * 安卓各块的左右留白是相对屏幕边的（52 / 24 / 26），这里 `.explore-home` 已有 22，所以写的是差值（30 / 2 / 4）。
+ */
 .prayer-on-parchment .explore-home-title {
   margin: 0;
-  font-size: 26px;
-  font-weight: 600;
-  letter-spacing: -0.3px;
-  line-height: 35px;
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 33px;
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: inherit;
 }
 
 .prayer-on-parchment .explore-home-greeting {
   display: block;
   width: 100%;
-  max-width: 82%;
   margin-inline: auto;
-  padding: 0 16px;
+  padding: 0;
   border: 0;
   background: transparent;
   cursor: pointer;
@@ -80,66 +86,128 @@
 
 .prayer-on-parchment .explore-habit-stats {
   width: 100%;
-  display: flex;
-  justify-content: center;
-  margin-top: 14px;
-  margin-bottom: 8px;
+  margin-top: 26px;
 }
 
 .prayer-on-parchment .explore-habit-stats-inner {
   width: 100%;
-  max-width: 340px;
+}
+
+.prayer-on-parchment .explore-habit-timeline {
+  padding-inline: 30px;
+}
+
+.prayer-on-parchment .explore-habit-timeline .read-bible-year-timeline {
+  margin: 0;
+}
+
+.prayer-on-parchment .explore-habit-timeline .read-bible-year-timeline-track {
+  height: 3px;
+}
+
+.prayer-on-parchment .explore-habit-timeline .read-bible-year-timeline-dot {
+  width: 11px;
+  height: 11px;
+}
+
+.prayer-on-parchment .explore-habit-stat-row {
+  margin-top: 22px;
+  padding-inline: 2px;
+}
+
+.prayer-on-parchment .explore-habit-stat-row .read-bible-today-stats {
+  margin: 0;
+  padding: 0;
+  align-items: center;
+}
+
+.prayer-on-parchment .explore-habit-stat-row .read-bible-today-stat-value {
+  font-size: 34px;
+  line-height: 40px;
+}
+
+.prayer-on-parchment .explore-habit-stat-row .read-bible-today-stat-label {
+  margin-top: 6px;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.prayer-on-parchment .explore-habit-stat-row .read-bible-today-stats-divider {
+  align-self: center;
+  height: 56px;
+  margin-inline: 0;
+  opacity: 0.8;
+}
+
+.prayer-on-parchment .explore-habit-level-card {
+  margin-top: 20px;
+  margin-bottom: 18px;
+  padding-inline: 2px;
 }
 
 .prayer-on-parchment .explore-habit-meta-line {
-  margin: 2px 0 0;
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 500;
+  margin: 0;
+  font-size: 17px;
+  line-height: 23px;
+  font-weight: 400;
   text-align: center;
-  color: color-mix(in srgb, currentColor 52%, transparent);
-}
-
-.prayer-on-parchment .explore-habit-meta-line--journey {
-  margin-bottom: 4px;
-}
-
-.prayer-on-parchment .explore-habit-meta-value {
-  font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: color-mix(in srgb, currentColor 66%, transparent);
 }
 
+.prayer-on-parchment .explore-habit-meta-line + .explore-habit-meta-line {
+  margin-top: 6px;
+}
+
 .prayer-on-parchment .explore-recent-list {
-  margin-top: 12px;
+  margin-top: 20px;
   width: 100%;
+  padding-inline: 4px;
 }
 
 .prayer-on-parchment .explore-recent-list-heading {
-  margin: 0 0 4px;
-  font-size: 13px;
-  line-height: 18px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  margin: 0 0 8px;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 400;
   text-align: center;
   color: color-mix(in srgb, currentColor 52%, transparent);
 }
 
+.prayer-on-parchment .explore-recent-list-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.prayer-on-parchment .explore-recent-list-head .explore-recent-list-heading {
+  flex: 1;
+  margin: 0;
+  text-align: start;
+}
+
+.prayer-on-parchment .explore-recent-list-more {
+  padding: 4px;
+  font-size: 14px;
+  line-height: 19px;
+  text-decoration: none;
+  color: color-mix(in srgb, currentColor 66%, transparent);
+}
+
 .prayer-on-parchment .explore-recent-list-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
-  min-height: 40px;
-  padding: 6px 10px;
-  border-radius: 10px;
+  min-height: 38px;
   text-decoration: none;
   color: inherit;
 }
 
 .prayer-on-parchment .explore-recent-list-row:active {
   opacity: 0.72;
-  background: rgba(255, 248, 235, 0.55);
 }
 
 .prayer-on-parchment .explore-recent-list-row-body {
@@ -149,27 +217,51 @@
 
 .prayer-on-parchment .explore-recent-list-row-text {
   display: block;
-  font-size: 16px;
-  line-height: 22px;
-  font-weight: 500;
+  flex: 1;
+  min-width: 0;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 400;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.prayer-on-parchment .explore-recent-list--favorites .explore-recent-list-row {
+  align-items: flex-start;
+  padding-block: 8px;
+}
+
+.prayer-on-parchment .explore-recent-list--favorites .explore-recent-list-row-text {
+  font-size: 15px;
+  font-weight: 600;
+}
+
 .prayer-on-parchment .explore-recent-list-verse-preview {
   display: block;
-  margin-top: 4px;
-  font-size: 15px;
-  line-height: 22px;
+  font-size: 14px;
+  line-height: 19px;
   font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: color-mix(in srgb, currentColor 66%, transparent);
 }
 
 .prayer-on-parchment .explore-recent-list-chevron {
   flex-shrink: 0;
-  font-size: 18px;
-  line-height: 22px;
-  color: color-mix(in srgb, currentColor 66%, transparent);
+  font-size: 24px;
+  line-height: 24px;
+  color: color-mix(in srgb, currentColor 30%, transparent);
+}
+
+.prayer-on-parchment .explore-recent-list-empty {
+  margin: 0;
+  height: 38px;
+  font-size: 15px;
+  line-height: 20px;
+  text-align: center;
+  color: color-mix(in srgb, currentColor 52%, transparent);
 }
 
 .prayer-on-parchment .explore-greeting-modal-backdrop {
@@ -450,7 +542,11 @@
 }
 
 .prayer-on-parchment .explore-icon-label {
+  display: -webkit-box;
   width: 100%;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   font-size: 12px;
   font-weight: 600;
   line-height: 15px;

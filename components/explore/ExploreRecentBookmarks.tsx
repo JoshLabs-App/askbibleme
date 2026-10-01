@@ -3,34 +3,39 @@
 import Link from "next/link";
 import { useMemo, useSyncExternalStore } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { achCopy } from "@/lib/achievements/achievement-copy";
 import { getScriptureBookDisplayName } from "@/lib/bible/scripture-book-display-name";
 import { listScriptureVerseBookmarks } from "@/lib/bible/scripture-verse-bookmarks";
 import {
+  getScriptureVerseBookmarkStoreServerSnapshot,
   getScriptureVerseBookmarkStoreSnapshot,
   subscribeScriptureVerseBookmarks,
 } from "@/lib/bible/scripture-verse-bookmarks-client";
-import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 
 const MAX_RECENT = 3;
 
-/** 探索首页：最近收藏的最多 3 处经文，可点进继续读。 */
+/** 探索首页：收藏的前 3 处经文 + 「更多」进收藏页；没有收藏时留一行说明（照安卓）。 */
 export function ExploreRecentBookmarks() {
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
   const store = useSyncExternalStore(
     subscribeScriptureVerseBookmarks,
     getScriptureVerseBookmarkStoreSnapshot,
-    () => ({}),
+    getScriptureVerseBookmarkStoreServerSnapshot,
   );
-  const recent = useMemo(() => listScriptureVerseBookmarks(store).slice(0, MAX_RECENT), [store]);
-
-  if (recent.length === 0) return null;
-
-  const heading =
-    locale === "en" ? "Recent favorites" : locale === "zh-TW" ? toZhTwText("最近收藏") : "最近收藏";
+  const all = useMemo(() => listScriptureVerseBookmarks(store), [store]);
+  const recent = all.slice(0, MAX_RECENT);
+  const heading = t("pages.read.favoritesTitle");
 
   return (
-    <section className="explore-recent-list" aria-label={heading}>
-      <h2 className="explore-recent-list-heading">{heading}</h2>
+    <section className="explore-recent-list explore-recent-list--favorites" aria-label={heading}>
+      <div className="explore-recent-list-head">
+        <h2 className="explore-recent-list-heading">{heading}</h2>
+        {all.length > MAX_RECENT ? (
+          <Link href="/read/favorites" className="explore-recent-list-more">
+            {achCopy("native.favoritesMore", locale)}
+          </Link>
+        ) : null}
+      </div>
       {recent.map((item) => {
         const bookName = getScriptureBookDisplayName(item.bookId, locale) || item.bookName;
         const refLabel = `${bookName} ${item.chapter}:${item.verse}`;
@@ -47,6 +52,9 @@ export function ExploreRecentBookmarks() {
           </Link>
         );
       })}
+      {recent.length === 0 ? (
+        <p className="explore-recent-list-empty">{achCopy("native.noFavorites", locale)}</p>
+      ) : null}
     </section>
   );
 }

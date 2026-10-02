@@ -256,7 +256,7 @@ Supabase 反代不是备而不用，移动网络上现在就用得着；jsdelivr
   安卓站外版 1.0.48 (245) 同日发到下载页（`deploy_android.py`），每日灵修只对管理员账号显示（D-23）。
   听到那边也给它的 Supabase 反代绑了 `my-class-sb.joshlabs.app`（03MyClass D-29），并补测了 `pages.dev`、它的两个 r2.dev：国内都是 24/24。
   Globalping 免登录额度是每个出口 IP 每小时 250 个探测点（`GET /v1/limits` 可查），本机多个会话共用，用完会 429；
-  所以备用入口 `askbible.joshlabs.app` 的国内可达性当天没测成（同一个 Vercel 项目的 `askbible.me` 是 22/24）。
+  备用入口 `askbible.joshlabs.app` 等额度恢复后补测：国内 24/24（同一个 Vercel 项目的 `askbible.me` 是 22/24）。
 
 ## 六、怎么操作
 

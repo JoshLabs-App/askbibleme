@@ -634,7 +634,7 @@ manifest `start_url=/web`；手机截图和金句字体文件都取得到。本�
 2026-10-01 晚已把 main（`2ad8b200`，「防封换线」那一批，已上线）**合进本分支**：两处冲突（`AppInstallGuidePage.tsx`、`useNatureGoldenVerseAudioControl.ts`）两边都保留，`tsc` + 271 个单元测试通过；本分支现在只领先 main、不落后，上线时可以直接快进合并。
 
 **下一步（按顺序）**：
-0. **标志配色（O-22）**：Josh 说官网标志是白的看不清。已和 ChatGPT 商量出三套方案、发了对比图，本机先按 ① 改了官网（`SiteLogoMark.tsx`，已提交在本分支，**没推送**），等他选定 + 说「上线」。
+0. ~~标志配色（O-22）~~：2026-10-02 已定并上线（DECISIONS D-24）：顶栏和切换条用金黄 App 图标，入口里的小标志单色。
 1. **三星装原生金句宋体版（D-19，OPEN-ITEMS O-15）**：两端代码已改完并提交在本分支，home iPhone 已装 1.1.2 (133)；三星 10-01 晚不在线没装。
    三星上线后打 `sideload` 变体（包名 `me.askbible.native`，别盖商店版）。这个 worktree 里没有 `apps/askbible-mobile/android/keystore.properties`
    （不进仓库），先从主目录拷过来再打，不然出来的包没签名；本机没有 `local.properties` 时用 `ANDROID_HOME` 指 SDK。

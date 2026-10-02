@@ -399,7 +399,8 @@ done
 > **还剩**：
 > 1. Play 和 App Store 提审——按 D-20 等站外版在三星上用两三天没问题再提。提的时候 Play 要用比 245 大的 versionCode，
 >    iOS 要升到 1.1.3 并写 `store/` 下的更新说明。Josh 说一声我就做。
-> 2. 要不要把 `josh.zeng.ca@gmail.com` 也设成管理员（现在只有 `502299900@qq.com` 是，三星上要用管理员账号登录才看得到每日灵修）。
+> 2. ~~要不要把 `josh.zeng.ca@gmail.com` 也设成管理员~~ **已关闭 2026-10-01**：Josh 定了 gmail 是管理员、qq 那个取消，已改库（D-23）。
+>    三星上用 gmail 账号登录才看得到每日灵修；App 是启动 / 登录时读一次这个标记，已经登着的话把 App 关掉重开一次。
 > 3. 网页上线后请 Josh 自己在 askbible.me 登录一次（邮箱或 Google），确认登录状态正常——真实账号的登录我没法替他试。
 
 - **现状（上线前的记录）**：改动在分支 `claude/pensive-germain-44c2e9`（worktree `pensive-germain-44c2e9`）。

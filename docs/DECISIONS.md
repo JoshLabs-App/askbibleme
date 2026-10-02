@@ -1172,4 +1172,6 @@ Play 要求**所有轨道**（正式 / 测试）上的包都不能再声明 `USE
   用账号开关而不是把代码回退：以后要公开，只改 `SolidJoys.availableFor()` 一处。
 - **落点**：`MemberAuthStore.isAdmin`（登录 / 启动后读一次，按用户 id 记在本机，断网沿用上次结果）、
   `SupabaseAuthClient.fetchIsAdmin()`、`SolidJoys.availableFor(locale, isAdmin)`。iOS 和网页本来就没有这个入口。
-- **现状提醒**：库里目前只有 `502299900@qq.com` 是管理员；`josh.zeng.ca@gmail.com` 不是。
+- **管理员账号（2026-10-01 Josh 定）**：「josh.zeng.ca@gmail.com 是管理员，5022 那个不要」——已改库：
+  `josh.zeng.ca@gmail.com` 的 `is_admin = true`，`502299900@qq.com` 取消，现在全库只有这一个管理员。
+  网页后台权限也是看这个字段，没有别的管理员名单。

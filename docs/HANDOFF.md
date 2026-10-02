@@ -626,6 +626,7 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
 **当前状态（2026-10-01 夜）**：官网首屏改成几个软件的入口（D-22：一排图标切换，标题 / 入口 / 手机画面跟着换，等 Josh 看）、官网加了「同系列工具」一节（D-21：听到 / 查到 / 小小圣经）、原生首页金句换思源宋体（D-19，两端已改，iPhone 已装、三星没装）、官网（D-10）、网页版首页对齐安卓（D-11）、探索页照安卓（D-12）、撤掉网页专有设置（D-13、D-18）、
 菜单「回主页」（D-14）、官网手机模型放真的网页版（D-15）、下载入口加图标（D-16）、安卓「最新版 / 商店版」二选一（D-17）都做完、本机验过、
 已提交在分支 `claude/upbeat-mayer-752c72`（worktree `.claude/worktrees/strange-dewdney-3855d7`），**没合 main、没推送，等 Josh 说「上线」**（OPEN-ITEMS O-9）。
+2026-10-01 晚已把 main（`2ad8b200`，「防封换线」那一批，已上线）**合进本分支**：两处冲突（`AppInstallGuidePage.tsx`、`useNatureGoldenVerseAudioControl.ts`）两边都保留，`tsc` + 271 个单元测试通过；本分支现在只领先 main、不落后，上线时可以直接快进合并。
 
 **下一步（按顺序）**：
 1. **三星装原生金句宋体版（D-19，OPEN-ITEMS O-15）**：两端代码已改完并提交在本分支，home iPhone 已装 1.1.2 (133)；三星 10-01 晚不在线没装。
@@ -672,5 +673,7 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
     加中文文案后照第 5 条用 opencc-js 对一遍繁体（这次补了「课 蜡」）。这一节用 `.site-home__versions--single`，宽屏也一行一张，别改回两列（三张会落单）。
 13. 官网首屏软件切换（D-22）：`.site-home__hero-text` 是**从上往下排**的，别改回垂直居中——各软件的标题、入口高矮不一，居中的话一点切换，那排图标会上下跳。
     首屏淡入的延时写在 `.site-home__hero-text > :nth-child(4/5)`，往里加减子元素要跟着改序号。AskBible 以外的手机画面在 `SitePhoneShowcase.tsx`。
+14. 「防封换线」之后（`docs/anti-block-endpoints.md`）：网页里别再写死 `r2.dev` / `askbible-media.joshlabs.app` / `supabase.co`，R2 资源用 `lib/endpoints`，APK 直链用 `lib/app-install-urls.ts`；
+    图标字体改成从 npm 包引（`material-icons`、`@mdi/font`），新开的 worktree 要先 `npm install`。`lib/sibling-app-urls.ts` 是给人点的外站入口，不在此列。
 11. 安卓发版顺序：先 `deploy_android.py` 发下载页，再推 Play——官网把下载页那个包叫「最新版」（D-17）。
 9. 暗度 / 模糊 / 金句特效在网页首页已经不读偏好了（D-13），但 `lib/` 里的读写函数别删，会员同步还在用它们和 RN / iOS 互通。

@@ -209,6 +209,12 @@ object SupabaseAuthClient {
 
     data class Profile(val displayName: String?, val locale: String?)
 
+    /** askbible_profiles.is_admin：管理员账号才看得到还没公开的功能（每日灵修）。取不到（断网等）回 null，调用方沿用上次的结果 */
+    fun fetchIsAdmin(token: String, userId: String): Boolean? = try {
+        val r = request("/rest/v1/askbible_profiles?select=is_admin&user_id=eq.$userId", "GET", token)
+        if (r.status != 200) null else JSONArray(r.body).let { rows -> rows.length() > 0 && rows.getJSONObject(0).optBoolean("is_admin", false) }
+    } catch (_: Exception) { null }
+
     fun fetchProfile(token: String, userId: String): Profile? = try {
         val r = request("/rest/v1/askbible_profiles?select=display_name,locale&user_id=eq.$userId", "GET", token)
         if (r.status != 200) null else {

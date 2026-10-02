@@ -25,13 +25,29 @@ class MemberAuthStore(context: Context) {
     private val sp = context.applicationContext.getSharedPreferences("member-auth", Context.MODE_PRIVATE)
     var user by mutableStateOf<MemberUser?>(null); private set
     private var session: MemberSession? = null
+    /**
+     * 管理员账号（askbible_profiles.is_admin）。还没公开的功能只给它看（Josh 2026-10-01：每日灵修先只给管理账户）。
+     * 按用户 id 记在本机，断网时沿用上次的结果；没登录一律 false。
+     */
+    var isAdmin by mutableStateOf(false); private set
+    private fun adminKey(userId: String) = "is-admin.$userId"
     /** 当前会话 token（读经同步用；没登录为 null） */
     val sessionToken: String? get() = session?.sessionToken
 
     init {
         // 过期但带 refresh_token 的也先算登着（启动后 verifyRemote 会先续期）；RN 是一过期就登出
         val s = sp.getString(MemberAuthRules.SESSION_KEY, null)?.let { MemberAuthRules.parseSession(it, System.currentTimeMillis(), allowExpired = true) }
-        if (s != null) { session = s; user = s.user } else sp.edit().remove(MemberAuthRules.SESSION_KEY).apply()
+        if (s != null) { session = s; user = s.user; isAdmin = sp.getBoolean(adminKey(s.user.id), false) } else sp.edit().remove(MemberAuthRules.SESSION_KEY).apply()
+    }
+
+    /** 登录后 / 启动后问一次服务器这个账号是不是管理员 */
+    suspend fun refreshAdminFlag() {
+        val id = user?.id ?: return
+        val token = ensureFreshToken() ?: return
+        val remote = withContext(Dispatchers.IO) { SupabaseAuthClient.fetchIsAdmin(token, id) } ?: return
+        if (user?.id != id) return
+        isAdmin = remote
+        sp.edit().putBoolean(adminKey(id), remote).apply()
     }
 
     /** 拿一个还能用的 access token：快到期（2 分钟内）就先用 refresh_token 续；续期被拒（已作废）→ 登出；断网 → 先用旧的 */
@@ -48,6 +64,7 @@ class MemberAuthStore(context: Context) {
     private fun persist(s: MemberSession?) {
         session = s
         user = s?.user
+        isAdmin = s != null && sp.getBoolean(adminKey(s.user.id), false)
         if (s != null) sp.edit().putString(MemberAuthRules.SESSION_KEY, s.toJson()).apply()
         else sp.edit().remove(MemberAuthRules.SESSION_KEY).apply()
     }

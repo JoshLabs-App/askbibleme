@@ -63,8 +63,11 @@ object SolidJoys {
     private var job: Job? = null
     private var loadingFile: String? = null
 
-    /** 授权只给中文版：英文界面整块不出现 */
-    fun availableFor(locale: AppLocale) = locale != AppLocale.EN
+    /**
+     * 授权只给中文版：英文界面整块不出现。
+     * Josh 2026-10-01：还没公开，先只给管理员账号（MemberAuthStore.isAdmin），其他人整块不出现；他自己再听一阵再定。
+     */
+    fun availableFor(locale: AppLocale, isAdmin: Boolean) = isAdmin && locale != AppLocale.EN
 
     /** 某天那一篇；2 月 29 日这本灵修没有，显示 2 月 28 日 */
     fun day(date: LocalDate): DevotionalDay? {

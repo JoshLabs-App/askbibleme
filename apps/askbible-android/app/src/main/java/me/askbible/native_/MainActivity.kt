@@ -318,6 +318,8 @@ private fun RootScreen() {
     }
     // 刚登录：立即拉云端进度（RN syncMemberReadingAfterLogin）
     LaunchedEffect(auth.user?.id) { if (auth.user != null) syncEngine.flushNow("login") }
+    // 管理员账号才看得到还没公开的功能（每日灵修）
+    LaunchedEffect(auth.user?.id) { auth.refreshAdminFlag() }
     LaunchedEffect(plans.listenedDates) { activity.mergeRemoteHabit(plans.listenedDates) }
     // 15 秒一跳：使用时长打点 + 记当天为读经日；每三跳（45 秒）轮询一次同步
     LaunchedEffect(Unit) {
@@ -421,8 +423,8 @@ private fun RootScreen() {
     // 首页金句跟当前读经版本走：内置译本读本机库，在线译本（含法语等）取该版本的正文
     LaunchedEffect(translation.id) { home.setSource(translation) }
     // 每日灵修数据：第一次进计划页才下载（中文界面才有）
-    LaunchedEffect(tab, appLocale) {
-        if (tab == ShellTab.PLAN && me.askbible.native_.data.SolidJoys.availableFor(appLocale)) me.askbible.native_.data.SolidJoys.ensureLoaded(context, appLocale)
+    LaunchedEffect(tab, appLocale, auth.isAdmin) {
+        if (tab == ShellTab.PLAN && me.askbible.native_.data.SolidJoys.availableFor(appLocale, auth.isAdmin)) me.askbible.native_.data.SolidJoys.ensureLoaded(context, appLocale)
     }
     // 切界面语言：探索页与首页左上菜单共用（RN applyLocaleWithTranslationPrefs：
     // 语言、主译本（自动）、副译本清空、首页金句译本与朗读一起换；之后手动改译本不再受语言影响）
@@ -714,7 +716,7 @@ private fun RootScreen() {
                     bookLabel = bookLabel,
                     onConfirmDay = { plans.setAheadDays(planContentAhead); planViewAhead = 0 },
                     onStageSet = { planViewAhead = 0; planCursor = 0 }, habitDates = activity.completedDateSet,
-                    showDevotional = me.askbible.native_.data.SolidJoys.availableFor(appLocale), devotionalPlayer = devotional,
+                    showDevotional = me.askbible.native_.data.SolidJoys.availableFor(appLocale, auth.isAdmin), devotionalPlayer = devotional,
                     onOpenDevotional = { devotionalDate = it; planRoute = "devotional" },
                     onRetryDevotional = { me.askbible.native_.data.SolidJoys.ensureLoaded(context, appLocale) })
             }

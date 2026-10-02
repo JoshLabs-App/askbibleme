@@ -1,3 +1,4 @@
+import { endpointDefaultBase } from "@/lib/endpoints";
 import { NextResponse } from "next/server";
 
 /**
@@ -7,8 +8,7 @@ import { NextResponse } from "next/server";
  * 与移动端共用同一个公开桶（`goldenVerseAudioRemote.ts`、`musicAudioRemote.ts`）。
  * 桶名与 pub-* id 已编译进上架二进制，不可更改——见 AGENTS.md 的 R2 铁律。
  */
-export const MOBILE_CONFIG_R2_BASE =
-  "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev";
+export const MOBILE_CONFIG_R2_BASE = endpointDefaultBase("media");
 
 /**
  * 生产环境把 GET 转到 R2；开发环境返回 null，交给路由自己读本地 `data/*.json`——

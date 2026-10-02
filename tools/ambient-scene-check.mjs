@@ -21,7 +21,7 @@ function run(cmd, args, label) {
   return JSON.parse(r.stdout);
 }
 const bin = path.join(mkdtempSync(path.join(tmpdir(), "ambient-")), "bin");
-execFileSync("swiftc", ["-O", "-swift-version", "5", path.join(IOS, "Audio/AmbientScenes.swift"),
+execFileSync("swiftc", ["-O", "-swift-version", "5", path.join(IOS, "Audio/AmbientScenes.swift"), path.join(ROOT, "apps/askbible-ios/AskBible/Model/Endpoints.swift"),
   path.join(ROOT, "tools/swift-harness/ambient/main.swift"), "-o", bin], { stdio: "pipe" });
 const swift = run(bin, [], "Swift harness");
 let kotlin = null;

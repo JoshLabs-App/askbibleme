@@ -1,5 +1,4 @@
-@import url("https://fonts.googleapis.com/icon?family=Material+Icons");
-@import url("https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css");
+/* Material Icons / MDI 图标字体改为自托管，在 app/layout.tsx 里从 npm 包引入（防封换线，docs/anti-block-endpoints.md）。 */
 
 @tailwind base;
 @tailwind components;

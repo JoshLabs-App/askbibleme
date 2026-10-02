@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import me.askbible.native_.BuildConfig
+import me.askbible.native_.data.Endpoints
 import org.json.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
@@ -21,11 +22,11 @@ import java.net.URL
  *
  * 只在 `web` 变体里生效（BuildConfig.SELF_UPDATE）——Play 版严禁自带下载安装逻辑，
  * 商店渠道的更新由 Play 自己推。真源是 deploy_android.py 每次发版写的
- * `https://askbible-media.joshlabs.app/version.json`。
+ * 桶根的 `version.json`（走当前 media 线路，见 Endpoints.kt）。
  */
 object AppUpdater {
 
-    const val VERSION_URL = "https://askbible-media.joshlabs.app/version.json"
+    val VERSION_URL: String get() = Endpoints.mediaBase + "/version.json"
 
     data class Info(
         val version: String,
@@ -73,7 +74,8 @@ object AppUpdater {
                 if (url.isBlank()) null else Info(
                     version = o.optString("version"),
                     versionCode = o.optInt("versionCode"),
-                    apkUrl = url,
+                    // version.json 里写死的是其中一条线路，换到当前通的那条上（老版本只认原字段，所以不改数据格式）
+                    apkUrl = Endpoints.rebasedMedia(url),
                     notes = o.optString("notes"),
                 )
             }

@@ -372,3 +372,58 @@ done
 - 【已关闭 2026-09-26】Play 测试轨道还挂着带全屏意图权限的旧包：Josh 说「你处理」后，
   用 API 一次 edit 把 internal / alpha / beta / TAIWAN 都设成 243、清空「623」草稿，已提交审核；
   API 回查五条轨道全是 1.0.46 (243)。政策审查状态页的问题要等 Play 审完才会消失。
+
+## 【已关闭 2026-10-01】O-16 防封换线：方案写好了，等 Josh 确认再动代码（2026-10-01）
+
+> Josh「你帮我做，RENDER 要改 VERCEL」→ 六项都取推荐项，见 DECISIONS D-20。实施记录在 `docs/anti-block-endpoints.md` 第五节。
+
+盘点和分步方案全文在 `docs/anti-block-endpoints.md`。
+
+- **现状**：三端一共写死了约 60 处自家域名，分三个角色——`media`（R2 桶，两条线其实都在，客户端不会换）、
+  `site`（`askbible.me` 接口，单线）、`api`（Supabase，单线）。数据里几乎没有自家域名，
+  所以不需要听到当时那种「改数据格式」的破坏性一步。主站实际在 Vercel（HANDOFF 写的 Render 已过时）。
+- **影响**：`askbible.me` 被封 → 网页全断（连带听到 `td` / 查到 `cd` 入口），App 的在线译本 / YouVersion 朗读 / 注销账号断；
+  r2.dev 被封 → 金句语音、音乐、场景、勋章图、每日灵修断；已发布的老版本改不了，只能保证老地址不下线。
+- **需要 Josh 决定**（推荐项在前）：
+  1. 备线域名用哪一族：**`joshlabs.app` 子域（推荐，免费、已在 Cloudflare、当天能挂）** / 闲置的 `praybible.me`（更独立，DNS 在 Porkbun 要先迁）/ 只用 Cloudflare 自带免费域。
+  2. 网页要不要备用入口：**要（推荐，Vercel 加一个域名即可）** / 不要（网页被封就只靠 App）。
+  3. Supabase 反代：**AskBible 单独部署一个 Worker（推荐）** / 直接复用听到那个。
+  4. 发布顺序：**安卓站外版先发验证，再一起提 Play + App Store（推荐）** / 三个渠道一起发。
+  5. 第 0 步里的国内可达性实测要不要先做：**做（推荐，约十来次浏览器往返，只读文字）** / 跳过，按听到的默认排序来。
+  6. `docs/HANDOFF.md` 第 47 行「生产在 Render」要不要顺手改成 Vercel：**改（推荐）**。
+
+## O-18 防封换线的代码做完了，还没上线（2026-10-01）
+
+- **现状**：改动在分支 `claude/pensive-germain-44c2e9`（worktree `pensive-germain-44c2e9`），没合 main、没推送、没发版。
+  基础设施（两个 Worker、桶里的 `endpoints.json`）已经在线上，但那是纯新增，没有客户端在用。
+  三星和 home iPhone 上装的是带换线的包。
+- **影响**：不上线就等于没做。Supabase 在移动网络上现在就有约两成节点连不上（实测 19/24）。
+- **需要 Josh 决定**：
+  1. 网页：合 main 并推送（Vercel 自动部署）。官网首页分支 `claude/upbeat-mayer-752c72` 也还没合，
+     两边都动了 `app/app/page.tsx`、`components/install/AppInstallGuidePage.tsx`、`app/globals.css`，改的位置不同，谁先合都行，后合的那个看一眼这三个文件。
+  2. 安卓站外版：`python3 ~/bin/deploy_android.py`（会自动把 versionCode 升到 245，站外版用户收到更新提示）。
+  3. 站外版在三星上用几天没问题，再一起提 Play 和 App Store（D-20 定的顺序）。
+  推荐：1 和 2 现在就做，3 过两三天。
+
+## O-19 网页备用入口还没挂（2026-10-01）
+
+- **现状**：D-20 定了要做，但要在 Vercel 后台给项目加域名，本机没有 Vercel 命令行登录态，这一步没做。
+- **影响**：`askbible.me` 被封时网页用户没有第二个地址可用（App 不受影响，App 走反代）。
+- **需要 Josh 决定 / 做**：在 Vercel 项目的 Domains 里加 `askbible.joshlabs.app`（它会给一条 CNAME，我来加到 Cloudflare）；
+  或者你先在 Chrome 里登录 Vercel，我用浏览器替你加。加完我再改 `lib/auth/public-auth-origin.ts` 的白名单和 Supabase 回跳白名单。
+  推荐：你登录 Vercel 后告诉我一声，其余我做。
+
+## O-20 网页端 Supabase 还没接换线（2026-10-01）
+
+- **现状**：网页浏览器端直连 `supabase.co`（`lib/supabase/browser.ts`），没走 `api` 角色。原生两端已经接了。
+- **影响**：`supabase.co` 连不上的网络（实测部分移动节点）在网页上登录会失败；App 不受影响。
+  接的时候要把会话 cookie 名钉死成 `sb-tgobadhdylarhssudplc-auth-token`（`@supabase/ssr` 默认按域名推 cookie 名，换入口会被当成没登录，
+  服务端也读不到），还要把邮箱登录、Google、Apple 三条登录路径回归一遍。Google / Apple 网页登录本身绕不过 `supabase.co`（回跳地址是它的）。
+- **需要 Josh 决定**：要不要做。推荐：做，但放在网页备用入口（O-19）之后一起回归登录。
+
+## O-21 两条原本就失败的对拍（2026-10-01 发现，和防封无关）
+
+- **现状**：`npm run check:nature-scenes` 报两端缺 54 个场景视频素材（视频已改成 R2 点播，对拍还在要求内置文件）；
+  `npm run check:member-sync` 报最近搜索合并 Swift 留 10 条、TS 期望 8 条。主目录里跑也是同样的结果。
+- **影响**：`check:native` 整套过不了，真出了回归会被这两条红灯盖住。
+- **需要 Josh 决定**：要不要另开一个会话修。推荐：修，都是把对拍期望值对齐现状的小活。

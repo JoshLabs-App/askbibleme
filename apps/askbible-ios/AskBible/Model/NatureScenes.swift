@@ -63,7 +63,7 @@ enum NatureScenes {
 
     // MARK: 资源
 
-    private static let r2Base = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev"
+    private static var r2Base: String { Endpoints.mediaBase }
 
     /// scene id → R2 720p 路径（与 nature-settings.json src 一致）
     private static let r2VideoPath: [String: String] = [

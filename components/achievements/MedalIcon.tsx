@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { medalImageUrl } from "@/lib/achievements/medal-catalog";
+import { useEndpointBase } from "@/lib/endpoints/use-endpoint-base";
 
 /** 档位配色：单档给金，多档从铜走到金（与 iOS `MedalIcon.tint` 同一套） */
 function tierTint(tier: number, tierCount: number): string | null {
@@ -33,7 +34,7 @@ export function MedalIcon({
 }) {
   const [loaded, setLoaded] = useState(false);
   const imgRef = useRef<HTMLImageElement | null>(null);
-  const url = medalImageUrl(imageKey);
+  const url = medalImageUrl(imageKey, useEndpointBase("media"));
   const tint = tierTint(tier, tierCount);
 
   // 图已在浏览器缓存里时，onLoad 在 React 挂上监听之前就过去了——

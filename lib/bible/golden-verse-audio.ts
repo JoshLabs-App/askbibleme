@@ -1,3 +1,4 @@
+import { endpointBase } from "@/lib/endpoints";
 import { parseVerseKey } from "./parse-verse-key";
 
 export const GOLDEN_VERSE_AUDIO_SUBDIR = "golden-verses";
@@ -23,20 +24,22 @@ export function buildGoldenVerseAudioRelativePath(
   return `${subdir}/${filename}`;
 }
 
-/** 与移动端共用的公开 R2 桶（见 apps/askbible-mobile/src/home/goldenVerseAudioRemote.ts）。 */
-const GOLDEN_VERSE_AUDIO_R2_PUBLIC_BASE = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev";
-
-export function goldenVerseAudioRemoteBaseUrl(): string {
+/**
+ * 与移动端共用的公开 R2 桶。域名走 `media` 角色的当前线路（防封换线，lib/endpoints），默认仍是 r2.dev。
+ * `mediaBase` 由调用方传入（渲染里用 `useEndpointBase("media")`），不传就取当前线路。
+ */
+export function goldenVerseAudioRemoteBaseUrl(mediaBase: string = endpointBase("media")): string {
   const fromEnv = process.env.NEXT_PUBLIC_GOLDEN_VERSE_AUDIO_BASE_URL?.trim();
-  return (fromEnv || GOLDEN_VERSE_AUDIO_R2_PUBLIC_BASE).replace(/\/$/, "");
+  return (fromEnv || mediaBase).replace(/\/$/, "");
 }
 
 /** 直连 R2，不经过 askbible.me 存放/转发。 */
 export function buildGoldenVerseAudioRemoteSrc(
   verseKey: string,
   translationId: GoldenVerseAudioTranslationId = "cuv-simp",
+  mediaBase?: string,
 ): string | null {
   const relativePath = buildGoldenVerseAudioRelativePath(verseKey, translationId);
   if (!relativePath) return null;
-  return `${goldenVerseAudioRemoteBaseUrl()}/audio/${relativePath}`;
+  return `${goldenVerseAudioRemoteBaseUrl(mediaBase)}/audio/${relativePath}`;
 }

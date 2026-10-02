@@ -14,8 +14,8 @@ import java.net.URL
  * Josh 2026-09-10：「YouVersion 里有的版本全放开来，不需要人为去选」。
  */
 object RemoteTranslations {
-    const val CATALOG_ENDPOINT = "https://askbible.me/api/mobile/bible/youversion/catalog"
-    const val CHAPTER_ENDPOINT = "https://askbible.me/api/mobile/bible/youversion/chapter"
+    val CATALOG_ENDPOINT: String get() = Endpoints.siteBase + "/api/mobile/bible/youversion/catalog"
+    val CHAPTER_ENDPOINT: String get() = Endpoints.siteBase + "/api/mobile/bible/youversion/chapter"
     /** 一天刷一次（目录很少变） */
     const val TTL_MS = 24L * 3600 * 1000
 

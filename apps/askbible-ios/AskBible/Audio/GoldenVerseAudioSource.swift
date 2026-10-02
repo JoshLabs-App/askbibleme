@@ -4,7 +4,8 @@ import Foundation
 /// R2 直链点播，对象键 `audio/golden-verses/{书}-{章}-{节}-32kbps.mp3`（英文 WEB 在 golden-verses-web-en）。
 /// 禁止回落到 askbible.me / Render。
 enum GoldenVerseAudioSource {
-    static let r2PublicBase = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev"
+    /// 当前 media 线路（防封换线，见 Endpoints.swift）；默认仍是 r2.dev
+    static var r2PublicBase: String { Endpoints.mediaBase }
     static let suffix = "-32kbps.mp3"
 
     struct Location: Equatable {

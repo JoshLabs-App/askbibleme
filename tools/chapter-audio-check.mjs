@@ -23,7 +23,7 @@ const UA = "AskBible.me/1.0 (iOS AVPlayer)";
 
 const bin = path.join(mkdtempSync(path.join(tmpdir(), "audiourl-")), "bin");
 execFileSync("swiftc", ["-O", "-swift-version", "5",
-  path.join(ROOT, "apps/askbible-ios/AskBible/Audio/ChapterAudioSource.swift"),
+  path.join(ROOT, "apps/askbible-ios/AskBible/Audio/ChapterAudioSource.swift"), path.join(ROOT, "apps/askbible-ios/AskBible/Model/Endpoints.swift"),
   path.join(ROOT, "tools/swift-harness/audiourl/main.swift"),
   "-o", bin], { stdio: "pipe" });
 

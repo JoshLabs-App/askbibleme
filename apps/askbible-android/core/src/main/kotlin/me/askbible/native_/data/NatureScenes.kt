@@ -31,7 +31,7 @@ object NatureScenes {
 
     fun scene(id: String): NatureScene? = scenes.firstOrNull { it.id == id }
 
-    private const val R2_BASE = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev"
+    private val R2_BASE: String get() = Endpoints.mediaBase
 
     /** scene id → R2 720p 视频路径（与 nature-settings.json src 一致） */
     private val r2VideoPath = mapOf(

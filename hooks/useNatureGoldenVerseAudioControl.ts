@@ -5,6 +5,7 @@ import { useHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerse
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { useMediaPlaybackCoordinator } from "@/components/media/MediaPlaybackCoordinatorProvider";
 import { buildGoldenVerseAudioRemoteSrc } from "@/lib/bible/golden-verse-audio";
+import { useEndpointBase } from "@/lib/endpoints/use-endpoint-base";
 import { isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
 import { addHomeListeningSeconds } from "@/lib/home-listening/progress";
 import {
@@ -41,9 +42,11 @@ export function useNatureGoldenVerseAudioControl(verseKey?: string | null) {
   const lastAudioTimeRef = useRef(0);
   const unflushedListeningSecondsRef = useRef(0);
 
+  // 防封换线：线路换了要重拼地址
+  const mediaBase = useEndpointBase("media");
   const src = useMemo(
-    () => (verseKey ? buildGoldenVerseAudioRemoteSrc(verseKey, audioTranslationId) : null),
-    [audioTranslationId, verseKey],
+    () => (verseKey ? buildGoldenVerseAudioRemoteSrc(verseKey, audioTranslationId, mediaBase) : null),
+    [audioTranslationId, mediaBase, verseKey],
   );
 
   useEffect(() => {

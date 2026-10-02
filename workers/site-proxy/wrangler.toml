@@ -1,0 +1,10 @@
+# AskBible · 主站接口反代（防封换线，docs/anti-block-endpoints.md）
+#
+# 部署：cd workers/site-proxy && npx wrangler deploy
+# 入口：https://askbible-site.joshlabs.app/ —— 已写进 data/endpoints.json 的 `site.candidates`（排在 askbible.me 后面）。
+
+name = "askbible-site-proxy"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+routes = [{ pattern = "askbible-site.joshlabs.app", custom_domain = true }]

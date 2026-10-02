@@ -94,7 +94,9 @@ enum ChapterAudioSource {
         "cunpss-zh-hans": "48", "cunpss-zh-hant": "47", "rcuv-zh-hant": "139", "rcuvss-zh-hans": "140",
         "niv": "111", "nlt": "116", "nkjv": "114", "kjv": "1",
     ]
-    static let chapterAudioProxyBase = "https://askbible.me/api/read/chapter-audio"
+    static let chapterAudioProxyPath = "/api/read/chapter-audio"
+    /// 当前 site 线路上的代理地址（防封换线，见 Endpoints.swift）；默认仍是 askbible.me
+    static var chapterAudioProxyBase: String { Endpoints.siteBase + chapterAudioProxyPath }
 
     /// 走 YouVersion 音源的译本（和合本 / KJV / WEB 有直连音源的优先直连）
     static func usesYouVersionAudio(_ translationId: String) -> Bool {
@@ -113,7 +115,9 @@ enum ChapterAudioSource {
 
     /// 这是「先问代理」的地址，不是能直接播的 mp3
     static func isResolverURL(_ url: URL) -> Bool {
-        url.absoluteString.hasPrefix(chapterAudioProxyBase)
+        // 认全部 site 候选域：地址拼好之后线路可能换过
+        let s = url.absoluteString
+        return Endpoints.allHosts(.site).contains { s.hasPrefix($0.dropLast() + chapterAudioProxyPath) }
     }
 
     /// 代理返回的 JSON → mp3 地址（只认 youversionapi.com 的 https 直链）

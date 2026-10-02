@@ -16,6 +16,7 @@ fun main(args: Array<String>) {
         "--music" -> return musicMain()
         "--golden" -> return goldenMain()
         "--ambient" -> return ambientMain()
+        "--endpoints" -> return endpointsMain()
         "--plans" -> return plansMain()
         "--info-edition" -> return infoEditionMain(args[1])
         "--scripture-search" -> return scriptureSearchMain()

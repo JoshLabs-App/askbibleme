@@ -4,7 +4,8 @@ import Foundation
 /// 内置曲走安装包；赞美诗 Hymn Commons 直链原样用；其余 `/music/uploads/…` 走 R2 公网点播。
 /// 禁止回落到 askbible.me（流量计费）—— 就算 src 是 askbible.me 的绝对地址也只取对象键转 R2。
 enum MusicAudioSource {
-    static let r2PublicBase = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev"
+    /// 当前 media 线路（防封换线，见 Endpoints.swift）；默认仍是 r2.dev
+    static var r2PublicBase: String { Endpoints.mediaBase }
     static let userAgent = "AskBible.me/1.0 (iOS AVPlayer)"
 
     /// TEMP：赞美诗专辑直链 Hymn Commons 钢琴 MP3（用户指定不经 R2）

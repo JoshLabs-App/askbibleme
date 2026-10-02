@@ -1,5 +1,7 @@
 "use client";
 
+import { rebaseMediaUrl } from "@/lib/endpoints";
+import { useEndpointBase } from "@/lib/endpoints/use-endpoint-base";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -79,6 +81,8 @@ export function AppInstallGuidePage() {
   const { locale } = useLocale();
   const isZh = locale === "zh-CN";
   const [platform, setPlatform] = useState<Platform>("other");
+  // 防封换线：APK 直链跟着当前通的 media 线路走
+  const mediaBase = useEndpointBase("media");
 
   useEffect(() => {
     setPlatform(detectPlatform());
@@ -130,12 +134,12 @@ export function AppInstallGuidePage() {
       href: APP_INSTALL_ANDROID_URL,
       external: true,
       secondaryLabel: isZh ? "直接下载 APK 安装包" : "Download the APK directly",
-      secondaryHref: APP_INSTALL_ANDROID_APK_URL,
+      secondaryHref: rebaseMediaUrl(APP_INSTALL_ANDROID_APK_URL, mediaBase),
     };
 
     if (platform === "android") return [android, ios];
     return [ios, android];
-  }, [isZh, platform]);
+  }, [isZh, mediaBase, platform]);
 
   return (
     <div className="narrow-parchment-root select-text">

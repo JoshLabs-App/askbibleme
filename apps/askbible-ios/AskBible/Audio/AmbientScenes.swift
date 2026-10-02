@@ -12,7 +12,8 @@ struct AmbientSlot: Identifiable, Hashable {
 }
 
 enum AmbientScenes {
-    static let r2PublicBase = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev"
+    /// 当前 media 线路（防封换线，见 Endpoints.swift）；默认仍是 r2.dev
+    static var r2PublicBase: String { Endpoints.mediaBase }
     /// 首页照片是「晨光」→ 默认白噪音（NATURE_SCENE_DEFAULT_AMBIENT）
     static let defaultSlotId = "scene-white-noise"
 

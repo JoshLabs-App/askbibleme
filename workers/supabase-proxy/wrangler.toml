@@ -1,0 +1,11 @@
+# AskBible · Supabase 反代（防封换线，docs/anti-block-endpoints.md）
+#
+# 部署：cd workers/supabase-proxy && npx wrangler deploy
+# 入口：https://askbible-sb.joshlabs.app/ —— 已写进 data/endpoints.json 的 `api.candidates`（排在 supabase.co 后面）。
+# workers.dev 地址国内不通，只留给境外兜底，不要写进候选表前排。
+
+name = "askbible-supabase"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+routes = [{ pattern = "askbible-sb.joshlabs.app", custom_domain = true }]

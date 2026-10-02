@@ -33,7 +33,7 @@ class TranslationDownloader(private val context: Context) {
         states[t.id] = State.Downloading(0.0)
         val ok = withContext(Dispatchers.IO) {
             try {
-                val conn = URL(t.downloadUrl).openConnection() as HttpURLConnection
+                val conn = URL(Endpoints.rebasedMedia(t.downloadUrl)).openConnection() as HttpURLConnection
                 conn.connectTimeout = 20_000; conn.readTimeout = 60_000
                 if (conn.responseCode !in 200..299) throw IllegalStateException("HTTP ${conn.responseCode}")
                 val total = conn.contentLengthLong

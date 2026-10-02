@@ -84,7 +84,7 @@ function run(cmd, args, label) {
 
 const bin = path.join(mkdtempSync(path.join(tmpdir(), "golden-")), "bin");
 execFileSync("swiftc", ["-O", "-swift-version", "5",
-  path.join(IOS, "Audio/GoldenVerseAudioSource.swift"),
+  path.join(IOS, "Audio/GoldenVerseAudioSource.swift"), path.join(ROOT, "apps/askbible-ios/AskBible/Model/Endpoints.swift"),
   path.join(IOS, "Home/HomeVersePool.swift"),
   path.join(IOS, "Model/VerseDisplayNotes.swift"),
   path.join(ROOT, "tools/swift-harness/golden/main.swift"),

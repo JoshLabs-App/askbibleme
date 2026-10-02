@@ -102,7 +102,7 @@ struct MedalDef: Identifiable {
 
 enum MedalCatalog {
     static let version = ${SRC.version}
-    static let imageBase = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/" + ${esc(imageBase)}
+    static var imageBase: String { Endpoints.mediaBase + "/" + ${esc(imageBase)} }
     static func imageURL(_ key: String) -> URL? { URL(string: imageBase + key + ".webp") }
 
     static let all: [MedalDef] = [
@@ -175,7 +175,7 @@ data class MedalDef(
 
 object MedalCatalog {
     const val VERSION = ${SRC.version}
-    const val IMAGE_BASE = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/" + ${esc(imageBase)}
+    val IMAGE_BASE: String get() = Endpoints.mediaBase + "/" + ${esc(imageBase)}
     fun imageUrl(key: String): String = IMAGE_BASE + key + ".webp"
 
     val all: List<MedalDef> = listOf(

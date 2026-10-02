@@ -6,7 +6,7 @@ import Foundation
 /// 目录页 / 章标题还写着中文或英文书卷名就对不上（Josh 2026-09-10）。
 /// 每个版本一份，落盘 Caches/book-names/<版本号>.tsv，取到就一直用。与 Kotlin 的 RemoteBookNames 对等。
 enum RemoteBookNames {
-    static let endpoint = "https://askbible.me/api/mobile/bible/youversion/books"
+    static var endpoint: String { Endpoints.siteBase + "/api/mobile/bible/youversion/books" }
 
     private static let lock = NSLock()
     /// 版本号 → (书卷 id → 该版本的书卷名)

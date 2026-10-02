@@ -18,8 +18,7 @@ import java.net.URL
  * 首次点进「陪你探索 / 查找资料」时触发，显示「首次准备中」进度条，下载到 filesDir/info-edition.sqlite 后离线可读。
  */
 object InfoEditionDownloader {
-    private const val R2_URL =
-        "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/bible/info-edition.sqlite"
+    private val R2_URL: String get() = Endpoints.mediaBase + "/bible/info-edition.sqlite"
 
     sealed class State {
         object Idle : State()

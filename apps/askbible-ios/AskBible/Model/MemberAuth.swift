@@ -121,7 +121,8 @@ extension ISO8601DateFormatter {
 
 /// Supabase 直连（与 RN app.config extra.supabaseUrl / anon key 同一套；anon key 是公开的发布密钥，RN 包里也带着）
 enum SupabaseAuthConfig {
-    static let url = "https://tgobadhdylarhssudplc.supabase.co"
+    /// 当前 api 线路（防封换线，见 Endpoints.swift）；默认仍是 supabase.co，被干扰时换到自家反代
+    static var url: String { Endpoints.apiBase }
     static let anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnb2JhZGhkeWxhcmhzc3VkcGxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyMTMwMDAsImV4cCI6MjA5Njc4OTAwMH0.5EqC5hJFmydZaVBmpXJk1ddJNGX_fY2hN83k5IzAO3I"
 }
 

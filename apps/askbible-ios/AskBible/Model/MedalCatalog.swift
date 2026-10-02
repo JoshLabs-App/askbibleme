@@ -50,7 +50,7 @@ struct MedalDef: Identifiable {
 
 enum MedalCatalog {
     static let version = 1
-    static let imageBase = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/" + "medals/"
+    static var imageBase: String { Endpoints.mediaBase + "/" + "medals/" }
     static func imageURL(_ key: String) -> URL? { URL(string: imageBase + key + ".webp") }
 
     static let all: [MedalDef] = [

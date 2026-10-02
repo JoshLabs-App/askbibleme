@@ -1,3 +1,5 @@
+import { endpointDefaultBase } from "@/lib/endpoints";
+
 /** 默认 App Store 公开页（可被 env 覆盖）。ascAppId: 6771996188 */
 export const DEFAULT_APP_INSTALL_IOS_URL =
   "https://apps.apple.com/app/id6771996188" as const;
@@ -6,9 +8,15 @@ export const DEFAULT_APP_INSTALL_IOS_URL =
 export const DEFAULT_APP_INSTALL_ANDROID_URL =
   "https://play.google.com/store/apps/details?id=me.askbible" as const;
 
-/** 默认 Android 安装包（APK）直链（可被 env 覆盖），托管在 Cloudflare R2。 */
-export const DEFAULT_APP_INSTALL_ANDROID_APK_URL =
-  "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/downloads/android/AskBible-latest.apk" as const;
+/** 安装包和版本信息在桶里的路径（域名走 `media` 角色，见 lib/endpoints） */
+export const APP_INSTALL_ANDROID_APK_PATH = "downloads/android/AskBible-latest.apk" as const;
+export const APP_INSTALL_ANDROID_VERSION_PATH = "version.json" as const;
+
+/**
+ * 默认 Android 安装包（APK）直链（可被 env 覆盖），托管在 Cloudflare R2。
+ * 这是默认线路上的地址；浏览器里展示前用 `rebaseMediaUrl()` 换到当前通的线路。
+ */
+export const DEFAULT_APP_INSTALL_ANDROID_APK_URL = `${endpointDefaultBase("media")}/${APP_INSTALL_ANDROID_APK_PATH}`;
 
 /** Android 试用申请收件邮箱（可被 env 覆盖）。 */
 export const DEFAULT_APP_INSTALL_ANDROID_EMAIL = "support@askbible.me" as const;

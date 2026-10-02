@@ -42,7 +42,7 @@ data class DevotionalDay(
 }
 
 object SolidJoys {
-    private const val BASE = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/devotionals/"
+    private val BASE: String get() = Endpoints.mediaBase + "/devotionals/"
 
     const val TITLE = "约翰·派博每日灵修"
     const val CREDIT_AUTHOR = "John Piper / Desiring God"

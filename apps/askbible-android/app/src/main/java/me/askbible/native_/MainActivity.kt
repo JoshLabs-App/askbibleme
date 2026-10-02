@@ -1,6 +1,7 @@
 package me.askbible.native_
 
 import me.askbible.native_.data.SiteCopy
+import me.askbible.native_.data.EndpointsStore
 import me.askbible.native_.data.TranslationDownloader
 import me.askbible.native_.data.ChapterLoader
 import me.askbible.native_.data.name
@@ -126,6 +127,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // 防封换线：先同步读出上次探通的线路，后面拼地址才不会打到已经不通的域
+        EndpointsStore.attach(this)
         // 全量在线译本目录先读盘：记住的远端译本要在 TranslationPrefs 解析之前就认得
         me.askbible.native_.data.RemoteTranslations.attach(cacheDir)
         OAuthCallbackBus.deliver(intent?.dataString)
@@ -140,6 +143,12 @@ class MainActivity : ComponentActivity() {
             // 商店版 → 站外版的迁移提示；默认关，开关在远端 migrate.json
             MigrateGate.Host()
         }
+    }
+
+    /** 回前台重探一次线路（Endpoints 自己限 10 分钟一次） */
+    override fun onStart() {
+        super.onStart()
+        EndpointsStore.refreshInBackground()
     }
 
     /** 浏览器 OAuth 回调（askbible://auth/callback?code=…）：singleTask 下回到这里 */

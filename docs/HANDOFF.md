@@ -625,7 +625,9 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
 
 **当前状态（2026-10-01 夜）**：官网首屏改成几个软件的入口（D-22：一排图标切换，标题 / 入口 / 手机画面跟着换，等 Josh 看）、官网加了「同系列工具」一节（D-21：听到 / 查到 / 小小圣经）、原生首页金句换思源宋体（D-19，两端已改，iPhone 已装、三星没装）、官网（D-10）、网页版首页对齐安卓（D-11）、探索页照安卓（D-12）、撤掉网页专有设置（D-13、D-18）、
 菜单「回主页」（D-14）、官网手机模型放真的网页版（D-15）、下载入口加图标（D-16）、安卓「最新版 / 商店版」二选一（D-17）都做完、本机验过、
-已提交在分支 `claude/upbeat-mayer-752c72`（worktree `.claude/worktrees/strange-dewdney-3855d7`），**没合 main、没推送，等 Josh 说「上线」**（OPEN-ITEMS O-9）。
+**2026-10-02 Josh 说「发布」「上线」，这一整批已合进 main 并推送（Vercel 自动部署）**；官网上不写备用地址（D-22 补充）。
+之前是在分支 `claude/upbeat-mayer-752c72`（worktree `.claude/worktrees/strange-dewdney-3855d7`）上做的。主目录 `~/Desktop/APP/01AskBible` 里有别的会话没提交的改动，
+所以是从 worktree 直接 `git push origin HEAD:main` 推的，**主目录的本地 main 落后于远端，要在那边 `git pull`**（那边改了 `docs/DECISIONS.md` / `OPEN-ITEMS.md` 没提交，拉之前先让改的会话提交）。
 2026-10-01 晚已把 main（`2ad8b200`，「防封换线」那一批，已上线）**合进本分支**：两处冲突（`AppInstallGuidePage.tsx`、`useNatureGoldenVerseAudioControl.ts`）两边都保留，`tsc` + 271 个单元测试通过；本分支现在只领先 main、不落后，上线时可以直接快进合并。
 
 **下一步（按顺序）**：
@@ -633,11 +635,12 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
    三星上线后打 `sideload` 变体（包名 `me.askbible.native`，别盖商店版）。这个 worktree 里没有 `apps/askbible-mobile/android/keystore.properties`
    （不进仓库），先从主目录拷过来再打，不然出来的包没签名；本机没有 `local.properties` 时用 `ANDROID_HOME` 指 SDK。
    Josh 看过手机后要是对英文金句用系统衬线体有意见，改 `VerseFont`（安卓 `ui/VerseFont.kt`、iOS `Theme/VerseFont.swift`）。
-2. Josh 看官网首屏的软件切换（D-22）和最下面「同系列工具」那一节（D-21），待他回的几条见 O-17。文案在 `components/site/site-home-copy.ts` 的 `hero*` / `sibling*`；地址在 `lib/sibling-app-urls.ts`；
+2. 官网已上线；Josh 看了首屏的软件切换（D-22）和最下面「同系列工具」那一节（D-21）有意见再改，还开着的几条见 O-17。文案在 `components/site/site-home-copy.ts` 的 `hero*` / `sibling*`；地址在 `lib/sibling-app-urls.ts`；
    手机里的截图在 `public/site/<名>-screen-N.webp`，换图就把新图裁成 600×1299 的 webp 覆盖同名文件。
    之后的编号顺延：
 2. Josh 逐页看网页版时再提的不一致，照「以安卓代码为准」处理。
-3. Josh 说「上线」后：合 main、推送（Vercel 自动部署），提醒他点一次手机主屏上已装的图标。
+3. ~~Josh 说「上线」后合 main、推送~~（2026-10-02 已做）。还差：Josh 用手机点一次主屏上已装的图标，确认会自动进 `/web`（O-9 第 2 条）。
+   安卓 1.0.48 (245) 是别的会话 10-01 从 main 发到下载页的，**不含**金句宋体（D-19）；下一次发安卓版才带上。
 4. 待他决定的：O-13（菜单里的「金句停顿」要不要也去掉）、O-14（首页水合报错要不要修）、D-14 的「主页」是不是指官网。
 
 **探索页（D-12）改在哪**：`components/explore/ExploreHomeContent.tsx`（只留文章格子）、`ExploreReadingHabitStats.tsx`（顺序）、

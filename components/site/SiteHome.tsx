@@ -13,6 +13,7 @@ import { ASKBIBLE_PRODUCT_NAME } from "@/lib/askbible-product-name";
 import type { AppLocale } from "@/lib/i18n/config";
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import { isDisplayStandalone } from "@/lib/pwa/display-mode";
+import { SIBLING_CHADAO_URL, SIBLING_LITTLE_BIBLE_URL, SIBLING_TINGDAO_URL } from "@/lib/sibling-app-urls";
 import { WEB_APP_HOME_PATH } from "@/lib/web-app-home-path";
 import "./site-home.css";
 
@@ -68,12 +69,18 @@ function VersionEntry({
 }: {
   copy: SiteHomeVersionCopy;
   href: string;
-  icon: EntryIconKind;
+  /** 自家几个版本用图标种类；同系列的别的 App 直接给它自己的图标图片 */
+  icon: EntryIconKind | { src: string };
   external?: boolean;
 }) {
   const inner = (
     <>
-      <EntryIcon kind={icon} size={34} />
+      {typeof icon === "string" ? (
+        <EntryIcon kind={icon} size={34} />
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className="site-home__entry-icon site-home__entry-icon--app" src={icon.src} alt="" width={34} height={34} loading="lazy" />
+      )}
       <span className="site-home__version-text">
         <span className="site-home__version-title font-serif">{copy.title}</span>
         <span className="site-home__version-body">{copy.body}</span>
@@ -293,6 +300,24 @@ export function SiteHome() {
               <VersionEntry copy={copy.versionApk} href={ANDROID_APK_PAGE_PATH} icon="apk" />
             </div>
             <p className="site-home__closing">{about.closing}</p>
+          </section>
+
+          {/* 同系列工具（Josh 2026-10-01，DECISIONS D-21）：官网还是 AskBible 的，这一节只是把另外几样带一下 */}
+          <section className="site-home__section" aria-labelledby="site-home-siblings">
+            <h2 id="site-home-siblings" className="site-home__heading font-serif">
+              {copy.siblingsHeading}
+            </h2>
+            <p className="site-home__intro">{copy.siblingsIntro}</p>
+            <div className="site-home__versions site-home__versions--single">
+              <VersionEntry copy={copy.siblingTingdao} href={SIBLING_TINGDAO_URL} icon={{ src: "/site/sibling-tingdao.png" }} external />
+              <VersionEntry copy={copy.siblingChadao} href={SIBLING_CHADAO_URL} icon={{ src: "/site/sibling-chadao.png" }} external />
+              <VersionEntry
+                copy={copy.siblingLittleBible}
+                href={SIBLING_LITTLE_BIBLE_URL}
+                icon={{ src: "/site/sibling-littlebible.jpg" }}
+                external
+              />
+            </div>
           </section>
         </main>
 

@@ -5,6 +5,9 @@
  * `components/about/about-page-copy.ts`——那是已经对外的定稿，官网和「关于」页说的必须是同一套话。
  * 这里新增的句子只从 `docs/01-vision.md`、`04-ux-philosophy.md`、`05-emotional-design.md` 提炼，
  * 不另编卖点（`docs/DECISIONS.md` D-10）。繁体由 `toZhTwText` 从简体转。
+ *
+ * 「同系列工具」三张卡（D-21）的介绍也不是新编的：听到、查到照 joshlabs.app 首页上已经对外的那两段，
+ * 小小圣经照它频道的定位和横幅上的那句话（00蜡笔画圣经故事 D-14 / D-73 / D-134）。
  */
 export type SiteHomeVersionCopy = {
   title: string;
@@ -35,6 +38,11 @@ export type SiteHomeCopy = {
   versionIos: SiteHomeVersionCopy;
   versionPlay: SiteHomeVersionCopy;
   versionApk: SiteHomeVersionCopy;
+  siblingsHeading: string;
+  siblingsIntro: string;
+  siblingTingdao: SiteHomeVersionCopy;
+  siblingChadao: SiteHomeVersionCopy;
+  siblingLittleBible: SiteHomeVersionCopy;
   footerAbout: string;
   languageLabel: string;
 };
@@ -78,6 +86,23 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
       body: "直接下载安装，新版最先到，App 里会提示更新。和商店版二选一，不能互相覆盖安装。",
       action: "下载最新版",
     },
+    siblingsHeading: "同系列工具",
+    siblingsIntro: "我们做的另外几样，也都围着圣经。",
+    siblingTingdao: {
+      title: "听到",
+      body: "世界各地的查经与主日讲道，用中文听；按圣经书卷编排，可边听边读。",
+      action: "打开网页版",
+    },
+    siblingChadao: {
+      title: "查到",
+      body: "给小组长用的归纳法查经工具：读经、备课、带组、排期，一套做完。目前只有安卓版。",
+      action: "安卓下载",
+    },
+    siblingLittleBible: {
+      title: "小小圣经",
+      body: "蜡笔画的圣经故事，一章一章，陪孩子安静听圣经。在 YouTube 上看，有英文和中文配音，可以切换。",
+      action: "去 YouTube 看",
+    },
     footerAbout: "关于",
     languageLabel: "语言",
   },
@@ -118,6 +143,23 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
       title: "Android · latest version",
       body: "Download and install it directly. New releases land here first and the app tells you when to update. It can't be installed over the store version.",
       action: "Download the latest",
+    },
+    siblingsHeading: "More from us",
+    siblingsIntro: "A few other things we make, all around Scripture.",
+    siblingTingdao: {
+      title: "听到 · Sermons",
+      body: "Bible studies and Sunday sermons from around the world, in Chinese. Arranged by book of the Bible, with text to read along.",
+      action: "Open the web app",
+    },
+    siblingChadao: {
+      title: "查到 · Group Bible Study",
+      body: "An inductive Bible study tool for small-group leaders: read, prepare, lead and schedule in one place. Android only for now.",
+      action: "Android download",
+    },
+    siblingLittleBible: {
+      title: "Little Bible",
+      body: "Bible stories drawn in crayon, one chapter at a time, for children to listen to quietly. On YouTube, with English and Chinese audio tracks.",
+      action: "Watch on YouTube",
     },
     footerAbout: "About",
     languageLabel: "Language",

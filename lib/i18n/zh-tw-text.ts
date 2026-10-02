@@ -611,6 +611,8 @@ const ZH_TW_CHAR_MAP: Record<string, string> = {
   样: "樣",
   浏: "瀏",
   槛: "檻",
+  课: "課",
+  蜡: "蠟",
 };
 
 export function toZhTwText(input: string): string {

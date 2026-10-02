@@ -644,6 +644,11 @@ html.dark .site-home__phone {
     grid-template-columns: 1fr 1fr;
     gap: 16px;
   }
+
+  /* 同系列工具只有三张卡，两列会落单，宽屏也一行一张 */
+  .site-home__versions--single {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* 宽屏：左边一句话和四个入口，右边手机模型 */

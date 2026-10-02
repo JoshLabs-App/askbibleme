@@ -1,7 +1,7 @@
 # 防封换线：域名盘点 + 分步改造方案
 
-**状态**：JOSHUA 2026-10-01 确认（DECISIONS D-20）。三端代码已做完并验证，网页已合 main 上线，**原生两端还没发版**——
-见文末「五、实施记录」和「六、怎么操作」。网页已上线；原生两端发版等 Josh 定（OPEN-ITEMS O-18）。
+**状态**：JOSHUA 2026-10-01 确认（DECISIONS D-20）。三端代码已做完并验证，网页已合 main 上线，安卓站外版已发，**Play 和 App Store 还没提**——
+见文末「五、实施记录」和「六、怎么操作」。网页和安卓站外版 1.0.48 (245) 已上线；Play / App Store 还没提（OPEN-ITEMS O-18）。
 **日期**：2026-10-01
 **参考实现**：`~/Desktop/APP/03MyClass`「2026-09-17 · 抗封域名方案」一节（`docs/DECISIONS.md` 约 1220 行起）；
 可照抄 `endpoints.js`、`ios/Tingdao/Model/Endpoints.swift`、`android/.../model/Endpoints.kt`、
@@ -251,6 +251,12 @@ Supabase 反代不是备而不用，移动网络上现在就用得着；jsdelivr
 - **Vercel 没有命令行登录态**：加域名是在 Josh 登录好的 Chrome 里调 Vercel 自己的接口做的
   （`POST /api/v10/projects/askbibleme/domains?slug=joshlabsapp`），页面上的「Add Existing」按钮在后台标签页里点不动。
   Supabase 后台同理：输入框用 `form_input` 填，保存按钮用页内 `click()`。
+
+- **上线记录**：网页 2026-10-01 推送 main（2ad8b200），部署约 7 分钟后 `askbible.me/endpoints.json` 200。
+  安卓站外版 1.0.48 (245) 同日发到下载页（`deploy_android.py`），每日灵修只对管理员账号显示（D-23）。
+  听到那边也给它的 Supabase 反代绑了 `my-class-sb.joshlabs.app`（03MyClass D-29），并补测了 `pages.dev`、它的两个 r2.dev：国内都是 24/24。
+  Globalping 免登录额度是每个出口 IP 每小时 250 个探测点（`GET /v1/limits` 可查），本机多个会话共用，用完会 429；
+  所以备用入口 `askbible.joshlabs.app` 的国内可达性当天没测成（同一个 Vercel 项目的 `askbible.me` 是 22/24）。
 
 ## 六、怎么操作
 

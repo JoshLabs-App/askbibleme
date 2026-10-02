@@ -1163,3 +1163,13 @@ Play 要求**所有轨道**（正式 / 测试）上的包都不能再声明 `USE
   未上线，见 OPEN-ITEMS O-18。
 - **第二轮（2026-10-01）**：网页备用入口定为 `https://askbible.joshlabs.app`（Vercel 直接挂域名，不走 Worker 整站镜像——整站镜像会牵出 cookie 域和登录回跳的问题）；
   网页端 Supabase 也接了换线，会话 cookie 名钉死。网页合 main 上线；安卓站外版因 main 上压着未公开的每日灵修，等 Josh 定（O-18）。
+
+## D-23 每日灵修先只给管理员账号，其他人不显示（2026-10-01）
+- **决定了什么**：Josh「每日灵修，我想先拿掉，只给管理帐户有，其它先不要，我再继续听听看」。
+  安卓「今日灵修」卡片和灵修页只在登录的是管理员账号（`askbible_profiles.is_admin = true`）时出现，未登录 / 普通账号整块不出现。
+  安卓站外版 1.0.48 (245) 按这个状态发了。
+- **为什么**：功能做完了但 Josh 还想自己再听一阵；刘弟兄关于「直接播放网站上的音频」的确认也还没回（OPEN-ITEMS O-7）。
+  用账号开关而不是把代码回退：以后要公开，只改 `SolidJoys.availableFor()` 一处。
+- **落点**：`MemberAuthStore.isAdmin`（登录 / 启动后读一次，按用户 id 记在本机，断网沿用上次结果）、
+  `SupabaseAuthClient.fetchIsAdmin()`、`SolidJoys.availableFor(locale, isAdmin)`。iOS 和网页本来就没有这个入口。
+- **现状提醒**：库里目前只有 `502299900@qq.com` 是管理员；`josh.zeng.ca@gmail.com` 不是。

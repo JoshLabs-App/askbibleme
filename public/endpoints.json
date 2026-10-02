@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "updated": "2026-10-01",
+  "note": "防封换线的候选域表（docs/anti-block-endpoints.md、DECISIONS D-20）。三端各内置一份同样的默认值，启动后并发探测 candidates，取列表里最靠前那条通的并缓存；同时拉这个文件更新候选表。加新域只改这里再跑 npm run endpoints:push，不用发版。改完跑 npm run check:endpoints 核对三端内置表。",
+  "roles": {
+    "media": {
+      "note": "R2 桶 askbible-media。两条线是同一个桶。r2.dev 排第一是因为已发布的老版本只认它，新版默认行为和老版一致；要把自定义域提前，调这里的顺序即可。",
+      "probe": "healthz.txt",
+      "candidates": [
+        "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/",
+        "https://askbible-media.joshlabs.app/"
+      ]
+    },
+    "site": {
+      "note": "主站接口（在线译本、章节朗读地址解析、注销账号）。第二条是 Cloudflare Worker 反代（workers/site-proxy），只放行 /api/mobile/ 和 /api/read/。",
+      "probe": "healthz.txt",
+      "candidates": [
+        "https://askbible.me/",
+        "https://askbible-site.joshlabs.app/"
+      ]
+    },
+    "api": {
+      "note": "Supabase 入口。第二条是 Cloudflare Worker 反代（workers/supabase-proxy）。不要把 *.workers.dev 写进来：国内整段不通（2026-10-01 实测 0/24）。",
+      "probe": "healthz.txt",
+      "candidates": [
+        "https://tgobadhdylarhssudplc.supabase.co/",
+        "https://askbible-sb.joshlabs.app/"
+      ]
+    }
+  }
+}

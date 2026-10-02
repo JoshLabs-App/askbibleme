@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolvePublicAuthOrigin } from "./public-auth-origin";
+import { isBackupEntryHost, resolvePublicAuthOrigin } from "./public-auth-origin";
 
 describe("resolvePublicAuthOrigin", () => {
   it("uses the trusted public host forwarded by Render", () => {
@@ -16,6 +16,16 @@ describe("resolvePublicAuthOrigin", () => {
     });
 
     expect(resolvePublicAuthOrigin(request)).toBe("https://legacy.askbible.me");
+  });
+
+  it("备用入口上的登录回跳留在备用入口", () => {
+    const request = new Request("https://0.0.0.0:10000/auth/callback", {
+      headers: { "x-forwarded-host": "askbible.joshlabs.app" },
+    });
+
+    expect(resolvePublicAuthOrigin(request)).toBe("https://askbible.joshlabs.app");
+    expect(isBackupEntryHost("askbible.joshlabs.app:443")).toBe(true);
+    expect(isBackupEntryHost("askbible.me")).toBe(false);
   });
 
   it("rejects an untrusted forwarded host", () => {

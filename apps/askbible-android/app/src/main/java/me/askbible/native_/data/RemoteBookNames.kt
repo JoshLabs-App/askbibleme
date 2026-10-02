@@ -14,7 +14,7 @@ import java.net.URL
  * 每个版本一份，落盘 cacheDir/book-names/<版本号>.tsv，取到就一直用。与 iOS 的 RemoteBookNames 对等。
  */
 object RemoteBookNames {
-    const val ENDPOINT = "https://askbible.me/api/mobile/bible/youversion/books"
+    val ENDPOINT: String get() = Endpoints.siteBase + "/api/mobile/bible/youversion/books"
 
     private val lock = Any()
     private val memory = HashMap<String, Map<String, String>>()

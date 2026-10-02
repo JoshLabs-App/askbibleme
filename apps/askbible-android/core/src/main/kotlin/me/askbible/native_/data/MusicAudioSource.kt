@@ -8,7 +8,8 @@ import java.net.URI
  * 禁止回落到 askbible.me（流量计费）—— 就算 src 是 askbible.me 的绝对地址也只取对象键转 R2。
  */
 object MusicAudioSource {
-    const val R2_PUBLIC_BASE = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev"
+    /** 当前 media 线路（防封换线，见 Endpoints.kt）；默认仍是 r2.dev */
+    val R2_PUBLIC_BASE: String get() = Endpoints.mediaBase
     const val USER_AGENT = "AskBible.me/1.0 (Android ExoPlayer)"
 
     private fun parse(raw: String): URI? = try { URI(raw) } catch (_: Exception) { null }

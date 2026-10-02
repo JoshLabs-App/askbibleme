@@ -7,8 +7,8 @@ import Foundation
 /// 冷启动先读盘（所以记住的译本一进来就认得），再后台按 TTL 刷新。
 /// Josh 2026-09-10：「YouVersion 里有的版本全放开来，不需要人为去选」。
 enum RemoteTranslations {
-    static let catalogEndpoint = "https://askbible.me/api/mobile/bible/youversion/catalog"
-    static let chapterEndpoint = "https://askbible.me/api/mobile/bible/youversion/chapter"
+    static var catalogEndpoint: String { Endpoints.siteBase + "/api/mobile/bible/youversion/catalog" }
+    static var chapterEndpoint: String { Endpoints.siteBase + "/api/mobile/bible/youversion/chapter" }
     /// 一天刷一次（目录很少变）
     static let ttl: TimeInterval = 24 * 3600
 

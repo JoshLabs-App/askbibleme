@@ -1,6 +1,8 @@
 "use client";
 
 import { ShellMaterialCommunityIcon } from "@/components/shell/ShellMaterialCommunityIcon";
+import { rebaseMediaUrl } from "@/lib/endpoints";
+import { useEndpointBase } from "@/lib/endpoints/use-endpoint-base";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -87,6 +89,8 @@ export function AppInstallGuidePage() {
   const { locale } = useLocale();
   const isZh = locale === "zh-CN";
   const [platform, setPlatform] = useState<Platform>("other");
+  // 防封换线：APK 直链跟着当前通的 media 线路走
+  const mediaBase = useEndpointBase("media");
 
   useEffect(() => {
     setPlatform(detectPlatform());
@@ -140,13 +144,13 @@ export function AppInstallGuidePage() {
       actionIcon: "google-play",
       external: true,
       secondaryLabel: isZh ? "下载最新版安装包（与商店版二选一）" : "Download the latest APK (instead of the store version)",
-      secondaryHref: APP_INSTALL_ANDROID_APK_URL,
+      secondaryHref: rebaseMediaUrl(APP_INSTALL_ANDROID_APK_URL, mediaBase),
       secondaryIcon: "android",
     };
 
     if (platform === "android") return [android, ios];
     return [ios, android];
-  }, [isZh, platform]);
+  }, [isZh, mediaBase, platform]);
 
   return (
     <div className="narrow-parchment-root select-text">

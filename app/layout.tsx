@@ -3,10 +3,14 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { PARCHMENT_SHELL_BOOT_SCRIPT } from "@/lib/read/parchment-shell-boot";
 import { SYNC_HTML_DARK_CLASS_BOOT_SCRIPT } from "@/lib/read/sync-html-dark-class";
+// 图标字体自托管（原来从 fonts.googleapis.com / cdn.jsdelivr.net 引，国内不稳且阻塞渲染）
+import "material-icons/iconfont/filled.css";
+import "@mdi/font/css/materialdesignicons.min.css";
 import "./globals.css";
 import "./(app-shell)/read/read-parchment-background.css";
 import "./(app-shell)/read/read-parchment-shell-chrome.css";
 import { AppUpdateNotifier } from "@/components/app-shell/AppUpdateNotifier";
+import { EndpointsBoot } from "@/components/shell/EndpointsBoot";
 import { AppImmersiveProvider } from "@/components/app-shell/AppImmersiveProvider";
 import { PwaServiceWorkerRegistration } from "@/components/app-shell/PwaServiceWorkerRegistration";
 import { ParchmentShellRouteEffect } from "@/components/shell/ParchmentShellRouteEffect";
@@ -133,6 +137,7 @@ export default async function RootLayout({
                     <ParchmentShellRouteEffect />
                     {children}
                     <PwaServiceWorkerRegistration />
+                    <EndpointsBoot />
                     <AppUpdateNotifier />
                   </MediaPlaybackCoordinatorProvider>
                 </MusicShellPlaybackProvider>

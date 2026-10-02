@@ -44,7 +44,7 @@
 |----|------|------|
 | **Studio** | 产品大脑（策展/编辑部）：理清意图、防失忆、写回 `docs/`；**不是** CMS / 运营后台 | Web：`/studio`（本机） |
 | **Mobile App** | 已上架、持续维护的用户端（Expo）；当前商店约 **1.0.38**（build 119） | `apps/askbible-mobile` |
-| **Web 站点** | Next.js；生产在 **Render + Persistent Disk**（不是 Vercel） | `app/`、`components/`、`lib/` |
+| **Web 站点** | Next.js；生产在 **Vercel**（2026-10-01 实测 `askbible.me` 响应头 `server: Vercel`；Render 已停用，`www` 只剩一条 301 回根域） | `app/`、`components/`、`lib/` |
 
 `AGENTS.md` 写「不要先做 Journey/CMS」= **不要新开产品线堆功能**；不是禁止修现有 App bug / 发版 / 对齐 iOS。
 
@@ -56,14 +56,14 @@
 
 1. **不擅自扩功能**；与边界冲突先短质疑 + 更紧方案，等确认（或 `DD`）。
 2. **移动端禁止 EAS 云端构建**；iOS 本机 Xcode，Android 本机 Gradle。见 `docs/mobile-release-checklist.md`、`.cursor/rules/mobile-local-build-only.mdc`。
-3. **媒体**：播放默认本地；大体积增量 **禁止** 走 Render / `askbible.me`。  
+3. **媒体**：播放默认本地；大体积增量 **禁止** 走主站（Vercel）/ `askbible.me`。  
    - 音乐：安装包每专辑**第一首**；其余 TEMPORARY = **Cloudflare R2** + 本机缓存。  
    - 金句语音：TEMPORARY = **R2 直链**（勿回落 askbible.me）。  
    - **禁止**为上架开 `MOBILE_ANDROID_MUSIC_PAD=1`（会打出约 650MB AAB；正常约 160MB）。  
    真源：`.cursor/rules/mobile-local-media-playback-first.mdc`、`docs/mobile-golden-verse-audio.md`。
 4. **外站拉取音频等**：禁止压缩/转码/降码率；原样直存。`.cursor/rules/no-compression-on-remote-fetch.mdc`。
 5. **OAuth**：从 App 发起的登录默认回调回 App；勿盲目改成网页 HTTPS 回调。验收：`.cursor/skills/验收-OAuth/SKILL.md`。
-6. **未要求不 commit / 不 push / 不发版**。Push `main` 会触发 Render 全量 build + CI。
+6. **未要求不 commit / 不 push / 不发版**。Push `main` 会触发 Vercel 自动部署 + CI。
 7. **禁止无门禁直推 main**；合入走 PR + `auto-merge` 标签。见 `docs/mobile-maestro-auto-merge.md`。
 8. UI：安静羊皮卷气质；不擅自加装饰/动画/工业风系统默认壳。
 
@@ -108,8 +108,8 @@
 |----|------|
 | Web / Studio | Next.js App Router + TypeScript + Tailwind |
 | Mobile | Expo / React Native（`apps/askbible-mobile`） |
-| 数据 | 本地优先：`data/` + sqlite；生产磁盘 `DATA_ROOT`（Render） |
-| 部署 | Render Web Service + Persistent Disk |
+| 数据 | 本地优先：`data/` + sqlite；`DATA_ROOT` 持久盘是 Render 时代的做法，Vercel 上没有持久盘，以代码为准 |
+| 部署 | Vercel（推 `main` 自动部署）。Render Web Service + Persistent Disk 是旧方案，已停用 |
 | 媒体增量 | Cloudflare R2（金句语音、非首曲音乐） |
 
 ### 常用命令
@@ -250,6 +250,9 @@ adb -s R5CW11DNS2K shell am start -n me.askbible.native/me.askbible.native_.Main
 ---
 
 ## 7. 文档索引（按需打开）
+
+> **防封换线（2026-10-01）**：域名盘点、候选域表、实测数据、操作命令都在 `docs/anti-block-endpoints.md`；
+> 代码里不要再写死 `r2.dev` / `askbible.me` / `supabase.co`，一律走 `Endpoints`（iOS / 安卓）或 `lib/endpoints`（网页）。当前状态：网页已上线（备用入口 `https://askbible.joshlabs.app`），原生两端未发版，见 OPEN-ITEMS O-18。
 
 | 主题 | 路径 |
 |------|------|

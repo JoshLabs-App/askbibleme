@@ -14,7 +14,8 @@ data class AmbientSlot(
 )
 
 object AmbientScenes {
-    const val R2_PUBLIC_BASE = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev"
+    /** 当前 media 线路（防封换线，见 Endpoints.kt）；默认仍是 r2.dev */
+    val R2_PUBLIC_BASE: String get() = Endpoints.mediaBase
     /** 首页照片是「晨光」→ 默认白噪音（NATURE_SCENE_DEFAULT_AMBIENT） */
     const val DEFAULT_SLOT_ID = "scene-white-noise"
 

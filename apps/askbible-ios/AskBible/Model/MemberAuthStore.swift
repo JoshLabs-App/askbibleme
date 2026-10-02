@@ -138,7 +138,7 @@ final class MemberAuthStore: ObservableObject {
     /// 返回 nil 表示成功，否则是错误码。调用方负责先把本机进度推上云（其实删了也就没了）并清本机数据。
     func deleteAccount() async -> String? {
         guard let token = await ensureFreshToken() else { return "unauthorized" }
-        var req = URLRequest(url: URL(string: "https://askbible.me/api/mobile/auth/account")!)
+        var req = URLRequest(url: URL(string: Endpoints.siteBase + "/api/mobile/auth/account")!)
         req.httpMethod = "DELETE"
         req.timeoutInterval = 20
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")

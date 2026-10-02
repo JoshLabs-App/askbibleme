@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import me.askbible.native_.BuildConfig
+import me.askbible.native_.data.Endpoints
 import me.askbible.native_.data.Parchment
 import me.askbible.native_.ui.toColor
 import org.json.JSONObject
@@ -29,7 +30,7 @@ import java.net.URL
  *
  * 1. **这违反 Google Play 政策**（引导用户去站外获取同一个 App，Deceptive Behavior），
  *    开着被抽查到是下架级别的。所以**默认关**，开关在远端
- *    `https://askbible-media.joshlabs.app/migrate.json`，随时能关掉、不用发版。
+ *    桶根的 `migrate.json`（走当前 media 线路），随时能关掉、不用发版。
  * 2. **迁移过去的用户会丢本地数据**。Play 上的包被 Play App Signing 重签过，
  *    和我们自己 upload key 签的站外包**签名不同**，装不上去（INSTALL_FAILED_UPDATE_INCOMPATIBLE），
  *    用户必须先卸载 —— 登录状态和设置都会清掉。这是 Android 的签名机制，绕不过去。
@@ -39,7 +40,7 @@ import java.net.URL
  */
 object MigrateGate {
 
-    private const val CONFIG_URL = "https://askbible-media.joshlabs.app/migrate.json"
+    private val CONFIG_URL: String get() = Endpoints.mediaBase + "/migrate.json"
     private const val PREFS = "app_migrate"
     private const val KEY_DISMISSED = "dismissed"
 
@@ -61,7 +62,7 @@ object MigrateGate {
                 val o = JSONObject(conn.inputStream.bufferedReader().readText())
                 if (!o.optBoolean("enabled", false)) return@withContext null
                 val url = o.optString("url")
-                if (url.isBlank()) null else Config(url, o.optString("note"))
+                if (url.isBlank()) null else Config(Endpoints.rebasedMedia(url), o.optString("note"))
             } finally {
                 conn.disconnect()
             }

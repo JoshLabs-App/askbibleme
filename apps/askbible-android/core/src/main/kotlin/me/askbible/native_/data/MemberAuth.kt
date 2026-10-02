@@ -112,7 +112,8 @@ object MemberAuthRules {
 
 /** Supabase 直连（与 RN app.config extra.supabaseUrl / anon key 同一套；anon key 是公开的发布密钥，RN 包里也带着） */
 object SupabaseAuthConfig {
-    const val URL = "https://tgobadhdylarhssudplc.supabase.co"
+    /** 当前 api 线路（防封换线，见 Endpoints.kt）；默认仍是 supabase.co，被干扰时换到自家反代 */
+    val URL: String get() = Endpoints.apiBase
     const val ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnb2JhZGhkeWxhcmhzc3VkcGxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyMTMwMDAsImV4cCI6MjA5Njc4OTAwMH0.5EqC5hJFmydZaVBmpXJk1ddJNGX_fY2hN83k5IzAO3I"
 }
 

@@ -58,7 +58,7 @@ function run(cmd, args, label) {
   return JSON.parse(r.stdout);
 }
 const bin = path.join(mkdtempSync(path.join(tmpdir(), "memberauth-")), "bin");
-execFileSync("swiftc", ["-O", "-swift-version", "5", path.join(IOS, "Model/MemberAuth.swift"), path.join(IOS, "Model/MemberOAuth.swift"), path.join(ROOT, "tools/swift-harness/memberauth/main.swift"), "-o", bin], { stdio: "pipe" });
+execFileSync("swiftc", ["-O", "-swift-version", "5", path.join(IOS, "Model/MemberAuth.swift"), path.join(ROOT, "apps/askbible-ios/AskBible/Model/Endpoints.swift"), path.join(IOS, "Model/MemberOAuth.swift"), path.join(ROOT, "tools/swift-harness/memberauth/main.swift"), "-o", bin], { stdio: "pipe" });
 const swift = run(bin, [], "Swift harness");
 let kotlin = null;
 try {

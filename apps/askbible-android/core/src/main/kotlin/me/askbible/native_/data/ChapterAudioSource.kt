@@ -100,7 +100,9 @@ object ChapterAudioSource {
         "cunpss-zh-hans" to "48", "cunpss-zh-hant" to "47", "rcuv-zh-hant" to "139", "rcuvss-zh-hans" to "140",
         "niv" to "111", "nlt" to "116", "nkjv" to "114", "kjv" to "1",
     )
-    const val CHAPTER_AUDIO_PROXY_BASE = "https://askbible.me/api/read/chapter-audio"
+    const val CHAPTER_AUDIO_PROXY_PATH = "/api/read/chapter-audio"
+    /** 当前 site 线路上的代理地址（防封换线，见 Endpoints.kt）；默认仍是 askbible.me */
+    val CHAPTER_AUDIO_PROXY_BASE: String get() = Endpoints.siteBase + CHAPTER_AUDIO_PROXY_PATH
 
     /** 走 YouVersion 音源的译本（和合本 / KJV / WEB 有直连音源的优先直连） */
     fun usesYouVersionAudio(translationId: String): Boolean {
@@ -117,7 +119,9 @@ object ChapterAudioSource {
     }
 
     /** 这是「先问代理」的地址，不是能直接播的 mp3 */
-    fun isResolverUrl(url: String): Boolean = url.startsWith(CHAPTER_AUDIO_PROXY_BASE)
+    fun isResolverUrl(url: String): Boolean =
+        // 认全部 site 候选域：地址拼好之后线路可能换过
+        Endpoints.allHosts(Endpoints.Role.SITE).any { url.startsWith(it.trimEnd('/') + CHAPTER_AUDIO_PROXY_PATH) }
 
     /** 代理返回的 JSON → mp3 地址（只认 youversionapi.com 的 https 直链） */
     fun parseResolverResponse(text: String): String? {

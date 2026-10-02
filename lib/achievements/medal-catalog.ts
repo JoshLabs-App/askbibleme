@@ -5,6 +5,7 @@
  * `npm run gen:medals` 生成 Swift / Kotlin 表；网页端不生成，直接 import 同一份 JSON——
  * 少一份生成物要对拍，数值天然不会跑偏。
  */
+import { endpointDefaultBase } from "@/lib/endpoints";
 import medals from "@/data/medals.json";
 
 export type MedalMetric =
@@ -46,11 +47,15 @@ export function sealKeyForBookNumber(bookNumber: number): string | null {
   return MEDAL_SEAL_FILES[bookNumber - 1] ?? null;
 }
 
-/** 勋章图基址：和项目其它素材一致走 r2.dev 公网域 */
-export const MEDAL_IMAGE_BASE = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/medals/";
+/** 勋章图在桶里的目录 */
+export const MEDAL_IMAGE_DIR = "medals/";
 
-export function medalImageUrl(key: string): string {
-  return `${MEDAL_IMAGE_BASE}${key}.webp`;
+/** 勋章图默认基址：`media` 角色内置表第一条（r2.dev），服务端渲染用这个 */
+export const MEDAL_IMAGE_BASE = `${endpointDefaultBase("media")}/${MEDAL_IMAGE_DIR}`;
+
+/** `mediaBase` 传 `useEndpointBase("media")` 的值（防封换线）；不传就是默认线路 */
+export function medalImageUrl(key: string, mediaBase: string = endpointDefaultBase("media")): string {
+  return `${mediaBase}/${MEDAL_IMAGE_DIR}${key}.webp`;
 }
 
 export const MEDAL_XP = {

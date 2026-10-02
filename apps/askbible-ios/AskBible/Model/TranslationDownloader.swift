@@ -21,7 +21,8 @@ final class TranslationDownloader: ObservableObject {
 
     /// 没装就下；已在下就等它
     func ensure(_ t: ScriptureTranslation) async -> Bool {
-        guard t.delivery == .download, let url = URL(string: t.downloadUrl) else { return true }
+        // 目录里的下载地址写死了一条 media 线路，换到当前线路上
+        guard t.delivery == .download, let url = URL(string: Endpoints.rebasedMedia(t.downloadUrl)) else { return true }
         if Self.isInstalled(t.id) { states[t.id] = .done; return true }
         if let running = tasks[t.id] { await running.value; return Self.isInstalled(t.id) }
         let task = Task { await self.download(t.id, from: url) }

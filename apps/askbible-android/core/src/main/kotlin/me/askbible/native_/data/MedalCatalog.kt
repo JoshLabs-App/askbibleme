@@ -44,7 +44,7 @@ data class MedalDef(
 
 object MedalCatalog {
     const val VERSION = 1
-    const val IMAGE_BASE = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/" + "medals/"
+    val IMAGE_BASE: String get() = Endpoints.mediaBase + "/" + "medals/"
     fun imageUrl(key: String): String = IMAGE_BASE + key + ".webp"
 
     val all: List<MedalDef> = listOf(

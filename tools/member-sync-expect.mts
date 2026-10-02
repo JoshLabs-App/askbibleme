@@ -143,7 +143,8 @@ function mergeRecentSearches(a: unknown, b: unknown): unknown {
     const key = trimmed.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key); merged.push(trimmed);
-    if (merged.length >= 8) break;
+    // 上限跟 SCRIPTURE_RECENT_SEARCH_MAX_ITEMS 走（2026-09-26 从 8 改成 10，这里当时漏改）
+    if (merged.length >= 10) break;
   }
   return { version: 1, terms: merged };
 }

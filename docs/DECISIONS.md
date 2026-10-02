@@ -1337,3 +1337,18 @@ Play 要求**所有轨道**（正式 / 测试）上的包都不能再声明 `USE
 - **下载页**：1.0.47 (244)，`version.json` 已更新，网页版用户会收到 App 内更新提示。
 - **App Store**：新建版本 1.1.2，挂 build 133，已提交审核，批准后自动发布（AFTER_APPROVAL）。1.1.1 之后的改动一起上：7 天连读重设、搜索定位 + 关键词高亮、完成动效、成就大图分享、安静档播放坞等。
 - 更新说明：`store/ios-release-notes/*.txt`、`store/android-play-metadata/*/changelogs/244.txt`、`.android-deploy.json`。
+
+## D-20 防封换线：照 `docs/anti-block-endpoints.md` 做，六项都取推荐项（2026-10-01）
+- **决定了什么**：Josh「你帮我做，RENDER 要改 VERCEL」。① 备线域名用 `joshlabs.app` 子域；② 网页要备用入口；
+  ③ Supabase 反代 AskBible 单独部署一个 Worker，不复用听到那个；④ 发布顺序：安卓站外版先发验证，再一起提 Play + App Store；
+  ⑤ 先做国内可达性实测，按结果排候选域；⑥ `docs/HANDOFF.md` 里「生产在 Render」改成 Vercel。
+- **为什么**：`askbible.me` 现在同时是 AskBible 主站、听到（td）、查到（cd）的入口，一封全断；三个角色里 `site` 和 `api` 都是单线。
+  数据里几乎没有自家域名，所以全是加法，不需要「先发版再换数据」的破坏性一步；老版本只靠「老地址永不下线」保住。
+- **永久约束**：`pub-f30f…r2.dev` 公开访问、`askbible.me` 的 `/api/mobile/*`、`/api/read/chapter-audio`、`/app`、
+  `next.config.mjs` 的 7 条 307、`version.json` 的 `apkUrl` / `downloadUrl` 老字段，永不下线、永不改格式。
+- **落地（2026-10-01）**：候选域真源 `data/endpoints.json`；反代两个 Worker 绑 `askbible-sb.joshlabs.app`、`askbible-site.joshlabs.app`
+  （国内实测 `*.workers.dev` 0/24，所以反代只认自定义域）；每个角色第一条保持老版本写死的地址，没探测前行为不变。
+  `version.json` 格式不动，新版安卓自己把 `apkUrl` 换到当前线路。实测数据、验证记录、操作命令见 `docs/anti-block-endpoints.md` 第五、六节。
+  未上线，见 OPEN-ITEMS O-18。
+- **第二轮（2026-10-01）**：网页备用入口定为 `https://askbible.joshlabs.app`（Vercel 直接挂域名，不走 Worker 整站镜像——整站镜像会牵出 cookie 域和登录回跳的问题）；
+  网页端 Supabase 也接了换线，会话 cookie 名钉死。网页合 main 上线；安卓站外版因 main 上压着未公开的每日灵修，等 Josh 定（O-18）。

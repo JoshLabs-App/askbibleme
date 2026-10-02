@@ -4,7 +4,10 @@
  * 上传：`npx wrangler r2 object put askbible-media/bible/{id}.sqlite --file=data/bible/sqlite/{id}.sqlite --remote`。
  * 不在这张表里的非内置译本，`downloadUrl` 仍是 null——尚未上传，不假装可下载。
  */
-const R2_PUBLIC_BASE = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev";
+import { endpointDefaultBase } from "@/lib/endpoints";
+
+/** 写给 App 的下载地址用默认线路（内置表第一条，老版本只认它）；新版 App 自己会换到当前通的线路 */
+const R2_PUBLIC_BASE = endpointDefaultBase("media");
 
 const MOBILE_SCRIPTURE_R2_DOWNLOAD_IDS = new Set<string>(["kjv"]);
 

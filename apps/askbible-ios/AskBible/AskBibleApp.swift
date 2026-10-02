@@ -446,6 +446,8 @@ struct RootView: View {
             // 整章朗读时环境音压半音量继续放，停了恢复
             .onChange(of: audio.isPlaying) { _, playing in ambient.setDucked(playing) }
             .task {
+                // 防封换线：先挑线路，后面的登录校验 / 同步才不会打到已经不通的域
+                await Endpoints.refresh()
                 await auth.verifyRemote()
                 await sync.flushNow(reason: "foreground")
             }
@@ -455,7 +457,7 @@ struct RootView: View {
                 if phase == .active {
                     audio.recoverAfterInterruption(); music.recoverAfterInterruption()
                     activity.noteForeground(); activity.touchHabitDay()
-                    Task { await sync.flushNow(reason: "foreground") }
+                    Task { await Endpoints.refresh(); await sync.flushNow(reason: "foreground") }
                 } else {
                     activity.noteBackground()
                 }

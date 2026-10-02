@@ -13,7 +13,7 @@ final class InfoEditionDownloader: NSObject, ObservableObject, URLSessionDownloa
 
     static let shared = InfoEditionDownloader()
 
-    private static let r2URL = URL(string: "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/bible/info-edition.sqlite")!
+    private static var r2URL: URL { URL(string: Endpoints.mediaBase + "/bible/info-edition.sqlite")! }
 
     static var localFileURL: URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]

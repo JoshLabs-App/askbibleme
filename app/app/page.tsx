@@ -1,3 +1,6 @@
+import { MediaLinkRebaser } from "@/components/install/MediaLinkRebaser";
+import { APP_INSTALL_ANDROID_VERSION_PATH, DEFAULT_APP_INSTALL_ANDROID_APK_URL } from "@/lib/app-install-urls";
+import { endpointCandidates } from "@/lib/endpoints";
 import type { Metadata } from "next";
 
 /**
@@ -18,20 +21,22 @@ export const metadata: Metadata = {
 /** 一小时新鲜期：发版后最多一小时页面上的版本号就跟上了 */
 export const revalidate = 3600;
 
-const VERSION_URL = "https://askbible-media.joshlabs.app/version.json";
-const APK_URL = "https://askbible-media.joshlabs.app/downloads/android/AskBible-latest.apk";
+/** 版本信息和安装包都在 R2 桶里，域名走 `media` 角色（防封换线，lib/endpoints）——不再单独写死一个域 */
+const APK_URL = DEFAULT_APP_INSTALL_ANDROID_APK_URL;
 
 type VersionInfo = { version?: string; versionCode?: number; apkUrl?: string; notes?: string; date?: string };
 
 async function loadVersion(): Promise<VersionInfo | null> {
-  try {
-    const res = await fetch(VERSION_URL, { next: { revalidate: 3600 } });
-    if (!res.ok) return null;
-    return (await res.json()) as VersionInfo;
-  } catch {
-    // 取不到就退回静态直链 —— 页面照常能下，只是不显示版本号
-    return null;
+  // 两条 media 线路是同一个桶，挨个试；都取不到就退回静态直链 —— 页面照常能下，只是不显示版本号
+  for (const host of endpointCandidates("media")) {
+    try {
+      const res = await fetch(host + APP_INSTALL_ANDROID_VERSION_PATH, { next: { revalidate: 3600 } });
+      if (res.ok) return (await res.json()) as VersionInfo;
+    } catch {
+      /* 试下一条 */
+    }
   }
+  return null;
 }
 
 export default async function AppDownloadPage() {
@@ -124,6 +129,8 @@ export default async function AppDownloadPage() {
       <a href="https://askbible.me" style={{ marginTop: 6, fontSize: 13, color: "#D97707" }}>
         askbible.me
       </a>
+      {/* 下载链接跟着当前通的 media 线路走 */}
+      <MediaLinkRebaser />
     </main>
   );
 }

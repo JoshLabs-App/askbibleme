@@ -172,7 +172,7 @@ class MemberAuthStore(context: Context) {
     suspend fun deleteAccount(): String? = withContext(Dispatchers.IO) {
         val token = ensureFreshToken() ?: return@withContext "unauthorized"
         try {
-            val url = java.net.URL("https://askbible.me/api/mobile/auth/account")
+            val url = java.net.URL(Endpoints.siteBase + "/api/mobile/auth/account")
             val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
                 requestMethod = "DELETE"
                 connectTimeout = 20_000

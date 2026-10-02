@@ -6,7 +6,8 @@ package me.askbible.native_.data
  * 禁止回落到 askbible.me / Render。
  */
 object GoldenVerseAudioSource {
-    const val R2_PUBLIC_BASE = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev"
+    /** 当前 media 线路（防封换线，见 Endpoints.kt）；默认仍是 r2.dev */
+    val R2_PUBLIC_BASE: String get() = Endpoints.mediaBase
     const val SUFFIX = "-32kbps.mp3"
 
     data class Location(val bookId: String, val chapter: Int, val verse: Int)

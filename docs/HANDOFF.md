@@ -252,7 +252,7 @@ adb -s R5CW11DNS2K shell am start -n me.askbible.native/me.askbible.native_.Main
 ## 7. 文档索引（按需打开）
 
 > **防封换线（2026-10-01）**：域名盘点、候选域表、实测数据、操作命令都在 `docs/anti-block-endpoints.md`；
-> 代码里不要再写死 `r2.dev` / `askbible.me` / `supabase.co`，一律走 `Endpoints`（iOS / 安卓）或 `lib/endpoints`（网页）。当前状态：做完未上线，见 OPEN-ITEMS O-18。
+> 代码里不要再写死 `r2.dev` / `askbible.me` / `supabase.co`，一律走 `Endpoints`（iOS / 安卓）或 `lib/endpoints`（网页）。当前状态：网页已上线（备用入口 `https://askbible.joshlabs.app`），原生两端未发版，见 OPEN-ITEMS O-18。
 
 | 主题 | 路径 |
 |------|------|

@@ -1161,3 +1161,5 @@ Play 要求**所有轨道**（正式 / 测试）上的包都不能再声明 `USE
   （国内实测 `*.workers.dev` 0/24，所以反代只认自定义域）；每个角色第一条保持老版本写死的地址，没探测前行为不变。
   `version.json` 格式不动，新版安卓自己把 `apkUrl` 换到当前线路。实测数据、验证记录、操作命令见 `docs/anti-block-endpoints.md` 第五、六节。
   未上线，见 OPEN-ITEMS O-18。
+- **第二轮（2026-10-01）**：网页备用入口定为 `https://askbible.joshlabs.app`（Vercel 直接挂域名，不走 Worker 整站镜像——整站镜像会牵出 cookie 域和登录回跳的问题）；
+  网页端 Supabase 也接了换线，会话 cookie 名钉死。网页合 main 上线；安卓站外版因 main 上压着未公开的每日灵修，等 Josh 定（O-18）。

@@ -25,6 +25,11 @@ const KINDS = [
 ];
 const check = process.argv.includes("--check");
 const videos = SETTINGS.videos;
+/**
+ * 视频只内置默认景，其余走 R2 流播（DECISIONS「自然场景视频：只保留默认景内置」）；海报两类 9 景全内置。
+ * 所以「该有的没有」和「不该有的有了」都算问题。
+ */
+const bundled = (dir, v) => dir !== "videos" || v.id === SETTINGS.activeVideoId;
 
 if (!check) {
   let copied = 0;
@@ -32,6 +37,7 @@ if (!check) {
     mkdirSync(path.join(ANDROID, dir), { recursive: true });
     mkdirSync(IOS, { recursive: true });
     for (const v of videos) {
+      if (!bundled(dir, v)) continue;
       const src = path.join(RN, "assets/nature", dir, `${v.id}.${ext}`);
       if (!existsSync(src)) throw new Error(`RN 素材缺失：${path.relative(ROOT, src)}`);
       copyFileSync(src, path.join(ANDROID, dir, `${v.id}.${ext}`));
@@ -39,7 +45,7 @@ if (!check) {
       copied += 2;
     }
   }
-  console.log(`已复制 ${copied} 个文件（${videos.length} 景 × 3 类 × 2 端）`);
+  console.log(`已复制 ${copied} 个文件（${videos.length} 景海报 × 2 类 + 默认景视频，× 2 端）`);
   process.exit(0);
 }
 
@@ -70,8 +76,13 @@ for (const [dir, ext, prefix] of KINDS) {
   for (const v of videos) {
     const a = path.join(ANDROID, dir, `${v.id}.${ext}`);
     const i = path.join(IOS, `nature-${prefix}-${v.id}.${ext}`);
-    if (!existsSync(a)) problems.push(`Android 缺素材 ${path.relative(ROOT, a)}`);
-    if (!existsSync(i)) problems.push(`iOS 缺素材 ${path.relative(ROOT, i)}`);
+    if (bundled(dir, v)) {
+      if (!existsSync(a)) problems.push(`Android 缺素材 ${path.relative(ROOT, a)}`);
+      if (!existsSync(i)) problems.push(`iOS 缺素材 ${path.relative(ROOT, i)}`);
+    } else {
+      if (existsSync(a)) problems.push(`Android 多打了视频（应走 R2 流播）${path.relative(ROOT, a)}`);
+      if (existsSync(i)) problems.push(`iOS 多打了视频（应走 R2 流播）${path.relative(ROOT, i)}`);
+    }
   }
 }
 const iosExtra = existsSync(IOS) ? readdirSync(IOS).filter((f) => !/^nature-(poster|soft|video)-[0-9a-f-]+\.(jpg|mp4)$/.test(f)) : [];
@@ -81,4 +92,4 @@ if (problems.length) {
   console.error("nature-scenes 对拍失败：\n  " + problems.join("\n  "));
   process.exit(1);
 }
-console.log(`nature-scenes 对拍通过：${videos.length} 景，Swift / Kotlin 表与 nature-settings.json 一致，两端素材 ${videos.length * 3} × 2 齐全`);
+console.log(`nature-scenes 对拍通过：${videos.length} 景，Swift / Kotlin 表与 nature-settings.json 一致，两端素材齐全（海报 ${videos.length * 2} + 默认景视频 1）`);

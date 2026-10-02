@@ -70,6 +70,14 @@ describe("防封换线：网页端候选域", () => {
     expect(again.endpointBase("media")).toBe(CUSTOM.slice(0, -1));
   });
 
+  it("supabase.co 连不上时 api 角色换到自家反代，media 不受牵连", async () => {
+    fakeBrowser(["https://tgobadhdylarhssudplc.supabase.co/"]);
+    const m = await load();
+    await m.refreshEndpoints(true);
+    expect(m.endpointBase("api")).toBe("https://askbible-sb.joshlabs.app");
+    expect(m.endpointBase("media")).toBe(R2.slice(0, -1));
+  });
+
   it("全挂就保持原样", async () => {
     fakeBrowser([R2, CUSTOM]);
     const m = await load();

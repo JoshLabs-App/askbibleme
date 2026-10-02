@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { isSelahOnlineEditorSurfaceAllowed } from "@/lib/selah-online-editor-surface";
 import { SELAH_REQUEST_PATHNAME_HEADER } from "@/lib/read/request-pathname";
+import { isBackupEntryHost } from "@/lib/auth/public-auth-origin";
 
 function nextWithRequestPathname(request: NextRequest, init?: ResponseInit) {
   const requestHeaders = new Headers(request.headers);
@@ -32,7 +33,12 @@ export async function middleware(request: NextRequest) {
     return new NextResponse(null, { status: 404 });
   }
 
-  return nextWithRequestPathname(request);
+  const response = nextWithRequestPathname(request);
+  // 备用入口和主站内容一样，别让搜索引擎收成重复站
+  if (isBackupEntryHost(request.headers.get("host"))) {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
+  return response;
 }
 
 export const config = {

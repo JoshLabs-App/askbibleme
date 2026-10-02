@@ -1,7 +1,7 @@
 # 防封换线：域名盘点 + 分步改造方案
 
-**状态**：JOSHUA 2026-10-01 确认（DECISIONS D-20）。第 0 / 1 / 2 步代码已做完并验证，**还没合 main、没发版**——
-见文末「五、实施记录」和「六、怎么操作」。剩下的事在 OPEN-ITEMS O-18 ~ O-21。
+**状态**：JOSHUA 2026-10-01 确认（DECISIONS D-20）。三端代码已做完并验证，网页已合 main 上线，**原生两端还没发版**——
+见文末「五、实施记录」和「六、怎么操作」。网页已上线；原生两端发版等 Josh 定（OPEN-ITEMS O-18）。
 **日期**：2026-10-01
 **参考实现**：`~/Desktop/APP/03MyClass`「2026-09-17 · 抗封域名方案」一节（`docs/DECISIONS.md` 约 1220 行起）；
 可照抄 `endpoints.js`、`ios/Tingdao/Model/Endpoints.swift`、`android/.../model/Endpoints.kt`、
@@ -211,7 +211,7 @@ Supabase 反代不是备而不用，移动网络上现在就用得着；jsdelivr
 `version.json` 的数据格式没动：新版安卓把 `apkUrl` 里的域换成当前线路再下载，老版照旧读原字段。
 方案里说的 `apkPath` 新字段不需要了（`deploy_android.py` 是所有项目共用的，能不动就不动）。
 
-没做的：RN 老版（按 D-20 不动）；网页端 Supabase 换线（O-20）；网页备用入口（O-19）；`next.config.mjs` 的 7 条 307（r2.dev 实测通，不用换）。
+没做的：RN 老版（按 D-20 不动）；`next.config.mjs` 的 7 条 307（r2.dev 实测通，不用换）。网页端 Supabase 换线和网页备用入口在第二轮做了，见下。
 
 ### 验证
 
@@ -236,6 +236,22 @@ Supabase 反代不是备而不用，移动网络上现在就用得着；jsdelivr
 - 模拟器上那个 `me.askbible.native` 是 Release 签名的侧载包，Debug 包盖不上去也 `run-as` 不了；
   要预置偏好设置用 `adb root` 直接写 `/data/data/…/shared_prefs/`（写完 `chown` + `restorecon`）。
 
+### 第二轮（2026-10-01，Josh「2 好了，其它你帮我处理」）
+
+- **网页备用入口 `https://askbible.joshlabs.app`**：Vercel 项目 `askbibleme`（团队 `joshlabsapp`）加了这个域名；
+  Cloudflare 加 CNAME `askbible` → `34c4f7c76d6872fe.vercel-dns-017.com`（仅 DNS，不开代理）；
+  Supabase 回跳白名单加 `https://askbible.joshlabs.app/**`；`lib/auth/public-auth-origin.ts` 的 `BACKUP_ENTRY_HOSTNAMES`
+  放行它的登录回跳，`middleware.ts` 给它加 `X-Robots-Tag: noindex`（和主站内容一样，别被收成重复站）。
+  两个入口的登录状态不互通（cookie 按域名存）。
+- **网页端 Supabase 换线**：`lib/supabase/browser.ts` 的入口走 `api` 角色；会话 cookie 名钉死成按官方域名推出来的
+  `sb-tgobadhdylarhssudplc-auth-token`（服务端 `createServerClient` 也是这么推的），换入口不掉登录。
+  每个入口一个客户端实例（`isSingleton: false` + 自己缓存）。
+  验证：反代上跨域预检 204、错误密码返回 `invalid_credentials`（和直连一致）、匿名读 `askbible_profiles` 200；
+  本地预览登录页错误密码显示「邮箱或密码错误」，点 Google 跳到账号选择页，PKCE cookie 名是钉死的那个。
+- **Vercel 没有命令行登录态**：加域名是在 Josh 登录好的 Chrome 里调 Vercel 自己的接口做的
+  （`POST /api/v10/projects/askbibleme/domains?slug=joshlabsapp`），页面上的「Add Existing」按钮在后台标签页里点不动。
+  Supabase 后台同理：输入框用 `form_input` 填，保存按钮用页内 `click()`。
+
 ## 六、怎么操作
 
 ```bash
@@ -251,6 +267,6 @@ cd workers/site-proxy && npx wrangler deploy
 `npm run endpoints:push`（原生新版立刻生效）→ 网页要重新部署才带上新的 `/endpoints.json`。内置表随下个版本。
 
 **某条线路被封了**：不用做任何事，新版客户端下次启动 / 回前台自己换。只有两件事要手动：
-老站外版安卓只认 `version.json` 的 `apkUrl`，把它改指向还通的那条；网页用户要靠备用入口（O-19）。
+老站外版安卓只认 `version.json` 的 `apkUrl`，把它改指向还通的那条；网页用户要改用备用入口 `https://askbible.joshlabs.app`（要事先让他们知道这个地址）。
 
 **候选域的规矩**：`https://主机名/`，单层子域，不用 `*.workers.dev`。

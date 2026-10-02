@@ -213,7 +213,9 @@ export function SiteHome() {
       <div className="site-home__wrap">
         <header className="site-home__top">
           <span className="site-home__brand">
-            <SiteLogoMark size={24} />
+            {/* 顶栏用带黄底的 App 图标，和下面切换条里的那个一致（Josh 2026-10-02：「APP 图是金黄的，但最上面的标是黑的？」） */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={SITE_APP_ICON.askbible} alt="" width={30} height={30} />
             {ASKBIBLE_PRODUCT_NAME}
           </span>
           <div className="site-home__langs" role="group" aria-label={copy.languageLabel}>

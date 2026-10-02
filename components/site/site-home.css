@@ -77,9 +77,11 @@ html.dark .site-home {
   letter-spacing: 0.02em;
 }
 
-/* 顶栏标志：单色，跟文字色（浅色底是墨色，深色底是米白），配色见 DECISIONS「标志配色」 */
-.site-home__brand svg {
-  flex-shrink: 0;
+/* 顶栏标志：带黄底的 App 图标，和切换条里的一致 */
+.site-home__brand img {
+  width: 30px;
+  height: 30px;
+  border-radius: 23%;
 }
 
 .site-home__langs {

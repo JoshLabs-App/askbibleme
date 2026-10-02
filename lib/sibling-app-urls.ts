@@ -1,9 +1,12 @@
 /**
- * 官网「同系列工具」一节链出去的地址（DECISIONS D-21）。都是别的项目的入口，换了域名要来这里改。
+ * 官网首屏的软件切换（DECISIONS D-22）和「同系列工具」一节（D-21）链出去的地址。都是别的项目的入口，换了域名要来这里改。
  */
 
 /** 听到：网页版主入口（03MyClass，Cloudflare Pages；旧域 class.joshlabs.app 同时可用） */
 export const SIBLING_TINGDAO_URL = "https://td.askbible.me/" as const;
+
+/** 听到：安卓下载页 */
+export const SIBLING_TINGDAO_ANDROID_URL = "https://my-class-media.joshlabs.app/download.html" as const;
 
 /** 查到：目前只有安卓版，这是它的下载页（01查经）。定了以后用 cd.askbible.me，做好后换成它 */
 export const SIBLING_CHADAO_URL = "https://chadao-media.joshlabs.app/download.html" as const;

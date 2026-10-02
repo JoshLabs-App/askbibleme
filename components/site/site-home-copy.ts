@@ -15,7 +15,24 @@ export type SiteHomeVersionCopy = {
   action: string;
 };
 
+/** 首屏切到别的软件时换上的那一套（D-22）。`entries` 的顺序和 `SiteHome` 里各软件的入口一一对应 */
+export type SiteHomeAppHeroCopy = {
+  /** 切换条上的名字 */
+  tab: string;
+  title: string;
+  sub: string;
+  /** 手机模型里画面的说明（读屏用） */
+  phoneAlt: string;
+  entries: { name: string; sub: string }[];
+};
+
 export type SiteHomeCopy = {
+  /** 首屏软件切换条（读屏用的名字） */
+  appsLabel: string;
+  appTabAskbible: string;
+  heroTingdao: SiteHomeAppHeroCopy;
+  heroChadao: SiteHomeAppHeroCopy;
+  heroLittleBible: SiteHomeAppHeroCopy;
   heroTitle: string;
   heroSub: string;
   ctaWeb: string;
@@ -49,6 +66,32 @@ export type SiteHomeCopy = {
 
 export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
   "zh-CN": {
+    appsLabel: "选择软件",
+    appTabAskbible: "AskBible",
+    heroTingdao: {
+      tab: "听到",
+      title: "世界各地的讲道，用中文听。",
+      sub: "世界各地的查经与主日讲道，按圣经书卷编排，可边听边读。",
+      phoneAlt: "听到 App 里的画面",
+      entries: [
+        { name: "打开网页版", sub: "无需安装" },
+        { name: "安卓下载", sub: "Android" },
+      ],
+    },
+    heroChadao: {
+      tab: "查到",
+      title: "小组查经，一套做完。",
+      sub: "给小组长用的归纳法查经工具：读经、备课、带组、排期。内容已全部打包，装上即用。",
+      phoneAlt: "查到 App 里的画面",
+      entries: [{ name: "安卓下载", sub: "目前只有安卓版" }],
+    },
+    heroLittleBible: {
+      tab: "小小圣经",
+      title: "一章一章，安静听圣经。",
+      sub: "蜡笔画的圣经故事，陪孩子安静听圣经。在 YouTube 上看，有英文和中文配音，可以切换。",
+      phoneAlt: "小小圣经第 1 集的封面",
+      entries: [{ name: "YouTube", sub: "英文、中文配音" }],
+    },
     heroTitle: "安静地，回到经文。",
     heroSub: "一个让人重新进入圣经的安静入口。",
     ctaWeb: "进入网页版",
@@ -107,6 +150,32 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
     languageLabel: "语言",
   },
   en: {
+    appsLabel: "Choose an app",
+    appTabAskbible: "AskBible",
+    heroTingdao: {
+      tab: "听到",
+      title: "Sermons from around the world, in Chinese.",
+      sub: "Bible studies and Sunday sermons, arranged by book of the Bible, with text to read along.",
+      phoneAlt: "Inside the 听到 app",
+      entries: [
+        { name: "Open the web app", sub: "Nothing to install" },
+        { name: "Android APK", sub: "Android" },
+      ],
+    },
+    heroChadao: {
+      tab: "查到",
+      title: "Group Bible study, all in one place.",
+      sub: "An inductive Bible study tool for small-group leaders: read, prepare, lead and schedule. All content is bundled and works right after install.",
+      phoneAlt: "Inside the 查到 app",
+      entries: [{ name: "Android APK", sub: "Android only for now" }],
+    },
+    heroLittleBible: {
+      tab: "Little Bible",
+      title: "One chapter at a time, straight from the Bible.",
+      sub: "Bible stories drawn in crayon, for children to listen to quietly. On YouTube, with English and Chinese audio tracks.",
+      phoneAlt: "The cover of Little Bible episode 1",
+      entries: [{ name: "YouTube", sub: "English & Chinese audio" }],
+    },
     heroTitle: "Quietly, back to Scripture.",
     heroSub: "A quiet entry back into Scripture.",
     ctaWeb: "Open the web app",

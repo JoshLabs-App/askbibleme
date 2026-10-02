@@ -2,18 +2,24 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ABOUT_PAGE_COPY } from "@/components/about/about-page-copy";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { SITE_HOME_COPY, type SiteHomeVersionCopy } from "@/components/site/site-home-copy";
 import { SitePhoneLiveScreen } from "@/components/site/SitePhoneLiveScreen";
+import { SitePhoneLittleBible, SitePhoneSlides } from "@/components/site/SitePhoneShowcase";
 import { ShellMaterialCommunityIcon } from "@/components/shell/ShellMaterialCommunityIcon";
 import { APP_INSTALL_ANDROID_URL, APP_INSTALL_IOS_URL } from "@/lib/app-install-urls";
 import { ASKBIBLE_PRODUCT_NAME } from "@/lib/askbible-product-name";
 import type { AppLocale } from "@/lib/i18n/config";
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import { isDisplayStandalone } from "@/lib/pwa/display-mode";
-import { SIBLING_CHADAO_URL, SIBLING_LITTLE_BIBLE_URL, SIBLING_TINGDAO_URL } from "@/lib/sibling-app-urls";
+import {
+  SIBLING_CHADAO_URL,
+  SIBLING_LITTLE_BIBLE_URL,
+  SIBLING_TINGDAO_ANDROID_URL,
+  SIBLING_TINGDAO_URL,
+} from "@/lib/sibling-app-urls";
 import { WEB_APP_HOME_PATH } from "@/lib/web-app-home-path";
 import "./site-home.css";
 
@@ -32,19 +38,52 @@ const APP_SCREEN_IMAGE_SRC = "/site/app-screen-home.webp";
  * 各版本入口前面的图标（Josh 2026-10-01：「有图标的都把图标上」，DECISIONS D-16）：
  * 网页版用 AskBible 自己的图标，其余是 App 里同一套 MDI 图标字体里的苹果 / Google Play / 安卓标。
  */
-type EntryIconKind = "web" | "ios" | "play" | "apk";
+type EntryIconKind = "web" | "ios" | "play" | "apk" | "youtube";
 
 const ENTRY_MDI_ICON: Record<Exclude<EntryIconKind, "web">, string> = {
   ios: "apple",
   play: "google-play",
   apk: "android",
+  youtube: "youtube",
 };
 
-function EntryIcon({ kind, size }: { kind: EntryIconKind; size: number }) {
-  if (kind === "web") {
+/**
+ * 首屏可以切换的几个软件（Josh 2026-10-01：「一开始就展示几个不同的软件……点不同的，里面的手机就切换不同的内容」，DECISIONS D-22）。
+ * AskBible 是默认选中的那个，它的首屏内容还是原来那一套；另外三个各有自己的标题、入口和手机画面。
+ */
+type SiteAppId = "askbible" | "tingdao" | "chadao" | "littleBible";
+
+const SITE_APP_ORDER: SiteAppId[] = ["askbible", "tingdao", "chadao", "littleBible"];
+
+const SITE_APP_ICON: Record<SiteAppId, string> = {
+  askbible: "/branding/app-icon.png",
+  tingdao: "/site/sibling-tingdao.png",
+  chadao: "/site/sibling-chadao.png",
+  littleBible: "/site/sibling-littlebible.jpg",
+};
+
+const screens = (name: string) => [1, 2, 3, 4].map((n) => `/site/${name}-screen-${n}.webp`);
+const TINGDAO_SCREENS = screens("tingdao");
+const CHADAO_SCREENS = screens("chadao");
+
+type SiblingEntry = { href: string; icon: EntryIconKind | { src: string } };
+
+/** 各软件的入口按钮，顺序和文案里的 `entries` 一一对应；第一个是深色的主入口 */
+const SIBLING_ENTRIES: Record<Exclude<SiteAppId, "askbible">, SiblingEntry[]> = {
+  tingdao: [
+    { href: SIBLING_TINGDAO_URL, icon: { src: SITE_APP_ICON.tingdao } },
+    { href: SIBLING_TINGDAO_ANDROID_URL, icon: "apk" },
+  ],
+  chadao: [{ href: SIBLING_CHADAO_URL, icon: "apk" }],
+  littleBible: [{ href: SIBLING_LITTLE_BIBLE_URL, icon: "youtube" }],
+};
+
+function EntryIcon({ kind, size }: { kind: EntryIconKind | { src: string }; size: number }) {
+  if (kind === "web" || typeof kind !== "string") {
+    const src = kind === "web" ? SITE_APP_ICON.askbible : kind.src;
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img className="site-home__entry-icon site-home__entry-icon--app" src="/branding/app-icon.png" alt="" width={size} height={size} />
+      <img className="site-home__entry-icon site-home__entry-icon--app" src={src} alt="" width={size} height={size} />
     );
   }
   return <ShellMaterialCommunityIcon className="site-home__entry-icon" name={ENTRY_MDI_ICON[kind]} size={size} />;
@@ -75,12 +114,7 @@ function VersionEntry({
 }) {
   const inner = (
     <>
-      {typeof icon === "string" ? (
-        <EntryIcon kind={icon} size={34} />
-      ) : (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img className="site-home__entry-icon site-home__entry-icon--app" src={icon.src} alt="" width={34} height={34} loading="lazy" />
-      )}
+      <EntryIcon kind={icon} size={34} />
       <span className="site-home__version-text">
         <span className="site-home__version-title font-serif">{copy.title}</span>
         <span className="site-home__version-body">{copy.body}</span>
@@ -106,18 +140,38 @@ function VersionEntry({
 
 /**
  * 官网 `askbible.me/`：一句话理念 + 各版本入口（D-10）。
- * 首屏：一句话 + 四个版本入口排成一组（网页版是深色主入口，三个 App 下载同样大小），Josh 2026-10-01 定。
+ * 首屏：一排可切换的软件（D-22）+ 一句话 + 入口排成一组（主入口深色，其余同样大小），Josh 2026-10-01 定。
  */
 export function SiteHome() {
   const { locale, setLocale } = useLocale();
   const router = useRouter();
   const isEn = locale === "en";
+  const [app, setApp] = useState<SiteAppId>("askbible");
 
   const { copy, about } = useMemo(() => {
     if (isEn) return { copy: SITE_HOME_COPY.en, about: ABOUT_PAGE_COPY.en };
     const zh = { copy: SITE_HOME_COPY["zh-CN"], about: ABOUT_PAGE_COPY["zh-CN"] };
     return locale === "zh-TW" ? mapStrings(zh, toZhTwText) : zh;
   }, [isEn, locale]);
+
+  const appTabs: Record<SiteAppId, string> = {
+    askbible: copy.appTabAskbible,
+    tingdao: copy.heroTingdao.tab,
+    chadao: copy.heroChadao.tab,
+    littleBible: copy.heroLittleBible.tab,
+  };
+  const sibling =
+    app === "tingdao" ? copy.heroTingdao : app === "chadao" ? copy.heroChadao : app === "littleBible" ? copy.heroLittleBible : null;
+
+  /** 别的软件的第一张画面先悄悄取回来，点切换时不用等 */
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      for (const src of [TINGDAO_SCREENS[0], CHADAO_SCREENS[0], "/site/littlebible-cover.webp"]) {
+        new Image().src = src;
+      }
+    }, 2500);
+    return () => window.clearTimeout(id);
+  }, []);
 
   /** 已装到主屏的旧 PWA 仍从 `/` 启动：它要的是网页版，不是官网 */
   useEffect(() => {
@@ -178,63 +232,110 @@ export function SiteHome() {
         <main>
           <section className="site-home__hero">
             <div className="site-home__hero-text">
-            <div className="site-home__rule" aria-hidden />
-            <h1 className="site-home__title font-serif">{copy.heroTitle}</h1>
-            <p className="site-home__sub">{copy.heroSub}</p>
-            {/*
-              Josh 2026-10-01：各版本要在首屏直接看得到；「进入网页版」和几个 App 版本
-              同一排、同样大小对齐，只用深色底标出它是主入口。
-            */}
-            <div className="site-home__stores-block">
-              <div className="site-home__stores">
-                <Link className="site-home__store site-home__store--primary" href={WEB_APP_HOME_PATH}>
-                  <EntryIcon kind="web" size={26} />
-                  <span className="site-home__store-text">
-                    <span className="site-home__store-name">{copy.ctaWeb}</span>
-                    <span className="site-home__store-sub">{copy.storeWebSub}</span>
-                  </span>
-                </Link>
-                <a
-                  className="site-home__store"
-                  href={APP_INSTALL_IOS_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <EntryIcon kind="ios" size={26} />
-                  <span className="site-home__store-text">
-                    <span className="site-home__store-name">App Store</span>
-                    <span className="site-home__store-sub">{copy.storeIosSub}</span>
-                  </span>
-                </a>
-                <a
-                  className="site-home__store"
-                  href={APP_INSTALL_ANDROID_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <EntryIcon kind="play" size={26} />
-                  <span className="site-home__store-text">
-                    <span className="site-home__store-name">Google Play</span>
-                    <span className="site-home__store-sub">{copy.storePlaySub}</span>
-                  </span>
-                </a>
-                <Link className="site-home__store" href={ANDROID_APK_PAGE_PATH}>
-                  <EntryIcon kind="apk" size={26} />
-                  <span className="site-home__store-text">
-                    <span className="site-home__store-name">{copy.storeApkName}</span>
-                    <span className="site-home__store-sub">{copy.storeApkSub}</span>
-                  </span>
-                </Link>
+              <div className="site-home__apps" role="tablist" aria-label={copy.appsLabel}>
+                {SITE_APP_ORDER.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    role="tab"
+                    className="site-home__app"
+                    aria-selected={app === id}
+                    onClick={() => setApp(id)}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={SITE_APP_ICON[id]} alt="" width={44} height={44} />
+                    <span>{appTabs[id]}</span>
+                  </button>
+                ))}
               </div>
-              <p className="site-home__stores-note">{copy.storesAndroidNote}</p>
-            </div>
+              <div className="site-home__rule" aria-hidden />
+              {/* key 跟着选中的软件换：标题、介绍、入口整块重新淡入 */}
+              <h1 key={`title-${app}`} className="site-home__title font-serif">
+                {sibling ? sibling.title : copy.heroTitle}
+              </h1>
+              <p key={`sub-${app}`} className="site-home__sub">
+                {sibling ? sibling.sub : copy.heroSub}
+              </p>
+              {sibling && app !== "askbible" ? (
+                <div key={`stores-${app}`} className="site-home__stores-block">
+                  <div className={`site-home__stores${sibling.entries.length === 1 ? " site-home__stores--one" : ""}`}>
+                    {SIBLING_ENTRIES[app].map((entry, i) => (
+                      <a
+                        key={entry.href}
+                        className={`site-home__store${i === 0 ? " site-home__store--primary" : ""}`}
+                        href={entry.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <EntryIcon kind={entry.icon} size={26} />
+                        <span className="site-home__store-text">
+                          <span className="site-home__store-name">{sibling.entries[i]?.name}</span>
+                          <span className="site-home__store-sub">{sibling.entries[i]?.sub}</span>
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                /*
+                  Josh 2026-10-01：各版本要在首屏直接看得到；「进入网页版」和几个 App 版本
+                  同一排、同样大小对齐，只用深色底标出它是主入口。
+                */
+                <div key="stores-askbible" className="site-home__stores-block">
+                  <div className="site-home__stores">
+                    <Link className="site-home__store site-home__store--primary" href={WEB_APP_HOME_PATH}>
+                      <EntryIcon kind="web" size={26} />
+                      <span className="site-home__store-text">
+                        <span className="site-home__store-name">{copy.ctaWeb}</span>
+                        <span className="site-home__store-sub">{copy.storeWebSub}</span>
+                      </span>
+                    </Link>
+                    <a className="site-home__store" href={APP_INSTALL_IOS_URL} target="_blank" rel="noopener noreferrer">
+                      <EntryIcon kind="ios" size={26} />
+                      <span className="site-home__store-text">
+                        <span className="site-home__store-name">App Store</span>
+                        <span className="site-home__store-sub">{copy.storeIosSub}</span>
+                      </span>
+                    </a>
+                    <a className="site-home__store" href={APP_INSTALL_ANDROID_URL} target="_blank" rel="noopener noreferrer">
+                      <EntryIcon kind="play" size={26} />
+                      <span className="site-home__store-text">
+                        <span className="site-home__store-name">Google Play</span>
+                        <span className="site-home__store-sub">{copy.storePlaySub}</span>
+                      </span>
+                    </a>
+                    <Link className="site-home__store" href={ANDROID_APK_PAGE_PATH}>
+                      <EntryIcon kind="apk" size={26} />
+                      <span className="site-home__store-text">
+                        <span className="site-home__store-name">{copy.storeApkName}</span>
+                        <span className="site-home__store-sub">{copy.storeApkSub}</span>
+                      </span>
+                    </Link>
+                  </div>
+                  <p className="site-home__stores-note">{copy.storesAndroidNote}</p>
+                </div>
+              )}
             </div>
             {/*
-              手机模型（Josh 2026-10-01）：里面是真的网页版首页，不是一张图（DECISIONS D-15）。
+              手机模型（Josh 2026-10-01）：AskBible 放的是真的网页版首页，不是一张图（DECISIONS D-15），
               垫底的截图是 `public/site/app-screen-home.webp`，网页版没加载出来时才看得到。
+              切到别的软件时换成它的截图轮播 / 封面（D-22）。
             */}
             <div className="site-home__phone">
-              <SitePhoneLiveScreen posterSrc={APP_SCREEN_IMAGE_SRC} alt={copy.phoneAlt} />
+              {app === "askbible" ? (
+                <SitePhoneLiveScreen posterSrc={APP_SCREEN_IMAGE_SRC} alt={copy.phoneAlt} />
+              ) : app === "tingdao" ? (
+                <SitePhoneSlides key="tingdao" slides={TINGDAO_SCREENS} href={SIBLING_TINGDAO_URL} alt={copy.heroTingdao.phoneAlt} />
+              ) : app === "chadao" ? (
+                <SitePhoneSlides key="chadao" slides={CHADAO_SCREENS} href={SIBLING_CHADAO_URL} alt={copy.heroChadao.phoneAlt} />
+              ) : (
+                <SitePhoneLittleBible
+                  href={SIBLING_LITTLE_BIBLE_URL}
+                  alt={copy.heroLittleBible.phoneAlt}
+                  name={copy.heroLittleBible.tab}
+                  slogan={copy.heroLittleBible.title}
+                />
+              )}
             </div>
           </section>
 

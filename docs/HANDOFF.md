@@ -620,7 +620,7 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
 
 ## 附：2026-10-01 官网 + 网页版搬到 /web 交接
 
-**当前状态（2026-10-01 夜）**：官网加了「同系列工具」一节（D-21：听到 / 查到 / 小小圣经，等 Josh 看）、原生首页金句换思源宋体（D-19，两端已改，iPhone 已装、三星没装）、官网（D-10）、网页版首页对齐安卓（D-11）、探索页照安卓（D-12）、撤掉网页专有设置（D-13、D-18）、
+**当前状态（2026-10-01 夜）**：官网首屏改成几个软件的入口（D-22：一排图标切换，标题 / 入口 / 手机画面跟着换，等 Josh 看）、官网加了「同系列工具」一节（D-21：听到 / 查到 / 小小圣经）、原生首页金句换思源宋体（D-19，两端已改，iPhone 已装、三星没装）、官网（D-10）、网页版首页对齐安卓（D-11）、探索页照安卓（D-12）、撤掉网页专有设置（D-13、D-18）、
 菜单「回主页」（D-14）、官网手机模型放真的网页版（D-15）、下载入口加图标（D-16）、安卓「最新版 / 商店版」二选一（D-17）都做完、本机验过、
 已提交在分支 `claude/upbeat-mayer-752c72`（worktree `.claude/worktrees/strange-dewdney-3855d7`），**没合 main、没推送，等 Josh 说「上线」**（OPEN-ITEMS O-9）。
 
@@ -629,7 +629,8 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
    三星上线后打 `sideload` 变体（包名 `me.askbible.native`，别盖商店版）。这个 worktree 里没有 `apps/askbible-mobile/android/keystore.properties`
    （不进仓库），先从主目录拷过来再打，不然出来的包没签名；本机没有 `local.properties` 时用 `ANDROID_HOME` 指 SDK。
    Josh 看过手机后要是对英文金句用系统衬线体有意见，改 `VerseFont`（安卓 `ui/VerseFont.kt`、iOS `Theme/VerseFont.swift`）。
-2. Josh 看官网最下面「同系列工具」那一节（O-17），有意见就改 `components/site/site-home-copy.ts` 的 `sibling*`；地址在 `lib/sibling-app-urls.ts`。
+2. Josh 看官网首屏的软件切换（D-22）和最下面「同系列工具」那一节（D-21），待他回的几条见 O-17。文案在 `components/site/site-home-copy.ts` 的 `hero*` / `sibling*`；地址在 `lib/sibling-app-urls.ts`；
+   手机里的截图在 `public/site/<名>-screen-N.webp`，换图就把新图裁成 600×1299 的 webp 覆盖同名文件。
    之后的编号顺延：
 2. Josh 逐页看网页版时再提的不一致，照「以安卓代码为准」处理。
 3. Josh 说「上线」后：合 main、推送（Vercel 自动部署），提醒他点一次手机主屏上已装的图标。
@@ -666,5 +667,7 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
 10. 官网手机模型里是 iframe 内嵌的 `/web`（D-15）：给站点加 `X-Frame-Options` / `frame-ancestors` 这类响应头时要放行同源，不然手机里只剩垫底截图。
 12. 官网「同系列工具」（D-21）：三张卡的地址集中在 `lib/sibling-app-urls.ts`，查到的 `cd.askbible.me` 做好后换那一行；图标在 `public/site/sibling-*`。
     加中文文案后照第 5 条用 opencc-js 对一遍繁体（这次补了「课 蜡」）。这一节用 `.site-home__versions--single`，宽屏也一行一张，别改回两列（三张会落单）。
+13. 官网首屏软件切换（D-22）：`.site-home__hero-text` 是**从上往下排**的，别改回垂直居中——各软件的标题、入口高矮不一，居中的话一点切换，那排图标会上下跳。
+    首屏淡入的延时写在 `.site-home__hero-text > :nth-child(4/5)`，往里加减子元素要跟着改序号。AskBible 以外的手机画面在 `SitePhoneShowcase.tsx`。
 11. 安卓发版顺序：先 `deploy_android.py` 发下载页，再推 Play——官网把下载页那个包叫「最新版」（D-17）。
 9. 暗度 / 模糊 / 金句特效在网页首页已经不读偏好了（D-13），但 `lib/` 里的读写函数别删，会员同步还在用它们和 RN / iOS 互通。

@@ -77,10 +77,9 @@ html.dark .site-home {
   letter-spacing: 0.02em;
 }
 
-.site-home__brand img {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
+/* 顶栏标志：单色，跟文字色（浅色底是墨色，深色底是米白），配色见 DECISIONS「标志配色」 */
+.site-home__brand svg {
+  flex-shrink: 0;
 }
 
 .site-home__langs {
@@ -385,7 +384,7 @@ html.dark .site-home__phone {
   transform: scale(0.98);
 }
 
-/* 入口前的图标：网页版是 AskBible 自己的图标（圆角方块），其余是单色的商店 / 系统标 */
+/* 入口前的图标：都是单色、跟文字色（网页版是 AskBible 的标志，其余是商店 / 系统标）；别的软件用它自己的 App 图标（圆角方块） */
 .site-home__entry-icon {
   flex-shrink: 0;
 }

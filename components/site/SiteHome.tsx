@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ABOUT_PAGE_COPY } from "@/components/about/about-page-copy";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { SITE_HOME_COPY, type SiteHomeVersionCopy } from "@/components/site/site-home-copy";
+import { SiteLogoMark } from "@/components/site/SiteLogoMark";
 import { SitePhoneLiveScreen } from "@/components/site/SitePhoneLiveScreen";
 import { SitePhoneLittleBible, SitePhoneSlides } from "@/components/site/SitePhoneShowcase";
 import { ShellMaterialCommunityIcon } from "@/components/shell/ShellMaterialCommunityIcon";
@@ -55,8 +56,9 @@ type SiteAppId = "askbible" | "tingdao" | "chadao" | "littleBible";
 
 const SITE_APP_ORDER: SiteAppId[] = ["askbible", "tingdao", "chadao", "littleBible"];
 
+/** 切换条上放的是各软件的 App 图标；AskBible 用带黄底的那张（`app-icon.png` 是透明底白标，浅色底上看不见） */
 const SITE_APP_ICON: Record<SiteAppId, string> = {
-  askbible: "/branding/app-icon.png",
+  askbible: "/branding/icon-512.png",
   tingdao: "/site/sibling-tingdao.png",
   chadao: "/site/sibling-chadao.png",
   littleBible: "/site/sibling-littlebible.jpg",
@@ -79,11 +81,12 @@ const SIBLING_ENTRIES: Record<Exclude<SiteAppId, "askbible">, SiblingEntry[]> = 
 };
 
 function EntryIcon({ kind, size }: { kind: EntryIconKind | { src: string }; size: number }) {
-  if (kind === "web" || typeof kind !== "string") {
-    const src = kind === "web" ? SITE_APP_ICON.askbible : kind.src;
+  /* 网页版入口：AskBible 的标志，和旁边的苹果 / 安卓标一样是单色、跟文字色 */
+  if (kind === "web") return <SiteLogoMark className="site-home__entry-icon" size={size} />;
+  if (typeof kind !== "string") {
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img className="site-home__entry-icon site-home__entry-icon--app" src={src} alt="" width={size} height={size} />
+      <img className="site-home__entry-icon site-home__entry-icon--app" src={kind.src} alt="" width={size} height={size} />
     );
   }
   return <ShellMaterialCommunityIcon className="site-home__entry-icon" name={ENTRY_MDI_ICON[kind]} size={size} />;
@@ -210,8 +213,7 @@ export function SiteHome() {
       <div className="site-home__wrap">
         <header className="site-home__top">
           <span className="site-home__brand">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/branding/app-icon.png" alt="" width={30} height={30} />
+            <SiteLogoMark size={24} />
             {ASKBIBLE_PRODUCT_NAME}
           </span>
           <div className="site-home__langs" role="group" aria-label={copy.languageLabel}>

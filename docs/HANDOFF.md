@@ -634,6 +634,7 @@ manifest `start_url=/web`；手机截图和金句字体文件都取得到。本�
 2026-10-01 晚已把 main（`2ad8b200`，「防封换线」那一批，已上线）**合进本分支**：两处冲突（`AppInstallGuidePage.tsx`、`useNatureGoldenVerseAudioControl.ts`）两边都保留，`tsc` + 271 个单元测试通过；本分支现在只领先 main、不落后，上线时可以直接快进合并。
 
 **下一步（按顺序）**：
+0. **标志配色（O-22）**：Josh 说官网标志是白的看不清。已和 ChatGPT 商量出三套方案、发了对比图，本机先按 ① 改了官网（`SiteLogoMark.tsx`，已提交在本分支，**没推送**），等他选定 + 说「上线」。
 1. **三星装原生金句宋体版（D-19，OPEN-ITEMS O-15）**：两端代码已改完并提交在本分支，home iPhone 已装 1.1.2 (133)；三星 10-01 晚不在线没装。
    三星上线后打 `sideload` 变体（包名 `me.askbible.native`，别盖商店版）。这个 worktree 里没有 `apps/askbible-mobile/android/keystore.properties`
    （不进仓库），先从主目录拷过来再打，不然出来的包没签名；本机没有 `local.properties` 时用 `ANDROID_HOME` 指 SDK。
@@ -679,6 +680,8 @@ manifest `start_url=/web`；手机截图和金句字体文件都取得到。本�
     加中文文案后照第 5 条用 opencc-js 对一遍繁体（这次补了「课 蜡」）。这一节用 `.site-home__versions--single`，宽屏也一行一张，别改回两列（三张会落单）。
 15. **线上的 `/index` 不会跳 `/web`**：Vercel 把 `/index` 当成根路径，直接显示官网（响应头 `x-matched-path: /`）；本机 dev 才会走 `app/(app-shell)/index/page.tsx` 跳 `/web`。
     代码里没有任何地方链到 `/index`，所以没管（O-9 第 5 条）；别拿它当「回网页版首页」的地址用。
+16. `public/branding/app-icon.png` 是**透明底 + 白色标志**的母版，只能垫在深色 / 品牌黄上用；浅色底上要标志就用 `SiteLogoMark`（单色跟文字色），要 App 图标就用 `icon-512.png`（黄底）。
+    想知道一张图是什么颜色又不想看图：用 PIL 缩到 64×64 统计主要颜色和四角像素。
 13. 官网首屏软件切换（D-22）：`.site-home__hero-text` 是**从上往下排**的，别改回垂直居中——各软件的标题、入口高矮不一，居中的话一点切换，那排图标会上下跳。
     首屏淡入的延时写在 `.site-home__hero-text > :nth-child(4/5)`，往里加减子元素要跟着改序号。AskBible 以外的手机画面在 `SitePhoneShowcase.tsx`。
 14. 「防封换线」之后（`docs/anti-block-endpoints.md`）：网页里别再写死 `r2.dev` / `askbible-media.joshlabs.app` / `supabase.co`，R2 资源用 `lib/endpoints`，APK 直链用 `lib/app-install-urls.ts`；

@@ -665,7 +665,7 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
    探索页的尺寸是在 `explore-parchment.css` 里用 `.explore-habit-*` 包一层覆盖的，别去改组件本身。
 8. 探索页左右留白：外层羊皮卷栏有 20，`.explore-home` 只补 2（合计安卓的 22）。
 10. 官网手机模型里是 iframe 内嵌的 `/web`（D-15）：给站点加 `X-Frame-Options` / `frame-ancestors` 这类响应头时要放行同源，不然手机里只剩垫底截图。
-12. 官网「同系列工具」（D-21）：三张卡的地址集中在 `lib/sibling-app-urls.ts`，查到的 `cd.askbible.me` 做好后换那一行；图标在 `public/site/sibling-*`。
+12. 官网「同系列工具」（D-21）：三张卡的地址集中在 `lib/sibling-app-urls.ts`（查到已换成 `cd.askbible.me`）；图标在 `public/site/sibling-*`。
     加中文文案后照第 5 条用 opencc-js 对一遍繁体（这次补了「课 蜡」）。这一节用 `.site-home__versions--single`，宽屏也一行一张，别改回两列（三张会落单）。
 13. 官网首屏软件切换（D-22）：`.site-home__hero-text` 是**从上往下排**的，别改回垂直居中——各软件的标题、入口高矮不一，居中的话一点切换，那排图标会上下跳。
     首屏淡入的延时写在 `.site-home__hero-text > :nth-child(4/5)`，往里加减子元素要跟着改序号。AskBible 以外的手机画面在 `SitePhoneShowcase.tsx`。

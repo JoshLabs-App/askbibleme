@@ -8,8 +8,8 @@ export const SIBLING_TINGDAO_URL = "https://td.askbible.me/" as const;
 /** 听到：安卓下载页 */
 export const SIBLING_TINGDAO_ANDROID_URL = "https://my-class-media.joshlabs.app/download.html" as const;
 
-/** 查到：目前只有安卓版，这是它的下载页（01查经）。定了以后用 cd.askbible.me，做好后换成它 */
-export const SIBLING_CHADAO_URL = "https://chadao-media.joshlabs.app/download.html" as const;
+/** 查到：目前只有安卓版，这是它的下载页（01查经；2026-10-01 起用新域，旧地址 chadao-media.joshlabs.app/download.html 照常可用） */
+export const SIBLING_CHADAO_URL = "https://cd.askbible.me/" as const;
 
 /** 小小圣经：YouTube 频道。只用英文频道这一个，中文是同一支视频的另一条音轨（00蜡笔画圣经故事 D-134） */
 export const SIBLING_LITTLE_BIBLE_URL = "https://www.youtube.com/@LittleBibleEN" as const;

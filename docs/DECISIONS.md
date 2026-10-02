@@ -64,7 +64,7 @@
      ~~**不**把根路径改成几个 App 并排的总首页。~~（**这一句已作废 2026-10-01**：首屏改成了几个软件的入口，见 D-22。）
   2. **三张卡连到哪**（地址集中在 `lib/sibling-app-urls.ts`）：
      - 听到 → 网页版 `https://td.askbible.me/`；
-     - 查到 → 安卓下载页 `https://chadao-media.joshlabs.app/download.html`（它还没有网页版；`cd.askbible.me` 做好后换过去）；
+     - 查到 → 安卓下载页 ~~`https://chadao-media.joshlabs.app/download.html`~~ → **`https://cd.askbible.me/`**（2026-10-01 晚 `cd.askbible.me` 上线后已换，同一个下载页；它还没有网页版）；
      - 小小圣经 → YouTube **英文频道** `https://www.youtube.com/@LittleBibleEN`，卡上放一段介绍（Josh：「放介绍，然后连到 YOUTUBE 英文那个频道，我们保留英文的那个」）。
   3. **先后**：这一节做完、Josh 看过之后，和官网 + `/web` 那一批**一起上线**（O-9），不先单独上线。
 - **为什么**：改动小，刚定的官网首屏和结构不用重排；AskBible 仍是这个域名的主角，别的几样只是带一下。

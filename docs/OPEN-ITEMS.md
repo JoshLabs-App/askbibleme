@@ -5,6 +5,12 @@
 
 ## 待决
 
+### O-25 网页版 /web 首页金句还是宋体，要不要也改回（2026-10-02）
+
+- **现状**：D-27 只把安卓 / iOS 首页金句改回系统粗体；网页 `/web` 的宋体（D-11，当时 Josh 点名「听到用的那个宋体可以用起来」）没动。
+- **影响**：网页和原生首页字体不一致，D-11 的「网页和安卓是同一个东西」在字体上不成立。
+- **要 Josh 决定**：网页也改回（推荐，和原生一致；改 `app/globals.css` 的 `.font-verse-song` 即可）/ 网页保留宋体。
+
 ### O-4 YouTube 放松长视频：第 1 集发布进度（2026-09-27）
 
 - **现状（2026-09-28）**：第 1 集三个版本全部重做（背景不抖、出处改成和经文同样式 80 px、「金句朗读」）。流水线 `00/youtube/ep01-pipeline.sh`，日志 `00/youtube/ep01-pipeline.log`，依次：中文朗读版（Josh 定：新版直接 public；旧版 9vRemMVgasY 已由 Claude 改成 private，**等 Josh 自己在 Studio 删除**——永久删除 Claude 不能代做）→ 中文纯音乐版（public，@AskBible.me_Still）→ 英文纯音乐版（public，AskBibleEN）。每个渲染完就上传，日志 `00/youtube/{ep01,ep01-music,en-ep01}-upload.log`。2026-09-28 01:27 Josh 要求暂停 2 小时：进程用 `kill -STOP` 冻结，进程号在 `00/youtube/.paused-pids`；约 03:27 自动 `kill -CONT` 恢复。如果中途关机或重启，重新跑 `ep01-pipeline.sh` 之前要先把脚本开头的 `rm -rf` 那一行去掉，否则做好的分段会被删。

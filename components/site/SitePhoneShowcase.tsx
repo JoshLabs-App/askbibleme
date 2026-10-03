@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-/** 每张截图停多久再换下一张 */
-const SLIDE_HOLD_MS = 3200;
+/** 每张截图停多久再换下一张（首屏自动轮到这个软件时大约能看到三张） */
+const SLIDE_HOLD_MS = 2200;
 
 function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -13,14 +13,27 @@ function prefersReducedMotion(): boolean {
  * 官网手机模型里放别的软件时的画面（DECISIONS D-22）：几张截图轮着淡入淡出，点整个屏幕去那个软件。
  * AskBible 自己不用这个，它放的是真的网页版（`SitePhoneLiveScreen`）。
  */
-export function SitePhoneSlides({ slides, href, alt }: { slides: string[]; href: string; alt: string }) {
+export function SitePhoneSlides({
+  slides,
+  href,
+  alt,
+  active,
+}: {
+  slides: string[];
+  href: string;
+  alt: string;
+  /** 手机里现在是不是轮到它：没轮到时不换图，轮到时从第一张开始 */
+  active: boolean;
+}) {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
+    if (!active) return;
+    setIndex(0);
     if (slides.length < 2 || prefersReducedMotion()) return;
     const id = window.setInterval(() => setIndex((i) => (i + 1) % slides.length), SLIDE_HOLD_MS);
     return () => window.clearInterval(id);
-  }, [slides.length]);
+  }, [active, slides.length]);
 
   return (
     <a className="site-home__phone-screen" href={href} target="_blank" rel="noopener noreferrer" aria-label={alt}>

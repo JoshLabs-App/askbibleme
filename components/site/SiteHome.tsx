@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { ABOUT_PAGE_COPY } from "@/components/about/about-page-copy";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { SITE_HOME_COPY, type SiteHomeVersionCopy } from "@/components/site/site-home-copy";
@@ -55,6 +55,9 @@ const ENTRY_MDI_ICON: Record<Exclude<EntryIconKind, "web">, string> = {
 type SiteAppId = "askbible" | "tingdao" | "chadao" | "littleBible";
 
 const SITE_APP_ORDER: SiteAppId[] = ["askbible", "tingdao", "chadao", "littleBible"];
+
+/** 首屏几个软件自动轮着展示，每个停这么久（Josh 2026-10-02：「首页 4 个，做成自动切换的」，DECISIONS D-25） */
+const APP_AUTO_ROTATE_MS = 6500;
 
 /** 切换条上放的是各软件的 App 图标；AskBible 用带黄底的那张（`app-icon.png` 是透明底白标，浅色底上看不见） */
 const SITE_APP_ICON: Record<SiteAppId, string> = {
@@ -150,6 +153,20 @@ export function SiteHome() {
   const router = useRouter();
   const isEn = locale === "en";
   const [app, setApp] = useState<SiteAppId>("askbible");
+  /** 自动轮播：自己点过切换条就不再自动换；鼠标停在首屏上、焦点在首屏里、首屏滑出视野、系统要求减少动效时先停着 */
+  const [autoRotate, setAutoRotate] = useState(true);
+  const [heroHeld, setHeroHeld] = useState(false);
+  const [heroInView, setHeroInView] = useState(true);
+  const [reducedMotion, setReducedMotion] = useState(true);
+  /** 轮到过的软件，手机画面留着不拆，下一轮直接淡入 */
+  const [shown, setShown] = useState<Record<SiteAppId, boolean>>({
+    askbible: true,
+    tingdao: false,
+    chadao: false,
+    littleBible: false,
+  });
+  const heroRef = useRef<HTMLElement>(null);
+  const rotating = autoRotate && !heroHeld && heroInView && !reducedMotion;
 
   const { copy, about } = useMemo(() => {
     if (isEn) return { copy: SITE_HOME_COPY.en, about: ABOUT_PAGE_COPY.en };
@@ -165,6 +182,35 @@ export function SiteHome() {
   };
   const sibling =
     app === "tingdao" ? copy.heroTingdao : app === "chadao" ? copy.heroChadao : app === "littleBible" ? copy.heroLittleBible : null;
+
+  useEffect(() => {
+    setShown((cur) => (cur[app] ? cur : { ...cur, [app]: true }));
+  }, [app]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setReducedMotion(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) => setHeroInView(entry.isIntersecting), { threshold: 0.35 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!rotating) return;
+    const id = window.setInterval(() => {
+      if (document.hidden) return;
+      setApp((cur) => SITE_APP_ORDER[(SITE_APP_ORDER.indexOf(cur) + 1) % SITE_APP_ORDER.length]);
+    }, APP_AUTO_ROTATE_MS);
+    return () => window.clearInterval(id);
+  }, [rotating]);
 
   /** 别的软件的第一张画面先悄悄取回来，点切换时不用等 */
   useEffect(() => {
@@ -234,9 +280,26 @@ export function SiteHome() {
         </header>
 
         <main>
-          <section className="site-home__hero">
+          <section
+            ref={heroRef}
+            className="site-home__hero"
+            onPointerEnter={(e) => {
+              if (e.pointerType === "mouse") setHeroHeld(true);
+            }}
+            onPointerLeave={(e) => {
+              if (e.pointerType === "mouse") setHeroHeld(false);
+            }}
+            onFocus={() => setHeroHeld(true)}
+            onBlur={() => setHeroHeld(false)}
+          >
             <div className="site-home__hero-text">
-              <div className="site-home__apps" role="tablist" aria-label={copy.appsLabel}>
+              <div
+                className="site-home__apps"
+                role="tablist"
+                aria-label={copy.appsLabel}
+                data-rotating={rotating ? "1" : "0"}
+                style={{ "--sh-rotate-ms": `${APP_AUTO_ROTATE_MS}ms` } as CSSProperties}
+              >
                 {SITE_APP_ORDER.map((id) => (
                   <button
                     key={id}
@@ -244,7 +307,10 @@ export function SiteHome() {
                     role="tab"
                     className="site-home__app"
                     aria-selected={app === id}
-                    onClick={() => setApp(id)}
+                    onClick={() => {
+                      setAutoRotate(false);
+                      setApp(id);
+                    }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={SITE_APP_ICON[id]} alt="" width={44} height={44} />
@@ -326,20 +392,42 @@ export function SiteHome() {
               切到别的软件时换成它的截图轮播 / 封面（D-22）。
             */}
             <div className="site-home__phone">
-              {app === "askbible" ? (
-                <SitePhoneLiveScreen posterSrc={APP_SCREEN_IMAGE_SRC} alt={copy.phoneAlt} />
-              ) : app === "tingdao" ? (
-                <SitePhoneSlides key="tingdao" slides={TINGDAO_SCREENS} href={SIBLING_TINGDAO_URL} alt={copy.heroTingdao.phoneAlt} />
-              ) : app === "chadao" ? (
-                <SitePhoneSlides key="chadao" slides={CHADAO_SCREENS} href={SIBLING_CHADAO_URL} alt={copy.heroChadao.phoneAlt} />
-              ) : (
-                <SitePhoneLittleBible
-                  href={SIBLING_LITTLE_BIBLE_URL}
-                  alt={copy.heroLittleBible.phoneAlt}
-                  name={copy.heroLittleBible.tab}
-                  slogan={copy.heroLittleBible.title}
-                />
-              )}
+              {/* 几个软件的画面叠在一起，轮到谁谁淡入；AskBible 的网页版一直留着，免得每轮都重新加载 */}
+              <div className="site-home__phone-stack">
+                <div className="site-home__phone-layer" data-on={app === "askbible" ? "1" : "0"}>
+                  <SitePhoneLiveScreen posterSrc={APP_SCREEN_IMAGE_SRC} alt={copy.phoneAlt} />
+                </div>
+                {shown.tingdao || app === "tingdao" ? (
+                  <div className="site-home__phone-layer" data-on={app === "tingdao" ? "1" : "0"}>
+                    <SitePhoneSlides
+                      slides={TINGDAO_SCREENS}
+                      href={SIBLING_TINGDAO_URL}
+                      alt={copy.heroTingdao.phoneAlt}
+                      active={app === "tingdao"}
+                    />
+                  </div>
+                ) : null}
+                {shown.chadao || app === "chadao" ? (
+                  <div className="site-home__phone-layer" data-on={app === "chadao" ? "1" : "0"}>
+                    <SitePhoneSlides
+                      slides={CHADAO_SCREENS}
+                      href={SIBLING_CHADAO_URL}
+                      alt={copy.heroChadao.phoneAlt}
+                      active={app === "chadao"}
+                    />
+                  </div>
+                ) : null}
+                {shown.littleBible || app === "littleBible" ? (
+                  <div className="site-home__phone-layer" data-on={app === "littleBible" ? "1" : "0"}>
+                    <SitePhoneLittleBible
+                      href={SIBLING_LITTLE_BIBLE_URL}
+                      alt={copy.heroLittleBible.phoneAlt}
+                      name={copy.heroLittleBible.tab}
+                      slogan={copy.heroLittleBible.title}
+                    />
+                  </div>
+                ) : null}
+              </div>
             </div>
           </section>
 
@@ -414,7 +502,7 @@ export function SiteHome() {
             </h2>
             <p className="site-home__intro">{copy.siblingsIntro}</p>
             <div className="site-home__versions site-home__versions--single">
-              <VersionEntry copy={copy.siblingTingdao} href={SIBLING_TINGDAO_URL} icon={{ src: "/site/sibling-tingdao.png" }} external />
+              <VersionEntry copy={copy.siblingTingdao} href={SIBLING_TINGDAO_URL} icon={{ src: SITE_APP_ICON.tingdao }} external />
               <VersionEntry copy={copy.siblingChadao} href={SIBLING_CHADAO_URL} icon={{ src: "/site/sibling-chadao.png" }} external />
               <VersionEntry
                 copy={copy.siblingLittleBible}

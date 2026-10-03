@@ -157,6 +157,34 @@ html.dark .site-home__phone {
   background: var(--sh-bg-deep);
 }
 
+/* 几个软件的画面叠着放，轮到的那层淡入；没轮到的隐藏起来，键盘也点不到 */
+.site-home__phone-stack {
+  position: relative;
+}
+
+.site-home__phone-layer {
+  transition: opacity 0.6s ease;
+}
+
+.site-home__phone-layer + .site-home__phone-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.site-home__phone-layer[data-on="0"] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.6s ease, visibility 0s linear 0.6s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-home__phone-layer,
+  .site-home__phone-layer[data-on="0"] {
+    transition: none;
+  }
+}
+
 /* 真的网页版首页：按 390 × 844 排版再缩进来（缩放比例由组件算），只看不能点 */
 .site-home__phone-live {
   position: absolute;
@@ -255,6 +283,7 @@ html.dark .site-home__phone {
 }
 
 .site-home__app {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -289,6 +318,29 @@ html.dark .site-home__phone {
   font-weight: 600;
 }
 
+/* 自动轮播时，选中的那个底下有一条细线慢慢走满，走满就换下一个；停着的时候不显示 */
+.site-home__apps[data-rotating="1"] .site-home__app[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  right: 16px;
+  bottom: 3px;
+  left: 16px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--sh-accent);
+  transform-origin: left center;
+  animation: site-home-app-progress var(--sh-rotate-ms, 6500ms) linear both;
+}
+
+@keyframes site-home-app-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 .site-home__rule {
   width: 36px;
   height: 1px;
@@ -320,9 +372,11 @@ html.dark .site-home__phone {
 }
 
 /* 首屏的四个版本入口：同样大小排成一组，网页版用深色底标成主入口 */
+/* min-height 按 AskBible 那组（两排入口 + 一行小字）留：各软件入口多少不一样，自动轮播时下面的内容不跟着上下跳 */
 .site-home__stores-block {
   width: 100%;
   max-width: 440px;
+  min-height: 196px;
   margin-top: 44px;
 }
 

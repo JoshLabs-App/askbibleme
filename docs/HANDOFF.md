@@ -634,6 +634,9 @@ manifest `start_url=/web`；手机截图和金句字体文件都取得到。本�
 2026-10-01 晚已把 main（`2ad8b200`，「防封换线」那一批，已上线）**合进本分支**：两处冲突（`AppInstallGuidePage.tsx`、`useNatureGoldenVerseAudioControl.ts`）两边都保留，`tsc` + 271 个单元测试通过；本分支现在只领先 main、不落后，上线时可以直接快进合并。
 
 **下一步（按顺序）**：
+0. **首屏四个软件自动轮播（D-25）**：已做完、提交在本分支，**没推送**，等 Josh 看了说「上线」。验证时注意：浏览器面板在后台时 `document.hidden` 为真，轮播按设计不走，
+   定时器也会被限速，用轮询量会得到乱序的假象——要么把面板切到前台，要么临时覆盖 `document.hidden` 再用 MutationObserver 记选中项的变化。
+0. **听到图标反色试看（O-23）**：worktree 里有**没提交**的改动（`SiteHome.tsx` 的 `SITE_APP_ICON.tingdao` + `public/site/sibling-tingdao-inverted.png`），等 Josh 看了定；没定之前别把它带上线。
 0. ~~标志配色（O-22）~~：2026-10-02 已定并上线（DECISIONS D-24）：顶栏和切换条用金黄 App 图标，入口里的小标志单色。
 1. **三星装原生金句宋体版（D-19，OPEN-ITEMS O-15）**：两端代码已改完并提交在本分支，home iPhone 已装 1.1.2 (133)；三星 10-01 晚不在线没装。
    三星上线后打 `sideload` 变体（包名 `me.askbible.native`，别盖商店版）。这个 worktree 里没有 `apps/askbible-mobile/android/keystore.properties`

@@ -2,6 +2,8 @@ package me.askbible.native_.ui
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -30,10 +32,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
@@ -111,20 +115,38 @@ fun HomeScreen(
     onResumeReading: (ReadingActivityStore.RecentChapter?) -> Unit = {},
     /** 回归卡出现 / 退场时通知壳：它在的时候把勋章 / 升级横幅压后，两块不抢首页顶部同一个位置 */
     onReturnCardVisible: (Boolean) -> Unit = {},
+    /** 闲置收起（D-28，照 iOS HomeView）：true = 底栏藏起、齿轮和三个常用键压淡；状态放在壳里，壳据此藏底栏 */
+    chromeHidden: Boolean = false,
+    onChromeHidden: (Boolean) -> Unit = {},
 ) {
     var toolsOpen by remember { mutableStateOf(false) }
     // 回归卡：点过就不再出；闲置 7 秒跟着淡走，不常驻压在风景上（首页的价值是全景不被打扰）
     var returnCardDone by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { delay(HomeMetrics.TOOLS_AUTO_CLOSE_MS); returnCardDone = true }
     var idleEpoch by remember { mutableIntStateOf(0) }
-    val touch = { idleEpoch += 1 }
-    LaunchedEffect(toolsOpen, idleEpoch) {
-        if (!toolsOpen) return@LaunchedEffect
-        delay(HomeMetrics.TOOLS_AUTO_CLOSE_MS)
-        toolsOpen = false
+    val hidden by rememberUpdatedState(chromeHidden)
+    val touch = {
+        idleEpoch += 1
+        if (hidden) onChromeHidden(false)
     }
+    // 闲置 7 秒：先收设置簇，再过 7 秒收起整层界面（D-28，照 iOS）；任何一次操作都重新计时
+    LaunchedEffect(toolsOpen, idleEpoch, chromeHidden) {
+        if (chromeHidden) return@LaunchedEffect
+        delay(HomeMetrics.TOOLS_AUTO_CLOSE_MS)
+        if (toolsOpen) toolsOpen = false else onChromeHidden(true)
+    }
+    // 收起时只压淡、不位移（iOS 同值 0.55）
+    val chromeAlpha by animateFloatAsState(if (chromeHidden) 0.55f else 1f, tween(400), label = "homeChrome")
 
-    Box(Modifier.fillMaxSize().background(Color(0xFF1A1512))) {
+    Box(Modifier.fillMaxSize().background(Color(0xFF1A1512))
+        // 点空白处：收起的界面叫回来；已显示时再点就立即收起（按键自己吃掉点击，不会走到这里）
+        .pointerInput(Unit) {
+            detectTapGestures {
+                toolsOpen = false
+                idleEpoch += 1
+                onChromeHidden(!hidden)
+            }
+        }) {
         // 底图：柔焦静帧一直垫着，live 时视频出首帧后盖上来
         val poster = rememberAssetImage(
             if (liveVideo) NatureScenes.posterAsset(sceneId)
@@ -140,13 +162,13 @@ fun HomeScreen(
 
         Column(Modifier.fillMaxSize().statusBarsPadding()) {
             Row(
-                Modifier.fillMaxWidth().padding(
+                Modifier.fillMaxWidth().alpha(chromeAlpha).padding(
                     horizontal = ShellMetrics.topChromeSideInset.dp,
                     vertical = ShellMetrics.topChromeOffset.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 // RN ShellMenuButton menu 28 / HomeNatureScreenTopChrome settings 28（展开或环境音开着时点亮）
-                ChromeButton(MI.MENU, Color.White, onOpenMenu)
+                ChromeButton(MI.MENU, Color.White) { touch(); onOpenMenu() }
                 val settingsLit = toolsOpen || ambientSlotId != null
                 ChromeButton(MI.SETTINGS, if (settingsLit) Brand.logo.toColor() else Color.White) {
                     touch(); toolsOpen = !toolsOpen
@@ -194,7 +216,7 @@ fun HomeScreen(
 
             // bottomBand：paddingTop 12，各排之间 22
             Column(
-                Modifier.fillMaxWidth().padding(top = HomeMetrics.BAND_PAD_TOP.dp),
+                Modifier.fillMaxWidth().alpha(chromeAlpha).padding(top = HomeMetrics.BAND_PAD_TOP.dp),
                 verticalArrangement = Arrangement.spacedBy(HomeMetrics.ROW_GAP.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {

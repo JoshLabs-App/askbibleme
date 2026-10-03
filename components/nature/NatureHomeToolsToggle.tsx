@@ -35,7 +35,7 @@ export function NatureHomeToolsToggle({ open, ambientActive, onToggle }: Props) 
       onClick={onToggle}
       aria-expanded={open}
       aria-label={label}
-      className="touch-manipulation inline-flex shrink-0 items-center justify-center rounded-full border-0 bg-transparent p-0 text-white transition active:scale-[0.97]"
+      className="nature-home-tools-toggle touch-manipulation inline-flex shrink-0 items-center justify-center rounded-full border-0 bg-transparent p-0 text-white transition active:scale-[0.97]"
       style={{ width: 50, height: 50 }}
     >
       <ShellMaterialIcon

@@ -381,20 +381,27 @@ select,
   }
 }
 
-/* 自然首页：点主画面收起自然首页底带，不影响全站底部主导航 */
+/* 自然首页闲置收起（D-28，照 iOS）：常用键和齿轮压淡到 0.55、位置不动、仍可点；底栏淡出且不接点击（点那一带落到主画面，等于点空白处叫回界面） */
+.nature-home-bottom-band,
+.nature-home-tools-toggle,
+.home-bottom-nav__bar {
+  transition: opacity 0.4s ease;
+}
+
 html[data-nature-home-chrome-hidden] .nature-home-bottom-band,
-html[data-nature-home-chrome-hidden] .nature-home-bottom-band {
+html[data-nature-home-chrome-hidden] .nature-home-tools-toggle {
+  opacity: 0.55;
+}
+
+html[data-nature-home-chrome-hidden] .home-bottom-nav__bar {
   opacity: 0;
   pointer-events: none;
-  transform: translateY(0.75rem);
-  transition:
-    opacity 0.28s ease,
-    transform 0.28s ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html[data-nature-home-chrome-hidden] .nature-home-bottom-band,
-  html[data-nature-home-chrome-hidden] .nature-home-bottom-band {
+  .nature-home-bottom-band,
+  .nature-home-tools-toggle,
+  .home-bottom-nav__bar {
     transition: none;
   }
 }

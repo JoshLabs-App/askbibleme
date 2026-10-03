@@ -42,6 +42,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
@@ -231,6 +234,8 @@ private fun RootScreen() {
     var musicChromeHidden by remember { mutableStateOf(false) }
     // 首页回归卡正占着顶部：勋章 / 升级横幅让位，等它退场再弹（Josh 2026-09-18）
     var homeReturnCardUp by remember { mutableStateOf(false) }
+    /** 首页闲置收起（D-28）：底栏藏起，HomeScreen 里齿轮和常用键压淡 */
+    var homeChromeHidden by remember { mutableStateOf(false) }
     // 浏览器 OAuth 回调：拿到 code 就换会话（RN useMemberAuthGoogleDeepLink）
     val oauthCallback = OAuthCallbackBus.url
     LaunchedEffect(oauthCallback) {
@@ -423,7 +428,7 @@ private fun RootScreen() {
     // 首页金句跟当前读经版本走：内置译本读本机库，在线译本（含法语等）取该版本的正文
     LaunchedEffect(translation.id) { home.setSource(translation) }
     // 首页静默：停在首页时 +XP 这类飘字不进队列（Josh 2026-10-02「保持首页不打扰」）
-    LaunchedEffect(tab) { achievements.quiet = tab == ShellTab.HOME }
+    LaunchedEffect(tab) { achievements.quiet = tab == ShellTab.HOME; if (tab != ShellTab.HOME) homeChromeHidden = false }
     // 每日灵修数据：第一次进计划页才下载（中文界面才有）
     LaunchedEffect(tab, appLocale, auth.isAdmin) {
         if (tab == ShellTab.PLAN && me.askbible.native_.data.SolidJoys.availableFor(appLocale, auth.isAdmin)) me.askbible.native_.data.SolidJoys.ensureLoaded(context, appLocale)
@@ -649,6 +654,8 @@ private fun RootScreen() {
                 // 回归卡（DECISIONS 2026-09-18 Gentle Return）：最近读到的那一章，隔天回来时首页顶部出现
                 lastRead = activity.recent.firstOrNull(),
                 onReturnCardVisible = { homeReturnCardUp = it },
+                chromeHidden = homeChromeHidden,
+                onChromeHidden = { homeChromeHidden = it },
                 onResumeReading = { resume ->
                     planFlowActive = false; listenBook = null; chapterFromPlan = false
                     pickingBook = null; focusVerse = null; focusKeyword = null
@@ -867,6 +874,11 @@ private fun RootScreen() {
                 )
                 Spacer(Modifier.height(ShellMetrics.tabBarDockGap.dp))
             }
+            // 首页闲置收起时底栏淡出（D-28）；淡出期间点那一带只是把界面叫回来，不切 Tab
+            val homeBarHidden = tab == ShellTab.HOME && homeChromeHidden
+            val tabBarAlpha by androidx.compose.animation.core.animateFloatAsState(
+                if (homeBarHidden) 0f else 1f, androidx.compose.animation.core.tween(300), label = "homeTabBar")
+            Box {
             ShellTabBar(
                 selected = tab,
                 onSelect = { tab = it },
@@ -876,9 +888,14 @@ private fun RootScreen() {
                 // 否则两层纹理错位会在 Tab 行底边露出一条横线
                 parchmentScrim = false,
                 modifier = Modifier
+                    .alpha(tabBarAlpha)
                     .padding(bottom = shellTabBarBottomInset())
                     .height(ShellMetrics.tabRowHeight.dp),
             )
+            if (homeBarHidden) Box(Modifier.matchParentSize().pointerInput(Unit) {
+                detectTapGestures { homeChromeHidden = false }
+            })
+            }
         }
         }
 

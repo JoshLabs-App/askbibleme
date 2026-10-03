@@ -58,7 +58,6 @@ import {
 import { SCENE_LOOP_SWITCH_MS } from "@/lib/nature/home-scene-strip-metrics";
 import type { NatureAmbientSceneSlotId } from "@/lib/nature/ambient-scene-slots";
 import { useScreenWakeLock } from "@/hooks/useScreenWakeLock";
-import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import {
   NATURE_HOME_LIVE_VIDEO_PREFS_EVENT,
   readNatureLiveVideoEnabled,
@@ -113,6 +112,9 @@ const SLOW_INTRO_HINT_DELAY_MS = INTRO_REVEAL_MIN_DELAY_MS + 2500;
 /** 播放中 rebuffer 稍候再提示，避免闪一下 */
 const PLAYBACK_WAIT_HINT_DELAY_MS = 2800;
 
+/** 首页闲置收起（D-28）：设置簇收起后再等这么久，底栏藏起、常用键压淡（iOS toolsAutoCloseNs 同值） */
+const HOME_CHROME_AUTO_HIDE_MS = 7000;
+
 /**
  * 自然：有首图时进页显静图、后台 fetch 整段 MP4，下完再挂 `<video>` 并淡出静图；否则约 3s 起流式缓冲揭晓。
  */
@@ -123,9 +125,7 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
     bilingual,
     homeVerseVisible,
     verseKeys,
-    verseAudioSequenceActive,
   } = useHomePrayerVerseFeedContext();
-  const { togglePlayMusic } = useMusicShellPlayback();
   const videoRef = useRef<HTMLVideoElement>(null);
   const introRevealGuardRef = useRef(false);
   /** 本会话内 `<video poster>` 是否仍用 HTML poster（首场景揭晓后不再重复挂） */
@@ -168,8 +168,10 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
   /** 当前缩放的同步副本：适配时要用它把量到的尺寸除回「没缩之前」 */
   const natureVerseFitCompressRef = useRef(1);
   const [verseTightLineClamp, setVerseTightLineClamp] = useState(false);
-  /** 点主画面：收起底栏、场景条与环境音；再点恢复 */
+  /** 闲置收起（D-28，照 iOS HomeView）：底栏藏起、齿轮和三个常用键压淡；点空白处切换 */
   const [homeChromeHidden, setHomeChromeHidden] = useState(false);
+  /** 每次操作 +1，重新计闲置的 7 秒 */
+  const [homeIdleEpoch, setHomeIdleEpoch] = useState(0);
 
   useScreenWakeLock(true);
   const activeVerseKey = verseKeys?.[activeIndex] ?? null;
@@ -819,14 +821,30 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
   }, []);
 
 
-  /** 与 iOS 一致：沉浸态先恢复控件；普通态点主画面切换背景音乐。 */
+  /** 与 iOS 一致（D-28）：点主画面空白处，收起的界面叫回来；已显示时再点就立即收起。 */
   const onNatureVideoBlankClick = useCallback(() => {
-    if (homeChromeHidden) {
-      setHomeChromeHidden(false);
-      return;
-    }
-    if (!verseAudioSequenceActive) void togglePlayMusic();
-  }, [homeChromeHidden, togglePlayMusic, verseAudioSequenceActive]);
+    setSceneToolsOpen(false);
+    setHomeChromeHidden((hidden) => !hidden);
+    setHomeIdleEpoch((n) => n + 1);
+  }, []);
+
+  /** 闲置 7 秒：先收设置簇（NatureHomeBottomBand 自己计时），再过 7 秒收起整层界面；任何一次操作都重新计时 */
+  useEffect(() => {
+    if (homeChromeHidden || sceneToolsOpen) return;
+    const id = window.setTimeout(() => setHomeChromeHidden(true), HOME_CHROME_AUTO_HIDE_MS);
+    return () => window.clearTimeout(id);
+  }, [homeChromeHidden, sceneToolsOpen, homeIdleEpoch]);
+
+  /** 点到任何按键都算一次操作：重新计时，收起状态下顺便叫回界面（空白处由 onNatureVideoBlankClick 处理） */
+  useEffect(() => {
+    const onPointerDown = (e: PointerEvent) => {
+      setHomeIdleEpoch((n) => n + 1);
+      const el = e.target instanceof Element ? e.target : null;
+      if (el?.closest("button, a, [role='button'], input") && !el.closest("[data-nature-blank]")) setHomeChromeHidden(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown, true);
+    return () => document.removeEventListener("pointerdown", onPointerDown, true);
+  }, []);
 
   const verseTextZoom = natureHomeTextScaleAtStep(textScaleStepIndex);
 
@@ -1041,6 +1059,7 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
             type="button"
             className="absolute inset-0 z-[7] cursor-default touch-pan-y border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
             aria-label={t("nature.homeBackdropTapAria")}
+            data-nature-blank
             onClick={onNatureVideoBlankClick}
           />
           <p className="sr-only">{t("nature.videoBgAnnounced")}</p>
@@ -1101,6 +1120,7 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
               type="button"
               className="absolute inset-0 z-0 cursor-default touch-pan-y border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
               aria-label={t("nature.homeBackdropTapAria")}
+              data-nature-blank
               onClick={onNatureVideoBlankClick}
             />
             <div className="relative z-10 flex min-h-0 flex-1 flex-col pointer-events-none">

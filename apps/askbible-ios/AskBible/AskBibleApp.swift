@@ -186,7 +186,14 @@ struct RootView: View {
         if opened.chapter < limit { nextChapter = opened.chapter + 1 }
         else if audio.loopMode == .book { nextChapter = 1 }
         else { return }
-        if openedChapter != nil { openedChapter = (opened.book, nextChapter) }
+        if nextChapter == opened.chapter {
+            // 单章书循环：音源没变，onChange 不会触发，直接回开头续播
+            audio.seek(to: 0); audio.resume()
+        } else if openedChapter != nil {
+            // 自动跳章要接着播：交给 audioURL 的 onChange 起播
+            autoPlayPending = true
+            openedChapter = (opened.book, nextChapter)
+        }
         else { listenChapter = (opened.book, nextChapter); audio.resume() }
     }
 

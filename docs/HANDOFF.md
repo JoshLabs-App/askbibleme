@@ -666,8 +666,7 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
 5. 繁体靠 `toZhTwText` 逐字表转，新文案里出现表里没有的字就不会转。加文案后用 opencc-js 对照一遍（这次补了「优 缓 样 浏 槛」和「放松 / 轻松 / 日历」）。
 6. **网页版首页已向安卓看齐（D-11）**：改首页按键 / 底栏时以安卓 `HomeScreen.kt`、`ShellTabBar.kt` 为准，别再往网页首页加安卓没有的键。
    底部工具的展开状态在 `NatureVideoExperience`（`sceneToolsOpen`），开关是右上角 `NatureHomeToolsToggle`。
-   金句字体 `.font-verse-song` 在 `app/globals.css`，字体文件由 `scripts/build-verse-font.py` 生成。
-   原生的 `AskBibleSong-Bold.ttf` 已停用（D-27，原生首页改回系统粗体），脚本只出网页两个 woff2，新增中文译本后重跑要把它们一起提交；跑的时候把主目录的 `public/scripture` 作为参数传进去。留下的待决定项见 OPEN-ITEMS O-10。
+   金句字体 `.font-verse-song` 在 `app/globals.css`：D-27 起网页和原生都是系统字体粗体，宋体文件已删（`scripts/build-verse-font.py` 停用备查）。
 7. **探索页的统计数和进度条是和读经页共用的组件**（`ReadTodayReadingStats` / `ReadYearDayTimeline`，`ReadTodayPlanPanel` 也在用）：
    探索页的尺寸是在 `explore-parchment.css` 里用 `.explore-habit-*` 包一层覆盖的，别去改组件本身。
 8. 探索页左右留白：外层羊皮卷栏有 20，`.explore-home` 只补 2（合计安卓的 22）。

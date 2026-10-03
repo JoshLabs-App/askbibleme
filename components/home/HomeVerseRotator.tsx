@@ -334,7 +334,7 @@ export function HomeVerseRotator({
       /**
        * Josh 2026-10-01：「经文实际要更小一些，不是铺满屏，而是一个有品味、有呼吸感的空间」。
        * 手机约 17px，大屏最多 20px；一行最多 17 个字（`max-w-[17em]`），不横着铺满；行距、字距放松一点。
-       * （前三版 24→46px、24→34px、20→26px 都嫌大。）宋体见 globals.css `.font-verse-song`。
+       * （前三版 24→46px、24→34px、20→26px 都嫌大。）字体见 globals.css `.font-verse-song`（D-27 起是系统字体）。
        */
       return `m-0 mx-auto max-w-[17em] font-verse-song text-[clamp(1.0625rem,0.4vmin+0.97rem,1.25rem)] ${wt} leading-[1.7] tracking-[0.04em] text-white`;
     }

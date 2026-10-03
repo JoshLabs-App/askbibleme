@@ -93,38 +93,11 @@
 }
 
 /**
- * 金句宋体（D-11）：和「听到」大标题、YouTube 封面同款思源宋体 700 的子集，
- * 字表是站内中文译本用到的全部字（`scripts/build-verse-font.py`）。简体、繁体各一个文件，
- * 字体栈里两个都列：当前语言的排前面，缺的字再去另一个文件取，字形是同一套，接得上。
+ * 首页金句字体：D-11 的思源宋体已撤（D-27，Josh 2026-10-02「宋体不好看，改回去」），
+ * 和安卓 / iOS 一样用系统字体粗体。类名留着，`HomeVerseRotator` 里四处在用。
  */
-@font-face {
-  font-family: "AskBibleSong SC";
-  src: url("/fonts/AskBibleSong-SC-Bold.woff2") format("woff2");
-  font-weight: 600 900;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "AskBibleSong TC";
-  src: url("/fonts/AskBibleSong-TC-Bold.woff2") format("woff2");
-  font-weight: 600 900;
-  font-display: swap;
-}
-
 .font-verse-song {
-  font-family: "AskBibleSong SC", "AskBibleSong TC", "Songti SC", "Noto Serif CJK SC", "Noto Serif SC",
-    "Source Han Serif SC", STSong, SimSun, ui-serif, Georgia, serif;
-}
-
-html[lang="zh-Hant"] .font-verse-song,
-html[lang="zh-TW"] .font-verse-song {
-  font-family: "AskBibleSong TC", "AskBibleSong SC", "Songti TC", "Noto Serif CJK TC", "Noto Serif TC",
-    "Source Han Serif TC", PMingLiU, ui-serif, Georgia, serif;
-}
-
-/* 英文界面的金句是英文译本，不为几个拉丁字母去下中文字体 */
-html[lang^="en"] .font-verse-song {
-  font-family: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  font-family: inherit;
 }
 
 html,

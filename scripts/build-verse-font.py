@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """
+【已停用 2026-10-02，D-27：网页和原生首页金句都改回系统字体，三个字体文件已删。留着备查，要恢复宋体时再跑。】
+
 金句字体 AskBibleSong（DECISIONS D-11）：和「听到」大标题、YouTube 封面同款思源宋体
 （Noto Serif SC，OFL），取 wght 700 再子集化，给网页版首页的金句用。
 

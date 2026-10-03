@@ -627,10 +627,14 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
 菜单「回主页」（D-14）、官网手机模型放真的网页版（D-15）、下载入口加图标（D-16）、安卓「最新版 / 商店版」二选一（D-17）都做完、本机验过、
 **2026-10-02 Josh 说「发布」「上线」，这一整批已合进 main 并推送（Vercel 自动部署）**；官网上不写备用地址（D-22 补充）。
 之前是在分支 `claude/upbeat-mayer-752c72`（worktree `.claude/worktrees/strange-dewdney-3855d7`）上做的。主目录 `~/Desktop/APP/01AskBible` 里有别的会话没提交的改动，
-所以是从 worktree 直接 `git push origin HEAD:main` 推的，**主目录的本地 main 落后于远端，要在那边 `git pull`**（那边改了 `docs/DECISIONS.md` / `OPEN-ITEMS.md` 没提交，拉之前先让改的会话提交）。
+所以是从 worktree 直接 `git push origin HEAD:main` 推的（`e9851a81`）；主目录的本地 main 随后由「防封换线」会话快进到同一个提交，那边没提交的改动原样保留。
+**线上已核对（2026-10-02 00:25，Vercel 部署成功）**：`askbible.me/` 是新官网（四个软件切换、听到 / 查到 / 小小圣经的地址都在）；`/web`、`/app`、`/explore`、`/read` 都是 200；
+manifest `start_url=/web`；手机截图和金句字体文件都取得到。本机的 `npm run build` 当时 10 分钟没跑完被中止（不是报错），是靠 Vercel 的构建把的关。
+之后只推文档的提交也是 `git push origin HEAD:main`，推完主目录要 `git pull`。
 2026-10-01 晚已把 main（`2ad8b200`，「防封换线」那一批，已上线）**合进本分支**：两处冲突（`AppInstallGuidePage.tsx`、`useNatureGoldenVerseAudioControl.ts`）两边都保留，`tsc` + 271 个单元测试通过；本分支现在只领先 main、不落后，上线时可以直接快进合并。
 
 **下一步（按顺序）**：
+0. ~~标志配色（O-22）~~：2026-10-02 已定并上线（DECISIONS D-24）：顶栏和切换条用金黄 App 图标，入口里的小标志单色。
 1. **三星装原生金句宋体版（D-19，OPEN-ITEMS O-15）**：两端代码已改完并提交在本分支，home iPhone 已装 1.1.2 (133)；三星 10-01 晚不在线没装。
    三星上线后打 `sideload` 变体（包名 `me.askbible.native`，别盖商店版）。这个 worktree 里没有 `apps/askbible-mobile/android/keystore.properties`
    （不进仓库），先从主目录拷过来再打，不然出来的包没签名；本机没有 `local.properties` 时用 `ANDROID_HOME` 指 SDK。
@@ -673,6 +677,10 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
 10. 官网手机模型里是 iframe 内嵌的 `/web`（D-15）：给站点加 `X-Frame-Options` / `frame-ancestors` 这类响应头时要放行同源，不然手机里只剩垫底截图。
 12. 官网「同系列工具」（D-21）：三张卡的地址集中在 `lib/sibling-app-urls.ts`（查到已换成 `cd.askbible.me`）；图标在 `public/site/sibling-*`。
     加中文文案后照第 5 条用 opencc-js 对一遍繁体（这次补了「课 蜡」）。这一节用 `.site-home__versions--single`，宽屏也一行一张，别改回两列（三张会落单）。
+15. **线上的 `/index` 不会跳 `/web`**：Vercel 把 `/index` 当成根路径，直接显示官网（响应头 `x-matched-path: /`）；本机 dev 才会走 `app/(app-shell)/index/page.tsx` 跳 `/web`。
+    代码里没有任何地方链到 `/index`，所以没管（O-9 第 5 条）；别拿它当「回网页版首页」的地址用。
+16. `public/branding/app-icon.png` 是**透明底 + 白色标志**的母版，只能垫在深色 / 品牌黄上用；浅色底上要标志就用 `SiteLogoMark`（单色跟文字色），要 App 图标就用 `icon-512.png`（黄底）。
+    想知道一张图是什么颜色又不想看图：用 PIL 缩到 64×64 统计主要颜色和四角像素。
 13. 官网首屏软件切换（D-22）：`.site-home__hero-text` 是**从上往下排**的，别改回垂直居中——各软件的标题、入口高矮不一，居中的话一点切换，那排图标会上下跳。
     首屏淡入的延时写在 `.site-home__hero-text > :nth-child(4/5)`，往里加减子元素要跟着改序号。AskBible 以外的手机画面在 `SitePhoneShowcase.tsx`。
 14. 「防封换线」之后（`docs/anti-block-endpoints.md`）：网页里别再写死 `r2.dev` / `askbible-media.joshlabs.app` / `supabase.co`，R2 资源用 `lib/endpoints`，APK 直链用 `lib/app-install-urls.ts`；

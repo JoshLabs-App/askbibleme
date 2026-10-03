@@ -62,7 +62,7 @@ export default async function AppDownloadPage() {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/branding/app-icon.png"
+        src="/branding/icon-512.png"
         alt="AskBible"
         width={104}
         height={104}

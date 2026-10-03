@@ -86,6 +86,19 @@ final class AchievementStore: ObservableObject {
     var now: () -> Date = Date.init
     /// App 是否在前台：听读 XP 只在前台给（后台播着不算，A 方案的防刷约束之一）
     var foreground = true
+    /// 首页静默（Josh 2026-10-02「不要在首页增加那些奖励，+分，之类的，保持首页不打扰」）：
+    /// 停在首页时 +XP / 连续天数 / 今日计划完成 / 读完一章这类飘字不进队列（分照记），已排着的也清掉；
+    /// 勋章 / 印章 / 升级照常排队，由壳层在首页不弹、离开首页再补。
+    var quiet = false {
+        didSet { if quiet { pending.removeAll(where: Self.isFloater) } }
+    }
+
+    private static func isFloater(_ e: Event) -> Bool {
+        switch e {
+        case .xp, .streak, .planDayDone, .chapterRead: return true
+        default: return false
+        }
+    }
 
     init() {
         if let raw = defaults.string(forKey: Self.ledgerKey), let data = raw.data(using: .utf8),
@@ -370,6 +383,7 @@ final class AchievementStore: ObservableObject {
     }
 
     private func emit(_ e: Event) {
+        if quiet && Self.isFloater(e) { return }
         // 飘字合并：连着来的 +XP 合成一条，免得刷屏
         if case .xp(let n, let r) = e, case .xp(let prev, let pr)? = pending.last, pr == r {
             pending[pending.count - 1] = .xp(prev + n, reason: r)

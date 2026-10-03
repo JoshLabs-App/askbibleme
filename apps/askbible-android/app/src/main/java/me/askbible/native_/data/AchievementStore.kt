@@ -101,6 +101,17 @@ class AchievementStore(context: Context) {
     /** App 是否在前台：听读 XP 只在前台给（后台播着不算，A 方案的防刷约束之一） */
     var foreground = true
 
+    /**
+     * 首页静默（Josh 2026-10-02「不要在首页增加那些奖励，+分，之类的，保持首页不打扰」）：
+     * 停在首页时 +XP / 连续天数 / 今日计划完成 / 读完一章这类飘字不进队列（分照记），已排着的也清掉；
+     * 勋章 / 印章 / 升级照常排队，由壳层在首页不弹、离开首页再补。
+     */
+    var quiet = false
+        set(v) { field = v; if (v) pending = pending.filterNot(::isFloater) }
+
+    private fun isFloater(e: Event) =
+        e is Event.Xp || e is Event.Streak || e is Event.PlanDayDone || e is Event.ChapterRead
+
     init {
         s = parse(sp.getString(LEDGER_KEY, null)) ?: Snapshot()
     }
@@ -451,6 +462,7 @@ class AchievementStore(context: Context) {
     }
 
     private fun emit(e: Event) {
+        if (quiet && isFloater(e)) return
         // 飘字合并：连着来的 +XP 合成一条，免得刷屏
         val last = pending.lastOrNull()
         if (e is Event.Xp && last is Event.Xp && last.reason == e.reason) {

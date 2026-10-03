@@ -422,6 +422,8 @@ private fun RootScreen() {
     val home = remember { HomeVerseController(context, scope) }
     // 首页金句跟当前读经版本走：内置译本读本机库，在线译本（含法语等）取该版本的正文
     LaunchedEffect(translation.id) { home.setSource(translation) }
+    // 首页静默：停在首页时 +XP 这类飘字不进队列（Josh 2026-10-02「保持首页不打扰」）
+    LaunchedEffect(tab) { achievements.quiet = tab == ShellTab.HOME }
     // 每日灵修数据：第一次进计划页才下载（中文界面才有）
     LaunchedEffect(tab, appLocale, auth.isAdmin) {
         if (tab == ShellTab.PLAN && me.askbible.native_.data.SolidJoys.availableFor(appLocale, auth.isAdmin)) me.askbible.native_.data.SolidJoys.ensureLoaded(context, appLocale)
@@ -1075,8 +1077,9 @@ private fun RootScreen() {
         // +XP 飘字 + 勋章 / 印章 / 升级提示（Josh 2026-09-18「要感觉到 XP 一直在增加」）
         Box(Modifier.fillMaxSize().statusBarsPadding(), contentAlignment = Alignment.TopCenter) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                // 回归卡在首页顶部占着同一个位置时先不弹——事件留在 pending 里不消费，卡片退场后照常补上
-                if (!homeReturnCardUp) {
+                // 首页一律不弹（首页静默，Josh 2026-10-02「保持首页不打扰」）——事件留在 pending 里不消费，离开首页后照常补上；
+                // +XP 飘字在首页直接不进队列（AchievementStore.quiet）
+                if (!homeReturnCardUp && tab != ShellTab.HOME) {
                     EarnedToast(achievements, appLocale, Parchment.light, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
                 }
                 XPFloater(achievements, Modifier.padding(top = 60.dp))

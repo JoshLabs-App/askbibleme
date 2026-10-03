@@ -756,10 +756,11 @@ struct RootView: View {
         .overlay(alignment: .top) {
             XPFloater().environmentObject(achievements).padding(.top, 90)
         }
-        // 勋章 / 印章 / 升级的获得提示。回归卡在首页顶部占着同一个位置时先不弹——
-        // 事件留在 ach.pending 里不消费，卡片退场后照常补上（Josh 2026-09-18）
+        .onChange(of: tab, initial: true) { _, t in achievements.quiet = t == .home }
+        // 勋章 / 印章 / 升级的获得提示。首页一律不弹（首页静默，Josh 2026-10-02「保持首页不打扰」）——
+        // 事件留在 ach.pending 里不消费，离开首页后照常补上；+XP 飘字在首页直接不进队列（AchievementStore.quiet）
         .overlay(alignment: .top) {
-            if !homeReturnCardUp {
+            if !homeReturnCardUp && tab != .home {
                 EarnedToast().environmentObject(achievements).padding(.top, 8).padding(.horizontal, 16)
             }
         }

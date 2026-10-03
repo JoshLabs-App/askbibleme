@@ -8,7 +8,7 @@
   public/fonts/AskBibleSong-SC-Bold.woff2   简体译本的字
   public/fonts/AskBibleSong-TC-Bold.woff2   繁体译本的字
 
-原生 App（DECISIONS D-19）用同一份字表另出一个简繁合并的 TTF（原生不认 woff2，两端又都要能随时切简繁，合一份比两份小），
+原生 App（DECISIONS D-19，2026-10-02 已按 D-27 停用，不再输出）曾用同一份字表另出一个简繁合并的 TTF（原生不认 woff2，两端又都要能随时切简繁，合一份比两份小），
 同一个文件放两处：
   apps/askbible-android/app/src/main/assets/fonts/AskBibleSong-Bold.ttf
   apps/askbible-ios/AskBible/Resources/Fonts/AskBibleSong-Bold.ttf
@@ -92,5 +92,6 @@ for tag, translations in SETS.items():
 
 # 原生：简繁合并 + Latin-1（夹在中文里的外文）。不含假名和别的文字——原生端只给含汉字、不含假名的金句用这个字体
 union |= {chr(c) for c in range(0xA0, 0x100)}
-build(union, "AskBibleSong", "AskBibleSong-Bold", NATIVE_OUT[0])
-shutil.copyfile(NATIVE_OUT[0], NATIVE_OUT[1])
+# 原生 TTF 已停用（D-27：原生首页改回系统粗体），要恢复时去掉下面两行的注释
+# build(union, "AskBibleSong", "AskBibleSong-Bold", NATIVE_OUT[0])
+# shutil.copyfile(NATIVE_OUT[0], NATIVE_OUT[1])

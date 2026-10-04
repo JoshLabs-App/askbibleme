@@ -25,7 +25,7 @@ const CASES = [
   ["split", "神爱世人，甚至将他的独生子赐给他们", "神"], ["split", "神爱世人", "人"], ["split", "神爱世人", "没有"],
   ["split", "Love LOVE love", "love"], ["split", "神爱世人", ""], ["split", "神爱世人", "  神  "], ["split", "aaa", "aa"],
   ["recent", "[]", "神"], ["recent", "[\"爱\",\"神\"]", "神"], ["recent", "[\"爱\",\"神\"]", " 神 "], ["recent", "[\"神\"]", "神"],
-  ["recent", "[\"1\",\"2\",\"3\",\"4\",\"5\",\"6\",\"7\",\"8\"]", "9"], ["recent", "[\"Love\"]", "love"], ["recent", "[\"a\"]", "   "],
+  ["recent", "[\"1\",\"2\",\"3\",\"4\",\"5\",\"6\",\"7\",\"8\",\"9\",\"10\"]", "11"], ["recent", "[\"Love\"]", "love"], ["recent", "[\"a\"]", "   "],
   ["recentnorm", "[\"神\",\" 神\",\"爱\",\"\",\"爱 \",\"A\",\"a\",\"1\",\"2\",\"3\",\"4\",\"5\",\"6\",\"7\"]"],
   ["bmkey", "cuv-simp", "GEN", "1", "1"],
   ["bmparse", "{}"], ["bmparse", "not json"], ["bmparse", ""],
@@ -105,7 +105,7 @@ if (at("norm", 0) !== "神 爱 世人") problems.push(`normalize 没折叠空白
 if (at("esc", 1) !== "a\\_b\\\\c") problems.push(`LIKE 转义不对：${at("esc", 1)}`);
 if (at("scope", 2) !== "0" || at("scope", 3) !== "1") problems.push("旧约范围判断不对（MAT 不在旧约 / MAL 在旧约）");
 if (!at("split", 3).includes("\"match\":true")) problems.push("大小写不敏感切段失效");
-if (JSON.parse(canon(at("recent", 4))).length !== 8 || JSON.parse(canon(at("recent", 4)))[0] !== "9") problems.push("最近搜索没有封顶 8 条 / 新的没在前");
+if (JSON.parse(canon(at("recent", 4))).length !== 10 || JSON.parse(canon(at("recent", 4)))[0] !== "11") problems.push("最近搜索没有封顶 10 条 / 新的没在前");
 const parsed = JSON.parse(canon(at("bmparse", 4)));
 if (Object.keys(parsed).join(",") !== "k2") problems.push(`收藏解析没跳过坏条目：${Object.keys(parsed)}`);
 if (canon(at("tpparse", 3)) !== canon("{\"primary\":\"web-en\",\"secondary\":\"cuv-simp\"}")) problems.push(`译本偏好解析不对：${at("tpparse", 3)}`);

@@ -62,11 +62,11 @@ for (const line of lines) {
     }
     case "split": out.push(JSON.stringify(S.splitTextByScriptureSearchKeyword(f[1], f[2]))); break;
     case "recent": {
-      // pushScriptureRecentSearch 依赖存储；用它的纯规则等价式：新词在前、去重（不分大小写）、封顶 8
+      // pushScriptureRecentSearch 依赖存储；用它的纯规则等价式：新词在前、去重（不分大小写）、封顶取真源 SCRIPTURE_RECENT_SEARCH_MAX_ITEMS（10，O-27）
       const terms: string[] = JSON.parse(f[1]);
       const normalized = f[2].trim().replace(/\s+/g, " ");
       if (normalized.length < 1) { out.push(JSON.stringify(R.parseScriptureRecentSearchesRecord(JSON.stringify(terms)).terms)); break; }
-      const next = [normalized, ...terms.filter((t: string) => t.toLowerCase() !== normalized.toLowerCase())].slice(0, 8);
+      const next = [normalized, ...terms.filter((t: string) => t.toLowerCase() !== normalized.toLowerCase())].slice(0, R.SCRIPTURE_RECENT_SEARCH_MAX_ITEMS);
       out.push(JSON.stringify(R.parseScriptureRecentSearchesRecord(JSON.stringify(next)).terms)); break;
     }
     case "recentnorm": out.push(JSON.stringify(R.parseScriptureRecentSearchesRecord(f[1]).terms)); break;

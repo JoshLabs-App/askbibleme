@@ -22,6 +22,58 @@
 - **为什么**：首页是「安静地，回到经文」的入口，飘字和弹层打扰；宋体在手机上 Josh 看了觉得不好看。
 - **日期**：2026-10-02
 
+### D-26 iOS 音频会话：不出声时混音，不打断别的 App（2026-10-02，O-24）
+
+- **决定**：新增 `apps/askbible-ios/AskBible/Audio/AudioSessionPolicy.swift`。首页静音背景视频开播 / 回前台续播前调 `relaxIfIdle()`：自家音乐、读经、金句、环境音都没在出声，就把会话设成 `.ambient + .mixWithOthers`；这四个播放器开播时统一走 `playback()` 切回 `.playback`。读经播放器 init 不再预设 `.playback`，改到开播时设。
+- **为什么**：视频静音、文件也没有音轨，但 AVPlayer 一播放就会按当前类别激活会话。默认类别是独占的，所以一打开 AskBible，「听到」这类正在放声音的 App 就会被暂停。用户主动点播放时打断别人是对的，而且要保住锁屏后台播放，所以那时仍然用 `.playback`。
+- **日期**：2026-10-02，Josh「改」。
+
+### D-9 YouTube 配乐被 Content ID 主张：出片时跳过被主张的段落，不自己去登记主张（2026-10-01）
+
+- **决定了什么**：`scripts/youtube-golden-verses.py` 加 `MUSIC_SKIP`（曲内秒数的跳过区间表），`build_music` 拼背景乐时把这些段落剪掉，
+  剪口 5 秒交叉淡化。现在只有一条：《安息在祢恩典中》（`0e63e309….mp3`）**805–1400 秒**（13:25–23:20）。
+  原文件 `public/music/uploads/` 不动（App 的音乐陪伴也在用）。已发布的视频现在不改；以后要解除，用 Studio「采取行动 → 替换歌曲」换成 YouTube 音频库的曲子。
+  不通过发行商去登记自己的 Content ID。
+- **为什么**：频道 9 支带配乐的视频里 5 支被标「可能存在收入限制」，共 10 条主张，按种子还原曲目顺序后**全部落在这一首的 13:38–23:08**
+  （ep03-tw / ep01-tw：Moonlit Pillow 19:28–20:00、I Remember Us 14:41–14:55 + 19:28–19:38、Quiet Knowledge Space 22:16–23:08、
+  Сладких снов, малыш 17:08–17:53、RW - Sunshine and Broken Dreams 13:38–15:40；ep02-zh、ep02-en、ep01-en 换算后同一段）。
+  其余 7 首没有被主张过。同一首曲子在另外几支视频里没被比中（ep03-en、ep02-tw、ep01-zh），比对结果本身不稳定，所以整段跳过而不是只剪 5 小块。
+  不登记主张：Content ID 要求独占权，AI 生成的曲子多半不合格；登记后会自动主张别人的视频，误伤要担责；也消不掉别人已有的主张。
+- **怎么验证**：用种子 `ep3-tw-music` 单独跑 `build_music`，输出 820 秒处和原曲 1420 秒处相关 0.998、和原曲 820 秒处 0.061。
+- **以后又被主张**：Studio 详情里的时间 − 那首在视频里的起点 = 曲内秒数，加进 `MUSIC_SKIP`。起点怎么算见 OPEN-ITEMS O-8。
+
+### D-8 每日灵修按 ChatGPT 的 8 条建议全改；计划页两处易误解的一起改（2026-09-30）
+
+- **决定了什么**：灵修页和卡片：正文段距加大、正文深棕色、经文 / 标题防孤字换行、书名→日期→标题→经文四级层级拉开、
+  卡片内放「今日灵修」身份 + 时长、整条播放条可点、左右滑动换天、署名改成 14sp 出版信息样式、页底加一个不游戏化的「已读完」。
+  计划页：月历黄色 / 黑色日期加图例说明；「第 179 天」改成明确是读经计划的第几天。
+  底部播放坞显示灵修这一条也做（Josh「都做」）。
+- **为什么**：Josh 看完 ChatGPT 的建议和我的筛选后说「都做，计划页那两处也改」。建议原文见 OPEN-ITEMS O-7 第 4 条的对话链接。
+- **日期**：2026-09-30
+
+### D-7 每日灵修（纯全喜乐）只放在读经计划页；先做安卓（2026-09-30）
+
+- **决定了什么**：「今日灵修」的入口**只放在读经计划页**（底栏中央键那一页），首页、探索页都不放。
+  灵修页包含：日期 + 标题、当天经文（出处可点）、音频播放条（直接引用 befaithful.net，见 D-6）、正文全文、固定署名区（John Piper / Desiring God；译文与音频：忠信福音事工 + befaithful.net）、前一天 / 后一天切换。
+  只在中文界面显示。数据由 58 个 Word 稿切成 365 天，内置进 App。2 月 29 日显示 2 月 28 日那篇。
+  先做安卓，Josh 在三星上看过再同步 iOS 和网页。
+  **全文不进 git**：仓库 `JoshLabs-App/askbibleme` 是公开的，把全文提交上去等于在 GitHub 公开转载，超出授权范围。
+  所以原稿和生成的数据都放在 `private/solid-joys-zh/`（已写进 `.git/info/exclude`），数据传到 R2 的 `askbible-media/devotionals/solid-joys-zh.json`，App 首次进计划页时下载、之后离线可读。
+- **为什么**：Josh 在 A（首页 + 计划页）/ B（只首页）/ C（只计划页）里选了 C。给 Desiring God 的申请信里写的也是「放进每日读经计划」。
+  「先做安卓」是我推荐的默认做法，Josh 没另外指定：先在一端定稿，免得改版要改三遍。
+- **日期**：2026-09-30
+
+### D-6 纯全喜乐：音频直接引用 befaithful.net，不自己托管；文字要进 App 可打开（2026-09-30）
+
+- **决定了什么**：
+  1. **音频**：每日灵修的音频直接播 befaithful.net 上的 mp3 链接（如 `/sites/default/files/audio/2024-12/0109%281%29.mp3`），**不下载、不转码、不传 R2**。App 里存「日期 → 音频地址」的对照表。
+  2. **文字**：一定要进 App，每天的灵修页能打开全文阅读，不能只放音频。
+  3. 在给刘弟兄的感谢信里顺带确认两件事：可不可以直接引用网站上的音频链接；文字用网站上的版本还是 OneDrive 的 docx。等他回话再定文字的取数来源。
+- **为什么**：Josh「音频我们是不是直接引用它网站的音频就可以了？我们就不需要另外的上传」「文字，我们要下载下来……文字版也能够打开」。
+  实测（09-30）：网站 mp3 走 Cloudflare CDN、`cache-control` 一年、支持分段请求，2 MB 用 0.5 秒，直接播没问题。省下约 2 GB 的托管和转码。
+  代价：他们改路径或者网站挂掉，音频就断了（bafuhuoban.com 就挂过）。所以对照表要能单独更新，播放失败时文字照常可读。
+- **日期**：2026-09-30
+
 ### D-5 YouTube 经文短片的版式（2026-09-27）
 
 - **决定了什么**：全片只用一个风景场景循环播放（原片首尾几乎一样，接得上）；经文字幕放在画面上部，中心约在 40% 高度，不加灰底衬条，只靠文字阴影；前一节读完后隔 7 秒再读下一节，字幕一直留到下一节出来。样片在 `00/youtube/psalm23-v2.mp4`，字幕脚本在 `00/youtube/txt.py`。
@@ -49,6 +101,21 @@
 - **2026-09-28 Josh 定**：①背景**一集一个场景**，不在一集里轮换（问过「3 小时会不会腻」后仍然选 A）；②顺序改成**每集先做纯音乐（中文、英文），再做这一集的朗读版**；③第 1 集按新断行**重做**；④正在考虑「中文在上、英文小字在下」的双语版面，以及繁体版（见 OPEN-ITEMS）。
 - **不做中英同屏；加繁体版（Josh 2026-09-28）**：繁体用和合本繁体（`cuv-trad`，1919 公有领域），脚本参数 `--tw`，放播放列表 `PLPEyTCaTh1Jc`。繁体也是**先做纯音乐版**，繁体朗读版以后再做（朗读音频和简体共用）。每集顺序：中文纯音乐 → 英文纯音乐 → 繁体纯音乐 → 中文金句朗读。**新版和合本不用**：和合本修订版（2010）、新标点和合本都是香港圣经公会的版权，YouTube 属于公开发布，要书面授权；继续用 1919 和合本。
 - **加英文朗读、繁体朗读版（Josh 2026-09-30）**：Josh 提议把人声加进音乐版；定为**纯音乐版保持无人声**（助眠、祷告的人要的就是没有人声），另外每集加「英文朗读」（WEB 经文 + `public/audio/golden-verses-web-en` 英文朗读）和「繁体朗读」（繁体字 + 简体那份中文朗读音频），每集变成 6 个版本，第 1、2 集也补做。新播放列表 `en-read` PLKK_8-f03hpc、`tw-read` PLR5MbRZFKSfo。上面「英文朗读版暂时不做」「繁体朗读版以后再做」作废。
+- ~~**提示「可以打开 AskBible.me 听金句」（Josh 2026-09-30 选）**：放在**片头卡、片尾卡、说明栏**，经文画面上不放（免打扰）。片头 / 片尾在「AskBible.me」下加一行小字：简「打开 AskBible.me，每节金句都能点开听朗读」/ 繁「打開 AskBible.me，每節金句都能點開聽朗讀」/ 英「Hear any verse read aloud at AskBible.me」。说明栏第二段放同一句，加网址和 iPhone / 安卓下载链接（`lib/app-install-urls.ts`）；已公开的视频用 API 补改说明（片头片尾改不了，YouTube 不能换视频文件）。写「AskBible.me」是因为网页首页和 App 的金句都能点开听。~~（已作废 2026-09-30：Claude 理解错，见下一条）
+- **朗读版改成一支视频两条音轨（Josh 2026-09-30）**：Josh 原意是 YouTube 播放器「设置 → 音轨」切换，不是去网站。定为：每集纯音乐版 3 支（简 / 繁 / 英字幕）不变；朗读版 3 支（简 / 繁 / 英字幕）每支带「中文朗读」「English reading」两条音轨，默认播放和字幕同语言的那条；两条音轨要和视频等长，所以中英对齐同一条时间轴（每节按中英较长的那个 + 15 秒）。片头用**大字**提示「⚙ 设置 → 音轨」可以切换。前提是频道在 Studio 里能加音轨（API 不支持，要在 Studio 网页里加）——先确认再改渲染。上一条「英文朗读、繁体朗读各做一支」据此调整。
+- **以后只做音乐版，朗读是音乐版里的音轨（Josh 2026-09-30「以后只做音乐版，而朗读是音乐版本里的音轨功能了」）**：每集 3 支（简 / 繁 / 英字幕），用朗读时间轴（每节按中英较长的朗读 + 15 秒）；**原音轨纯音乐**，另加两条配音「中文」（中文朗读）和「英语」（English 朗读；英文字幕版原始语言是英语，这条标「英语（美国）」——Studio 实测配音不能和视频原始语言相同）。片头片尾大字「设置 → 音轨」提示。上传：API 传私享 → 配音分段暂存 R2 `askbible-media/yt-dubs/` → Claude 用 Chrome 在 Studio 页面跑 `scripts/youtube-studio-add-dubs.js`（R2 取回拼文件塞进上传框；Chrome 扩展 file_upload 上限 10 MB、页面连不上本机服务，都试过）→ `youtube-series-run.py finish <key>` 公开并删暂存。上面两条（各做一支朗读版 / 朗读版双音轨）由此取代。加配音时 Chrome 必须在前台：Josh 2026-10-01 定由 Claude 自己切前台（osascript activate Chrome），加完切回原应用，每支约 5 分钟会抢焦点。从第 3 集开始做；第 1、2 集也按新版重做（Josh 2026-09-30）：3–9 集做完后回头补；新版加好配音公开时，同集同字幕语言的旧版（简体含旧朗读版）自动改私享，永久删除留给 Josh。
+- **每集只发英文一支，中文版全部收起；目前不再发新的（Josh 2026-10-01「目前都不发，而且只保留一支英文的」）**：
+  - **决定了什么**：同一集不再发简 / 繁 / 英三支，只做英文字幕那一支（原音轨纯音乐 + 中文 / English 两条朗读配音不变）。已公开的中文版 9 支（第 1–4 集的简体、繁体，含第 1 集简体朗读版和第 4 集简体上传中断的半截条目）已用 API 改成私享，不删除；英文第 1–4 集 4 支保持公开。批量流水线停着，等 Josh 说再发才启动。`youtube-series-run.py` 的 `VARIANTS` 只剩 `("en", "dual")`，`finish` 拒绝非英文的 key，`dubs-pending` 不再列中文版。
+  - **为什么**：①同一集三支只差烧在画面上的文字（简繁之间只差字形），容易被 YouTube 当成重复上传 / 模板化内容，27 支里其实只有 9 个不同内容；②中英放一个频道，英文用户看到中文显得不专业，订阅推送也会混；③分两个频道也不解决——垃圾内容政策管的是「一个或多个频道」上的重复，而且 AskBibleEN 验证不了。所以只留一种语言。
+  - 上面「全部放一个频道、按版本分播放列表」里的繁体 / 简体播放列表、「每集 3 支（简 / 繁 / 英字幕）」由此作废。中文版以后要不要做、放哪里，另议（OPEN-ITEMS O-4）。
+  - **顺带查出的错**：`youtube-series-run.py` 排队上传时一律写 `privacy="public"`，把 dual「先私享、加完配音再公开」盖掉了，第 3、4 集没加配音就公开了（日志却写「已传成私享」）。已改成 `setdefault`。
+- **英文 9 集全部发布后再搬到移动硬盘（Josh 2026-10-03「全部发布后搬到移动硬盘里」）**：9 集已渲染完（10-03 00:20），从待移区挪回 `00/youtube/en-epNN/`；`youtube-series-run.py --from 1` 依次传私享（+ 三语字幕轨自动传）→ Claude 在 Studio 加中 / 英配音 → Studio 看版权、`claims-ok` → `finish` 公开 + 旧版改私享 + **整集文件搬进 `~/素材备份待移/01AskBible/youtube/en-epNN/`**。旧的第 3、4 集英文（ks0NkJO9e1Y / 80yzvlVMwRo）记作 `-dual-old`，新版公开时自动改私享。
+- **先把英文 9 集全部渲染出来、不上传、不删（Josh 2026-10-01 晚「现在先做英文，全部先做出来，已经有标注有问题的音乐，我们直接不用了……现在不要自动删了，我们要保留在我们的硬盘备份出去」）**：《安息在祢恩典中》（0e63e309…）**整首不用**（MUSIC_SKIP 区间盖过全长，剩 7 首轮换）；`python3 scripts/youtube-series-run.py render-all-en` 渲染第 1–9 集英文 dual（成片 + 中 / 英配音 + 三语 SRT + 封面 + 章节），留在 `00/youtube/en-epNN/`，~~并硬链接到待移区~~ → **2026-10-02 Josh「改」：直接搬进 `~/素材备份待移/01AskBible/youtube/en-epNN/`，本机项目里不留**（`.moved-to-backup` 标记，重跑跳过），插移动硬盘自动挪走、腾空间。第 3、4 集英文也重做（旧的本地已删、配乐含被主张段）。上传、加配音另定。
+- **英文一支 + 多语言字幕轨 + 多语言音轨 + 过滤被主张的配乐（Josh 2026-10-01「保持做英文的，然后有多语言字幕与音轨，然后过滤掉那些有版权声明的音乐」）**：
+  - **字幕轨**：每支英文视频传英 / 繁 / 简三条字幕（WEB / 和合本繁体 / 和合本简体，每节一条，从淡入到淡出结束）。`youtube-golden-verses.py subs N --en --music [--old-music]` 按那支视频自己的时间轴出 SRT（参数必须和渲染时一样），`youtube-series-run.py captions <key>` 用 API `captions.insert` 传（一条 400 额度，三条 1200）；dual 传成私享后会自动传。验证：算出的总长和 YouTube 实际时长差不到 1 秒，章节时间点对得上。已公开的英文 4 支都传好了。
+  - **音轨**：照上面「朗读是音乐版里的音轨」不变（中文 / English 朗读配音，Studio 里加）。
+  - **配乐**：渲染时跳过被主张段（D-9 `MUSIC_SKIP`）；另加一道闸——私享阶段 YouTube 就会做版权检查，`finish` 之前要先在 Studio「版权声明」页看过、跑 `claims-ok <key>`，有主张就把那段加进 `MUSIC_SKIP` 重新渲染，不公开。
+  - **为什么**：中文用户不再靠另传一支，靠同一支视频上的字幕和音轨，频道对英文用户是纯英文的；英文字幕轨还让 YouTube 能自动翻译成别的语言。标题 / 说明的中文本地化 Josh 没点名，没做。
 - **第 8、9 集场景（Josh 同日看图后选）**：第 8 集雨窗（3736d8d5…），第 9 集雨夜城（aaf87b9f…），9 集都不重复。
 - **频道头像和横幅选 A（Josh 2026-09-28）**：延续原来的蓝色渐变风格，改成 AskBible.me，用思源宋体（不用 AI 生成，也不用有授权疑虑的系统手写字）。横幅写「安静下来，重新得力 / Be Still, Renew Your Strength / AskBible.me」，已用 API 换上；头像要在 Studio 手动上传（API 不支持）。文件在 `00/youtube/branding/A-*.png`。
 - **视频水印（Josh 同日）**：所有视频下方正中加「AskBible.me」水印（宋体 600、48 px、约 55% 不透明度、淡阴影），片头片尾不加。第 1 集英文纯音乐版 noduqGNNgOQ 是加水印之前传的。
@@ -59,6 +126,7 @@
 - **日期**：2026-09-27
 
 ### D-25 官网首屏的四个软件自动轮播（2026-10-02）
+- **2026-10-03 上线**：合进 main `1599f0ee` 并推送（Vercel 自动部署）。
 
 - **决定了什么**（Josh 2026-10-02：「首页 4 个，做成自动切换的，变化」）：
   1. 首屏不用点，AskBible → 听到 → 查到 → 小小圣经 自动轮着展示，每个停 6.5 秒；标题、介绍、入口重新淡入，手机里的画面交叉淡入。
@@ -1403,3 +1471,31 @@ Play 要求**所有轨道**（正式 / 测试）上的包都不能再声明 `USE
 - **管理员账号（2026-10-01 Josh 定）**：「josh.zeng.ca@gmail.com 是管理员，5022 那个不要」——已改库：
   `josh.zeng.ca@gmail.com` 的 `is_admin = true`，`502299900@qq.com` 取消，现在全库只有这一个管理员。
   网页后台权限也是看这个字段，没有别的管理员名单。
+## D-4 成就反馈：跟着动作走，不跟着打开走（2026-09-27）
+
+- **决定**：①启动那次、云端同步并入那次重算只定基线，不发任何升级 / 勋章 / 连续天数事件；②「连续 N 天」只在读完一章时顺带飘一句，不单独出声；③全 App 只有「读完一章」出声（小钵），升级 / 勋章 / 今日计划完成都只给卡片或飘字 + 触感，三声升级钟不再用。
+- **为什么**：Josh「一打开 APP 就有升级信息、声音，有点吵，太像游戏」。查下来启动时 `level` 默认 1，首次 refresh 必然判成升级——每次冷启动都误报；连续天数则是打开就奖励。
+- 原 O-5，iOS / 安卓同步改。
+
+## D-29 YouTube 英文新版：传完直接公开，重复的旧版改私享（2026-10-03）
+
+- **决定了什么**：英文 dual（音乐版 + 朗读配音）传完**直接公开**，不再先私享等配音和版权检查；同一集的旧版（`epNN-en-music`、`epNN-en-dual-old`）在新版上线时自动改私享，免得频道里重复。配音之后在 Studio 补在公开视频上；版权主张事后看。D-5 里「加完配音 finish 才公开」、D-9 里「claims-ok 才能公开」作废。
+- **为什么**：Josh「传完就公开，不要私享吧……把之前的改为私享，如果重复的话」。查过：第 1–4 集旧英文版当时都还是公开，新版上线就会重复。
+- **怎么落实的**：`scripts/youtube-series-run.py` 里 `meta_for` dual 改成 public，新加 `retire_old()`；`finish` 不再拦 claims。10-03 之前就在跑的 `--from 1` 进程内存里还是旧代码，另起 `auto-public` 兜底（每 5 分钟：排队的配置改 public、已传上的公开 + 撤旧版，`--from` 进程退出后自己停）。顺手修了两个坑：沿用旧 `video_id`（第 3、4 集配置里还带着旧版 ID，新版会不上传）、不认识的参数（`--help`）默认开跑。
+- **补（同日）配音本机直传，不再经 R2**：Josh「一定要本机直传的」。`~/bin/serve-local-files.py` 只听 127.0.0.1:8765、只给 studio.youtube.com 开跨域，根目录 `00/youtube`；`stage_dubs` 不再往 R2 传，`dubs-pending` 会顺手把服务拉起来，输出的地址是本机地址。09-30 时「页面连不上本机服务」的真正原因是 **Chrome 154 的「本地网络访问」权限**：没点允许时 fetch 一直挂着、不报错。Studio 已在 Browser 1 里允许过（10-03），页面要在前台才弹得出这个提示。省掉每集约 600 MB 的上行。
+- **补（同日）配音「处理失败」自动删掉重加**：Josh 选「删掉重加（推荐）」——以后 Studio 里配音显示「处理失败」，Claude 直接删掉那条（语言弹窗 → 音频行「显示配音音频选项」→ 删除 → 确认 → 更新），再用本机文件重加，不用再问。第一次是 ep02 中文（10-03 17:4x）。
+
+## D-30 经文搜索：结果全部显示 + 总数，超过 500 条才截断（2026-10-04）
+
+- **决定**：搜索不再固定 40 条封顶。顶部显示「共 N 处」；N ≤ 500 全部列出，N > 500 只列前 500 条并提示换个更具体的词。iOS / 安卓 / 网页三端一起改。
+- **为什么**：Josh 搜「安息」→新约发现结果不全（全本 196 处只出 40 条，且没有提示）。40 条是照搬 RN 的上限，全本只有 3 万多节，全量搜很快；500 条上限只是挡「的」「神」这种几千条的常用字。
+- 同日顺带修复：旧约 / 新约范围原来是先取 120 条再过滤，被另一约挤成 0 条，改为在 SQL 里按卷序筛（提交 4ffb0b0d）。
+
+## 发版：iOS 1.1.3 (134) 提交审核 + 安卓 1.0.49 (246) 上 Play production + 下载页（2026-10-04）
+
+- 内容：D-30 搜索全部显示 + 总数、旧约 / 新约不漏经文、搜索返回恢复结果；O-24 iOS 不掐停别的 App 声音；本书循环自动跳章续播（两端）；防封备线等 1.1.2 之后的改动。
+- App Store：1.1.3 挂 build 134，已提交审核，批准后自动发布。Play：production 已上传（fastlane supply）。下载页 `version.json` 已更新到 1.0.49。
+- **原生发版命令**（项目文档原来只写了 RN 的流程，这里记下原生版实际用的）：
+  1. 升版本：改 `apps/askbible-ios/AskBible.xcodeproj/project.pbxproj` 的 `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION`（Debug + Release 各两处），`apps/askbible-android/app/build.gradle.kts` 的 `versionCode` / `versionName`，`.android-deploy.json` 的 version / notes / changelog；更新说明写 `store/ios-release-notes/{zh,en}.txt`、`store/android-play-metadata/{zh-CN,en-US}/changelogs/<versionCode>.txt`。
+  2. iOS：`cd apps/askbible-ios && xcodebuild -project AskBible.xcodeproj -scheme AskBible -configuration Release -destination 'generic/platform=iOS' -archivePath $S/AskBible.xcarchive -allowProvisioningUpdates archive` → `xcodebuild -exportArchive -archivePath $S/AskBible.xcarchive -exportPath $S/ipa -exportOptionsPlist ExportOptions-appstore.plist -allowProvisioningUpdates` → 回仓库根 `bash scripts/submit-ios-ipa-appstore.sh --path $S/ipa/AskBible.ipa` → `ASC_TARGET_VERSION=<版本> ASC_TARGET_BUILD=<build> node scripts/submit-ios-app-store-review.mjs`（会等 build 处理完再提审）。
+  3. 安卓：先 `python3 ~/bin/deploy_android.py`（下载页，D-17），再 `cd apps/askbible-android && ./gradlew :app:bundleRelease` → 回根 `bash scripts/submit-android-aab-play.sh --path apps/askbible-android/app/build/outputs/bundle/release/app-release.aab --track production`，传完删 AAB。

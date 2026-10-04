@@ -1,7 +1,7 @@
 {
   "_note": "android_dir 相对于此文件所在目录（01AskBible/）",
   "app_name": "AskBible",
-  "version": "1.0.48",
+  "version": "1.0.49",
   "apk_prefix": "AskBible",
   "bucket": "askbible-media",
   "android_dir": "apps/askbible-android",
@@ -12,12 +12,11 @@
   "min_android": "Android 8.0+",
   "gradle_task": "assembleWeb",
   "apk_rel_path": "app/build/outputs/apk/web/app-web.apk",
-  "notes": "连不上时自动切换备用线路，登录、同步和金句语音更稳；修复「陪你探索 / 查找资料」首次下载后卡住。",
+  "notes": "经文搜索结果全部列出并显示总数，旧约 / 新约不再漏经文；返回时回到原来的搜索结果；整本书循环自动跳章接着播。",
   "changelog": [
-    "网络更稳：某条线路连不上时自动换到备用线路，登录、同步、金句语音不受影响",
-    "修复「陪你探索 / 查找资料」首次下载后卡在「首次准备中」",
-    "成就：启动和云端同步时不再误报升级",
-    "读经计划月历加了图例，「第 N 天」改成「计划第 N 天」"
+    "经文搜索：结果全部列出并显示「共 N 处」，旧约 / 新约范围不再漏掉经文",
+    "从搜索结果点进经文，返回时回到原来的结果",
+    "整本书循环自动跳章接着播，单章书回开头续播"
   ],
   "intro": "AskBible 是一本能问问题的圣经：读经、听读、按计划跟进度，遇到不懂的地方随时问。",
   "icon_image": "apps/askbible-ios/AskBible/Assets.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png"

@@ -1,5 +1,5 @@
-• 7-day plans can restart from Day 1 today, and any stage can be set as today
-• Scripture search jumps straight to the verse and highlights only your search term; recent searches now sit in one scrollable row
-• New completion moments for finishing a chapter or today's plan; achievements open as a large card you can share
-• A calmer reading page and player; golden verses keep playing with the screen off
+• Scripture search now lists every match with a total count, and Old / New Testament searches no longer miss verses; going back from a verse returns you to your results
+• Opening AskBible no longer stops your podcast or other audio — it only takes over when you press play
+• Book loop keeps playing as it moves to the next chapter
+• Automatic backup routes when the connection fails, for steadier sign-in, sync and verse audio
 • Stability improvements

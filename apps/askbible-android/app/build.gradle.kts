@@ -16,8 +16,8 @@ android {
         minSdk = 26
         targetSdk = 36
         // 必须大于 Play 上 RN 版已用过的 versionCode（RN android/app/build.gradle = 238）
-        versionCode = 245
-        versionName = "1.0.48"
+        versionCode = 246
+        versionName = "1.0.49"
     }
 
     // 与 RN 同一把 upload key：凭据只在本机 apps/askbible-mobile/android/keystore.properties（gitignore）

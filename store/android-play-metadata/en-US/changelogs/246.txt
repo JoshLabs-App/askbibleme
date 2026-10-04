@@ -1,0 +1,5 @@
+Version 1.0.49
+• Scripture search now lists every match with a total count, and Old / New Testament searches no longer miss verses; going back returns you to your results
+• Book loop keeps playing into the next chapter; single-chapter books restart from the top
+• Automatic backup routes when the connection fails, for steadier sign-in, sync and verse audio
+• Stability improvements

@@ -71,12 +71,9 @@ def book_names():
     return dict(re.findall(r'bookId: "(\w+)", bookName: "([^"]+)"', src))
 
 
-def load_verses():
-    bible = json.load(open(ROOT / "data/bible/uploads" / ("web-en.json" if EN else "cuv-trad.json" if TW else "cuv-simp.json")))["books"]
-    order = {b: i for i, b in enumerate(bible)}
-    names = book_names()
-    cache = json.load(open(CACHE)) if CACHE.exists() else {}
-    files = sorted(AUDIO_DIR.glob("*-32kbps.mp3"))
+def audio_durations(adir, cache_path):
+    cache = json.load(open(cache_path)) if cache_path.exists() else {}
+    files = sorted(adir.glob("*-32kbps.mp3"))
     missing = [f for f in files if f.name not in cache]
     if missing:
         print(f"测时长 {len(missing)} 个音频…", flush=True)
@@ -86,7 +83,23 @@ def load_verses():
         with ThreadPoolExecutor(8) as ex:
             cache.update(dict(ex.map(dur, missing)))
         OUT_ROOT.mkdir(parents=True, exist_ok=True)
-        json.dump(cache, open(CACHE, "w"))
+        json.dump(cache, open(cache_path, "w"))
+    return cache
+
+
+# 朗读版一支视频两条音轨（D-5，Josh 2026-09-30）：中文朗读 + English reading，两条等长，
+# 所以每节时长按中英较长的那个算；简 / 繁 / 英三种字幕的朗读版共用这一条时间轴
+ZH_AUDIO, EN_AUDIO = ROOT / "public/audio/golden-verses", ROOT / "public/audio/golden-verses-web-en"
+TRACKS = {"zh": (ZH_AUDIO, OUT_ROOT / "durations.json"), "en": (EN_AUDIO, OUT_ROOT / "durations-en.json")}
+
+
+def load_verses():
+    bible = json.load(open(ROOT / "data/bible/uploads" / ("web-en.json" if EN else "cuv-trad.json" if TW else "cuv-simp.json")))["books"]
+    order = {b: i for i, b in enumerate(bible)}
+    names = book_names()
+    cache = audio_durations(AUDIO_DIR, CACHE)
+    both = {k: audio_durations(*t) for k, t in TRACKS.items()}
+    files = sorted(AUDIO_DIR.glob("*-32kbps.mp3"))
     verses = []
     for f in files:
         m = re.match(r"(\w{3})-(\d+)-(\d+)-32kbps\.mp3", f.name)
@@ -95,7 +108,8 @@ def load_verses():
         if EN:
             text = text[:1].upper() + text[1:]  # WEB 有些节以小写开头（接上一节），单独显示时首字母大写
         verses.append(dict(book=b, ch=c, v=v, text=text, ref=f"{names[b]} {c}:{v}",
-                           audio=str(f), dur=cache[f.name]))
+                           audio=str(f), dur=max(both["zh"][f.name], both["en"][f.name]),
+                           tracks={k: str(TRACKS[k][0] / f.name) for k in TRACKS}))
     meta = json.load(open(ROOT / "data/scripture/theme-repeat-ge5-meta.json"))["rows"]
     rc = {(r["bookId"], r["chapter"], r["verse"]): r["repeatCount"] for r in meta}
     for x in verses:
@@ -118,8 +132,14 @@ def music_hold(v):
     return min(20.0, 18 + (n - 60) / 40) if n > 60 else min(15.0, 12 + n / 20)
 
 
+# 2026-09-30 Josh：以后只做音乐版，朗读做成音乐版里可切换的音轨（D-5）。音乐版改用朗读的时间轴
+# （每节 = 淡入 + 中英较长的朗读 + 停留 + 淡出），原音轨纯音乐，另出「中文朗读」「English reading」两条配音。
+# 旧的纯音乐节奏（music_hold）只留给 --old-music 重做旧版用
+OLD_MUSIC = "--old-music" in sys.argv
+
+
 def seg_frames(v, music=None):
-    if MUSIC if music is None else music:
+    if OLD_MUSIC and (MUSIC if music is None else music):
         return frames(M_FI + music_hold(v) + M_FO + BLANK)
     return frames(FI + v["dur"] + HOLD + FO + BLANK)
 
@@ -312,10 +332,22 @@ def verse_card(path, text, ref, peak=0.0):
     (Image.alpha_composite(backdrop(peak), txt) if peak else txt).save(path)
 
 
-def brand_card(path, sub=None, peak=0.0):
-    items = [(W / 2, H * TEXT_Y - (70 if sub else 40), "AskBible.me", font(64, 800), 2, INK + (204,), "center", "r")]
-    if sub:
-        items.append((W / 2, H * TEXT_Y + 40, sub, font(40, 800), 2, INK + (204,), "center", "r"))
+# 片头片尾卡最下一行：提示可以去 AskBible.me 听金句朗读（Josh 2026-09-30，见 DECISIONS D-5）
+# 朗读版片头片尾的大字提示：在 YouTube 播放器「设置 → 音轨」切换中英朗读（Josh 2026-09-30「要大的提示」）。
+# 字体里没有 ⚙（会显示成方框），只用文字和 →
+TRACK_HINT = ("Switch reading: Settings → Audio track (English / 中文)" if EN
+              else "可在「設定 → 音軌」切換 中文 / English 朗讀" if TW else "可在「设置 → 音轨」切换 中文 / English 朗读")
+LISTEN_HINT = None if OLD_MUSIC else TRACK_HINT
+
+
+def brand_card(path, sub=None, peak=0.0, hint=LISTEN_HINT):
+    subs = [x for x in (sub, hint) if x]
+    y = H * TEXT_Y - 40 - 30 * len(subs)
+    items = [(W / 2, y, "AskBible.me", font(64, 800), 2, INK + (204,), "center", "r")]
+    for i, x in enumerate(subs):
+        big = x is hint  # 音轨提示用大字（接近经文字号），祝福语照旧
+        items.append((W / 2, y + 110 + 80 * i + (40 if big else 0), x, font(88 if big else 40, 600 if big else 800), 2,
+                      INK + (245 if big else 204,), "center", "r"))
     txt = compose(items, {"r": REF_SHADOWS})
     (Image.alpha_composite(backdrop(peak), txt) if peak else txt).save(path)
 
@@ -544,15 +576,38 @@ def mp3_pcm(path):
 
 XFADE = 5.0  # 两首之间交叉淡入淡出秒数（Josh 2026-09-28）
 
+# 被 YouTube Content ID 主张过的段落，出片时跳过（曲内秒数；Josh 2026-10-01，docs/OPEN-ITEMS.md O-8）。
+# 只管 YouTube 出片：public/music/uploads/ 里的原文件不动，App 的音乐陪伴照常放整首。
+# 以后又被主张：视频里的时间 − 那首在视频里的起点（按种子还原顺序）= 曲内秒数，加进来。
+MUSIC_SKIP = {
+    # 《安息在祢恩典中》13:38–23:08：5 支视频的 10 条主张全落在这一段，前后各留十几秒
+    # Josh 2026-10-01「已经有标注有问题的音乐，我们直接不用了」：整首不用（区间盖过全长 → music_keep 为空 → 不进选曲）
+    "0e63e309c5fd4e518174ed84ee74b391.mp3": [(0, 10 ** 6)],
+}
+
+
+def music_keep(t, dur):
+    """这首要留下的区间 [(起, 止)]：整首减去 MUSIC_SKIP；不够两头交叉淡化的碎片丢掉。"""
+    keep, pos = [], 0.0
+    for a, b in sorted(MUSIC_SKIP.get(t.name, [])):
+        keep.append((pos, min(a, dur)))
+        pos = max(pos, b)
+    keep.append((pos, dur))
+    return [(a, b) for a, b in keep if b - a > 2 * XFADE + 1]
+
 
 def build_music(path, total_sec, seed):
     """背景乐：「安静」专辑随机排（每集每个版本种子不同，所以开头那首和中间顺序都不同、没有规律），
-    一轮放完再打乱一次，避免同一首连着；两首之间 XFADE 秒交叉淡入淡出。输出一条够长的 m4a。"""
+    一轮放完再打乱一次，避免同一首连着；两首之间 XFADE 秒交叉淡入淡出。输出一条够长的 m4a。
+    MUSIC_SKIP 里的段落剪掉，剪口同样 XFADE 秒交叉淡化。"""
     import random
     tracks = music_tracks()
     rng = random.Random(seed)
-    durs = {t: float(sh(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(t)],
+    full = {t: float(sh(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(t)],
                         text=True).stdout) for t in tracks}
+    keep = {t: music_keep(t, full[t]) for t in tracks}
+    tracks = [t for t in tracks if keep[t]]
+    durs = {t: sum(b - a for a, b in keep[t]) - XFADE * (len(keep[t]) - 1) for t in tracks}
     order, acc = [], 0.0
     while acc < total_sec + 30:
         batch = tracks[:]
@@ -567,7 +622,18 @@ def build_music(path, total_sec, seed):
     ins, fl = [], []
     for i, t in enumerate(order):
         ins += ["-i", str(t)]
-        fl.append(f"[{i}:a]aresample={SR},aformat=channel_layouts=stereo[s{i}]")
+        src, segs = f"[{i}:a]aresample={SR},aformat=channel_layouts=stereo", keep[t]
+        if segs == [(0.0, full[t])]:
+            fl.append(f"{src}[s{i}]")
+            continue
+        fl.append(f"{src},asplit={len(segs)}" + "".join(f"[c{i}_{k}]" for k in range(len(segs))))
+        for k, (a, b) in enumerate(segs):
+            fl.append(f"[c{i}_{k}]atrim={a:.2f}:{b:.2f},asetpts=PTS-STARTPTS[{f'k{i}_{k}' if len(segs) > 1 else f's{i}'}]")
+        prev = f"k{i}_0"
+        for k in range(1, len(segs)):
+            nxt = f"s{i}" if k == len(segs) - 1 else f"j{i}_{k}"
+            fl.append(f"[{prev}][k{i}_{k}]acrossfade=d={XFADE}:c1=tri:c2=tri[{nxt}]")
+            prev = nxt
     prev = "s0"
     for i in range(1, len(order)):
         fl.append(f"[{prev}][s{i}]acrossfade=d={XFADE}:c1=tri:c2=tri[x{i}]")
@@ -619,7 +685,7 @@ def render(n, limit=None):
         else:
             if not png.exists():
                 verse_card(png, v["text"], v["ref"], peak)
-            t_in, t_out = ((0.0, M_FI), (d - BLANK - M_FO, M_FO)) if MUSIC else ((0.0, FI), (d - BLANK - FO, FO))
+            t_in, t_out = ((0.0, M_FI), (d - BLANK - M_FO, M_FO)) if OLD_MUSIC else ((0.0, FI), (d - BLANK - FO, FO))
         jobs.append((scene, png, pos, nfr, work / f"{key}.mp4", t_in, t_out, key == "intro", key == "outro"))
         pos += nfr
 
@@ -637,40 +703,51 @@ def render(n, limit=None):
     sh(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(work / "list.txt"),
         "-c", "copy", str(video)])
 
-    # 朗读音轨：每节在字幕淡入结束（FI 秒）时开始读，按帧精确对齐
-    print("  拼朗读音轨…" if not MUSIC else "  纯音乐版：不拼朗读", flush=True)
-    pcm = work / "voice.pcm"
-    with open(pcm, "wb") as fh:
-      if MUSIC:
-        left = sum(n for _, _, n in segs) * SR // FPS
-        while left > 0:  # 分块写静音，别一次在内存里造 1GB
-            k = min(left, SR * 60); fh.write(b"\0\0" * k); left -= k
-      else:
-        for key, v, nfr in segs:
-            total = nfr * SR // FPS
-            if v is None:
-                fh.write(b"\0\0" * total); continue
-            lead = int(FI * SR)
-            data = mp3_pcm(v["audio"])[: (total - lead) * 2]
-            fh.write(b"\0\0" * lead + data + b"\0\0" * (total - lead - len(data) // 2))
+    # 朗读音轨：每节在字幕淡入结束（FI 秒）时开始读，按帧精确对齐。朗读版出中、英两条（D-5 双音轨）
+    print("  拼朗读音轨（中文 / English）…" if not MUSIC else "  纯音乐版：不拼朗读", flush=True)
+    def write_voice(pcm, lang):
+        with open(pcm, "wb") as fh:
+            for key, v, nfr in segs:
+                total = nfr * SR // FPS
+                if v is None or lang is None:
+                    left = total
+                    while left > 0:  # 分块写静音，别一次在内存里造 1GB
+                        k = min(left, SR * 60); fh.write(b"\0\0" * k); left -= k
+                    continue
+                lead = int(FI * SR)
+                data = mp3_pcm(v["tracks"][lang])[: (total - lead) * 2]
+                fh.write(b"\0\0" * lead + data + b"\0\0" * (total - lead - len(data) // 2))
     total_sec = pos / FPS
 
-    # 背景乐：随机顺序 + 交叉淡入淡出，每集每个版本不一样
+    # 背景乐：随机顺序 + 交叉淡入淡出，每集每个版本不一样；同一支视频的两条音轨用同一段背景乐
     seed = f"ep{n}-{'en' if EN else 'tw' if TW else 'zh'}-{'music' if MUSIC else 'read'}"
     order = build_music(work / "music.m4a", total_sec, seed)
     print(f"  背景乐顺序（{seed}）：{len(order)} 首", flush=True)
-    final = out / f"askbible-golden-verses-ep{n:02d}{'-music' if MUSIC else ''}{'-test' if limit else ''}.mp4"
+    suffix = f"{'-music' if MUSIC else ''}{'-test' if limit else ''}"
+    final = out / f"askbible-golden-verses-ep{n:02d}{suffix}.mp4"
+    main_lang = None if MUSIC else ("en" if EN else "zh")  # 主音轨跟字幕语言走；繁体字幕配中文朗读
+    def mix_args(pcm, voice):
+        return ["-f", "s16le", "-ar", str(SR), "-ac", "1", "-i", str(pcm), "-i", str(work / "music.m4a"),
+                "-filter_complex",
+                f"[0:a]volume=1.4,pan=stereo|c0=c0|c1=c0[vo];"
+                f"[1:a]aresample={SR},volume={0.22 if voice else 1.0},afade=in:st=0:d=2,afade=out:st={total_sec - 5:.2f}:d=5[mu];"
+                f"[vo][mu]amix=inputs=2:normalize=0:duration=first,loudnorm=I={-14 if voice else -16}:TP=-1.5,aresample={SR}[a]",
+                "-t", f"{total_sec:.3f}", "-c:a", "aac", "-b:a", "192k"]
     print("  混音、合成…", flush=True)
-    sh(["ffmpeg", "-y", "-loglevel", "error",
-        "-i", str(video),
-        "-f", "s16le", "-ar", str(SR), "-ac", "1", "-i", str(pcm),
-        "-i", str(work / "music.m4a"),
-        "-filter_complex",
-        f"[1:a]volume=1.4,pan=stereo|c0=c0|c1=c0[vo];"
-        f"[2:a]aresample={SR},volume={1.0 if MUSIC else 0.22},afade=in:st=0:d=2,afade=out:st={total_sec - 5:.2f}:d=5[mu];"
-        f"[vo][mu]amix=inputs=2:normalize=0:duration=first,loudnorm=I={-16 if MUSIC else -14}:TP=-1.5,aresample={SR}[a]",
-        "-map", "0:v", "-map", "[a]", "-t", f"{total_sec:.3f}",
-        "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(final)])
+    pcm = work / "voice.pcm"
+    write_voice(pcm, main_lang)
+    mixed = work / "main.m4a"
+    sh(["ffmpeg", "-y", "-loglevel", "error"] + mix_args(pcm, main_lang) + ["-map", "[a]", str(mixed)])
+    sh(["ffmpeg", "-y", "-loglevel", "error", "-i", str(video), "-i", str(mixed), "-map", "0:v", "-map", "1:a",
+        "-t", f"{total_sec:.3f}", "-c", "copy", "-movflags", "+faststart", str(final)])
+    # 配音音轨：单独的音频文件，在 Studio「语言 → 配音」里上传（API 不支持）。
+    # 音乐版出中、英两条；旧的朗读版出和主音轨相对的另一条
+    dubs = [] if OLD_MUSIC else ["zh", "en"] if MUSIC else ["zh" if main_lang == "en" else "en"]
+    for dub_lang in dubs:
+        write_voice(pcm, dub_lang)
+        dub = out / f"askbible-golden-verses-ep{n:02d}{suffix}-dub-{dub_lang}.m4a"
+        sh(["ffmpeg", "-y", "-loglevel", "error"] + mix_args(pcm, dub_lang) + ["-map", "[a]", "-movflags", "+faststart", str(dub)])
+        print(f"  配音音轨（{dub_lang}）：{dub}", flush=True)
 
     # YouTube 章节时间戳（贴进说明栏）：每 50 节一个，标这一段的第一节
     lines, t = ["0:00:00 Intro" if EN else "0:00:00 片頭" if TW else "0:00:00 片头"], INTRO
@@ -684,9 +761,45 @@ def render(n, limit=None):
     if "--keep" not in sys.argv:
         shutil.rmtree(work)
     else:  # 保留分段：以后只改片头 / 片尾时，删掉对应的 intro.* / outro.* 再跑一次，其它段直接复用
-        for f in ("video.mp4", "voice.pcm"):
+        for f in ("video.mp4", "voice.pcm", "main.m4a"):
             (work / f).unlink(missing_ok=True)
     print(f"完成：{final}（{final.stat().st_size / 1e9:.2f} GB）", flush=True)
+
+
+SUB_LANGS = {"en": (True, False), "zh-Hant": (False, True), "zh-Hans": (False, False)}  # YouTube 语言代码: (EN, TW)
+
+
+def subs(n):
+    """多语言字幕轨（Josh 2026-10-01：只发英文一支，中文靠字幕轨和音轨，D-5）。时间轴按当前参数算
+    （和 render 同样的 --en --music [--old-music]），所以和那支视频逐帧对得上；经文分别取 WEB / 和合本繁体 / 和合本简体。
+    每节一条：从淡入开始到淡出结束。出 SRT，由 youtube-series-run.py captions 用 API 传上去。"""
+    global EN, TW
+    base = plan(load_verses())[n - 1]
+    out = OUT_ROOT / (f"en-ep{n:02d}" if EN else f"tw-ep{n:02d}" if TW else f"ep{n:02d}")
+    out.mkdir(parents=True, exist_ok=True)
+    cues, pos = [], frames(INTRO)
+    for v in base:  # 时间轴必须用这支视频自己的参数算（旧纯音乐版的停留时间跟英文字数走）
+        nfr = seg_frames(v)
+        cues.append(((v["book"], v["ch"], v["v"]), pos / FPS, (pos + nfr) / FPS - BLANK))
+        pos += nfr
+    total = (pos + frames(OUTRO)) / FPS
+
+    def ts(t):
+        ms = int(round(t * 1000))
+        return f"{ms // 3600000:02d}:{ms % 3600000 // 60000:02d}:{ms % 60000 // 1000:02d},{ms % 1000:03d}"
+    keep, files = (EN, TW), []
+    try:
+        for code, (EN, TW) in SUB_LANGS.items():
+            text = {(v["book"], v["ch"], v["v"]): (v["text"], v["ref"]) for v in load_verses()}
+            f = out / f"subs-ep{n:02d}{'-old' if OLD_MUSIC else ''}-{code}.srt"
+            f.write_text("".join(f"{i}\n{ts(a)} --> {ts(b)}\n{text[k][0]}\n— {text[k][1]}\n\n"
+                                 for i, (k, a, b) in enumerate(cues, 1)))
+            files.append(f)
+    finally:
+        EN, TW = keep
+    print(f"第 {n} 集字幕：{len(cues)} 条，视频总长 {total:.3f} 秒（{ts(total)[:8]}）")
+    for f in files:
+        print(f)
 
 
 if __name__ == "__main__":
@@ -701,6 +814,8 @@ if __name__ == "__main__":
         cover_options(int(sys.argv[2]), sys.argv[3] if len(sys.argv) > 3 else "read")
     elif cmd == "still":
         still(int(sys.argv[2]))
+    elif cmd == "subs":
+        subs(int(sys.argv[2]))
     elif cmd == "render":
         lim = int(sys.argv[sys.argv.index("--limit") + 1]) if "--limit" in sys.argv else None
         render(int(sys.argv[2]), lim)

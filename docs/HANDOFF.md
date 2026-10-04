@@ -634,7 +634,7 @@ manifest `start_url=/web`；手机截图和金句字体文件都取得到。本�
 2026-10-01 晚已把 main（`2ad8b200`，「防封换线」那一批，已上线）**合进本分支**：两处冲突（`AppInstallGuidePage.tsx`、`useNatureGoldenVerseAudioControl.ts`）两边都保留，`tsc` + 271 个单元测试通过；本分支现在只领先 main、不落后，上线时可以直接快进合并。
 
 **下一步（按顺序）**：
-0. **首屏四个软件自动轮播（D-25）**：已做完、提交在本分支，**没推送**，等 Josh 看了说「上线」。验证时注意：浏览器面板在后台时 `document.hidden` 为真，轮播按设计不走，
+0. **首屏四个软件自动轮播（D-25）**：~~等 Josh 说「上线」~~ **2026-10-03 已合进 main（`1599f0ee`）并推送上线**（Josh「合进，上线，清掉，代码留着」）；听到图标反色试看没合，还留在 worktree `strange-dewdney-3855d7` 未提交。验证时注意：浏览器面板在后台时 `document.hidden` 为真，轮播按设计不走，
    定时器也会被限速，用轮询量会得到乱序的假象——要么把面板切到前台，要么临时覆盖 `document.hidden` 再用 MutationObserver 记选中项的变化。
 0. **听到图标反色试看（O-23）**：worktree 里有**没提交**的改动（`SiteHome.tsx` 的 `SITE_APP_ICON.tingdao` + `public/site/sibling-tingdao-inverted.png`），等 Josh 看了定；没定之前别把它带上线。
 0. ~~标志配色（O-22）~~：2026-10-02 已定并上线（DECISIONS D-24）：顶栏和切换条用金黄 App 图标，入口里的小标志单色。
@@ -690,3 +690,46 @@ manifest `start_url=/web`；手机截图和金句字体文件都取得到。本�
     图标字体改成从 npm 包引（`material-icons`、`@mdi/font`），新开的 worktree 要先 `npm install`。`lib/sibling-app-urls.ts` 是给人点的外站入口，不在此列。
 11. 安卓发版顺序：先 `deploy_android.py` 发下载页，再推 Play——官网把下载页那个包叫「最新版」（D-17）。
 9. 暗度 / 模糊 / 金句特效在网页首页已经不读偏好了（D-13），但 `lib/` 里的读写函数别删，会员同步还在用它们和 RN / iOS 互通。
+
+
+## 附：YouTube 金句放松视频交接（2026-10-03）
+
+### 当前状态
+- 方向（D-5 最新几条）：每集只发**英文一支**（音乐版，原音轨纯音乐 + Studio 里加「中文」「英语（美国）」两条朗读配音 + API 传英 / 繁 / 简三条字幕轨）；被主张的配乐《安息在祢恩典中》整首不用（D-9）。
+- 英文第 1–9 集**已全部渲染**，文件在 `00/youtube/en-ep01…09/`（成片 / 两条配音 / 三语 SRT / 章节），封面在 `00/youtube/covers/en-epNN-music.jpg`。
+- 后台在跑 `python3 scripts/youtube-series-run.py --from 1`（日志 `00/youtube/series-run.log`）：按集传成**私享**、自动传字幕轨、配音分段暂存 R2；每天额度约 3 支（上传 1600 + 字幕 1200），用完自动等美西午夜。
+- 旧版：第 1、2 集旧英文 `ep01-en-music` / `ep02-en-music`、第 3、4 集 `ep03/04-en-dual-old` 仍公开或私享着，新版 `finish` 时自动改私享；永久删除由 Josh 在 Studio 做。
+
+### ★ 2026-10-04 15:41 九集全部完成
+- 英文第 1–9 集都已公开、中英两条配音都「已发布」、三语字幕已传、旧版都改私享：
+  ptpo6B-M61o / 7ZbspnYmkH0 / DOYikZeoCDo / FHceB3UfW2E / rSvIdJgrBQQ / UV84qlo2vY4 / FOJmx1vU6h0 / 60E5XiDpT14 / vX1Z_JtwrjQ。
+- 1–6 集文件已在 18T `素材备份/01AskBible/youtube/`；7–9 集（约 18G）在 `~/素材备份待移`，插盘后跑 `~/bin/archive_to_drive.sh`。
+- 剩下只有 Josh 自己做的：Studio 里永久删除 12 支私享旧版（ep01/02 en/tw/zh 纯音乐、ep01 zh 朗读、ep03/04 tw/zh dual、ep03/04 en dual-old）。
+- 下面是过程记录，下次再出新集照着做。
+
+### 2026-10-03 改（D-29）：传完直接公开
+- 新版传完直接公开，旧版同时改私享；`auto-public` 兜底进程在跑（日志同 `series-run.log`，前缀 `auto-public：`）。下面第 4 步不再需要 `claims-ok`，`finish` 只负责删 R2 暂存、搬待移区。
+- 第 1 集新版 https://youtu.be/ptpo6B-M61o 已公开，旧版已改私享，字幕已传；10:xx 在加两条配音。第 2 集 09:20 起重新上传（之前传了 1.9 GB 的那次在重启时丢了）。
+- **配音本机直传**（不经 R2）：`dubs-pending` 拉起 `~/bin/serve-local-files.py`（127.0.0.1:8765，日志 `00/youtube/local-file-server.log`）；Chrome 的 Studio 已允许「本地网络访问」。加配音时页面每 30 秒请求 `/__status/<进度JSON>`，后台 `grep` 这个日志等 done / error，不用一轮轮去页面查。
+- **加配音脚本 10-03 修过**：Studio 弹窗文字里词之间是换行，原来按「音频 已发布」找永远匹配不上，卡在「上传中…」；已改成先把空白统一成空格再比。「已发布」出现后文件才真正上传（约 0.4 MB/s），用 `nettop` 看 Chrome 上行降到 0 才算完。
+- **10-03 12:17 第 1 集 finish 完**（配音两条已发布，文件进待移区）。第 2 集配音已提交，等处理完 finish。当前 `--from` 进程（09:20 起）内存里是旧 `save_state`，会把 finish 标记盖掉：`dubs-pending` 又列出已 finish 的集就再跑一次 `finish <key>`（可重复跑）；下次重启后新 `save_state` 会合并，不再有这问题。
+- **10-03 22:40 进度**：第 1–4 集全部 finish（文件在待移区，18T 拔了，插上后手动 `~/bin/archive_to_drive.sh`）；第 5 集配音已提交、处理中；第 6 集在传；7–9 排队。
+- **配音状态别信页面上的「正在处理…」**：Studio 页面不一定自己刷新，第 3 集早就「已发布」了页面还挂着「正在处理」。现在在一个空闲 Studio 标签页里放隐藏 iframe，每 10 分钟重载 `…/translations`，把状态报到 `/__w-epNN/`，后台 grep。「处理失败」→ 直接删掉重加（D-29 补充）。
+- **「没有有效授权」可能是断网**：10-03 18:36–21:07 断网，`youtube-upload.py` 把刷新失败一律当授权失效；已改成只有 RefreshError 才这么报。
+- **10-04 09:30 进度**：7/8/9 配音已提交（解锁后），6–9 都在 YouTube 处理，`watch2.sh` 式后台等完成后 finish。监视 iframe 要放在**窗口当前激活的那个标签页**里：后台标签页放久了会被 Chrome 冻结（CDP 执行一直超时），里面的监视也停。Studio 刷新后的页面 CSP 不许 `new Function`，加配音脚本只能整段贴。
+- **10-04 04:45 进度**：9 集视频全部传完公开（`--from` 进程 04:12「全部完成」已退出）；7 FOJmx1vU6h0 / 8 60E5XiDpT14 / 9 vX1Z_JtwrjQ 的配音等屏幕解锁再加；6 配音处理中。全部 finish 后：重跑 `finish` 补 1–4 集被旧进程盖掉的标记（可重复），再提交推送（HANDOFF 下一步第 5 条）。
+- **10-04 02:45 进度**：1–5 集完成；6 集配音处理中；7 集（FOJmx1vU6h0）已公开、配音**等屏幕解锁**再加（锁屏时页面 hidden，Studio 弹窗不出）；8、9 排队。`osascript` 取不到 frontmost 进程 = 锁屏。
+- **别踩**：别用 `sed -i` 改正在被写的 `series-run.log`（换了文件，运行中的进程写丢）；别杀 `--from` 进程而不管它的 `youtube-upload.py` 子进程（会变孤儿，重启后重复上传）。
+
+### 下一步（每支传完后）
+1. `python3 scripts/youtube-series-run.py dubs-pending` 取待加配音清单。
+2. **Chrome 必须登录有 AskBible.me_Still 的 Google 账号**（10-01 起两个 Chrome 分别登录了「榴莲英语」和「BIGAPPLE」，**这一步现在卡住，要 Josh 切账号**）。按 A：Claude 自己 `osascript` 把 Studio 标签页所在窗口提到最前（页面必须 visible），做完切回原应用。
+3. Studio `studio.youtube.com/video/<id>/translations`：页内 fetch R2 分段拼 File → 添加语言 → 音频「添加」→ 塞进 `#audio-file-loader` → 发布 → 更新（参考 `scripts/youtube-studio-add-dubs.js` 和本线程分步写法）。**点发布后要留在页面直到上传完**（上行约 0.4 MB/s，一条 300 MB 约 13 分钟；用 `nettop` 看 Chrome Helper 的 bytes_out）。
+4. 两条都从「正在处理…」变「已发布」后，Studio「版权」页确认没主张 → `claims-ok <key>` → `finish <key>`（公开、删 R2 暂存、旧版改私享、整集搬进待移区）。
+5. 9 集都 finish 后提交推送（只提交 YouTube 相关文件；`scripts/youtube-golden-verses.py` 里有版权会话加的 MUSIC_SKIP，一起带上）。
+
+### 别踩的坑
+- 后台标签页 Studio 弹窗不渲染、定时器被节流；Trusted Types 禁止建 Worker。
+- 配音不能和视频原始语言同名：英文视频的 English 朗读标「英语（美国）」。
+- 插盘自动搬运会因 macOS 权限失败（rsync `Operation not permitted`），要给 `/usr/bin/rsync`、`/bin/bash` 开完全磁盘访问权限，或手动在终端跑 `~/bin/archive_to_drive.sh`。
+- zsh 里通配符没匹配会让整条命令中止；`rm` 带变量路径会被安全检查拦，用写死的路径。

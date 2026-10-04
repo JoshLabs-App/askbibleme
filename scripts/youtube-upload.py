@@ -36,7 +36,10 @@ def creds(ch, allow_flow=False):
     if c and not c.valid and c.refresh_token:
         try:
             c.refresh(Request())
-        except Exception:
+        except Exception as e:
+            from google.auth.exceptions import RefreshError
+            if not isinstance(e, RefreshError):  # 断网之类：照实报，别当成授权失效（2026-10-03 断网时误报了两个半小时）
+                raise
             c = None
     if not c or not c.valid:
         if not allow_flow:

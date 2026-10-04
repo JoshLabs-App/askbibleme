@@ -13,7 +13,8 @@ export type ScriptureSearchHit = {
 };
 
 export const SCRIPTURE_SEARCH_MIN_LEN = 1;
-export const SCRIPTURE_SEARCH_LIMIT = 40;
+/** 一次最多列出的条数；总数另报（D-30，原来 40） */
+export const SCRIPTURE_SEARCH_LIMIT = 500;
 
 export type ScriptureSearchChapterRef = {
   bookId: string;

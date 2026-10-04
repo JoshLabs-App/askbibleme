@@ -86,6 +86,8 @@ struct RootView: View {
     @State private var listenChapter: (book: BookRef, chapter: Int)?
     /// 章页是从计划页开的：返回回计划 Tab、不停播
     @State private var chapterFromPlan = false
+    /// 章页是从搜索结果点进来的：记下当时的关键词，返回时回到搜索页并恢复结果
+    @State private var searchReturnQuery: String?
     /// 探索页当前打开的文章（计划目录页的「麦克阿瑟研经法」链接要能直接打开一篇）
     @State private var exploreArticle: ExploreArticle?
     /// 登录 / 注册页：盖在整个壳上的全屏页（RN 是 stack 路由，无底栏）
@@ -316,7 +318,7 @@ struct RootView: View {
         focusVerse = nil; focusKeyword = nil
         autoPlayPending = autoPlay
         listenChapter = (b, p.chapter)
-        openedChapter = (b, p.chapter)
+        searchReturnQuery = nil; openedChapter = (b, p.chapter)
     }
 
     /// 播放页点播：不开章页，只把音源换到这一章（同章已载入就直接续播）
@@ -386,7 +388,7 @@ struct RootView: View {
         planFlowHost = .chapter
         focusVerse = nil; focusKeyword = nil
         if !(planPoolMatchesView && index == planQueueIndex) { planFlowActive = false; listenChapter = nil }
-        openedChapter = (b, q[index].chapter)
+        searchReturnQuery = nil; openedChapter = (b, q[index].chapter)
         tab = .read
     }
 
@@ -817,7 +819,7 @@ struct RootView: View {
                     tab = .read
                     // 没有记录（首次打开）就只进读经页，让用户自己挑，不替他定一卷
                     if let resume, let b = BibleCatalog.book(id: resume.bookId) {
-                        openedChapter = (b, resume.chapter)
+                        searchReturnQuery = nil; openedChapter = (b, resume.chapter)
                     }
                 },
                 onReturnCardVisible: { up in homeReturnCardUp = up }
@@ -835,7 +837,7 @@ struct RootView: View {
                                showSearch = false
                                guard let b = BibleCatalog.book(id: hit.bookId) else { return }
                                planFlowActive = false; listenChapter = nil; chapterFromPlan = false; openedBook = nil
-                               focusVerse = hit.verse; focusKeyword = keyword
+                               focusVerse = hit.verse; focusKeyword = keyword; searchReturnQuery = keyword
                                openedChapter = (b, hit.chapter)
                            })
                 .edgeSwipeBack { showSearch = false }
@@ -847,7 +849,7 @@ struct RootView: View {
                                   guard let b = BibleCatalog.book(id: item.bookId) else { return }
                                   planFlowActive = false; listenChapter = nil; chapterFromPlan = false; openedBook = nil
                                   focusVerse = item.verse; focusKeyword = nil
-                                  openedChapter = (b, item.chapter)
+                                  searchReturnQuery = nil; openedChapter = (b, item.chapter)
                               })
                 .edgeSwipeBack { showFavorites = false }
             } else if let opened = openedChapter {
@@ -870,6 +872,12 @@ struct RootView: View {
                             if !planFlowActive { listenChapter = nil }
                         } else {
                             planFlowActive = false; listenChapter = nil
+                        }
+                        // 从搜索结果进来的：回到搜索页，关键词和结果原样恢复
+                        if let q = searchReturnQuery {
+                            searchReturnQuery = nil
+                            searchPrefs.resumeQuery = q
+                            showSearch = true
                         }
                     },
                     onOpenSettings: { showTranslationPanel = true },
@@ -896,7 +904,7 @@ struct RootView: View {
                     },
                     onCopySelection: { copySelectedVerses(in: opened) },
                     onClearSelection: { selectedVerses = [] },
-                    onOpenCatalog: { openedChapter = nil; openedBook = nil; planFlowActive = false; listenChapter = nil; chapterFromPlan = false },
+                    onOpenCatalog: { searchReturnQuery = nil; openedChapter = nil; openedBook = nil; planFlowActive = false; listenChapter = nil; chapterFromPlan = false },
                     onNavigate: { id, ch in
                         // 结尾的上一章 / 下一章：手动翻页就退出计划流
                         guard let b = BibleCatalog.book(id: id) else { return }
@@ -931,7 +939,7 @@ struct RootView: View {
                                 planFlowActive = false; listenChapter = nil; chapterFromPlan = false
                                 focusVerse = nil; focusKeyword = nil
                                 openedBook = nil
-                                openedChapter = (b, last.chapter)
+                                searchReturnQuery = nil; openedChapter = (b, last.chapter)
                             }
                         }
                     }
@@ -947,7 +955,7 @@ struct RootView: View {
                                guard let b = BibleCatalog.book(id: hit.bookId) else { return }
                                planFlowActive = false; listenChapter = nil; openedBook = nil
                                chapterFromPlan = true; planFlowHost = .chapter
-                               focusVerse = hit.verse; focusKeyword = keyword
+                               focusVerse = hit.verse; focusKeyword = keyword; searchReturnQuery = keyword
                                openedChapter = (b, hit.chapter)
                                tab = .read
                            })
@@ -991,7 +999,7 @@ struct RootView: View {
                             planFlowActive = false; listenChapter = nil; chapterFromPlan = false
                             openedBook = nil
                             focusVerse = verse; focusKeyword = nil
-                            openedChapter = (b, ch)
+                            searchReturnQuery = nil; openedChapter = (b, ch)
                             tab = .read
                         },
                         onOpenFavorites: { showFavorites = true; tab = .read },
@@ -1000,7 +1008,7 @@ struct RootView: View {
                 guard let b = BibleCatalog.book(id: id) else { return }
                 planFlowActive = false; listenChapter = nil; chapterFromPlan = false
                 openedBook = nil
-                openedChapter = (b, ch)
+                searchReturnQuery = nil; openedChapter = (b, ch)
                 tab = .read
             },
                         onOpenAchievements: { showAchievements = true })

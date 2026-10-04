@@ -53,6 +53,8 @@ class SearchPrefs(context: Context) {
         private set
     var scope by mutableStateOf(ScriptureSearchScope.parse(sp.getString(SCOPE_KEY, null)))
         private set
+    /** 从章页返回搜索页时要恢复的关键词（只在内存里，用一次就清） */
+    var resumeQuery: String? = null
 
     private fun readRecent(): List<String> {
         val raw = sp.getString(RECENT_KEY, null) ?: return emptyList()

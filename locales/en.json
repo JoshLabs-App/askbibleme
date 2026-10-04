@@ -983,6 +983,8 @@
       "scriptureSearchDbError": "This translation database is not available. Try again or switch translation.",
       "scriptureSearchLoading": "Searching…",
       "scriptureSearchEmpty": "No matching verses",
+      "scriptureSearchCount": "{{count}} verses found",
+      "scriptureSearchTruncated": "Too many matches — showing the first {{limit}}. Try a more specific keyword.",
       "scriptureSearchNoChapterHint": "No current chapter. Open a chapter first to search within it.",
       "scriptureSearchScopeAria": "Search scope",
       "scriptureSearchScopeAll": "Whole Bible",

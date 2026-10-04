@@ -983,6 +983,8 @@
       "scriptureSearchDbError": "当前译本数据未就绪，请稍后重试或切换译本。",
       "scriptureSearchLoading": "搜索中…",
       "scriptureSearchEmpty": "没有找到匹配的经文",
+      "scriptureSearchCount": "共 {{count}} 处",
+      "scriptureSearchTruncated": "结果太多，只显示前 {{limit}} 条，换个更具体的词试试",
       "scriptureSearchNoChapterHint": "暂无当前章节，请先打开一章后再搜索本章。",
       "scriptureSearchScopeAria": "搜索范围",
       "scriptureSearchScopeAll": "全本",

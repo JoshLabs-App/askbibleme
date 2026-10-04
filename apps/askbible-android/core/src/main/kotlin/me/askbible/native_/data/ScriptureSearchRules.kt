@@ -8,6 +8,10 @@ enum class ScriptureSearchScope(val raw: String) {
 
 data class SearchChapterRef(val bookId: String, val chapter: Int)
 data class ScriptureSearchHit(val bookId: String, val bookName: String, val chapter: Int, val verse: Int, val text: String)
+/** 搜索结果：hits 最多 LIMIT 条，total 是实际命中总数（> hits.size 说明被截断了） */
+data class ScriptureSearchResult(val hits: List<ScriptureSearchHit>, val total: Int) {
+    companion object { val EMPTY = ScriptureSearchResult(emptyList(), 0) }
+}
 data class SearchTextSegment(val text: String, val match: Boolean)
 
 /**
@@ -16,9 +20,8 @@ data class SearchTextSegment(val text: String, val match: Boolean)
  */
 object ScriptureSearchRules {
     const val MIN_LENGTH = 1
-    const val LIMIT = 40
-    /** 旧约 / 新约范围先多取 120 条再按卷过滤（RN SCOPED_FETCH_LIMIT） */
-    const val SCOPED_FETCH_LIMIT = 120
+    /** 一次最多列出的条数；总数另报（D-30，原来是 RN 的 40） */
+    const val LIMIT = 500
 
     fun normalize(raw: String): String = raw.trim().replace(Regex("\\s+"), " ")
 

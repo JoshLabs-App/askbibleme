@@ -295,6 +295,8 @@ private fun RootScreen() {
     var listenChapter by remember { mutableIntStateOf(1) }
     // 章页是从计划页开的：返回回计划 Tab、不停播
     var chapterFromPlan by remember { mutableStateOf(false) }
+    /** 章页是从搜索结果点进来的：记下当时的关键词，返回时回到搜索页并恢复结果 */
+    var searchReturnQuery by remember { mutableStateOf<String?>(null) }
     // 读经计划流：今日逐章队列，一章播完顺到下一章并记已读
     var planQueue by remember { mutableStateOf<List<PlanPointer>>(emptyList()) }
     var planQueueIndex by remember { mutableIntStateOf(0) }
@@ -379,7 +381,7 @@ private fun RootScreen() {
         autoPlayPending = autoPlay
         listenBook = b; listenChapter = p.chapter
         chapter = p.chapter
-        openedBook = b
+        searchReturnQuery = null; openedBook = b
     }
     // 播放页点播：不开章页，只把音源换到这一章（同章已载入就直接续播）
     fun listenPlanChapter(p: PlanPointer, autoPlay: Boolean) {
@@ -416,8 +418,12 @@ private fun RootScreen() {
                     audio.loopMode == LoopMode.BOOK -> 1
                     else -> 0
                 }
-                if (nextChapter > 0) {
-                    if (b != null) chapter = nextChapter
+                if (nextChapter == at) {
+                    // 单章书循环：音源没变，不会重新装载，直接回开头续播
+                    audio.seekTo(0.0); audio.resume()
+                } else if (nextChapter > 0) {
+                    // 自动跳章要接着播：交给音源变化后的 autoPlayPending 起播
+                    if (b != null) { autoPlayPending = true; chapter = nextChapter }
                     else { listenChapter = nextChapter; audio.resume() }
                 }
             }
@@ -559,6 +565,8 @@ private fun RootScreen() {
                 // 从计划页进来的章页：回计划 Tab、不停播（RN 返回上一页仍在放）
                 if (chapterFromPlan) { chapterFromPlan = false; planFlowListen = true; tab = ShellTab.PLAN; if (!planFlowActive) listenBook = null }
                 else { audio.pause(); planFlowActive = false; listenBook = null }
+                // 从搜索结果进来的：回到搜索页，关键词和结果原样恢复
+                searchReturnQuery?.let { q -> searchReturnQuery = null; searchPrefs.resumeQuery = q; showSearch = true }
             }
             tab == ShellTab.PLAN && planRoute != "play" -> planRoute = if (planRoute == "detail") "plans" else "play"
             else -> tab = ShellTab.HOME
@@ -606,7 +614,7 @@ private fun RootScreen() {
         planFlowListen = false
         focusVerse = null; focusKeyword = null
         if (!(planPoolMatchesView && index == planQueueIndex)) { planFlowActive = false; listenBook = null }
-        chapter = q[index].chapter; openedBook = b
+        chapter = q[index].chapter; searchReturnQuery = null; openedBook = b
         tab = ShellTab.READ
     }
     // 坞的播放键：播中就停；池对上本页就续播；否则从选中章起播
@@ -662,7 +670,7 @@ private fun RootScreen() {
                     tab = ShellTab.READ
                     // 没有记录（首次打开）就只进读经页，让用户自己挑，不替他定一卷
                     if (resume != null) BibleCatalog.book(resume.bookId)?.let { b ->
-                        chapter = resume.chapter; openedBook = b
+                        chapter = resume.chapter; searchReturnQuery = null; openedBook = b
                     }
                 },
             )
@@ -679,14 +687,14 @@ private fun RootScreen() {
                     // 探索页的收藏：跳到读经 Tab 的那一节
                     BibleCatalog.book(id)?.let { b ->
                         planFlowActive = false; listenBook = null; chapterFromPlan = false; pickingBook = null
-                        focusVerse = v; focusKeyword = null; chapter = ch; openedBook = b; tab = ShellTab.READ
+                        focusVerse = v; focusKeyword = null; chapter = ch; searchReturnQuery = null; openedBook = b; tab = ShellTab.READ
                     }
                 },
                 onOpenFavorites = { showFavorites = true; tab = ShellTab.READ },
                 onOpenChapter = { id, ch ->
                     // 文章里的经文链接：切到读经 Tab 直接开章
                     BibleCatalog.book(id)?.let { b ->
-                        planFlowActive = false; listenBook = null; chapterFromPlan = false; pickingBook = null; chapter = ch; openedBook = b; tab = ShellTab.READ
+                        planFlowActive = false; listenBook = null; chapterFromPlan = false; pickingBook = null; chapter = ch; searchReturnQuery = null; openedBook = b; tab = ShellTab.READ
                     }
                 })
             ShellTab.PLAN -> if (showSearch) SearchScreen(
@@ -698,7 +706,7 @@ private fun RootScreen() {
                     showSearch = false
                     BibleCatalog.book(hit.bookId)?.let { b ->
                         planFlowActive = false; listenBook = null; pickingBook = null; chapterFromPlan = true; planFlowListen = false
-                        focusVerse = hit.verse; focusKeyword = keyword; chapter = hit.chapter; openedBook = b; tab = ShellTab.READ
+                        focusVerse = hit.verse; focusKeyword = keyword; searchReturnQuery = keyword; chapter = hit.chapter; openedBook = b; tab = ShellTab.READ
                     }
                 })
             else when (planRoute) {
@@ -709,7 +717,7 @@ private fun RootScreen() {
                         // 出处 → 读经 Tab 开那一章；返回回到灵修页（chapterFromPlan 让返回键回计划 Tab）
                         BibleCatalog.book(id)?.let { b ->
                             planFlowActive = false; listenBook = null; pickingBook = null; chapterFromPlan = true; planFlowListen = false
-                            focusVerse = null; focusKeyword = null; chapter = ch; openedBook = b; tab = ShellTab.READ
+                            focusVerse = null; focusKeyword = null; chapter = ch; searchReturnQuery = null; openedBook = b; tab = ShellTab.READ
                         }
                     })
                 "plans" -> PlansListScreen(plans, onOpenPlan = { planDetailId = it; planRoute = "detail" }, onBack = { planRoute = "play" },
@@ -736,7 +744,7 @@ private fun RootScreen() {
                 onOpenHit = { hit, keyword ->
                     showSearch = false
                     BibleCatalog.book(hit.bookId)?.let { b ->
-                        planFlowActive = false; listenBook = null; chapterFromPlan = false; pickingBook = null; focusVerse = hit.verse; focusKeyword = keyword; chapter = hit.chapter; openedBook = b
+                        planFlowActive = false; listenBook = null; chapterFromPlan = false; pickingBook = null; focusVerse = hit.verse; focusKeyword = keyword; searchReturnQuery = keyword; chapter = hit.chapter; openedBook = b
                     }
                 })
             else if (showFavorites) FavoritesScreen(
@@ -746,7 +754,7 @@ private fun RootScreen() {
                 onOpen = { item ->
                     showFavorites = false
                     BibleCatalog.book(item.bookId)?.let { b ->
-                        planFlowActive = false; listenBook = null; chapterFromPlan = false; pickingBook = null; focusVerse = item.verse; focusKeyword = null; chapter = item.chapter; openedBook = b
+                        planFlowActive = false; listenBook = null; chapterFromPlan = false; pickingBook = null; focusVerse = item.verse; focusKeyword = null; chapter = item.chapter; searchReturnQuery = null; openedBook = b
                     }
                 })
             else if (book == null) CatalogScreen(
@@ -758,7 +766,7 @@ private fun RootScreen() {
                         {
                             planFlowActive = false; listenBook = null; chapterFromPlan = false
                             pickingBook = null; focusVerse = null; focusKeyword = null
-                            chapter = last.chapter; openedBook = b
+                            chapter = last.chapter; searchReturnQuery = null; openedBook = b
                         }
                     }
                 },
@@ -812,6 +820,8 @@ private fun RootScreen() {
                         // 从计划页进来的章页：回计划 Tab、不停播（RN 返回上一页仍在放）
                         if (chapterFromPlan) { chapterFromPlan = false; planFlowListen = true; tab = ShellTab.PLAN; if (!planFlowActive) listenBook = null }
                         else { audio.pause(); planFlowActive = false; listenBook = null }
+                        // 从搜索结果进来的：回到搜索页，关键词和结果原样恢复
+                        searchReturnQuery?.let { q -> searchReturnQuery = null; searchPrefs.resumeQuery = q; showSearch = true }
                     },
                     onOpenSettings = { showTranslationPanel = true },
                     onSizeUp = { size.next?.let { size = it } },
@@ -831,7 +841,7 @@ private fun RootScreen() {
                     onLongPressVerse = { actionVerse = it },
                     onOpenSearch = { searchRef = SearchChapterRef(book.id, chapter); showSearch = true },
                     onOpenFavorites = { showFavorites = true },
-                    onOpenCatalog = { openedBook = null; audio.pause(); planFlowActive = false; listenBook = null; chapterFromPlan = false },
+                    onOpenCatalog = { searchReturnQuery = null; openedBook = null; audio.pause(); planFlowActive = false; listenBook = null; chapterFromPlan = false },
                     onNavigate = { id, ch ->
                         // 结尾的上一章 / 下一章：手动翻页就退出计划流
                         BibleCatalog.book(id)?.let { b -> planFlowActive = false; listenBook = null; chapterFromPlan = false; chapter = ch; openedBook = b }

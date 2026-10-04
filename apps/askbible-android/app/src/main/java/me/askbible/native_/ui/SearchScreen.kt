@@ -66,6 +66,7 @@ import me.askbible.native_.data.AppLocale
 import me.askbible.native_.data.ReadSize
 import me.askbible.native_.data.ScriptureDatabase
 import me.askbible.native_.data.ScriptureSearchHit
+import me.askbible.native_.data.ScriptureSearchResult
 import me.askbible.native_.data.ScriptureSearchRules
 import me.askbible.native_.data.ScriptureSearchScope
 import me.askbible.native_.data.SearchChapterRef
@@ -91,8 +92,11 @@ fun SearchScreen(
     val context = LocalContext.current
     val scale = (size.metrics.verseFontSize / 16f).coerceIn(0.85f, 2.8f)
     fun sx(n: Float) = maxOf(1f, Math.round(n * scale * 10f) / 10f)
-    var query by remember { mutableStateOf("") }
+    // 从命中的章页返回：恢复关键词和结果，不弹键盘（挡结果）
+    val resumed = remember { prefs.resumeQuery.also { prefs.resumeQuery = null } }
+    var query by remember { mutableStateOf(resumed ?: "") }
     var results by remember { mutableStateOf<List<ScriptureSearchHit>>(emptyList()) }
+    var total by remember { mutableStateOf(0) }
     var searched by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(false) }
     // 在线译本没有本机库：改用同语言内置译本搜，并说明
@@ -107,7 +111,9 @@ fun SearchScreen(
         loading = true
         val fallbackId = ChapterLoader.searchFallbackId(context, translationId)
         fallbackNote = fallbackId?.let { ScriptureTranslation.find(it) }?.let { SiteCopy.f("native.searchFallbackNote", mapOf("name" to it.label(locale)), locale) }
-        results = ScriptureDatabase.open(context, fallbackId ?: translationId)?.let { db -> try { db.search(q, prefs.scope, chapterRef) } finally { db.close() } } ?: emptyList()
+        val found = ScriptureDatabase.open(context, fallbackId ?: translationId)?.let { db -> try { db.search(q, prefs.scope, chapterRef) } finally { db.close() } } ?: ScriptureSearchResult.EMPTY
+        results = found.hits
+        total = found.total
         searched = true
         loading = false
         // 不在这里记最近搜索：边输边搜会把 A、AB、ABC… 每个半截词都存下来（Josh 2026-09-26）。点进经文才记
@@ -117,7 +123,7 @@ fun SearchScreen(
         delay(360)
         run(query)
     }
-    LaunchedEffect(Unit) { focus.requestFocus() }
+    LaunchedEffect(Unit) { if (resumed != null) run(resumed) else focus.requestFocus() }
 
     Box(Modifier.fillMaxSize()) {
         ParchmentBackground(theme = theme)
@@ -198,6 +204,13 @@ fun SearchScreen(
                 if (!loading && searched && results.isEmpty() && !(prefs.scope == ScriptureSearchScope.CHAPTER && chapterRef == null)) {
                     Text(SiteCopy.t("pages.read.scriptureSearchEmpty", locale), Modifier.fillMaxWidth().padding(top = 24.dp), color = theme.muted.toColor(),
                          fontSize = sx(16f).sp, lineHeight = sx(24f).sp, textAlign = TextAlign.Center)
+                }
+                if (!loading && results.isNotEmpty()) {
+                    // 共 N 处；超过上限再补一句「只显示前 500 条」（D-30）
+                    Column(Modifier.padding(bottom = 8.dp)) {
+                        Text(SiteCopy.f("pages.read.scriptureSearchCount", mapOf("count" to "$total"), locale), color = theme.faint.toColor(), fontSize = sx(13f).sp)
+                        if (total > results.size) Text(SiteCopy.f("pages.read.scriptureSearchTruncated", mapOf("limit" to "${results.size}"), locale), color = theme.faint.toColor(), fontSize = sx(13f).sp)
+                    }
                 }
             }
             items(results, key = { "${it.bookId}:${it.chapter}:${it.verse}" }) { hit ->

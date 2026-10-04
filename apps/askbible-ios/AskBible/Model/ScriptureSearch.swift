@@ -2,7 +2,7 @@ import Foundation
 import SQLite3
 
 /// 经文搜索。规则逐条搬自 RN `src/bible/scripture-search.ts` + `search-scripture-verses.ts`，由 check:scripture-search 三端对拍：
-/// 关键词 trim + 折叠空白；SQLite LIKE 转义；范围 全本 / 旧约 / 新约 / 本章（旧约 = 卷号 ≤ 39）；命中 40 条封顶。
+/// 关键词 trim + 折叠空白；SQLite LIKE 转义；范围 全本 / 旧约 / 新约 / 本章（旧约 = 卷号 ≤ 39）；最多列 500 条并报总数（D-30）。
 enum ScriptureSearchScope: String, CaseIterable { case all, old, new, chapter }
 
 struct SearchChapterRef: Equatable { let bookId: String; let chapter: Int }
@@ -16,13 +16,20 @@ struct ScriptureSearchHit: Identifiable, Equatable {
     var id: String { "\(bookId):\(chapter):\(verse)" }
 }
 
+/// 搜索结果：hits 最多 limit 条，total 是实际命中总数（> hits.count 说明被截断了）
+struct ScriptureSearchResult: Equatable {
+    let hits: [ScriptureSearchHit]
+    let total: Int
+    static let empty = ScriptureSearchResult(hits: [], total: 0)
+    var truncated: Bool { total > hits.count }
+}
+
 struct SearchTextSegment: Equatable { let text: String; let match: Bool }
 
 enum ScriptureSearchRules {
     static let minLength = 1
-    static let limit = 40
-    /// 旧约 / 新约范围先多取 120 条再按卷过滤（RN SCOPED_FETCH_LIMIT）
-    static let scopedFetchLimit = 120
+    /// 一次最多列出的条数；总数另报（D-30，原来是 RN 的 40）
+    static let limit = 500
     static let defaultScope: ScriptureSearchScope = .all
 
     /// normalizeScriptureSearchQuery：trim + 连续空白折成一个空格
@@ -109,44 +116,52 @@ extension ScriptureDatabase {
         return "CASE book_id \(cases) ELSE 999 END"
     }()
 
-    /// searchScriptureVersesMobile：LIKE 全文；本章范围直接带 book/chapter 条件；旧约 / 新约在 SQL 里按卷序筛；最多 40 条。
-    /// 排序按圣经卷序（Josh 2026-09-11「搜索结果要按圣经顺序排」）：RN 是 `ORDER BY book_id`，
-    /// book_id 是字符串，排出来「1CO」在「GEN」前面。这里把卷序做成 CASE 表达式交给 SQLite，
-    /// 顺序正确的同时 LIMIT 截出来的也是靠前的卷，不是字母靠前的卷。
-    func search(query raw: String, scope: ScriptureSearchScope, chapterRef: SearchChapterRef?) -> [ScriptureSearchHit] {
+    /// 经文搜索：LIKE 全文；本章范围直接带 book/chapter 条件，旧约 / 新约在 SQL 里按卷序筛。
+    /// 结果全部给出、另报总数，超过 500 条才截断（D-30，Josh 2026-10-04：原来 40 条封顶又不提示，看着像搜不到）。
+    /// 排序按圣经卷序（Josh 2026-09-11「搜索结果要按圣经顺序排」）：book_id 是字符串，直接排「1CO」会在「GEN」前面，
+    /// 所以把卷序做成 CASE 表达式交给 SQLite。
+    func search(query raw: String, scope: ScriptureSearchScope, chapterRef: SearchChapterRef?) -> ScriptureSearchResult {
         let q = ScriptureSearchRules.normalize(raw)
-        if q.isEmpty || q.count < ScriptureSearchRules.minLength { return [] }
-        if scope == .chapter, chapterRef == nil { return [] }
-        let like = "%\(ScriptureSearchRules.escapeLike(q))%"
-        var rows: [(String, Int, Int, String)] = []
-        var stmt: OpaquePointer?
-        defer { sqlite3_finalize(stmt) }
+        if q.isEmpty || q.count < ScriptureSearchRules.minLength { return .empty }
+        if scope == .chapter, chapterRef == nil { return .empty }
+        var whereSQL = "text LIKE ? ESCAPE '\\'"
+        var binds: [Any] = ["%\(ScriptureSearchRules.escapeLike(q))%"]
+        let ot = BibleCatalog.oldTestamentMax
+        switch scope {
+        case .chapter:
+            guard let ref = chapterRef else { return .empty }
+            whereSQL += " AND book_id = ? AND chapter = ?"; binds += [ref.bookId, ref.chapter]
+        case .old: whereSQL += " AND (\(Self.bookOrderSQL)) < \(ot)"
+        case .new: whereSQL += " AND (\(Self.bookOrderSQL)) BETWEEN \(ot) AND \(BibleCatalog.all.count - 1)"
+        case .all: break
+        }
         let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
-        if scope == .chapter, let ref = chapterRef {
-            let sql = "SELECT book_id, chapter, verse, text FROM verse WHERE text LIKE ? ESCAPE '\\' AND book_id = ? AND chapter = ? ORDER BY verse LIMIT ?"
-            guard sqlite3_prepare_v2(handle, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
-            sqlite3_bind_text(stmt, 1, like, -1, transient)
-            sqlite3_bind_text(stmt, 2, ref.bookId, -1, transient)
-            sqlite3_bind_int(stmt, 3, Int32(ref.chapter))
-            sqlite3_bind_int(stmt, 4, Int32(ScriptureSearchRules.limit))
-        } else {
-            // 旧约 / 新约在 SQL 里按卷序筛，不能先取 120 再过滤：「安息」旧约就超过 120 处，新约会被挤成 0 条（2026-10-04 Josh 报）
-            let ot = BibleCatalog.oldTestamentMax
-            let testament = scope == .old ? " AND (\(Self.bookOrderSQL)) < \(ot)" : scope == .new ? " AND (\(Self.bookOrderSQL)) BETWEEN \(ot) AND \(BibleCatalog.all.count - 1)" : ""
-            let sql = "SELECT book_id, chapter, verse, text FROM verse WHERE text LIKE ? ESCAPE '\\'\(testament) ORDER BY \(Self.bookOrderSQL), chapter, verse LIMIT ?"
-            guard sqlite3_prepare_v2(handle, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
-            sqlite3_bind_text(stmt, 1, like, -1, transient)
-            sqlite3_bind_int(stmt, 2, Int32(ScriptureSearchRules.limit))
+        func prepare(_ sql: String) -> OpaquePointer? {
+            var stmt: OpaquePointer?
+            guard sqlite3_prepare_v2(handle, sql, -1, &stmt, nil) == SQLITE_OK else { sqlite3_finalize(stmt); return nil }
+            for (i, v) in binds.enumerated() {
+                if let t = v as? String { sqlite3_bind_text(stmt, Int32(i + 1), t, -1, transient) }
+                else if let n = v as? Int { sqlite3_bind_int(stmt, Int32(i + 1), Int32(n)) }
+            }
+            return stmt
         }
-        while sqlite3_step(stmt) == SQLITE_ROW {
-            guard let b = sqlite3_column_text(stmt, 0), let t = sqlite3_column_text(stmt, 3) else { continue }
-            rows.append((String(cString: b), Int(sqlite3_column_int(stmt, 1)), Int(sqlite3_column_int(stmt, 2)), String(cString: t)))
+        var total = 0
+        if let stmt = prepare("SELECT COUNT(*) FROM verse WHERE \(whereSQL)") {
+            if sqlite3_step(stmt) == SQLITE_ROW { total = Int(sqlite3_column_int(stmt, 0)) }
+            sqlite3_finalize(stmt)
         }
-        let filtered = scope == .chapter ? rows : rows.filter { ScriptureSearchRules.isVerseInScope($0.0, $0.1, scope, chapterRef) }
-        return filtered.prefix(ScriptureSearchRules.limit).compactMap { r in
-            let text = r.3.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !r.0.isEmpty, !text.isEmpty else { return nil }
-            return ScriptureSearchHit(bookId: r.0, bookName: BibleCatalog.book(id: r.0)?.nameZh ?? r.0, chapter: r.1, verse: r.2, text: text)
+        var hits: [ScriptureSearchHit] = []
+        if total > 0, let stmt = prepare("SELECT book_id, chapter, verse, text FROM verse WHERE \(whereSQL) ORDER BY \(Self.bookOrderSQL), chapter, verse LIMIT \(ScriptureSearchRules.limit)") {
+            while sqlite3_step(stmt) == SQLITE_ROW {
+                guard let b = sqlite3_column_text(stmt, 0), let t = sqlite3_column_text(stmt, 3) else { continue }
+                let bookId = String(cString: b)
+                let text = String(cString: t).trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !bookId.isEmpty, !text.isEmpty else { continue }
+                hits.append(ScriptureSearchHit(bookId: bookId, bookName: BibleCatalog.book(id: bookId)?.nameZh ?? bookId,
+                                               chapter: Int(sqlite3_column_int(stmt, 1)), verse: Int(sqlite3_column_int(stmt, 2)), text: text))
+            }
+            sqlite3_finalize(stmt)
         }
+        return ScriptureSearchResult(hits: hits, total: total)
     }
 }

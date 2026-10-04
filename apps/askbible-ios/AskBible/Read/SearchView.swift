@@ -19,6 +19,7 @@ struct SearchView: View {
     @Environment(\.parchment) private var theme
     @State private var query = ""
     @State private var results: [ScriptureSearchHit] = []
+    @State private var total = 0
     @State private var searched = false
     @State private var loading = false
     @State private var debounce: Task<Void, Never>?
@@ -34,7 +35,8 @@ struct SearchView: View {
     var body: some View {
         GeometryReader { geo in
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 0) {
+                // 结果最多 500 条（D-30），用 Lazy 只排可见的几行
+                LazyVStack(alignment: .leading, spacing: 0) {
                     Button(action: onBack) {
                         Image(systemName: "chevron.left").font(.system(size: 22, weight: .semibold))
                             .foregroundStyle(theme.ink).frame(width: 44, height: 44, alignment: .leading)
@@ -116,6 +118,17 @@ struct SearchView: View {
                             .foregroundStyle(theme.muted).frame(maxWidth: .infinity).padding(.top, 24)
                     }
 
+                    if !loading, !results.isEmpty {
+                        // 共 N 处；超过上限再补一句「只显示前 500 条」（D-30）
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(SiteCopy.f("pages.read.scriptureSearchCount", ["count": "\(total)"], locale))
+                            if total > results.count {
+                                Text(SiteCopy.f("pages.read.scriptureSearchTruncated", ["limit": "\(results.count)"], locale))
+                            }
+                        }
+                        .font(.system(size: sx(13))).foregroundStyle(theme.faint).padding(.bottom, 8)
+                    }
+
                     ForEach(results) { hit in
                         Button {
                             // 点进经文才算一次真正的搜索，这时才记进最近搜索
@@ -146,7 +159,16 @@ struct SearchView: View {
             .scrollDismissesKeyboard(.interactively)
         }
         .background(ParchmentBackground(theme: theme).ignoresSafeArea())
-        .onAppear { focused = true }
+        .onAppear {
+            // 从命中的章页返回：恢复关键词和结果，不弹键盘（挡结果）
+            if let q = prefs.resumeQuery {
+                prefs.resumeQuery = nil
+                query = q
+                rerun()
+            } else {
+                focused = true
+            }
+        }
     }
 
     /// 命中经文：关键词段 ink 字 700；其余 verse 字号 500 正文色。关键词底色由 RoundedHighlightText 画成圆角 4 的框
@@ -188,8 +210,9 @@ struct SearchView: View {
         loading = true
         let fallbackId = store.searchFallbackId(for: store.translation.id)
         fallbackNote = fallbackId.flatMap { ScriptureTranslation.find($0) }.map { SiteCopy.f("native.searchFallbackNote", ["name": $0.label(locale)], locale) }
-        let hits = store.database(fallbackId ?? store.translation.id)?.search(query: q, scope: prefs.scope, chapterRef: chapterRef) ?? []
-        results = hits
+        let found = store.database(fallbackId ?? store.translation.id)?.search(query: q, scope: prefs.scope, chapterRef: chapterRef) ?? .empty
+        results = found.hits
+        total = found.total
         searched = true
         loading = false
     }

@@ -105,41 +105,34 @@ class ScriptureDatabase private constructor(
     }
 
     /**
-     * searchScriptureVersesMobile：LIKE 全文；本章范围直接带 book/chapter 条件；旧约 / 新约在 SQL 里按卷序筛；最多 40 条。
-     * 排序按圣经卷序（Josh 2026-09-11「搜索结果要按圣经顺序排」）：RN 是 `ORDER BY book_id`，
-     * book_id 是字符串，排出来「1CO」在「GEN」前面。这里把卷序做成 CASE 表达式交给 SQLite，
-     * 顺序正确的同时 LIMIT 截出来的也是靠前的卷，不是字母靠前的卷。与 iOS 的 ScriptureDatabase.search 对等。
+     * 经文搜索：LIKE 全文；本章范围直接带 book/chapter 条件，旧约 / 新约在 SQL 里按卷序筛。
+     * 结果全部给出、另报总数，超过 500 条才截断（D-30，Josh 2026-10-04：原来 40 条封顶又不提示，看着像搜不到）。
+     * 排序按圣经卷序（Josh 2026-09-11）：book_id 是字符串，直接排「1CO」会在「GEN」前面，所以卷序做成 CASE 表达式。与 iOS 对等。
      */
-    fun search(raw: String, scope: ScriptureSearchScope, chapterRef: SearchChapterRef?): List<ScriptureSearchHit> {
+    fun search(raw: String, scope: ScriptureSearchScope, chapterRef: SearchChapterRef?): ScriptureSearchResult {
         val q = ScriptureSearchRules.normalize(raw)
-        if (q.isEmpty() || q.length < ScriptureSearchRules.MIN_LENGTH) return emptyList()
-        if (scope == ScriptureSearchScope.CHAPTER && chapterRef == null) return emptyList()
-        val like = "%${ScriptureSearchRules.escapeLike(q)}%"
-        val rows = ArrayList<Array<Any>>()
-        val cursor = if (scope == ScriptureSearchScope.CHAPTER && chapterRef != null) db.rawQuery(
-            "SELECT book_id, chapter, verse, text FROM verse WHERE text LIKE ? ESCAPE '\\' AND book_id = ? AND chapter = ? ORDER BY verse LIMIT ?",
-            arrayOf(like, chapterRef.bookId, chapterRef.chapter.toString(), ScriptureSearchRules.LIMIT.toString()))
-        else {
-            // 旧约 / 新约在 SQL 里按卷序筛，不能先取 120 再过滤：「安息」旧约就超过 120 处，新约会被挤成 0 条（2026-10-04 Josh 报）
-            val ot = BibleCatalog.OLD_TESTAMENT_MAX
-            val testament = when (scope) {
-                ScriptureSearchScope.OLD -> " AND ($bookOrderSql) < $ot"
-                ScriptureSearchScope.NEW -> " AND ($bookOrderSql) BETWEEN $ot AND ${BibleCatalog.all.size - 1}"
-                else -> ""
+        if (q.isEmpty() || q.length < ScriptureSearchRules.MIN_LENGTH) return ScriptureSearchResult.EMPTY
+        if (scope == ScriptureSearchScope.CHAPTER && chapterRef == null) return ScriptureSearchResult.EMPTY
+        var where = "text LIKE ? ESCAPE '\\'"
+        val args = arrayListOf("%${ScriptureSearchRules.escapeLike(q)}%")
+        val ot = BibleCatalog.OLD_TESTAMENT_MAX
+        when (scope) {
+            ScriptureSearchScope.CHAPTER -> { where += " AND book_id = ? AND chapter = ?"; args += chapterRef!!.bookId; args += chapterRef.chapter.toString() }
+            ScriptureSearchScope.OLD -> where += " AND ($bookOrderSql) < $ot"
+            ScriptureSearchScope.NEW -> where += " AND ($bookOrderSql) BETWEEN $ot AND ${BibleCatalog.all.size - 1}"
+            ScriptureSearchScope.ALL -> {}
+        }
+        val total = db.rawQuery("SELECT COUNT(*) FROM verse WHERE $where", args.toTypedArray()).use { c -> if (c.moveToFirst()) c.getInt(0) else 0 }
+        if (total == 0) return ScriptureSearchResult.EMPTY
+        val hits = ArrayList<ScriptureSearchHit>()
+        db.rawQuery("SELECT book_id, chapter, verse, text FROM verse WHERE $where ORDER BY $bookOrderSql, chapter, verse LIMIT ${ScriptureSearchRules.LIMIT}", args.toTypedArray()).use { c ->
+            while (c.moveToNext()) {
+                val bookId = c.getString(0) ?: ""; val text = (c.getString(3) ?: "").trim()
+                if (bookId.isEmpty() || text.isEmpty()) continue
+                hits += ScriptureSearchHit(bookId, BibleCatalog.book(bookId)?.nameZh ?: bookId, c.getInt(1), c.getInt(2), text)
             }
-            db.rawQuery(
-                "SELECT book_id, chapter, verse, text FROM verse WHERE text LIKE ? ESCAPE '\\'$testament ORDER BY $bookOrderSql, chapter, verse LIMIT ?",
-                arrayOf(like, ScriptureSearchRules.LIMIT.toString()))
         }
-        cursor.use { c -> while (c.moveToNext()) rows.add(arrayOf(c.getString(0) ?: "", c.getInt(1), c.getInt(2), c.getString(3) ?: "")) }
-        val filtered = if (scope == ScriptureSearchScope.CHAPTER) rows else rows.filter {
-            ScriptureSearchRules.isVerseInScope(it[0] as String, it[1] as Int, scope, chapterRef)
-        }
-        return filtered.take(ScriptureSearchRules.LIMIT).mapNotNull { r ->
-            val bookId = r[0] as String; val text = (r[3] as String).trim()
-            if (bookId.isEmpty() || text.isEmpty()) null
-            else ScriptureSearchHit(bookId, BibleCatalog.book(bookId)?.nameZh ?: bookId, r[1] as Int, r[2] as Int, text)
-        }
+        return ScriptureSearchResult(hits, total)
     }
 
     fun close() = db.close()

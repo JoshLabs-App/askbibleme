@@ -369,6 +369,7 @@
 .read-scripture-search-hint,
 .read-scripture-search-status,
 .read-scripture-search-empty,
+.read-scripture-search-count,
 .read-scripture-search-error {
   margin: 0.5rem 0 0;
   font-size: 0.8125rem;
@@ -379,6 +380,12 @@
 
 .read-scripture-search-error {
   color: color-mix(in srgb, rgb(120 40 20) 88%, transparent);
+}
+
+/* 共 N 处（D-30）：靠左贴着结果列表 */
+.read-scripture-search-count {
+  text-align: left;
+  margin: 0.75rem 0 0.25rem;
 }
 
 .read-scripture-search-results {
@@ -427,7 +434,8 @@
 .dark .read-scripture-search-lead,
 .dark .read-scripture-search-hint,
 .dark .read-scripture-search-status,
-.dark .read-scripture-search-empty {
+.dark .read-scripture-search-empty,
+.dark .read-scripture-search-count {
   color: color-mix(in srgb, rgb(214 198 180) 82%, transparent);
 }
 

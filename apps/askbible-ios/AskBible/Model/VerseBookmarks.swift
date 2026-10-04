@@ -116,6 +116,8 @@ final class SearchPrefs: ObservableObject {
     static let scopeKey = "askbible-mobile-scripture-search-scope-v1"
     @Published private(set) var recent: [String]
     @Published var scope: ScriptureSearchScope { didSet { UserDefaults.standard.set(scope.rawValue, forKey: Self.scopeKey) } }
+    /// 从章页返回搜索页时要恢复的关键词（只在内存里，用一次就清）
+    var resumeQuery: String?
 
     init() {
         let d = UserDefaults.standard

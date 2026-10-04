@@ -72,6 +72,7 @@ export function ReadScriptureSearchClient({ routeChapterRef: routeChapterRefProp
   const [chapterRef, setChapterRef] = useState<ScriptureSearchChapterRef | null>(routeChapterRef);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ScriptureSearchHit[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -127,13 +128,14 @@ export function ReadScriptureSearchClient({ routeChapterRef: routeChapterRefProp
          * 把整个 5-6MB sqlite 读进内存做全表 LIKE，是网站运行时对 sqlite 的最后一处依赖。
          * 卷文件有 CDN 缓存，首次之后纯内存匹配，通常比走服务端更快。
          */
-        const hits = await searchScriptureVersesWeb(
+        const found = await searchScriptureVersesWeb(
           searchTranslationId,
           q,
           scope,
           scope === "chapter" ? chapterRef : null,
         );
-        setResults(hits);
+        setResults(found.hits);
+        setTotal(found.total);
         setSearched(true);
         // 不在这里记最近搜索：边输边搜会把每个半截词都存下来（Josh 2026-09-26）。点进经文才记
       } catch (e) {
@@ -230,6 +232,18 @@ export function ReadScriptureSearchClient({ routeChapterRef: routeChapterRefProp
       {error ? <p className="read-scripture-search-error">{error}</p> : null}
       {!loading && searched && results.length === 0 && !error ? (
         <p className="read-scripture-search-empty">{t("pages.read.scriptureSearchEmpty")}</p>
+      ) : null}
+
+      {!loading && results.length > 0 ? (
+        <p className="read-scripture-search-count">
+          {t("pages.read.scriptureSearchCount", { count: String(total) })}
+          {total > results.length ? (
+            <>
+              <br />
+              {t("pages.read.scriptureSearchTruncated", { limit: String(results.length) })}
+            </>
+          ) : null}
+        </p>
       ) : null}
 
       <ul className="read-scripture-search-results">

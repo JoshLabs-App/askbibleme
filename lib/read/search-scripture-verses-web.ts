@@ -68,17 +68,14 @@ async function fetchBook(
   return null;
 }
 
-/** 按 scope 选出要搜的卷，并按 book_id 字母序排列——与服务端 ORDER BY book_id 对齐。 */
+/** 按 scope 选出要搜的卷，按圣经卷序（创世记→启示录），与 iOS / 安卓一致（Josh 2026-09-11「搜索结果要按圣经顺序排」）。 */
 function booksForScope(
   scope: ScriptureSearchScope,
   chapterRef?: ScriptureSearchChapterRef | null,
 ): string[] {
   if (scope === "chapter") return chapterRef?.bookId ? [chapterRef.bookId] : [];
-  const ids =
-    scope === "all"
-      ? scriptureBooks.map((b) => b.bookId)
-      : scriptureBooks.map((b) => b.bookId).filter((id) => isBookInScriptureSearchScope(id, scope));
-  return ids.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+  const ordered = [...scriptureBooks].sort((a, b) => a.bookNumber - b.bookNumber).map((b) => b.bookId);
+  return scope === "all" ? ordered : ordered.filter((id) => isBookInScriptureSearchScope(id, scope));
 }
 
 type Row = { book_id: string; chapter: number; verse: number; text: string };
@@ -90,7 +87,8 @@ function collectFromBook(
   scope: ScriptureSearchScope,
   chapterRef: ScriptureSearchChapterRef | null | undefined,
   out: Row[],
-): void {
+): number {
+  let matched = 0;
   /** 章号按数值升序，对齐服务端的 `ORDER BY chapter, verse`。 */
   const chapters = Object.keys(file.c)
     .map((k) => Number(k))
@@ -98,11 +96,9 @@ function collectFromBook(
     .sort((a, b) => a - b);
 
   for (const chapter of chapters) {
-    if (out.length >= SCRIPTURE_SEARCH_LIMIT) return;
     if (!isVerseInScriptureSearchScope(bookId, chapter, scope, chapterRef)) continue;
     const entries = file.c[String(chapter)] ?? [];
     for (let i = 0; i < entries.length; i += 1) {
-      if (out.length >= SCRIPTURE_SEARCH_LIMIT) return;
       const entry = entries[i];
       if (entry === undefined || entry === null) continue;
       const text = typeof entry === "string" ? entry : entry.t;
@@ -113,24 +109,31 @@ function collectFromBook(
        * 服务端当作纯字面量，两侧包 % 而已）。
        */
       if (!text.toLowerCase().includes(loweredQuery)) continue;
-      out.push({ book_id: bookId, chapter, verse: i + 1, text });
+      matched += 1;
+      /** 总数照数，列表只留前 SCRIPTURE_SEARCH_LIMIT 条（D-30） */
+      if (out.length < SCRIPTURE_SEARCH_LIMIT) out.push({ book_id: bookId, chapter, verse: i + 1, text });
     }
   }
+  return matched;
 }
 
+export type ScriptureSearchWebResult = { hits: ScriptureSearchHit[]; total: number };
+
+/** 返回最多 SCRIPTURE_SEARCH_LIMIT 条命中 + 实际总数（D-30：要报总数，所以范围内的卷都要搜完，卷文件有缓存） */
 export async function searchScriptureVersesWeb(
   translationId: string,
   query: string,
   scope: ScriptureSearchScope,
   chapterRef?: ScriptureSearchChapterRef | null,
-): Promise<ScriptureSearchHit[]> {
+): Promise<ScriptureSearchWebResult> {
+  const empty = { hits: [], total: 0 };
   const tid = String(translationId || "").trim();
-  if (!tid) return [];
+  if (!tid) return empty;
 
   const q = normalizeScriptureSearchQuery(query);
-  if (!q || q.length < SCRIPTURE_SEARCH_MIN_LEN) return [];
+  if (!q || q.length < SCRIPTURE_SEARCH_MIN_LEN) return empty;
   if (scope === "chapter" && (!chapterRef?.bookId || !Number.isInteger(chapterRef.chapter))) {
-    return [];
+    return empty;
   }
 
   const lowered = q.toLowerCase();
@@ -139,17 +142,16 @@ export async function searchScriptureVersesWeb(
   );
 
   const rows: Row[] = [];
+  let total = 0;
   for (let i = 0; i < books.length; i += FETCH_BATCH) {
-    if (rows.length >= SCRIPTURE_SEARCH_LIMIT) break;
     const batch = books.slice(i, i + FETCH_BATCH);
     const files = await Promise.all(batch.map((bookId) => fetchBook(tid, bookId)));
     for (let j = 0; j < batch.length; j += 1) {
       const file = files[j];
       if (!file) continue;
-      collectFromBook(batch[j], file, lowered, scope, chapterRef, rows);
-      if (rows.length >= SCRIPTURE_SEARCH_LIMIT) break;
+      total += collectFromBook(batch[j], file, lowered, scope, chapterRef, rows);
     }
   }
 
-  return hitsFromRows(rows).slice(0, SCRIPTURE_SEARCH_LIMIT);
+  return { hits: hitsFromRows(rows).slice(0, SCRIPTURE_SEARCH_LIMIT), total };
 }

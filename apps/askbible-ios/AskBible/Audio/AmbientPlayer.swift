@@ -19,6 +19,10 @@ final class AmbientPlayer: ObservableObject {
     private var sleepTimer: Timer?
     static let duckGain: Float = 0.5
 
+    init() {
+        AudioSessionPolicy.register { [weak self] in self?.isOn ?? false }
+    }
+
     private static var cacheDir: URL {
         let base = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
         let dir = base.appendingPathComponent("ambient-scenes", isDirectory: true)
@@ -43,8 +47,7 @@ final class AmbientPlayer: ObservableObject {
         looper = AVPlayerLooper(player: q, templateItem: item)
         q.volume = slot.gain * (ducked ? Self.duckGain : 1)
         queue = q
-        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-        try? AVAudioSession.sharedInstance().setActive(true)
+        AudioSessionPolicy.playback()
         q.play()
         if !cached { cache(slot: slot, to: local) }
     }

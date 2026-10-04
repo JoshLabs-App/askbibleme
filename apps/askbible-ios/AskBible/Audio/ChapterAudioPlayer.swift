@@ -91,8 +91,8 @@ final class ChapterAudioPlayer: ObservableObject {
     var onStopped: (() -> Void)?
 
     init() {
-        configureSession()
         observeInterruptions()
+        AudioSessionPolicy.register { [weak self] in self?.isPlaying ?? false }
     }
 
     deinit {
@@ -275,9 +275,9 @@ final class ChapterAudioPlayer: ObservableObject {
         guard player != nil else { return }  // 还在问代理拿地址：记住意图，拿到后自动起播
         interrupted = false
         onWillPlay?()
-        try? AVAudioSession.sharedInstance().setActive(true)
         // 朗读是 spokenAudio；音乐播放器会把 mode 改成 default，回来时改回去
-        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio)
+        configureSession()
+        try? AVAudioSession.sharedInstance().setActive(true)
         RemoteControlHub.shared.claim(self)
         player?.rate = rate
         isPlaying = true

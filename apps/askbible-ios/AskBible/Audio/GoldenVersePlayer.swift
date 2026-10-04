@@ -22,6 +22,10 @@ final class GoldenVersePlayer: ObservableObject {
     private var statusObserver: NSKeyValueObservation?
     private var title = ""
 
+    init() {
+        AudioSessionPolicy.register { [weak self] in self?.isPlaying ?? false }
+    }
+
     func play(url: URL, title: String) {
         isGap = false
         playItem(url: url, title: title)
@@ -92,8 +96,7 @@ final class GoldenVersePlayer: ObservableObject {
             }
         }
 
-        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio)
-        try? AVAudioSession.sharedInstance().setActive(true)
+        AudioSessionPolicy.playback(mode: .spokenAudio)
         RemoteControlHub.shared.claim(self)
         avPlayer.play()
         isPlaying = true
@@ -127,7 +130,7 @@ final class GoldenVersePlayer: ObservableObject {
 }
 
 extension GoldenVersePlayer: RemotePlayable {
-    func remotePlay() { player?.play(); isPlaying = player != nil; updateNowPlaying() }
+    func remotePlay() { AudioSessionPolicy.playback(mode: .spokenAudio); player?.play(); isPlaying = player != nil; updateNowPlaying() }
     func remotePause() { player?.pause(); isPlaying = false; updateNowPlaying() }
     func remoteToggle() { isPlaying ? remotePause() : remotePlay() }
     func remoteNext() { onEnded?() }

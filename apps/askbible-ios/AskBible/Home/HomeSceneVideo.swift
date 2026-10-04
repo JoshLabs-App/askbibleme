@@ -39,11 +39,13 @@ struct HomeSceneVideo: UIViewRepresentable {
             queue.removeAllItems()
             guard let url = NatureScenes.videoURL(id: id) else { return }
             looper = AVPlayerLooper(player: queue, templateItem: AVPlayerItem(url: url))
+            // 静音视频也会按当前类别激活会话：自家没在出声就先退回混音，免得掐停「听到」等别的 App（O-24）
+            AudioSessionPolicy.relaxIfIdle()
             queue.play()
         }
 
         func setPaused(_ paused: Bool) {
-            if paused { queue.pause() } else if queue.rate == 0 { queue.play() }
+            if paused { queue.pause() } else if queue.rate == 0 { AudioSessionPolicy.relaxIfIdle(); queue.play() }
         }
     }
 

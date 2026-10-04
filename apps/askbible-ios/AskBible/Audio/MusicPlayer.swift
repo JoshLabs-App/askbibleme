@@ -45,6 +45,7 @@ final class MusicPlayer: ObservableObject {
         repeatMode = MusicAlbumRules.defaultRepeatMode(a) ?? .all
         gain = MusicAlbumRules.defaultGain(a)
         observeInterruptions()
+        AudioSessionPolicy.register { [weak self] in self?.isPlaying ?? false }
     }
 
     deinit {
@@ -239,8 +240,7 @@ final class MusicPlayer: ObservableObject {
         wantsPlayback = true
         interrupted = false
         onWillPlay?()
-        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-        try? AVAudioSession.sharedInstance().setActive(true)
+        AudioSessionPolicy.playback()
         RemoteControlHub.shared.claim(self)
         player?.volume = effectiveGain
         player?.play()

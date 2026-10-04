@@ -109,7 +109,7 @@ extension ScriptureDatabase {
         return "CASE book_id \(cases) ELSE 999 END"
     }()
 
-    /// searchScriptureVersesMobile：LIKE 全文；本章范围直接带 book/chapter 条件；旧约 / 新约先取 120 再按卷过滤；最多 40 条。
+    /// searchScriptureVersesMobile：LIKE 全文；本章范围直接带 book/chapter 条件；旧约 / 新约在 SQL 里按卷序筛；最多 40 条。
     /// 排序按圣经卷序（Josh 2026-09-11「搜索结果要按圣经顺序排」）：RN 是 `ORDER BY book_id`，
     /// book_id 是字符串，排出来「1CO」在「GEN」前面。这里把卷序做成 CASE 表达式交给 SQLite，
     /// 顺序正确的同时 LIMIT 截出来的也是靠前的卷，不是字母靠前的卷。
@@ -130,10 +130,13 @@ extension ScriptureDatabase {
             sqlite3_bind_int(stmt, 3, Int32(ref.chapter))
             sqlite3_bind_int(stmt, 4, Int32(ScriptureSearchRules.limit))
         } else {
-            let sql = "SELECT book_id, chapter, verse, text FROM verse WHERE text LIKE ? ESCAPE '\\' ORDER BY \(Self.bookOrderSQL), chapter, verse LIMIT ?"
+            // 旧约 / 新约在 SQL 里按卷序筛，不能先取 120 再过滤：「安息」旧约就超过 120 处，新约会被挤成 0 条（2026-10-04 Josh 报）
+            let ot = BibleCatalog.oldTestamentMax
+            let testament = scope == .old ? " AND (\(Self.bookOrderSQL)) < \(ot)" : scope == .new ? " AND (\(Self.bookOrderSQL)) BETWEEN \(ot) AND \(BibleCatalog.all.count - 1)" : ""
+            let sql = "SELECT book_id, chapter, verse, text FROM verse WHERE text LIKE ? ESCAPE '\\'\(testament) ORDER BY \(Self.bookOrderSQL), chapter, verse LIMIT ?"
             guard sqlite3_prepare_v2(handle, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
             sqlite3_bind_text(stmt, 1, like, -1, transient)
-            sqlite3_bind_int(stmt, 2, Int32(scope == .all ? ScriptureSearchRules.limit : ScriptureSearchRules.scopedFetchLimit))
+            sqlite3_bind_int(stmt, 2, Int32(ScriptureSearchRules.limit))
         }
         while sqlite3_step(stmt) == SQLITE_ROW {
             guard let b = sqlite3_column_text(stmt, 0), let t = sqlite3_column_text(stmt, 3) else { continue }

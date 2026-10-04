@@ -105,7 +105,7 @@ class ScriptureDatabase private constructor(
     }
 
     /**
-     * searchScriptureVersesMobile：LIKE 全文；本章范围直接带 book/chapter 条件；旧约 / 新约先取 120 再按卷过滤；最多 40 条。
+     * searchScriptureVersesMobile：LIKE 全文；本章范围直接带 book/chapter 条件；旧约 / 新约在 SQL 里按卷序筛；最多 40 条。
      * 排序按圣经卷序（Josh 2026-09-11「搜索结果要按圣经顺序排」）：RN 是 `ORDER BY book_id`，
      * book_id 是字符串，排出来「1CO」在「GEN」前面。这里把卷序做成 CASE 表达式交给 SQLite，
      * 顺序正确的同时 LIMIT 截出来的也是靠前的卷，不是字母靠前的卷。与 iOS 的 ScriptureDatabase.search 对等。
@@ -119,9 +119,18 @@ class ScriptureDatabase private constructor(
         val cursor = if (scope == ScriptureSearchScope.CHAPTER && chapterRef != null) db.rawQuery(
             "SELECT book_id, chapter, verse, text FROM verse WHERE text LIKE ? ESCAPE '\\' AND book_id = ? AND chapter = ? ORDER BY verse LIMIT ?",
             arrayOf(like, chapterRef.bookId, chapterRef.chapter.toString(), ScriptureSearchRules.LIMIT.toString()))
-        else db.rawQuery(
-            "SELECT book_id, chapter, verse, text FROM verse WHERE text LIKE ? ESCAPE '\\' ORDER BY $bookOrderSql, chapter, verse LIMIT ?",
-            arrayOf(like, (if (scope == ScriptureSearchScope.ALL) ScriptureSearchRules.LIMIT else ScriptureSearchRules.SCOPED_FETCH_LIMIT).toString()))
+        else {
+            // 旧约 / 新约在 SQL 里按卷序筛，不能先取 120 再过滤：「安息」旧约就超过 120 处，新约会被挤成 0 条（2026-10-04 Josh 报）
+            val ot = BibleCatalog.OLD_TESTAMENT_MAX
+            val testament = when (scope) {
+                ScriptureSearchScope.OLD -> " AND ($bookOrderSql) < $ot"
+                ScriptureSearchScope.NEW -> " AND ($bookOrderSql) BETWEEN $ot AND ${BibleCatalog.all.size - 1}"
+                else -> ""
+            }
+            db.rawQuery(
+                "SELECT book_id, chapter, verse, text FROM verse WHERE text LIKE ? ESCAPE '\\'$testament ORDER BY $bookOrderSql, chapter, verse LIMIT ?",
+                arrayOf(like, ScriptureSearchRules.LIMIT.toString()))
+        }
         cursor.use { c -> while (c.moveToNext()) rows.add(arrayOf(c.getString(0) ?: "", c.getInt(1), c.getInt(2), c.getString(3) ?: "")) }
         val filtered = if (scope == ScriptureSearchScope.CHAPTER) rows else rows.filter {
             ScriptureSearchRules.isVerseInScope(it[0] as String, it[1] as Int, scope, chapterRef)

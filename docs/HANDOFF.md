@@ -737,20 +737,21 @@ manifest `start_url=/web`；手机截图和金句字体文件都取得到。本�
 
 ## 附：YouTube 多语言字幕 + 标题本地化交接（2026-10-05）
 
-### 当前状态
-- 英文金句系列 9 集已全部完成（见上一节「九集全部完成」）：视频 ID 在 `00/youtube/series-state.json` 的 `epNN-en-dual`；已有字幕轨 en / zh-Hant / zh-Hans（`add_captions()`，SRT 在 18T 的 `素材备份/01AskBible/youtube/en-epNN/subs-epNN-*.srt`，本机已删——**要从硬盘拷回或按渲染脚本重新生成时间轴**）。
-- 决定见 DECISIONS D-35（14 种语言、正式译本、不自己翻、标题说明也本地化）和 D-31（英文标题规则）。
-- 项目里只有中英圣经（`data/bible/sqlite/`），其他语言还没下载。
+### 当前状态（2026-10-05 晚更新）
+- **语言定为 17 种**（D-35 补）。脚本 `scripts/youtube-multilang-subs.py`：`fetch`（下载解析 17 本译本到 `00/youtube/bible-foreign/`）→ `check`（缺节 / 分节校验）→ `subs all`（9 集 SRT 到 `00/youtube/en-epNN/subs-epNN-<lang>.srt`，时间轴和英文 SRT 逐行一致已验）→ `upload all --wait`。
+- 译本和授权：`docs/授权登记.md` 第五节；分节换算做法：DECISIONS D-35 补。`check` 现在 16 种全 0 缺节（日文缺 150 节）。
+- **14 种正在后台上传**（10-05 03:38 起，`nohup`，日志 `00/youtube/multilang-upload.log`，进度记在 `series-state.json` 各集 `captions`），每天约 25 条、额度用完自动等美西午夜，约 5 天传完 126 条。看进度：`grep -c 已上传 00/youtube/multilang-upload.log`；进程断了直接重跑同一条命令，传过的会跳过：
+  `cd ~/Desktop/APP/01AskBible && nohup python3 -u scripts/youtube-multilang-subs.py upload all --wait >> 00/youtube/multilang-upload.log 2>&1 &`
+- 日 / 韩 / 罗 在 `HOLD` 里没传，等 Josh 定（OPEN-ITEMS O-32）。
+- 注意：`series-state.json` 里 ep07-en-dual 没有 en / zh 字幕记录（别的集都有），可能当初没传，传完外语顺手查一下。
 
 ### 下一步（按顺序）
-1. **取译本**：从 eBible.org 下载（VPL / USFM），放 `data/bible/sqlite/` 或单独目录，登记进 `docs/授权登记.md` 第一节（公有领域）或第二节（CC BY-SA）：
-   西 RV1909、葡 Almeida 1911、法 LSG 1910、德 Luther 1912、俄 Synodal、意 Riveduta 1927、阿 Van Dyck、越 1934、他加禄 Ang Biblia 1905、印地 IRV（CC BY-SA）、斯瓦希里 ULB（CC BY-SA）；
-   **韩（개역한글 1961）/ 日（口語訳 1955）/ 印尼** 先查清版权再下，不确定就问 Josh 或换译本。
-2. **生成 SRT**：每集的经文列表和时间轴来自 `scripts/youtube-golden-verses.py`（时间轴同英文版）；写个函数按 (book, ch, v) 换成目标译本的文字 + 本地书卷名，输出 `subs-epNN-<lang>.srt`。抽查几节和译本原文逐字一致。
-3. **上传字幕**：沿用 `add_captions()` 的写法（每条 400 额度，每天 1 万 → 约 25 条/天，126 条约 5 天；额度用完等美西午夜，照 `youtube-series-run.py` 的 `next_quota_reset`）。
-4. **标题 / 说明本地化**：`videos.update(part="localizations")`，每种语言一个 title + description；标题照 D-31 的结构（需要开头 | 搜索词 | 时长 · Be Still Series），用当地人真会搜的说法（可以让 ChatGPT 联网查各语言这类视频的常用搜索词）；说明栏里 CC BY-SA 译本注明出处。
-5. 全部传完后在 Studio 抽查两三种语言能选、能显示；提交推送。
+1. Josh 定 O-32 后，把对应语言移出 `HOLD`，重跑 upload（日文选口語訳的话先补缺的 18 章）。
+2. **标题 / 说明本地化**：`videos.update(part="localizations")`，每种语言一个 title + description；标题照 D-31 的结构（需要开头 | 搜索词 | 时长 · Be Still Series），用当地人真会搜的说法（可以让 ChatGPT 联网查各语言这类视频的常用搜索词）；说明栏放 `LANGS` 第四栏的署名（葡、印地、斯瓦希里、印尼、波兰）。改 localizations 要带全 snippet。
+3. 全部传完后在 Studio 抽查两三种语言能选、能显示；提交推送。
 
 ### 别踩的坑
 - 字幕轨 / 本地化都只能用 `still` 频道的 token（`scripts/youtube-upload.py` 的 `yt("still")`）；断网时它现在会照实报错，不再误报授权失效。
 - 改标题要带全 snippet（title / description / tags / categoryId / defaultLanguage），只给 title 会被清空别的字段。
+- 外语译本**章节数对得上不等于内容对得上**：getbible 的 Gdańska 1881 把诗篇标题塞进第 1 节、整篇错一位；eBible 的 RV1909 用空节占位（约拿 1:17 空、2 章后移）。改译本后一定跑 `check`，并用近亲语言逐节比（做法见 D-35 补）。
+- getbible 的书名是英文，当地书名从同语言的 eBible USFM 取（`LANGS` 第三栏）；Wikimedia 接口不带像样的 User-Agent 会 403。

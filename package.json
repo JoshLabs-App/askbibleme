@@ -110,6 +110,7 @@
     "mobile:sync-offline-media": "node scripts/sync-mobile-offline-media.mjs",
     "mobile:upload:golden-verse-r2": "node scripts/upload-golden-verse-audio-r2-fast.mjs",
     "mobile:upload:music-r2": "node scripts/upload-music-companion-r2-fast.mjs",
+    "mobile:upload:nature-videos-r2": "node scripts/upload-missing-nature-videos-r2.mjs",
     "mobile:refresh-nature-bundle": "npm run mobile:sync-content && npm run mobile:sync-offline-media",
     "mobile:sync-home-verse-pool": "node scripts/sync-mobile-home-verse-pool.mjs && HOME_PRAYER_POOL_SCOPE_ID=theme-repeat-ge5 node scripts/generate-home-verse-chunk-registry.mjs && node scripts/generate-home-verse-pool-menu-counts.mjs",
     "mobile:sync-info-edition": "node scripts/build-info-edition-sqlite-then-sync.mjs",

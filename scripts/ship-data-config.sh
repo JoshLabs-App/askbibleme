@@ -49,4 +49,9 @@ echo
 echo "Syncing App config to R2 …"
 npm run --silent mobile:config:push-r2
 
+# 配置里引用的自然场景视频，App 直接从 R2 读；R2 上没有就补传（D-33 / O-30）。
+echo
+echo "Checking nature videos on R2 …"
+node scripts/upload-missing-nature-videos-r2.mjs
+
 echo "Done."

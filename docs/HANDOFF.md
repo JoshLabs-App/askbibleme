@@ -704,7 +704,7 @@ manifest `start_url=/web`；手机截图和金句字体文件都取得到。本�
 - 英文第 1–9 集都已公开、中英两条配音都「已发布」、三语字幕已传、旧版都改私享：
   ptpo6B-M61o / 7ZbspnYmkH0 / DOYikZeoCDo / FHceB3UfW2E / rSvIdJgrBQQ / UV84qlo2vY4 / FOJmx1vU6h0 / 60E5XiDpT14 / vX1Z_JtwrjQ。
 - 1–6 集文件已在 18T `素材备份/01AskBible/youtube/`；7–9 集（约 18G）在 `~/素材备份待移`，插盘后跑 `~/bin/archive_to_drive.sh`。
-- 剩下只有 Josh 自己做的：Studio 里永久删除 12 支私享旧版（ep01/02 en/tw/zh 纯音乐、ep01 zh 朗读、ep03/04 tw/zh dual、ep03/04 en dual-old）。
+- ~~Studio 里永久删除 12 支私享旧版~~：2026-10-05 Josh 已删，API 核对 12 支都不在了。7–9 集文件 10-04 已搬到 18T。
 - 下面是过程记录，下次再出新集照着做。
 
 ### 2026-10-03 改（D-29）：传完直接公开

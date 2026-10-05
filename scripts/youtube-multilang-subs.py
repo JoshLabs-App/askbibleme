@@ -80,7 +80,7 @@ def book_name(lang, fields):
     n = fields.get(NAME_FIELD.get(lang, "toc2")) or fields.get("toc2") or fields["h"]
     if lang == "ru":  # 「Первое послание к Коринфянам」→「1 Коринфянам」，「Послание Иакова」→「Иакова」
         n = re.sub(r"^(Первое|Второе|Третье) (соборное )?послание (к |апостола )?", lambda m: RU_ORD[m.group(1)] + " ", n)
-        n = re.sub(r"^(Соборное )?[Пп]ослание (к |апостола )?", "", n).replace("Притчи Соломона", "Притчи")
+        n = re.sub(r"^(Соборное )?[Пп]ослание (к |апостола )?", "", n).replace("Притчи Соломона", "Притчи").replace("Филлиппийцам", "Филиппийцам")  # eBible 原文拼错
     if n.isupper():
         n = n.title()  # 他加禄 ULB 有几卷是全大写（JUAN）
     return n
@@ -274,6 +274,7 @@ def sim(a, b):
 
 def tidy(lang, t):
     t = re.sub(r"\s*\([^()]*\d+[:.]\d+[^()]*\)", "", t)  # 印地 IRV 正文里夹的交叉引用「(यशा. 40:11)」
+    t = re.sub(r"\(\d+[-:]\d+\)\s*", "", t)  # 印尼 AYT 的分节注记「(46-11)」
     t = re.sub(r"\s+([,.)\]»”’])" if lang == "fr" else r"\s+([,.;:!?)\]»”’])", r"\1", t)  # 法语 ; : ! ? 前本来就空格
     return re.sub(r"\s+", " ", t).strip()
 
@@ -415,6 +416,27 @@ def upload(eps, wait=False):
     print("全部传完", flush=True)
 
 
+def replace(n, langs):
+    """已经传上去的字幕轨换成新 SRT（captions.list 50 + captions.update 450 额度/条）。
+    2026-10-05 用过：第 1 集印尼（AYT 分节注记没清）、俄文（腓立比书名拼错）。"""
+    from googleapiclient.http import MediaFileUpload
+    spec = importlib.util.spec_from_file_location("u", ROOT / "scripts/youtube-upload.py")
+    u = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(u)
+    y = u.yt("still")
+    vid = json.loads(STATE.read_text())[f"ep{n:02d}-en-dual"]["video_id"]
+    tracks = y.captions().list(part="snippet", videoId=vid).execute()["items"]
+    for lang in langs:
+        t = [c for c in tracks if c["snippet"]["language"] == lang and c["snippet"]["trackKind"] != "asr"]
+        if len(t) != 1:
+            print(f"ep{n:02d} {lang}：找到 {len(t)} 条字幕轨，跳过", flush=True)
+            continue
+        y.captions().update(part="snippet", body={"id": t[0]["id"], "snippet": t[0]["snippet"]},
+                            media_body=MediaFileUpload(str(Y / f"en-ep{n:02d}/subs-ep{n:02d}-{lang}.srt"),
+                                                       mimetype="application/octet-stream")).execute()
+        print(f"ep{n:02d}：字幕轨 {lang} 已换成新版", flush=True)
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     if cmd == "fetch":
@@ -424,6 +446,8 @@ if __name__ == "__main__":
     elif cmd == "subs":
         for n in (range(1, 10) if sys.argv[2] == "all" else [int(sys.argv[2])]):
             subs(n)
+    elif cmd == "replace":
+        replace(int(sys.argv[2]), sys.argv[3:])
     elif cmd == "upload":
         upload(range(1, 10) if sys.argv[2] == "all" else [int(sys.argv[2])], wait="--wait" in sys.argv)
     else:

@@ -740,13 +740,13 @@ manifest `start_url=/web`；手机截图和金句字体文件都取得到。本�
 ### 当前状态（2026-10-05 更新）
 - **17 种全做**（D-35 补；日 / 韩 / 罗 Josh 10-05 定照传，O-32 已关闭）。脚本 `scripts/youtube-multilang-subs.py`：`fetch`（下载解析到 `00/youtube/bible-foreign/`）→ `check`（17 种全 0 缺节）→ `subs all`（9 集 × 17 种 SRT 到 `00/youtube/en-epNN/subs-epNN-<lang>.srt`，时间轴和英文 SRT 逐行一致已验）→ `upload all --wait`。
 - 译本和授权：`docs/授权登记.md` 第五节；分节换算做法：DECISIONS D-35 补。
-- **后台在传**：`00/youtube/multilang-run.sh`（nohup，日志 `00/youtube/multilang-upload.log`）——等美西午夜额度重置 → 先补第 7 集简体字幕（10-04 那次 en / 繁体已传、简体撞额度，进度文件已补记 en、zh-Hant）→ 再传 17 种外语。10-05 已传第 1 集 14 条左右，还剩约 129 条，每天约 25 条，约 6 天。进度记在 `series-state.json` 各集 `captions`。
-  看进度：`grep -c 已上传 00/youtube/multilang-upload.log`；进程断了重跑（传过的跳过）：
-  `cd ~/Desktop/APP/01AskBible && nohup python3 -u scripts/youtube-multilang-subs.py upload all --wait >> 00/youtube/multilang-upload.log 2>&1 &`
+- **后台队列**：`00/youtube/multilang-run.sh`（nohup，日志 `00/youtube/multilang-upload.log`）——等美西午夜额度重置（10-06 约 03:10 本地时间）→ ① `youtube-localize.py apply all --wait`（9 集标题 / 说明 17 种语言，D-35 补）→ ② `youtube-multilang-subs.py replace 1 id ru`（第 1 集已传的印尼 / 俄文换新版：AYT「(46-11)」注记、俄文「Филлиппийцам」拼错，传完才发现）→ ③ 补第 7 集简体字幕（10-04 en / 繁体已传、简体撞额度，进度文件已补记 en、zh-Hant）→ ④ 传 17 种外语字幕（还剩约 129 条，每天约 25 条，约 6 天）。进度：字幕记在 `series-state.json` 各集 `captions`，本地化记在 `localized`。
+  看进度：`grep -v 测时长 00/youtube/multilang-upload.log | tail`；进程断了：只差字幕就重跑 `nohup python3 -u scripts/youtube-multilang-subs.py upload all --wait >> 00/youtube/multilang-upload.log 2>&1 &`（传过的跳过），本地化没做完就先跑 `python3 scripts/youtube-localize.py apply all --wait`。
 
 ### 下一步（按顺序）
-1. **标题 / 说明本地化**（可以和上传并行做，但 `videos.update` 也吃额度，每次 50，9 集一次性约 450，排在额度够的那天）：`videos.update(part="localizations")`，每种语言一个 title + description；标题照 D-31 的结构（需要开头 | 搜索词 | 时长 · Be Still Series），用当地人真会搜的说法（可以让 ChatGPT 联网查各语言这类视频的常用搜索词）；说明栏放 `LANGS` 第四栏的署名（葡、印地、斯瓦希里、印尼、波兰）。改 localizations 要带全 snippet。
-2. 字幕全部传完后在 Studio 抽查两三种语言能选、能显示；确认第 7 集三条中英字幕都在。
+1. 10-06 队列跑完 ①②③ 后看日志确认：9 集都写了 `localized`、两条 replace 成功、第 7 集 zh-Hans 已传。
+2. 字幕全部传完后在 Studio 抽查两三种语言的标题、说明、字幕能选能显示；确认第 7 集三条中英字幕都在。
+3. 以后新出的集：先在 `youtube-localize.py` 的 `L[*]["titles"]` 每种语言加一行（9 → 10…），再跑 `subs N` / `upload N` / `apply N`。
 
 ### 别踩的坑
 - 字幕轨 / 本地化都只能用 `still` 频道的 token（`scripts/youtube-upload.py` 的 `yt("still")`）；断网时它现在会照实报错，不再误报授权失效。

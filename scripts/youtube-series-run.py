@@ -93,6 +93,31 @@ def hours_label(sec, lang):
     return f"{h} Hours" if lang == "en" else f"{h} 小時" if lang == "tw" else f"{h} 小时"
 
 
+# 英文标题按「观众的需要」写，不写场景、不写 4K；系列名放最后（D-31，Josh 2026-10-05「按你们的建议做，以后也是」，
+# 和 ChatGPT 联网查过头部频道后定的）。每集一种需要，9 集分组不抢同一个搜索词：睡眠 1/9、焦虑平安 2/8、安慰恢复 3/5、
+# 白天 4/7、晚上 6。新一集先在这里加一行（O-28：新集按经文主题选经文，标题和主题对上），没加就报错，免得又套回模板。
+EN_TITLES = {
+    1: ("Fall Asleep in God's Peace", "Bible Verses for Sleep & Soft Piano"),
+    2: ("Let Go of Anxiety", "Bible Verses for Peace & Quiet Rest"),
+    3: ("Rest for the Weary Soul", "Comforting Bible Verses & Soft Piano"),
+    4: ("Renew Your Strength", "Bible Verses & Piano for Morning Quiet Time"),
+    5: ("Be Still and Know", "Bible Verses for Peace, Rest & Reflection"),
+    6: ("Unwind with God Tonight", "Bible Verses for Evening Peace & Rest"),
+    7: ("Focus with Scripture", "Bible Verses & Soft Piano for Study and Prayer"),
+    8: ("Quiet Your Mind", "Comforting Bible Verses for Rest & Stillness"),
+    9: ("Sleep Peacefully Tonight", "Bible Verses for Deep Rest & Soft Piano"),
+}
+
+
+def en_title(n, dur):
+    if n not in EN_TITLES:
+        raise SystemExit(f"第 {n} 集还没定标题：先在 EN_TITLES 里按这集的经文主题加一行（D-31 / O-28）")
+    hook, mid = EN_TITLES[n]
+    t = f"{hook} | {mid} | {hours_label(dur, 'en')} · Be Still Series"
+    assert len(t) <= 100, t
+    return t
+
+
 def meta_for(n, lang, var, video, chapters, scene, count, first, last):
     if var == "dual":  # 音乐版 + 中英朗读配音：说明照纯音乐版，把「没有朗读」那几句换成怎么切音轨
         m = meta_for(n, lang, "music", video, chapters, scene, count, first, last)
@@ -155,9 +180,7 @@ Chapters:
         return dict(channel="still", title=title, description=desc, tags=tags, category="22", lang="zh-Hant")
     if lang == "en":
         # YouTube 标题上限 100 字符：放得下就带「| Sleep · Pray」，放不下就去掉
-        title = f"Be Still, Renew Your Strength | {hours_label(dur, 'en')} Piano & Bible Verses · 4K {en_s} | Sleep · Pray"
-        if len(title) > 100:
-            title = title.rsplit(" | ", 1)[0]
+        title = en_title(n, dur)
         desc = f"""Be still, and let God's Word renew your strength.
 
 {LISTEN['en']}

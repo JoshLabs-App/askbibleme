@@ -1499,3 +1499,9 @@ Play 要求**所有轨道**（正式 / 测试）上的包都不能再声明 `USE
   1. 升版本：改 `apps/askbible-ios/AskBible.xcodeproj/project.pbxproj` 的 `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION`（Debug + Release 各两处），`apps/askbible-android/app/build.gradle.kts` 的 `versionCode` / `versionName`，`.android-deploy.json` 的 version / notes / changelog；更新说明写 `store/ios-release-notes/{zh,en}.txt`、`store/android-play-metadata/{zh-CN,en-US}/changelogs/<versionCode>.txt`。
   2. iOS：`cd apps/askbible-ios && xcodebuild -project AskBible.xcodeproj -scheme AskBible -configuration Release -destination 'generic/platform=iOS' -archivePath $S/AskBible.xcarchive -allowProvisioningUpdates archive` → `xcodebuild -exportArchive -archivePath $S/AskBible.xcarchive -exportPath $S/ipa -exportOptionsPlist ExportOptions-appstore.plist -allowProvisioningUpdates` → 回仓库根 `bash scripts/submit-ios-ipa-appstore.sh --path $S/ipa/AskBible.ipa` → `ASC_TARGET_VERSION=<版本> ASC_TARGET_BUILD=<build> node scripts/submit-ios-app-store-review.mjs`（会等 build 处理完再提审）。
   3. 安卓：先 `python3 ~/bin/deploy_android.py`（下载页，D-17），再 `cd apps/askbible-android && ./gradlew :app:bundleRelease` → 回根 `bash scripts/submit-android-aab-play.sh --path apps/askbible-android/app/build/outputs/bundle/release/app-release.aab --track production`，传完删 AAB。
+
+## D-31 YouTube 标题按「观众的需要」写，新集按经文主题出（2026-10-05）
+
+- **决定了什么**：英文标题结构 = 需要 / 情绪开头 | 搜索词（Bible Verses for …）| 时长 · Be Still Series；不写场景、不写 4K，系列名放最后。9 集各对一种需要、分组不抢同一个词（睡眠 1/9、焦虑平安 2/8、安慰恢复 3/5、白天 4/7、晚上 6），已用 API 全部改好。以后新集也这样：先按这集的经文主题定标题（`scripts/youtube-series-run.py` 的 `EN_TITLES`，没加就报错），经文按主题选、配乐和节奏换着用（O-28 采纳）。
+- **为什么**：原来 9 个标题只换场景名，像模板，也都抢「sleep」一个词；ChatGPT 联网查了 SOAKSTREAM / Divine Rest / Eden Melodies 等头部频道，高播放标题都是「需要开头 + Bible Verses for Sleep 类搜索词」，YouTube 官方也建议系列名放最后；2025 年起 YPP 把「大量生产、视频之间可互换」判为 inauthentic content，所以内容本身也要按主题区分。不用「Healing Scriptures」（容易往疗效上想），不写 rain sounds / narration（默认音轨没有）。
+- **日期**：2026-10-05，Josh「按你们的建议做，以后也是」。

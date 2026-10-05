@@ -19,6 +19,8 @@ final class NatureHomePrefs: ObservableObject {
     private static let liveKey = "askbible-nature-home-live-video-v1"
     private static let scaleKey = "askbible-nature-home-text-scale-v1"
     private static let usageKey = "askbible.mobile.nature-scene-usage.v1"
+    /// 当前场景是哪一天定下的（本地日序号 = 1970-01-01 起的天数），跨天进 App 就换景
+    private static let sceneDayKey = "askbible-nature-home-scene-day-v1"
 
     init() {
         let d = UserDefaults.standard
@@ -38,12 +40,36 @@ final class NatureHomePrefs: ObservableObject {
             for (k, v) in j { if let n = v as? Int, n > 0 { map[k] = n } }
         }
         usage = map
+        rotateIfNewDay()
+    }
+
+    /// 每天换一个场景（Josh 2026-10-05）：跨天第一次进 App / 回前台时按日序号轮到下一景，同一天内不动；
+    /// 当天手动点选的景保留到当天结束。首次安装（没记过日子）只记下今天，先看默认景，明天开始轮换。
+    /// 和安卓用同一个公式（日序号 % 景数），两端同一天看到同一景。不触发环境音。
+    func rotateIfNewDay() {
+        let today = Self.localDayNumber()
+        let stored = defaults.object(forKey: Self.sceneDayKey) as? Int
+        guard stored != today else { return }
+        defaults.set(today, forKey: Self.sceneDayKey)
+        guard stored != nil else { return }
+        let all = NatureScenes.scenes
+        guard all.count > 1 else { return }
+        var next = all[((today % all.count) + all.count) % all.count].id
+        if next == sceneId, let i = all.firstIndex(where: { $0.id == next }) { next = all[(i + 1) % all.count].id }
+        sceneId = next
+        defaults.set(next, forKey: Self.sceneKey)
+    }
+
+    private static func localDayNumber(_ now: Date = Date()) -> Int {
+        let secs = now.timeIntervalSince1970 + Double(TimeZone.current.secondsFromGMT(for: now))
+        return Int(floor(secs / 86_400))
     }
 
     func selectScene(_ id: String) {
         guard NatureScenes.scene(id: id) != nil else { return }
         sceneId = id
         defaults.set(id, forKey: Self.sceneKey)
+        defaults.set(Self.localDayNumber(), forKey: Self.sceneDayKey)
     }
 
     func bumpUsage(_ id: String) {

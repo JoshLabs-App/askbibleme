@@ -465,7 +465,7 @@ struct RootView: View {
                 achievements.foreground = phase == .active
                 if phase == .active {
                     audio.recoverAfterInterruption(); music.recoverAfterInterruption()
-                    activity.noteForeground(); activity.touchHabitDay()
+                    activity.noteForeground(); activity.touchHabitDay(); naturePrefs.rotateIfNewDay()
                     Task { await Endpoints.refresh(); await sync.flushNow(reason: "foreground") }
                 } else {
                     activity.noteBackground()

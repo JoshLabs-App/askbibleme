@@ -27,10 +27,31 @@ class NatureHomePrefs(context: Context) {
 
     val textScale: Float get() = NatureScenes.textScaleSteps[textScaleIndex]
 
+    init { rotateIfNewDay() }
+
+    /**
+     * 每天换一个场景（Josh 2026-10-05）：跨天第一次进 App / 回前台时按日序号轮到下一景，同一天内不动；
+     * 当天手动点选的景保留到当天结束。首次安装（没记过日子）只记下今天，先看默认景，明天开始轮换。
+     * 和 iOS 用同一个公式（日序号 % 景数），两端同一天看到同一景。不触发环境音。
+     */
+    fun rotateIfNewDay() {
+        val today = java.time.LocalDate.now().toEpochDay()
+        val stored = sp.getLong(KEY_SCENE_DAY, Long.MIN_VALUE)
+        if (stored == today) return
+        sp.edit().putLong(KEY_SCENE_DAY, today).apply()
+        if (stored == Long.MIN_VALUE) return
+        val all = NatureScenes.scenes
+        if (all.size < 2) return
+        var next = all[Math.floorMod(today, all.size.toLong()).toInt()].id
+        if (next == sceneId) next = all[(all.indexOfFirst { it.id == next } + 1) % all.size].id
+        sceneId = next
+        sp.edit().putString(KEY_SCENE, next).apply()
+    }
+
     fun selectScene(id: String) {
         if (NatureScenes.scene(id) == null) return
         sceneId = id
-        sp.edit().putString(KEY_SCENE, id).apply()
+        sp.edit().putString(KEY_SCENE, id).putLong(KEY_SCENE_DAY, java.time.LocalDate.now().toEpochDay()).apply()
     }
 
     fun bumpUsage(id: String) {
@@ -61,5 +82,6 @@ class NatureHomePrefs(context: Context) {
         const val KEY_LIVE = "live-video"
         const val KEY_SCALE = "text-scale-index"
         const val KEY_USAGE = "scene-usage"
+        const val KEY_SCENE_DAY = "scene-day"
     }
 }

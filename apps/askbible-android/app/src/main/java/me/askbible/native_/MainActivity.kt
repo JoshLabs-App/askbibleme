@@ -338,11 +338,12 @@ private fun RootScreen() {
             if (ticks % 3 == 0) syncEngine.schedule("poll")
         }
     }
+    val naturePrefs = remember { NatureHomePrefs(context) }
     DisposableEffect(lifecycle) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
             when (event) {
                 // 听读 XP 只在前台给（A 方案防刷：后台放整夜不算）
-                androidx.lifecycle.Lifecycle.Event.ON_RESUME -> { achievements.foreground = true; activity.noteForeground(); activity.touchHabitDay(); syncEngine.flushInBackground("foreground"); me.askbible.native_.audio.AudioInterruptionMonitor.onForeground() }
+                androidx.lifecycle.Lifecycle.Event.ON_RESUME -> { achievements.foreground = true; activity.noteForeground(); activity.touchHabitDay(); naturePrefs.rotateIfNewDay(); syncEngine.flushInBackground("foreground"); me.askbible.native_.audio.AudioInterruptionMonitor.onForeground() }
                 androidx.lifecycle.Lifecycle.Event.ON_PAUSE -> { achievements.foreground = false; activity.noteBackground() }
                 else -> {}
             }
@@ -350,7 +351,6 @@ private fun RootScreen() {
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer) }
     }
-    val naturePrefs = remember { NatureHomePrefs(context) }
     // 睡眠定时四路（读经 / 音乐 / 金句 / 环境音）同一份分钟数；0 = 未设
     var sleepTimerMinutes by remember { mutableIntStateOf(0) }
 

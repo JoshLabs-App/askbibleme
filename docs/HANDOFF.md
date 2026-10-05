@@ -733,3 +733,24 @@ manifest `start_url=/web`；手机截图和金句字体文件都取得到。本�
 - 配音不能和视频原始语言同名：英文视频的 English 朗读标「英语（美国）」。
 - 插盘自动搬运会因 macOS 权限失败（rsync `Operation not permitted`），要给 `/usr/bin/rsync`、`/bin/bash` 开完全磁盘访问权限，或手动在终端跑 `~/bin/archive_to_drive.sh`。
 - zsh 里通配符没匹配会让整条命令中止；`rm` 带变量路径会被安全检查拦，用写死的路径。
+
+
+## 附：YouTube 多语言字幕 + 标题本地化交接（2026-10-05）
+
+### 当前状态
+- 英文金句系列 9 集已全部完成（见上一节「九集全部完成」）：视频 ID 在 `00/youtube/series-state.json` 的 `epNN-en-dual`；已有字幕轨 en / zh-Hant / zh-Hans（`add_captions()`，SRT 在 18T 的 `素材备份/01AskBible/youtube/en-epNN/subs-epNN-*.srt`，本机已删——**要从硬盘拷回或按渲染脚本重新生成时间轴**）。
+- 决定见 DECISIONS D-35（14 种语言、正式译本、不自己翻、标题说明也本地化）和 D-31（英文标题规则）。
+- 项目里只有中英圣经（`data/bible/sqlite/`），其他语言还没下载。
+
+### 下一步（按顺序）
+1. **取译本**：从 eBible.org 下载（VPL / USFM），放 `data/bible/sqlite/` 或单独目录，登记进 `docs/授权登记.md` 第一节（公有领域）或第二节（CC BY-SA）：
+   西 RV1909、葡 Almeida 1911、法 LSG 1910、德 Luther 1912、俄 Synodal、意 Riveduta 1927、阿 Van Dyck、越 1934、他加禄 Ang Biblia 1905、印地 IRV（CC BY-SA）、斯瓦希里 ULB（CC BY-SA）；
+   **韩（개역한글 1961）/ 日（口語訳 1955）/ 印尼** 先查清版权再下，不确定就问 Josh 或换译本。
+2. **生成 SRT**：每集的经文列表和时间轴来自 `scripts/youtube-golden-verses.py`（时间轴同英文版）；写个函数按 (book, ch, v) 换成目标译本的文字 + 本地书卷名，输出 `subs-epNN-<lang>.srt`。抽查几节和译本原文逐字一致。
+3. **上传字幕**：沿用 `add_captions()` 的写法（每条 400 额度，每天 1 万 → 约 25 条/天，126 条约 5 天；额度用完等美西午夜，照 `youtube-series-run.py` 的 `next_quota_reset`）。
+4. **标题 / 说明本地化**：`videos.update(part="localizations")`，每种语言一个 title + description；标题照 D-31 的结构（需要开头 | 搜索词 | 时长 · Be Still Series），用当地人真会搜的说法（可以让 ChatGPT 联网查各语言这类视频的常用搜索词）；说明栏里 CC BY-SA 译本注明出处。
+5. 全部传完后在 Studio 抽查两三种语言能选、能显示；提交推送。
+
+### 别踩的坑
+- 字幕轨 / 本地化都只能用 `still` 频道的 token（`scripts/youtube-upload.py` 的 `yt("still")`）；断网时它现在会照实报错，不再误报授权失效。
+- 改标题要带全 snippet（title / description / tags / categoryId / defaultLanguage），只给 title 会被清空别的字段。

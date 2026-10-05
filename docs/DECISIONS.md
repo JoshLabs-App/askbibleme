@@ -1533,4 +1533,4 @@ Play 要求**所有轨道**（正式 / 测试）上的包都不能再声明 `USE
 
 - **决定了什么**：iOS / 安卓首页按本地日期每天轮换自然场景：跨天第一次进 App（或回前台）时换成 `场景表[日序号 % 9]`（日序号 = 1970-01-01 起的本地天数，两端同一天同一景；若恰好等于当前景就顺延一个）。同一天内不再变；当天手动点选的景保留到当天结束。首次安装 / 刚升级（没记过日子）只记下今天，先看默认雪山湖，第二天开始轮换。自动换景不开环境音。实现：`NatureHomePrefs.rotateIfNewDay()`（iOS `Home/NatureHomePrefs.swift`，安卓 `home/NatureHomePrefs.kt`），新键 `askbible-nature-home-scene-day-v1` / `scene-day`。
 - **为什么**：Josh「每天进 app 换一个场景展示」。按日期公式而不是随机，是为了两端一致、可预期，也不用额外存轮换状态；手动选的当天保留，是尊重用户当下的选择。
-- **日期**：2026-10-05。网页版首页（`lib/home/nature-home-active-scene-prefs.ts`）未改。
+- **日期**：2026-10-05。网页版首页同日同步（`lib/home/nature-home-active-scene-prefs.ts` 的 `resolveNatureHomeActiveVideoId` 里轮换，键同名；云端同步回填旧场景时不记日子，不挡当天轮换），O-31 关闭。

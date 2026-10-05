@@ -665,3 +665,9 @@ done
 - **影响**：下次加场景会重复这次的坑。
 - **需要 Josh 决定**：推荐在 `ship:data` 里加一步「`nature-settings.json` 引用的 `/nature/uploads/*-720.mp4` 线上 404 就补传」（只传缺的，几 MB）；或者暂不做，加场景时人工记得传。
 - **已关闭（2026-10-05）**：Josh「按推荐做」。新增 `scripts/upload-missing-nature-videos-r2.mjs`（`npm run mobile:upload:nature-videos-r2`，`--dry-run` 只看），`ship:data` 推完配置后自动跑：配置引用的 `-720.mp4` 线上 404 才传，传完回读核对大小。已用临时测试视频走通「缺 → 补传 → 200」，测试对象已删。缩略图 / 海报 App 不从 R2 读，没纳入。
+
+## O-31 ~~网页版首页要不要也每天换场景~~ 已关闭 2026-10-05：Josh「网页也同步」，已做（见 D-36）
+
+- **现状**：D-36 只改了 iOS / 安卓原生首页；网页首页仍是「上次手选的景，否则默认湖景」（`lib/home/nature-home-active-scene-prefs.ts`）。
+- **影响**：同一个人网页和 App 看到的场景不一样；不影响功能。
+- **要 Josh 决定**：网页要不要同步（推荐：要，同一个公式，约 20 行，不用发版）。

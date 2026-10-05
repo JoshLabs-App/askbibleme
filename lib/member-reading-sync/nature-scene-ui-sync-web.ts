@@ -29,7 +29,7 @@ export function readNatureSceneUiSyncBundle(): NatureSceneUiSyncBundle {
 
 export function applyNatureSceneUiSyncBundle(bundle: NatureSceneUiSyncBundle): void {
   if (bundle.version !== 1 || typeof window === "undefined") return;
-  if (bundle.activeSceneId) writeNatureHomeActiveSceneId(bundle.activeSceneId);
+  if (bundle.activeSceneId) writeNatureHomeActiveSceneId(bundle.activeSceneId, { markToday: false });
   writeNatureHomeLoopAllScenesEnabled(bundle.loopAllScenes);
   if (bundle.ambientSceneSlotId) writeNatureHomeAmbientSceneSlotId(bundle.ambientSceneSlotId);
 }

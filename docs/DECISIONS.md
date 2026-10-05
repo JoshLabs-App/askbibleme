@@ -1506,6 +1506,11 @@ Play 要求**所有轨道**（正式 / 测试）上的包都不能再声明 `USE
 - **为什么**：原来 9 个标题只换场景名，像模板，也都抢「sleep」一个词；ChatGPT 联网查了 SOAKSTREAM / Divine Rest / Eden Melodies 等头部频道，高播放标题都是「需要开头 + Bible Verses for Sleep 类搜索词」，YouTube 官方也建议系列名放最后；2025 年起 YPP 把「大量生产、视频之间可互换」判为 inauthentic content，所以内容本身也要按主题区分。不用「Healing Scriptures」（容易往疗效上想），不写 rain sounds / narration（默认音轨没有）。
 - **日期**：2026-10-05，Josh「按你们的建议做，以后也是」。
 
+## D-33 自然场景视频 R2 路径以 App 代码为准：`nature/uploads/<hash>-720.mp4`（2026-10-05）
+
+- **决定了什么**：iOS / 安卓非默认场景从 R2 读 `nature/uploads/<hash>-720.mp4`（与 `data/nature-settings.json` 的 `src` 一致）。这个前缀 404 是因为从没上传过；已把 `public/nature/uploads/` 的 9 个 720 视频按原路径传到 `askbible-media/nature/uploads/`，两个域名 9 个都 200。不改 App 代码、不发版。桶里旧的 `nature/videos/<场景id>.mp4`（2026-09-07 传的 8 个，内容同一批）保留不动。
+- **为什么**：2026-09-13 提交 2d33eb86（视频改走 R2 省包体）写了新路径，但没有任何脚本负责传媒体文件——`ship:data` 只推 JSON 配置。补传文件比改代码发版快，已装的 App 立即恢复。
+- **日期**：2026-10-05，Josh 确认「传 9 个到 nature/uploads」。
 ## D-32 场景动态「图片 + 实时着色器」先做独立测试 App，不动正式 App（2026-10-05）
 
 - **决定了什么**：水（雪山湖）+ 咖啡厅（晨读）两景，做一个临时 iOS 测试 App `experiments/scene-shader-lab`（XcodeGen），同屏可切「原视频 / 照片 + 着色器」对比；流向和蒸汽位置在 App 里用手指画 / 点，参数滑杆现场调。

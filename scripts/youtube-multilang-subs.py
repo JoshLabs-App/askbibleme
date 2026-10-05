@@ -11,7 +11,7 @@
 
 译本出处 / 授权见 docs/授权登记.md；CC BY-SA 的要在视频说明栏注明（LANGS 里 credit 不为空的）。
 """
-import importlib.util, io, json, re, sys, urllib.request, zipfile
+import importlib.util, io, json, re, sys, urllib.parse, urllib.request, zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -57,7 +57,7 @@ RO_NAMES = ("Geneza|Exodul|Leviticul|Numeri|Deuteronomul|Iosua|Judecători|Rut|1
 
 
 def get(url):
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "AskBibleSubs/1.0 (https://askbible.me)"})  # Wikimedia 不认 Mozilla/5.0
     return urllib.request.urlopen(req, timeout=120).read()
 
 
@@ -113,6 +113,27 @@ def parse_usfm(z, lang=None):
     return names, verses
 
 
+# 日文口語訳：getbible 缺 18 章（诗 130–139、箴 30–31、太 25–28、约 19、罗 10 等），从日文维基文库补。
+# 箴言、新约那几页 2023 年因版权讨论撤成了空页，取撤之前最后一个全文版本（Josh 2026-10-05 定用口語訳，O-32）
+JA_WS = {"PSA": ["詩篇第1巻-第2巻(口語訳)", "詩篇第3巻-第5巻(口語訳)"], "PRO": ["箴言(口語訳)"],
+         "MAT": ["マタイによる福音書 (口語訳)"], "JHN": ["ヨハネによる福音書 (口語訳)"], "ROM": ["ローマ人への手紙 (口語訳)"]}
+
+
+def wikisource_ja(title):
+    """维基文库页面最近一个全文版本 → {(章, 节): 文字}"""
+    api = "https://ja.wikisource.org/w/api.php?format=json&action=query&prop=revisions&titles=" + urllib.parse.quote(title)
+    revs = next(iter(json.loads(get(api + "&rvprop=ids|size&rvlimit=50"))["query"]["pages"].values()))["revisions"]
+    rid = next(r["revid"] for r in revs if r["size"] > 20000)
+    page = json.loads(get(f"https://ja.wikisource.org/w/api.php?format=json&action=query&prop=revisions&rvprop=content&revids={rid}"))
+    w = next(iter(page["query"]["pages"].values()))["revisions"][0]["*"]
+    w = re.sub(r"\{\{verse\|(\d+)\|(\d+)\}\}", r"==== \1:\2 ====", w)  # 旧版本用 {{verse|章|节}}
+    out, parts = {}, re.split(r"^=+\s*(\d+):(\d+)\s*=+\s*$", w, flags=re.M)
+    for i in range(1, len(parts) - 2, 3):
+        t = re.sub(r"<[^>]+>|\[\[(?:[^|\]]*\|)?([^\]]*)\]\]|\{\{[^}]*\}\}|^=+.*$", r"\1", parts[i + 2], flags=re.M)
+        out[(int(parts[i]), int(parts[i + 1]))] = re.sub(r"\s+", " ", t).strip()
+    return out
+
+
 def fetch():
     SRC.mkdir(parents=True, exist_ok=True)
     for lang, (kind, tid, names_from, _) in LANGS.items():
@@ -131,6 +152,15 @@ def fetch():
                 names = parse_usfm(zipfile.ZipFile(io.BytesIO(get(f"https://ebible.org/Scriptures/{names_from}_usfm.zip"))), lang)[0]
             else:
                 names = dict(zip(BOOKS, RO_NAMES))
+        if lang == "ja":
+            n = 0
+            for b, titles in JA_WS.items():
+                for t in titles:
+                    for (c, v), text in wikisource_ja(t).items():
+                        if text and not verses.get(f"{b} {c}:{v}"):
+                            verses[f"{b} {c}:{v}"] = text
+                            n += 1
+            print(f"ja：从维基文库补了 {n} 节", flush=True)
         out.write_text(json.dumps({"source": kind, "id": tid, "names": names, "verses": verses}, ensure_ascii=False))
         print(f"{lang} {tid}: {len(verses)} 节，{len(names)} 卷", flush=True)
 
@@ -278,9 +308,11 @@ def resolve(lang, need):
             if k and sc[k] >= 0.08 and sc[k] - sc[0] >= 0.05:
                 fixed.append((x, f"{b} {c}:{v}", f"{b} {c}:{v + k}"))
                 v += k
-        t = tidy(lang, vs.get(f"{b} {c}:{v}", ""))
+        t, vr = tidy(lang, vs.get(f"{b} {c}:{v}", "")), str(v)
+        if not t:  # 空节或缺节 = 和下一节合印（口語訳诗 63:5–6、65:2–3），用合印那节，出处写成 5-6
+            t, vr = tidy(lang, vs.get(f"{b} {c}:{v + 1}", "")), f"{v}-{v + 1}"
         if t:
-            out[x] = (t, f"{d['names'][b]} {c}:{v}")
+            out[x] = (t, f"{d['names'][b]} {c}:{vr}")
     _RES[lang] = out
     out_fixed[lang] = fixed
     return out
@@ -336,7 +368,7 @@ def subs(n):
     return files
 
 
-HOLD = {"ja", "ko", "ro"}  # 版权待 Josh 定（docs/OPEN-ITEMS.md），先不传
+HOLD = set()  # 日 / 韩 / 罗 Josh 2026-10-05 定：都传（O-32 已关闭）
 STATE = Y / "series-state.json"
 
 

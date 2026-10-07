@@ -54,8 +54,8 @@ const ENTRY_MDI_ICON: Record<Exclude<EntryIconKind, "web">, string> = {
  */
 type SiteAppId = "askbible" | "tingdao" | "chadao" | "littleBible";
 
-/** 查到先不上架（Josh 2026-10-06，DECISIONS D-37）：首屏切换和「同系列工具」都不放它。要放回来，把 "chadao" 加回这里、下面同系列工具那一条也加回去 */
-const SITE_APP_ORDER: SiteAppId[] = ["askbible", "tingdao", "littleBible"];
+/** 查到 2026-10-06 下架（D-37），2026-10-07 JOSHUA「在 askbible.me 首页也上架这个」放回（D-37 作废） */
+const SITE_APP_ORDER: SiteAppId[] = ["askbible", "tingdao", "chadao", "littleBible"];
 
 /** 首屏几个软件自动轮着展示，每个停这么久（Josh 2026-10-02：「首页 4 个，做成自动切换的」，DECISIONS D-25） */
 const APP_AUTO_ROTATE_MS = 6500;
@@ -216,7 +216,7 @@ export function SiteHome() {
   /** 别的软件的第一张画面先悄悄取回来，点切换时不用等 */
   useEffect(() => {
     const id = window.setTimeout(() => {
-      for (const src of [TINGDAO_SCREENS[0], "/site/littlebible-cover.webp"]) {
+      for (const src of [TINGDAO_SCREENS[0], CHADAO_SCREENS[0], "/site/littlebible-cover.webp"]) {
         new Image().src = src;
       }
     }, 2500);
@@ -504,6 +504,7 @@ export function SiteHome() {
             <p className="site-home__intro">{copy.siblingsIntro}</p>
             <div className="site-home__versions site-home__versions--single">
               <VersionEntry copy={copy.siblingTingdao} href={SIBLING_TINGDAO_URL} icon={{ src: SITE_APP_ICON.tingdao }} external />
+              <VersionEntry copy={copy.siblingChadao} href={SIBLING_CHADAO_URL} icon={{ src: "/site/sibling-chadao.png" }} external />
               <VersionEntry
                 copy={copy.siblingLittleBible}
                 href={SIBLING_LITTLE_BIBLE_URL}

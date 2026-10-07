@@ -1546,5 +1546,12 @@ Play 要求**所有轨道**（正式 / 测试）上的包都不能再声明 `USE
 - **日期**：2026-10-05。网页版首页同日同步（`lib/home/nature-home-active-scene-prefs.ts` 的 `resolveNatureHomeActiveVideoId` 里轮换，键同名；云端同步回填旧场景时不记日子，不挡当天轮换），O-31 关闭。
 
 ## D-37 官网先不展示「查到」；听到图标换成深色底（2026-10-06）
+> **「查到」那半已作废（2026-10-07）**：JOSHUA 要求重新上架，见 D-38。听到图标那半照旧。
 - **决定**：`askbible.me/` 首屏软件切换和「同系列工具」都拿掉「查到」（文案、截图、`SIBLING_CHADAO_URL` 留着没删，放回来只要把 `"chadao"` 加回 `SITE_APP_ORDER` 并恢复同系列工具那一条）；`public/site/sibling-tingdao.png` 换成听到的新图标（棕底米白字，03听到 D-34 的 `assets/logo/export/icon-1024-dark.png` 缩到 192）。
 - **为什么**：Josh「查到这个先不要上架在 ASKBIBLE 网站上去展示，先拿下来」「听到……图标换成我们新的深色底的」。查到的下载页本身没动，知道地址的人照样能装。
+
+## D-38 官网重新上架「查到」（2026-10-07）
+- **决定**：`askbible.me/` 首屏软件切换和「同系列工具」把「查到」放回来（`SITE_APP_ORDER` 加回 `"chadao"`、预取它的第一张截图、同系列工具恢复那一条）；
+  中英文案各加一句「工具只做参考，理念与方法全部公开」。下载链接仍是 `https://cd.askbible.me/`。
+- **为什么**：JOSHUA「然后在 askbible.me 首页也上架这个，之前关了」。查到同日定了「工具只做参考」这条立场，理念与方法公开在 `cd.askbible.me/method/`（01查到 `docs/DECISIONS.md` 2026-10-06/07 几条）。
+- 推翻 D-37 里「先不展示查到」那半。

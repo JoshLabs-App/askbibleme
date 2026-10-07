@@ -81,7 +81,7 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
     heroChadao: {
       tab: "查到",
       title: "小组查经，一套做完。",
-      sub: "给小组长用的归纳法查经工具：读经、备课、带组、排期。内容已全部打包，装上即用。",
+      sub: "给小组长用的归纳法查经工具：读经、备课、带组、排期。工具只做参考，理念与方法全部公开。",
       phoneAlt: "查到 App 里的画面",
       entries: [{ name: "安卓下载", sub: "目前只有安卓版" }],
     },
@@ -138,7 +138,7 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
     },
     siblingChadao: {
       title: "查到",
-      body: "给小组长用的归纳法查经工具：读经、备课、带组、排期，一套做完。目前只有安卓版。",
+      body: "给小组长用的归纳法查经工具：读经、备课、带组、排期，一套做完。工具只做参考，理念与方法全部公开。目前只有安卓版。",
       action: "安卓下载",
     },
     siblingLittleBible: {
@@ -165,7 +165,7 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
     heroChadao: {
       tab: "查到",
       title: "Group Bible study, all in one place.",
-      sub: "An inductive Bible study tool for small-group leaders: read, prepare, lead and schedule. All content is bundled and works right after install.",
+      sub: "An inductive Bible study tool for small-group leaders: read, prepare, lead and schedule. Tools are for reference only — our convictions and method are open to all.",
       phoneAlt: "Inside the 查到 app",
       entries: [{ name: "Android APK", sub: "Android only for now" }],
     },
@@ -222,7 +222,7 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
     },
     siblingChadao: {
       title: "查到 · Group Bible Study",
-      body: "An inductive Bible study tool for small-group leaders: read, prepare, lead and schedule in one place. Android only for now.",
+      body: "An inductive Bible study tool for small-group leaders: read, prepare, lead and schedule in one place. Tools are for reference only; our convictions and method are open to all. Android only for now.",
       action: "Android download",
     },
     siblingLittleBible: {

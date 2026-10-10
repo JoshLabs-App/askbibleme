@@ -166,7 +166,7 @@ fun NavDrawer(
     }
 }
 
-const val SUPPORT_EMAIL = "askbibleme@gmail.com"
+const val SUPPORT_EMAIL = "hello@askbible.me"
 
 @Composable
 private fun androidx.compose.foundation.layout.RowScope.DrawerLocaleChip(

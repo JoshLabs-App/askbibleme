@@ -14,7 +14,7 @@ import type { AppLocale } from "@/lib/i18n/config";
 import { getLocalePickerLabel } from "@/lib/i18n/locale-display-labels";
 import { isMemberRegisterEnabledClient } from "@/lib/member-register-enabled";
 
-const SUPPORT_EMAIL = "askbibleme@gmail.com";
+const SUPPORT_EMAIL = "hello@askbible.me";
 
 type Props = {
   onClose: () => void;

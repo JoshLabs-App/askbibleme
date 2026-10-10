@@ -5,7 +5,7 @@ import {
   ASKBIBLE_PRODUCT_URL,
 } from "@/lib/askbible-product-name";
 
-const CONTACT_EMAIL = "askbibleme@gmail.com";
+const CONTACT_EMAIL = "hello@askbible.me";
 const EFFECTIVE_DATE = "June 6, 2026";
 
 type Section = { title: string; paragraphs: string[]; bullets?: string[] };

@@ -3,7 +3,7 @@ import type { NatureHomeTtsLevel } from "../home/natureHomePrefs";
 
 export const DRAWER_ANIM_MS = 300;
 export const DRAWER_EASING = Easing.out(Easing.cubic);
-export const SUPPORT_EMAIL = "askbibleme@gmail.com";
+export const SUPPORT_EMAIL = "hello@askbible.me";
 export const TTS_LEVELS: readonly NatureHomeTtsLevel[] = [0, 1, 2, 3, 4];
 export const shellNavDrawerParchmentSource = require("../../assets/images/read-parchment-scroll-bg.jpg");
 

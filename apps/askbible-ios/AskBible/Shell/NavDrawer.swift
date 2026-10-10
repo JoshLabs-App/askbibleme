@@ -28,7 +28,7 @@ struct NavDrawerView: View {
     var onClose: () -> Void = {}
 
     @Environment(\.parchment) private var theme
-    private static let supportEmail = "askbibleme@gmail.com"
+    private static let supportEmail = "hello@askbible.me"
 
     var body: some View {
         GeometryReader { geo in

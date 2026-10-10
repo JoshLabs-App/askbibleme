@@ -59,7 +59,7 @@ struct RootView: View {
 
     /// 发送反馈：RN 是 mailto，打不开就算了（原生没有站内反馈页）
     private func openSupportMail() {
-        guard let url = URL(string: "mailto:askbibleme@gmail.com") else { return }
+        guard let url = URL(string: "mailto:hello@askbible.me") else { return }
         UIApplication.shared.open(url)
     }
 

@@ -28,7 +28,7 @@ type SubmitState =
   | { kind: "success"; id: string };
 
 const MAX_MESSAGE_CHARS = 1200;
-const SUPPORT_EMAIL = "askbibleme@gmail.com";
+const SUPPORT_EMAIL = "hello@askbible.me";
 
 export function FeedbackScreen() {
   const router = useRouter();

@@ -19,7 +19,7 @@ export const APP_INSTALL_ANDROID_VERSION_PATH = "version.json" as const;
 export const DEFAULT_APP_INSTALL_ANDROID_APK_URL = `${endpointDefaultBase("media")}/${APP_INSTALL_ANDROID_APK_PATH}`;
 
 /** Android 试用申请收件邮箱（可被 env 覆盖）。 */
-export const DEFAULT_APP_INSTALL_ANDROID_EMAIL = "support@askbible.me" as const;
+export const DEFAULT_APP_INSTALL_ANDROID_EMAIL = "hello@askbible.me" as const;
 
 export const APP_INSTALL_IOS_URL =
   process.env.NEXT_PUBLIC_APP_INSTALL_IOS_URL?.trim() || DEFAULT_APP_INSTALL_IOS_URL;

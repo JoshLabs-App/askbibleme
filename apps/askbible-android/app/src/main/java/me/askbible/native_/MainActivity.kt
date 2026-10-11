@@ -233,7 +233,6 @@ private fun RootScreen() {
     // 睡眠专辑放着时音乐页把按钮藏起来了，底栏一起藏（RN musicAutoHideChrome）
     var musicChromeHidden by remember { mutableStateOf(false) }
     // 首页回归卡正占着顶部：勋章 / 升级横幅让位，等它退场再弹（Josh 2026-09-18）
-    var homeReturnCardUp by remember { mutableStateOf(false) }
     /** 首页闲置收起（D-28）：底栏藏起，HomeScreen 里齿轮和常用键压淡 */
     var homeChromeHidden by remember { mutableStateOf(false) }
     // 浏览器 OAuth 回调：拿到 code 就换会话（RN useMemberAuthGoogleDeepLink）
@@ -659,20 +658,8 @@ private fun RootScreen() {
                     else { val wasPlaying = music.isPlaying; music.selectAlbum(album); if (!wasPlaying) music.toggle() }
                 },
                 onOpenMenu = { showMenu = true },
-                // 回归卡（DECISIONS 2026-09-18 Gentle Return）：最近读到的那一章，隔天回来时首页顶部出现
-                lastRead = activity.recent.firstOrNull(),
-                onReturnCardVisible = { homeReturnCardUp = it },
                 chromeHidden = homeChromeHidden,
                 onChromeHidden = { homeChromeHidden = it },
-                onResumeReading = { resume ->
-                    planFlowActive = false; listenBook = null; chapterFromPlan = false
-                    pickingBook = null; focusVerse = null; focusKeyword = null
-                    tab = ShellTab.READ
-                    // 没有记录（首次打开）就只进读经页，让用户自己挑，不替他定一卷
-                    if (resume != null) BibleCatalog.book(resume.bookId)?.let { b ->
-                        chapter = resume.chapter; searchReturnQuery = null; openedBook = b
-                    }
-                },
             )
             ShellTab.MUSIC -> MusicScreen(player = music, onChromeHidden = { musicChromeHidden = it },
                 sleepActive = audio.sleepDeadlineMs != null || music.sleepDeadlineMs != null || home.sleepDeadlineMs != null || ambient.sleepDeadlineMs != null,
@@ -1106,7 +1093,7 @@ private fun RootScreen() {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 // 首页一律不弹（首页静默，Josh 2026-10-02「保持首页不打扰」）——事件留在 pending 里不消费，离开首页后照常补上；
                 // +XP 飘字在首页直接不进队列（AchievementStore.quiet）
-                if (!homeReturnCardUp && tab != ShellTab.HOME) {
+                if (tab != ShellTab.HOME) {
                     EarnedToast(achievements, appLocale, Parchment.light, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
                 }
                 XPFloater(achievements, Modifier.padding(top = 60.dp))

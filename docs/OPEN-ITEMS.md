@@ -684,3 +684,8 @@ done
   - 日：推荐 **A 传口語訳**（补缺 18 章要另找来源，约半小时）；B 改用文語訳（1887/1917，各国都公版，但是文言，现代人读着吃力）；C 不做日文。
 - 定了以后：把 `scripts/youtube-multilang-subs.py` 的 `HOLD` 里对应语言去掉，重跑 `upload all --wait`。
 - **结果（2026-10-05）**：三种都传。日文缺的章从日文维基文库撤页前的最后全文版本补齐（`JA_WS`），和维基文库逐节比对 2056 节无错位；`HOLD` 已清空，已排进后台上传。
+
+## O-33 安卓 upload key 丢失，三星装不上新包（2026-10-11）
+- **现状**：`apps/askbible-mobile/android/keystore.properties` / `app/upload.keystore` 是指向 `APP/00/projects/...` 的软链，正本在 2026-10-07 `backupconfig` 事故里被删（见 `APP/00/恢复清单.md` 第 14 行）。现在 `assembleSideload` 只出 unsigned 包，D-39（撤回归卡）没能装到三星，iPhone 已装。
+- **影响**：安卓侧载包和 Play 包都签不了；用别的 key 签会和三星上已装的版本签名冲突，要卸载（清登录）。
+- **要 JOSHUA 决定**：从 R2 私有桶 `joshlabs-keystore-backup` 的加密备份恢复（推荐，需要你密码管理器里的解密口令；备份是否含这把 upload key 待确认），或者在 Play Console 申请重置 upload key。

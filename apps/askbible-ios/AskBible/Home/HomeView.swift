@@ -18,14 +18,6 @@ struct HomeView: View {
     var onOpenMenu: () -> Void = {}
     /// 界面收起 / 唤回时通知壳：首页闲置后连系统底栏一起淡出，全景不被任何东西压着（Josh 2026-09-18）
     var onChromeHidden: (Bool) -> Void = { _ in }
-    /// 最近读到的一章（ReadingActivityStore.recent.first）。隔天回来时首页顶部出现「回归卡」；
-    /// nil = 没有任何阅读记录，卡片退化成「从这里开始」（DECISIONS 2026-09-18 Gentle Return）
-    var lastRead: ReadingActivityStore.RecentChapter? = nil
-    /// 点「接着走」：有记录就跳那一章，没有记录（nil）就进读经页
-    var onResumeReading: (ReadingActivityStore.RecentChapter?) -> Void = { _ in }
-    /// 回归卡出现 / 退场时通知壳：它在的时候把勋章 / 升级横幅压后，两块不抢首页顶部同一个位置
-    /// （Josh 2026-09-18：回归卡只在隔天回来时出现，本来就稀有；升级横幅哪次都能补）
-    var onReturnCardVisible: (Bool) -> Void = { _ in }
 
     @Environment(\.scenePhase) private var scenePhase
     @State private var toolsOpen = false
@@ -37,8 +29,6 @@ struct HomeView: View {
     /// —— 这正是 Josh 2026-09-23 说的「隐藏其它图标时它会落到更底的位置」。
     /// 只取见过的**最大值**，之后再也不跟着缩，位置就钉死了。
     @State private var lockedBottomInset: CGFloat = 0
-    /// 本次前台里已经点过或划走过回归卡，不再反复冒出来
-    @State private var returnCardDone = false
     private var verse: GoldenVerse { home.verse }
 
     /// RN homeNatureLayoutMetrics / homeNatureScreenConstants / shellPlaybackTransportLayout 逐值
@@ -89,21 +79,7 @@ struct HomeView: View {
                     .padding(.horizontal, 22)
                     .padding(.top, safeTop + 99)
 
-                // 回归卡坐在最上面。zIndex(1) 是必须的：上面那层整屏 Color.clear 会把点击吃掉，
-                // 不抬起来按钮看着在、点不动。
-                if showReturnCard {
-                    returnCard
-                        .padding(.horizontal, 20)
-                        .padding(.top, safeTop + 10)
-                        .zIndex(1)
-                        .transition(.opacity)
-                        // 自己的退场计时：到点就收，和底栏那条闲置逻辑互不依赖
-                        .task {
-                            try? await Task.sleep(nanoseconds: M.toolsAutoCloseNs)
-                            guard !Task.isCancelled else { return }
-                            withAnimation(.easeInOut(duration: 0.4)) { returnCardDone = true }
-                        }
-                }
+                // 首页打开不打扰（JOSHUA 2026-10-11）：原「回归卡」（我们上次停在这里）已撤，顶部只留齿轮。
 
                 // 设置齿轮回到右上（Josh 2026-09-21）。2026-09-16 曾把它塞进底部专辑排末尾，
                 // 结果专辑排的宽度会随它出现/消失而变，三颗常用键跟着左右挪——那是他这次要去掉的位移。
@@ -154,10 +130,6 @@ struct HomeView: View {
                 onChromeHidden(!next)
                 idleEpoch += 1
             })
-            // 回归卡在 / 不在，报给壳：它在的时候勋章 / 升级横幅让位（两块抢首页顶部同一个位置）
-            .onAppear { onReturnCardVisible(showReturnCard) }
-            .onChange(of: showReturnCard) { _, up in onReturnCardVisible(up) }
-            .onDisappear { onReturnCardVisible(false) }
         }
         // 点开设置后闲置 7 秒自动收起（HOME_SCENE_TOOLS_AUTO_CLOSE_MS）；任何一次操作都重新计时
         // 闲置 7 秒：先收设置簇，再过 7 秒淡出整层界面；任何一次操作都重新计时
@@ -176,56 +148,6 @@ struct HomeView: View {
             withAnimation(.easeInOut(duration: 0.3)) { chromeVisible = true }
             onChromeHidden(false)
         }
-    }
-
-    // MARK: 回归卡
-
-    /// 显示条件：**隔天**才出——今天已经读过就不提（那是「你做得够不够」，不是「你走到哪了」）。
-    /// 跟着 chromeVisible 一起淡出：首页的价值是全景不被打扰，回归卡不常驻压在风景上（Josh 2026-09-18）。
-    private var showReturnCard: Bool {
-        // returnCardDone 由卡片自己的 7 秒计时置位，**不依赖 chromeVisible**：
-        // 「首页闲置隐藏底栏」那条还在等真机确认，可能退回成底栏常驻（chromeVisible 恒为 true）。
-        // 卡片自带退场，那条怎么定都不会把它永久钉在首页顶部（与安卓 ReturnCard 同构）。
-        guard !returnCardDone, chromeVisible else { return false }
-        guard let p = lastRead else { return true }
-        return !Calendar.current.isDateInToday(Date(timeIntervalSince1970: p.at / 1000))
-    }
-
-    /// 「你回来了 / 我们上次停在这里 · 马太福音 13」+「接着走」，点一下直接进那一章。
-    /// 只陈述走到哪了，不写天数、不写完成度、不催（DECISIONS 2026-09-18 明确不做的那一串）。
-    private var returnCard: some View {
-        let resume = lastRead
-        let title = resume.map { "\(SiteCopy.t("native.returnResumeTitle")) · \($0.bookName) \($0.chapter)" }
-            ?? SiteCopy.t("native.returnFreshTitle")
-        return Button {
-            returnCardDone = true
-            touch()
-            onResumeReading(resume)
-        } label: {
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(SiteCopy.t("native.returnGreeting"))
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.82))
-                    Text(title)
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(.white)
-                        .multilineTextAlignment(.leading)
-                }
-                Spacer(minLength: 8)
-                Text(SiteCopy.t("native.returnResumeAction"))
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(Brand.logo)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .contentShape(Rectangle())
-            // 不垫 iOS 26 的 clear 玻璃：浅色场景（晴天湖面 / 日出天空）下它会提亮成一块发白的板子，
-            // 和 2026-09-18 撤掉设置簇玻璃底是同一个原因。改成深褐半透底，与安卓 ReturnCard 同值。
-            .background(RoundedRectangle(cornerRadius: 18).fill(Color(rgb: 0x1c1410, opacity: 0.55)))
-            .askFloatingShadow()
-        }
-        .buttonStyle(.plain)
     }
 
     // MARK: 金句

@@ -27,7 +27,6 @@ struct RootView: View {
     /// 读经活动（习惯日 / 累计听 / 使用时长 / 最近阅读）与会员读经进度同步
     @StateObject private var activity = ReadingActivityStore()
     /// 首页回归卡正占着顶部：勋章 / 升级横幅让位，等它退场再弹
-    @State private var homeReturnCardUp = false
     @StateObject private var sync = MemberReadingSyncEngine()
     @Environment(\.scenePhase) private var scenePhase
     /// 15 秒一跳：使用时长打点 + 记当天为读经日；每三跳（45 秒）轮询一次同步（RN AppUsageTimeBridge / useMemberReadingSync）
@@ -769,7 +768,7 @@ struct RootView: View {
         // 勋章 / 印章 / 升级的获得提示。首页一律不弹（首页静默，Josh 2026-10-02「保持首页不打扰」）——
         // 事件留在 ach.pending 里不消费，离开首页后照常补上；+XP 飘字在首页直接不进队列（AchievementStore.quiet）
         .overlay(alignment: .top) {
-            if !homeReturnCardUp && tab != .home {
+            if tab != .home {
                 EarnedToast().environmentObject(achievements).padding(.top, 8).padding(.horizontal, 16)
             }
         }
@@ -809,20 +808,7 @@ struct RootView: View {
                     }
                 },
                 onOpenMenu: { showMenu = true },
-                onChromeHidden: { hidden in withAnimation(.easeInOut(duration: 0.3)) { homeChromeHidden = hidden } },
-                // 回归卡（DECISIONS 2026-09-18 Gentle Return）：最近读到的那一章，隔天回来时首页顶部出现
-                lastRead: activity.recent.first,
-                onResumeReading: { resume in
-                    planFlowActive = false; listenChapter = nil; chapterFromPlan = false
-                    focusVerse = nil; focusKeyword = nil
-                    openedBook = nil
-                    tab = .read
-                    // 没有记录（首次打开）就只进读经页，让用户自己挑，不替他定一卷
-                    if let resume, let b = BibleCatalog.book(id: resume.bookId) {
-                        searchReturnQuery = nil; openedChapter = (b, resume.chapter)
-                    }
-                },
-                onReturnCardVisible: { up in homeReturnCardUp = up }
+                onChromeHidden: { hidden in withAnimation(.easeInOut(duration: 0.3)) { homeChromeHidden = hidden } }
             )
         case .music:
             MusicView(player: music,

@@ -685,7 +685,9 @@ done
 - 定了以后：把 `scripts/youtube-multilang-subs.py` 的 `HOLD` 里对应语言去掉，重跑 `upload all --wait`。
 - **结果（2026-10-05）**：三种都传。日文缺的章从日文维基文库撤页前的最后全文版本补齐（`JA_WS`），和维基文库逐节比对 2056 节无错位；`HOLD` 已清空，已排进后台上传。
 
-## O-33 安卓 upload key 丢失，三星装不上新包（2026-10-11）
+## O-33 安卓 upload key 丢失，三星装不上新包（2026-10-11） — 已关闭 2026-10-11：从 EAS 取回原 key
 - **现状**：`apps/askbible-mobile/android/keystore.properties` / `app/upload.keystore` 是指向 `APP/00/projects/...` 的软链，正本在 2026-10-07 `backupconfig` 事故里被删（见 `APP/00/恢复清单.md` 第 14 行）。现在 `assembleSideload` 只出 unsigned 包，D-39（撤回归卡）没能装到三星，iPhone 已装。
 - **影响**：安卓侧载包和 Play 包都签不了；用别的 key 签会和三星上已装的版本签名冲突，要卸载（清登录）。
-- **要 JOSHUA 决定**：从 R2 私有桶 `joshlabs-keystore-backup` 的加密备份恢复（推荐，需要你密码管理器里的解密口令；备份是否含这把 upload key 待确认），或者在 Play Console 申请重置 upload key。
+- **2026-10-11 查**：`APP/00/恢复清单.md` 记着这把 key「不在任何备份里」（10-07 那份只含 `~/.config/android` 五把）；桶里还有 09-18、09-28 两份更早的，大概率也只含 `~/.config/android`，未解开核实（自动模式拦了读钥匙串口令）。
+- **要 JOSHUA 决定**：①在终端自己解开 09-18 / 09-28 两份看有没有 upload.keystore；②没有就 Play Console「设置 → 应用完整性 → 申请重置上传密钥」（推荐，最终大概率要走这条），新密钥放 `APP/00/projects/01AskBible/apps/askbible-mobile/android/` 并重做 R2 加密备份。
+- **已做（2026-10-11）**：备份桶里三份都没有它（10-07 那份只含 `~/.config/android`；09-18 / 09-28 的口令不在钥匙串）。原件在 **Expo EAS credentials** 上还有：`node scripts/fetch-android-upload-keystore-from-eas.mjs`（eas 已登录 joshuazeng）取回，落进 `APP/00/projects/01AskBible/apps/askbible-mobile/android/`（项目里原软链不变）。三星 `install -r` 覆盖成功 = 和原 key 同一把，网页下载版（web 变体，直接用 upload key 签）用户的更新不受影响。另加密传了一份到 R2 `joshlabs-keystore-backup/askbible-upload-keystore-20261011.tar.gz.enc`（口令同钥匙串「JoshLabs Android keystore 备份口令 20261007」）。

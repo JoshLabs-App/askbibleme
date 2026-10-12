@@ -52,10 +52,10 @@ struct NavDrawerView: View {
                 .padding(.top, max(geo.safeAreaInsets.top, 12))
                 .padding(.bottom, max(geo.safeAreaInsets.bottom, 16))
                 .frame(width: panelW, height: geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom)
-                // DECISIONS 2026-09-15：抽屉是操作层，所以它是玻璃，从内容上浮出来，
-                // 而不是一块推开内容的纯色/羊皮板（原来这里铺 ParchmentBackground + 右侧 hairline，
-                // 在视频首页和羊皮页之间切换时像是第三套 UI）。右上角圆掉，左侧贴边。
-                .askGlassRect(tone: .light, radius: AskCorner.sheet)
+                // JOSHUA 2026-10-11：玻璃底在探索页上透出底下内容、读不清，改回羊皮卷底，
+                // 和目录 / 收藏 / 搜索等页面同一种底（DECISIONS「设置菜单改羊皮卷底」，作废 2026-09-15 抽屉玻璃）。
+                .background(ParchmentBackground(theme: theme))
+                .clipShape(RoundedRectangle(cornerRadius: AskCorner.sheet, style: .continuous))
                 .askFloatingShadow(.overlay)
                 .padding(.trailing, 6)
                 .ignoresSafeArea()

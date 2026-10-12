@@ -1569,3 +1569,10 @@ Play 要求**所有轨道**（正式 / 测试）上的包都不能再声明 `USE
 - **为什么**：玻璃在探索页上把底下的卡片和图透出来，菜单文字读不清；羊皮卷是全 App 统一的页面底。
 - **作废**：2026-09-15「抽屉改成浮在内容上的玻璃面板」那条。
 - **日期**：2026-10-11
+
+## D-41 发版：iOS 1.1.4 (135) 提交审核 + 安卓 1.0.50 (247) 上 Play production + 下载页（2026-10-12）
+
+- **决定了什么**：JOSHUA「发新版并提审」「两端都发，还是网页下载也更新」。内容：首页每天换自然场景（D-36）、撤掉首页回归卡（D-39）、iOS 设置菜单羊皮卷底（D-40）、联系邮箱 hello@askbible.me。
+- App Store：1.1.4 挂 build 135，已提交审核（submission `6a0cdd26-3f20-4020-a879-e8da6d2b5f4d`），批准后自动发布。Play：production、release_status completed、中英更新说明已传。下载页 `version.json` 已到 1.0.50 (247)。
+- **坑**：`AA/AuthKey_9HDA27WY8C.p8` 软链指向的 00 正本在 10-07 事故里丢了，这次用 `ASC_API_KEY_PATH=~/.appstoreconnect/private_keys/AuthKey_9HDA27WY8C.p8` 跑上传和提审。
+- **日期**：2026-10-12

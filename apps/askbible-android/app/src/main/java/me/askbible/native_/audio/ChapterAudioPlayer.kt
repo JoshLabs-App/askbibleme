@@ -135,10 +135,11 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
 
     /** 装载一章。同一章重复调用不重新装载。 */
     /** YouVersion 译本：先问代理拿 mp3，这段时间按「装载中」显示；用户这时点播放，拿到地址后自动起播 */
-    fun beginResolving(key: String, title: String) {
+    /** [keepPlaying]：自动跳章，保留「还想播」——后台等地址期间前台服务不能降级，拿到地址直接起播 */
+    fun beginResolving(key: String, title: String, keepPlaying: Boolean = false) {
         if (loadedKey == key) return
         loadedKey = key
-        wantsPlayback = false
+        if (!keepPlaying) wantsPlayback = false
         errorMessage = null
         currentTime = 0.0; duration = 0.0; activeVerse = null; activeVerseProgress = 0.0; timings = emptyList()
         player.stop(); player.clearMediaItems()
@@ -154,10 +155,10 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
 
     /** [resolved]：beginResolving 之后拿到了真地址，同一个 key 也要装；用户等待期间点过播放就直接起播 */
     fun load(url: String, key: String, title: String,
-             translationId: String, bookId: String, chapter: Int, resolved: Boolean = false) {
+             translationId: String, bookId: String, chapter: Int, resolved: Boolean = false, keepPlaying: Boolean = false) {
         if (loadedKey == key && !(resolved && player.mediaItemCount == 0)) return
         loadedKey = key
-        if (!resolved) wantsPlayback = false
+        if (!resolved && !keepPlaying) wantsPlayback = false
         errorMessage = null
         currentTime = 0.0
         duration = 0.0

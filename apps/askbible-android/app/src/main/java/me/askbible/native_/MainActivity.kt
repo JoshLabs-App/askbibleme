@@ -391,6 +391,28 @@ private fun RootScreen() {
         autoPlayPending = autoPlay
         listenBook = b; listenChapter = p.chapter
     }
+    // 装载某章的朗读音源（同一章重复调用是空操作）。章页 / 播放页换章时由 LaunchedEffect 调；
+    // 自动跳章时 skipNext 直接调——关屏后 Activity 停了，Compose 不重组、LaunchedEffect 不跑，
+    // 只改状态的话第一章播完就停，亮屏才接下一章（Josh 2026-10-13 每日读经关屏只读一章）。
+    suspend fun loadChapterAudio(b: BookRef, ch: Int, keepPlaying: Boolean = false) {
+        val url = ChapterAudioSource.resolve(translation.id, b.id, b.number, b.nameEn, ch) ?: return
+        val key = "${translation.id}.${b.id}.$ch"
+        val title = ReadChrome.chapterTitle(bookLabel(b), ch, readChromeLocale)
+        if (ChapterAudioSource.isResolverUrl(url)) {
+            // YouVersion 译本：先问网站代理拿 CDN mp3，再装载
+            audio.beginResolving(key, title, keepPlaying)
+            val src = withContext(Dispatchers.IO) { ChapterAudioSource.fetchResolved(url, key) }
+            if (src != null) audio.load(src, key, title, translation.id, b.id, ch, resolved = true, keepPlaying = keepPlaying)
+            else audio.failResolving(key)
+        } else {
+            audio.load(url, key, title, translation.id, b.id, ch, keepPlaying = keepPlaying)
+        }
+    }
+    // 自动跳章：不等重组，立刻装下一章并起播
+    fun playChapterNow(b: BookRef, ch: Int) {
+        autoPlayPending = false
+        scope.launch { loadChapterAudio(b, ch, keepPlaying = true); if (audio.errorMessage == null) audio.resume() }
+    }
     // 下一章：计划流里顺队列并记已读（播放页听着就只换音源，章页开着就开下一章页），否则本卷下一章
     val skipNext: () -> Unit = {
         val b = openedBook
@@ -405,7 +427,9 @@ private fun RootScreen() {
             val next = planQueueIndex + 1
             if (next < planQueue.size) {
                 planQueueIndex = next
-                if (planFlowListen && b == null) listenPlanChapter(planQueue[next], true) else openPlanChapter(planQueue[next], true)
+                val p = planQueue[next]
+                if (planFlowListen && b == null) listenPlanChapter(p, true) else openPlanChapter(p, true)
+                BibleCatalog.book(p.bookId)?.let { playChapterNow(it, p.chapter) }
             } else planFlowActive = false
         } else {
             // 本书循环：读到末章回本书第 1 章；继续往前：到末章就停
@@ -422,8 +446,8 @@ private fun RootScreen() {
                     audio.seekTo(0.0); audio.resume()
                 } else if (nextChapter > 0) {
                     // 自动跳章要接着播：交给音源变化后的 autoPlayPending 起播
-                    if (b != null) { autoPlayPending = true; chapter = nextChapter }
-                    else { listenChapter = nextChapter; audio.resume() }
+                    if (b != null) chapter = nextChapter else listenChapter = nextChapter
+                    playChapterNow(cur, nextChapter)
                 }
             }
         }
@@ -520,20 +544,7 @@ private fun RootScreen() {
     }
 
     LaunchedEffect(audioUrl, targetChapter, translation.id) {
-        val b = targetBook ?: return@LaunchedEffect
-        audioUrl?.let {
-            val key = "${translation.id}.${b.id}.$targetChapter"
-            val title = ReadChrome.chapterTitle(bookLabel(b), targetChapter, readChromeLocale)
-            if (ChapterAudioSource.isResolverUrl(it)) {
-                // YouVersion 译本：先问网站代理拿 CDN mp3，再装载
-                audio.beginResolving(key, title)
-                val src = withContext(Dispatchers.IO) { ChapterAudioSource.fetchResolved(it, key) }
-                if (src != null) audio.load(src, key, title, translation.id, b.id, targetChapter, resolved = true)
-                else audio.failResolving(key)
-            } else {
-                audio.load(it, key, title, translation.id, b.id, targetChapter)
-            }
-        }
+        targetBook?.let { loadChapterAudio(it, targetChapter) }
         audio.onSkipNext = skipNext
         if (autoPlayPending) { autoPlayPending = false; audio.resume() }
     }

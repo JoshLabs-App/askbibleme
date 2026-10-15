@@ -1,5 +1,5 @@
-• Scripture search now lists every match with a total count, and Old / New Testament searches no longer miss verses; going back from a verse returns you to your results
-• Opening AskBible no longer stops your podcast or other audio — it only takes over when you press play
-• Book loop keeps playing as it moves to the next chapter
-• Automatic backup routes when the connection fails, for steadier sign-in, sync and verse audio
+• A new nature scene on the home screen every day
+• The home screen no longer pops up "where we left off" — your last chapter is in History on the reading page
+• The settings menu now uses the parchment background for clearer text
+• Contact email is now hello@askbible.me
 • Stability improvements

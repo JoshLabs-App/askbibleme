@@ -1,0 +1,6 @@
+# 刷量的爬虫：Parallel 的 ShapBot（2026-10-14 一天把同账号的 tovcore.com 刷了十几万次）
+User-agent: ShapBot
+Disallow: /
+
+User-agent: *
+Allow: /

@@ -1,0 +1,5 @@
+Version 1.0.50
+• A new nature scene on the home screen every day
+• The home screen no longer pops up "where we left off" — your last chapter is in History on the reading page
+• Contact email is now hello@askbible.me
+• Stability improvements

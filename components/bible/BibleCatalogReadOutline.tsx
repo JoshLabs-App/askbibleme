@@ -205,7 +205,11 @@ export function BibleCatalogReadOutline({
 
   useEffect(() => {
     if (!sheet) return;
-    const onScroll = () => setSheetOpen(false);
+    // 捕获阶段会收到弹窗内部章号列表自己的滚动，那不算「页面滚走了」，不能关
+    const onScroll = (e: Event) => {
+      if (e.target instanceof Element && e.target.closest(".bc-sheet-root")) return;
+      setSheetOpen(false);
+    };
     window.addEventListener("scroll", onScroll, true);
     return () => window.removeEventListener("scroll", onScroll, true);
   }, [sheet]);

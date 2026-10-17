@@ -21,7 +21,7 @@ android {
     }
 
     // Google 原生登录（Credential Manager）要的 Web client ID：和网页 / RN 同一个，只在本机 .env.local（gitignore）或环境变量里。
-    // 读不到就是空串，App 退回 Supabase 浏览器 OAuth，照样能登录
+    // 都读不到就用 RN app.config.js 里同一个兜底值（client ID 是公开值，不是密钥；本机 .env.local 丢过一次，别让打包靠它）
     val googleWebClientId = run {
         val keys = listOf("GOOGLE_WEB_CLIENT_ID", "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID", "NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID", "GOOGLE_OAUTH_WEB_CLIENT_ID")
         keys.firstNotNullOfOrNull { System.getenv(it)?.trim()?.takeIf(String::isNotEmpty) }
@@ -34,7 +34,7 @@ android {
                     else line.substring(0, eq).trim().removePrefix("export ").trim() to line.substring(eq + 1).trim().trim('"', '\'')
                 }
                 .let { pairs -> keys.firstNotNullOfOrNull { k -> pairs.firstOrNull { it.first == k && it.second.isNotEmpty() }?.second } }
-            ?: ""
+            ?: "827770827257-cigkgaq8k1m8qiu9ogq6n60d4s5uqili.apps.googleusercontent.com"
     }
     defaultConfig.buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")
 

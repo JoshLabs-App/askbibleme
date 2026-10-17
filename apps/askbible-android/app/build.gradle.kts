@@ -20,6 +20,24 @@ android {
         versionName = "1.0.50"
     }
 
+    // Google 原生登录（Credential Manager）要的 Web client ID：和网页 / RN 同一个，只在本机 .env.local（gitignore）或环境变量里。
+    // 读不到就是空串，App 退回 Supabase 浏览器 OAuth，照样能登录
+    val googleWebClientId = run {
+        val keys = listOf("GOOGLE_WEB_CLIENT_ID", "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID", "NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID", "GOOGLE_OAUTH_WEB_CLIENT_ID")
+        keys.firstNotNullOfOrNull { System.getenv(it)?.trim()?.takeIf(String::isNotEmpty) }
+            ?: listOf("../../.env.local", "../askbible-mobile/.env.local", "../askbible-mobile/.env").map { rootProject.file(it) }
+                .filter { it.exists() }
+                .flatMap { it.readLines() }
+                .mapNotNull { line ->
+                    val eq = line.indexOf('=')
+                    if (line.trimStart().startsWith("#") || eq < 0) null
+                    else line.substring(0, eq).trim().removePrefix("export ").trim() to line.substring(eq + 1).trim().trim('"', '\'')
+                }
+                .let { pairs -> keys.firstNotNullOfOrNull { k -> pairs.firstOrNull { it.first == k && it.second.isNotEmpty() }?.second } }
+            ?: ""
+    }
+    defaultConfig.buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")
+
     // 与 RN 同一把 upload key：凭据只在本机 apps/askbible-mobile/android/keystore.properties（gitignore）
     val uploadProps = rootProject.file("../askbible-mobile/android/keystore.properties")
     signingConfigs {
@@ -93,8 +111,12 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.activity:activity-compose:1.9.3")
-    // Google 登录走 Supabase 浏览器 OAuth（RN expo-web-browser.openAuthSessionAsync = Custom Tabs）
+    // Google 登录的后备：Supabase 浏览器 OAuth（RN expo-web-browser.openAuthSessionAsync = Custom Tabs）
     implementation("androidx.browser:browser:1.8.0")
+    // Google 登录优先走系统账号选择（Credential Manager → id_token → Supabase signInWithIdToken），不经 supabase.co 网页
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.media3:media3-exoplayer:1.5.1")
     implementation("androidx.media3:media3-session:1.5.1")

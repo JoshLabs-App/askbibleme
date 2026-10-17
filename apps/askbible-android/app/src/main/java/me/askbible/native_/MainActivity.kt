@@ -24,6 +24,7 @@ import me.askbible.native_.update.MigrateGate
 import me.askbible.native_.update.RatePrompt
 import me.askbible.native_.data.MedalXP
 import me.askbible.native_.ui.AchievementsScreen
+import me.askbible.native_.ui.ChapterNeighbor
 import me.askbible.native_.ui.EarnedToast
 import me.askbible.native_.ui.XPFloater
 import androidx.compose.foundation.layout.fillMaxSize
@@ -428,12 +429,26 @@ private fun RootScreen() {
             }
         }
     }
+    // 上一章（读经坞左键）：同章页结尾的「上一章」，卷首跨到前一卷末章；手动翻章就退出计划流，正在播就接着播
+    val skipPrevious: () -> Unit = {
+        val b = openedBook
+        val cur = b ?: listenBook
+        val at = if (b != null) chapter else listenChapter
+        val prev = cur?.let { ChapterNeighbor.resolve(it.id, at).first }
+        val pb = prev?.let { BibleCatalog.book(it.bookId) }
+        if (prev != null && pb != null) {
+            val keepPlaying = audio.isPlaying || audio.wantsPlayback
+            planFlowActive = false; chapterFromPlan = false
+            autoPlayPending = keepPlaying
+            if (b != null) { listenBook = null; chapter = prev.chapter; openedBook = pb }
+            else { listenBook = pb; listenChapter = prev.chapter }
+        }
+    }
     val music = remember { MusicPlayer(context, scope) }
     val home = remember { HomeVerseController(context, scope) }
     // 首页金句跟当前读经版本走：内置译本读本机库，在线译本（含法语等）取该版本的正文
     LaunchedEffect(translation.id) { home.setSource(translation) }
-    // 首页静默：停在首页时 +XP 这类飘字不进队列（Josh 2026-10-02「保持首页不打扰」）
-    LaunchedEffect(tab) { achievements.quiet = tab == ShellTab.HOME; if (tab != ShellTab.HOME) homeChromeHidden = false }
+    LaunchedEffect(tab) { if (tab != ShellTab.HOME) homeChromeHidden = false }
     // 每日灵修数据：第一次进计划页才下载（中文界面才有）
     LaunchedEffect(tab, appLocale, auth.isAdmin) {
         if (tab == ShellTab.PLAN && me.askbible.native_.data.SolidJoys.availableFor(appLocale, auth.isAdmin)) me.askbible.native_.data.SolidJoys.ensureLoaded(context, appLocale)
@@ -851,8 +866,8 @@ private fun RootScreen() {
                 PlaybackDock(
                     audio = audio,
                     available = audioUrl != null,
-                    onSearch = { targetBook?.let { b -> searchRef = SearchChapterRef(b.id, targetChapter) }; showSearch = true },
                     onSkipNext = skipNext,
+                    onSkipPrevious = skipPrevious,
                 )
                 // RN shellTabBarStyles.wrap.gap：坞与 Tab 行之间 6
                 Spacer(Modifier.height(ShellMetrics.tabBarDockGap.dp))
@@ -1092,7 +1107,7 @@ private fun RootScreen() {
         Box(Modifier.fillMaxSize().statusBarsPadding(), contentAlignment = Alignment.TopCenter) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 // 首页一律不弹（首页静默，Josh 2026-10-02「保持首页不打扰」）——事件留在 pending 里不消费，离开首页后照常补上；
-                // +XP 飘字在首页直接不进队列（AchievementStore.quiet）
+                // +XP 飘字全 App 都不进队列（AchievementStore.quiet，Josh 2026-10-17 读经时也不要）
                 if (tab != ShellTab.HOME) {
                     EarnedToast(achievements, appLocale, Parchment.light, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
                 }

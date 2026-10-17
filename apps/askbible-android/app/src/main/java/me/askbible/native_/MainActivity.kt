@@ -24,6 +24,7 @@ import me.askbible.native_.update.MigrateGate
 import me.askbible.native_.update.RatePrompt
 import me.askbible.native_.data.MedalXP
 import me.askbible.native_.ui.AchievementsScreen
+import me.askbible.native_.ui.ChapterNeighbor
 import me.askbible.native_.ui.EarnedToast
 import me.askbible.native_.ui.XPFloater
 import androidx.compose.foundation.layout.fillMaxSize
@@ -426,6 +427,21 @@ private fun RootScreen() {
                     else { listenChapter = nextChapter; audio.resume() }
                 }
             }
+        }
+    }
+    // 上一章（读经坞左键）：同章页结尾的「上一章」，卷首跨到前一卷末章；手动翻章就退出计划流，正在播就接着播
+    val skipPrevious: () -> Unit = {
+        val b = openedBook
+        val cur = b ?: listenBook
+        val at = if (b != null) chapter else listenChapter
+        val prev = cur?.let { ChapterNeighbor.resolve(it.id, at).first }
+        val pb = prev?.let { BibleCatalog.book(it.bookId) }
+        if (prev != null && pb != null) {
+            val keepPlaying = audio.isPlaying || audio.wantsPlayback
+            planFlowActive = false; chapterFromPlan = false
+            autoPlayPending = keepPlaying
+            if (b != null) { listenBook = null; chapter = prev.chapter; openedBook = pb }
+            else { listenBook = pb; listenChapter = prev.chapter }
         }
     }
     val music = remember { MusicPlayer(context, scope) }
@@ -851,8 +867,8 @@ private fun RootScreen() {
                 PlaybackDock(
                     audio = audio,
                     available = audioUrl != null,
-                    onSearch = { targetBook?.let { b -> searchRef = SearchChapterRef(b.id, targetChapter) }; showSearch = true },
                     onSkipNext = skipNext,
+                    onSkipPrevious = skipPrevious,
                 )
                 // RN shellTabBarStyles.wrap.gap：坞与 Tab 行之间 6
                 Spacer(Modifier.height(ShellMetrics.tabBarDockGap.dp))

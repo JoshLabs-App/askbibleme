@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "page": {
+    "title": {
+      "zh-CN": "更多 App",
+      "zh-TW": "更多 App",
+      "en": "More from us"
+    },
+    "intro": {
+      "zh-CN": "我们做的另外几样，也都围着圣经。",
+      "zh-TW": "我們做的另外幾樣，也都圍著聖經。",
+      "en": "A few other things we make, all around Scripture."
+    },
+    "appStore": {
+      "zh-CN": "App Store",
+      "zh-TW": "App Store",
+      "en": "App Store"
+    },
+    "googlePlay": {
+      "zh-CN": "Google Play",
+      "zh-TW": "Google Play",
+      "en": "Google Play"
+    },
+    "android": {
+      "zh-CN": "安卓下载",
+      "zh-TW": "安卓下載",
+      "en": "Android"
+    },
+    "web": {
+      "zh-CN": "网页版",
+      "zh-TW": "網頁版",
+      "en": "Web"
+    }
+  },
+  "apps": [
+    {
+      "id": "askbible",
+      "icon": "https://askbible-media.joshlabs.app/sibling-apps/askbible.png",
+      "name": {
+        "zh-CN": "AskBible",
+        "zh-TW": "AskBible",
+        "en": "AskBible"
+      },
+      "tagline": {
+        "zh-CN": "安静地，回到经文。读经、听经、每日金句与读经计划。",
+        "zh-TW": "安靜地，回到經文。讀經、聽經、每日金句與讀經計畫。",
+        "en": "Quietly, back to Scripture. Read, listen, daily verses and reading plans."
+      },
+      "ios": "https://apps.apple.com/app/id6771996188",
+      "googlePlay": "https://play.google.com/store/apps/details?id=me.askbible",
+      "web": "https://askbible.me/"
+    },
+    {
+      "id": "tingdao",
+      "icon": "https://askbible-media.joshlabs.app/sibling-apps/tingdao.png",
+      "name": {
+        "zh-CN": "听到",
+        "zh-TW": "聽到",
+        "en": "听到 · Sermons"
+      },
+      "tagline": {
+        "zh-CN": "世界各地的查经与主日讲道，用中文听；按圣经书卷编排，可边听边读。",
+        "zh-TW": "世界各地的查經與主日講道，用中文聽；按聖經書卷編排，可邊聽邊讀。",
+        "en": "Bible studies and Sunday sermons from around the world, in Chinese. Arranged by book, with text to read along."
+      },
+      "ios": "https://apps.apple.com/app/id6812104595",
+      "android": "https://my-class-media.joshlabs.app/download.html",
+      "web": "https://td.askbible.me/"
+    },
+    {
+      "id": "chadao",
+      "icon": "https://askbible-media.joshlabs.app/sibling-apps/chadao.png",
+      "name": {
+        "zh-CN": "查到",
+        "zh-TW": "查到",
+        "en": "查到 · Group Bible Study"
+      },
+      "tagline": {
+        "zh-CN": "给小组长用的归纳法查经工具：读经、备课、带组、排期，一套做完。",
+        "zh-TW": "給小組長用的歸納法查經工具：讀經、備課、帶組、排期，一套做完。",
+        "en": "An inductive Bible study tool for small-group leaders: read, prepare, lead and schedule in one place."
+      },
+      "ios": "https://apps.apple.com/app/id6815240486",
+      "android": "https://cd.askbible.me/"
+    },
+    {
+      "id": "tovcore",
+      "icon": "https://askbible-media.joshlabs.app/sibling-apps/tovcore.png",
+      "name": {
+        "zh-CN": "诗歌",
+        "zh-TW": "詩歌",
+        "en": "TovCore"
+      },
+      "tagline": {
+        "zh-CN": "像电影评级一样，看一首诗歌的神学。",
+        "zh-TW": "像電影評級一樣，看一首詩歌的神學。",
+        "en": "Worship songs rated like films — for their theology."
+      },
+      "android": "https://tovcore.com/install/",
+      "web": "https://tovcore.com/"
+    }
+  ]
+}

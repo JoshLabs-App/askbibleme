@@ -5,6 +5,18 @@
 
 ## 待决
 
+### O-36 「更多 App」：三星未装、TovCore iOS 链接待补、另外三个 App 待做（2026-10-21）
+- **现状**（D-42）：
+  - 清单 + 图标已传 R2（`bash scripts/upload-sibling-apps.sh`，`askbible-media/sibling-apps/`，不走缓存，改完即时生效）。
+  - iOS：探索页收藏下面一节，已装 home 手机（Release 1.1.4 (135)，覆盖装）。
+  - 安卓：代码同 iOS，`assembleSideload` 编译通过；**三星不在线没装上**，本机也没有安卓模拟器，界面没实机看过。
+  - 网页：首屏切换和「同系列工具」小小圣经换成诗歌（截图取自 TovCore App Store 截图），听到 / 查到补 App Store；开了 PR 等 JOSHUA 合并。
+- **影响**：TovCore iOS 还在苹果审核，App 里诗歌一行点了去网页版、网页上也没有 App Store 按钮。
+- **要 JOSHUA 决定 / 做**：
+  1. 三星连上无线调试（或插 USB 跑 `~/bin/connect_devices.sh --setup`）后说一声，我装安卓并看一眼界面。
+  2. TovCore 过审后：`data/sibling-apps/apps.json` 给 tovcore 加 `ios` 再跑上传脚本（App 不用发版）；网页 `lib/sibling-app-urls.ts` 加 App Store 入口。
+  3. 听到 / 查到 / 诗歌三个 App 里也做同样一节（读同一份线上清单，去掉自己）：推荐每个项目开一个会话做。
+
 ### O-26 三星没装上 1.0.49（搜索修复）（2026-10-04）
 
 - **现状**：iOS 已装 home iPhone；三星 10-04 无线调试不在线，sideload 包没装。

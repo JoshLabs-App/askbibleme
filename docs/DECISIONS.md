@@ -1576,3 +1576,14 @@ Play 要求**所有轨道**（正式 / 测试）上的包都不能再声明 `USE
 - App Store：1.1.4 挂 build 135，已提交审核（submission `6a0cdd26-3f20-4020-a879-e8da6d2b5f4d`），批准后自动发布。Play：production、release_status completed、中英更新说明已传。下载页 `version.json` 已到 1.0.50 (247)。
 - **坑**：`AA/AuthKey_9HDA27WY8C.p8` 软链指向的 00 正本在 10-07 事故里丢了，这次用 `ASC_API_KEY_PATH=~/.appstoreconnect/private_keys/AuthKey_9HDA27WY8C.p8` 跑上传和提审。
 - **日期**：2026-10-12
+
+## D-42 App 内「更多 App」页：同系列圣经软件互相推介（2026-10-21）
+- **决定了什么**（JOSHUA 2026-10-21 点选 +「小小圣经去掉，然后加上 TOVCORE」）：
+  1. **放法**：~~设置抽屉加一行「更多 App」，点进去单独一整页~~（同日改：JOSHUA「不要太深菜单，而是在探索页下面就列出来」）→ **探索页「收藏」下面直接列一节「更多 App」**，一行一个，整行可点（iOS 有 App Store 去 App Store，没上架去网页版）。首页、读经页不放（守 D-39）。
+  2. **推介谁**：AskBible / 听到 / 查到 / TovCore，每个 App 显示时去掉自己。TovCore 在列表里中文名写「诗歌」（繁「詩歌」，英文仍 TovCore；JOSHUA 同日）。小小圣经（YouTube 频道）不放进 App 里。
+  3. **清单放远程**：一份几个 App 共用的 JSON，真源 `data/sibling-apps/apps.json`（图标在 `data/sibling-apps/icons/`），
+     线上 `https://askbible-media.joshlabs.app/sibling-apps/apps.json`；App 内带一份兜底（iOS `Resources/sibling-apps.json`），先用上次拉到的、没有用兜底。加 App / 换链接 / 上下架只改线上，不发版。
+  4. **按钮规则**：iOS 有 App Store 链接就主按钮 App Store（另给网页版）；还没上架的给网页版。安卓上架 Play 的用 Play 链接，没上的指向官网 / 下载页（**不直接链 APK**，免得撞 Play 政策）。
+  5. **先后**：先在 AskBible iOS 做出来给 JOSHUA 看效果（2026-10-21 模拟器截图已给），定了再做安卓，再推到听到、查到、TovCore 各自 App。
+- **为什么**：几个圣经软件互相带量；清单放远程是因为几个 App 都在变（TovCore iOS 还在审），写死就得每次几端一起发版。
+- **日期**：2026-10-21

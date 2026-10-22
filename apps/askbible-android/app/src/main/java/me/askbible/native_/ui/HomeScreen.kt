@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -47,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -78,12 +80,14 @@ private object HomeMetrics {
     const val ALBUM_BTN = 52f           // HOME_ALBUM_BTN_SIZE
     const val ALBUM_GAP = 28f           // transportMainGap
     const val TOOLS_AUTO_CLOSE_MS = 7000L
+    const val SCENE_SWIPE = 72f         // 上下滑换场景的最小距离
 }
 
 /**
  * 首页：全屏场景视频 / 柔焦静帧 + 金句 + 底部「场景与音效」带。与 RN HomeNatureScreen 对等：
  * 右上齿轮展开 字号/定时 行、环境音九槽、场景条（首格「模糊」），闲置 7 秒自动收起；
  * 最下一排是 放松专辑 / 金句朗读 / 休闲专辑 三个开关（HomeNatureAlbumStrip）。
+ * 整屏上下滑换场景：上滑下一景、下滑上一景（按场景固定顺序循环）。
  */
 @Composable
 fun HomeScreen(
@@ -100,6 +104,8 @@ fun HomeScreen(
     playingAlbum: String?,
     sleepTimerMinutes: Int,
     onSelectScene: (String) -> Unit,
+    /** 首屏上下滑：+1 = 上滑换下一景，-1 = 下滑回上一景 */
+    onSwipeScene: (Int) -> Unit = {},
     onToggleLiveVideo: () -> Unit,
     onToggleAmbient: (String) -> Unit,
     onBumpTextScale: (Int) -> Unit,
@@ -126,6 +132,7 @@ fun HomeScreen(
     }
     // 收起时只压淡、不位移（iOS 同值 0.55）
     val chromeAlpha by animateFloatAsState(if (chromeHidden) 0.55f else 1f, tween(400), label = "homeChrome")
+    val swipePx = with(LocalDensity.current) { HomeMetrics.SCENE_SWIPE.dp.toPx() }
 
     Box(Modifier.fillMaxSize().background(Color(0xFF1A1512))
         // 点空白处：收起的界面叫回来；已显示时再点就立即收起（按键自己吃掉点击，不会走到这里）
@@ -135,6 +142,17 @@ fun HomeScreen(
                 idleEpoch += 1
                 onChromeHidden(!hidden)
             }
+        }
+        // 上下滑换场景（JOSHUA 2026-10-22）：只重新计时、不叫回收起的界面，沉浸着一张张翻
+        .pointerInput(Unit) {
+            var dy = 0f
+            detectVerticalDragGestures(
+                onDragStart = { dy = 0f },
+                onDragEnd = {
+                    if (dy <= -swipePx) { idleEpoch += 1; onSwipeScene(1) }
+                    else if (dy >= swipePx) { idleEpoch += 1; onSwipeScene(-1) }
+                },
+            ) { _, amount -> dy += amount }
         }) {
         // 底图：柔焦静帧一直垫着，live 时视频出首帧后盖上来
         val poster = rememberAssetImage(

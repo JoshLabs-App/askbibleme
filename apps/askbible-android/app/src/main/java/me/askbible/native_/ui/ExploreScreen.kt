@@ -256,6 +256,9 @@ fun ExploreScreen(
                     }
                 }
 
+                // 同系列圣经软件（D-42）：直接列在收藏下面，不进菜单
+                SiblingAppsSection(locale, theme)
+
                 // 九宫格功能块（欢迎 / 读经计划 / 圣经人物…）按 Josh 的决定只留网站，App 暂不放（2026-09-09）
                 // 查经资料：RN 探索格子里的精选文章（section 上 36 + 8，格子上 16 + 8，3 列 gap 10）
                 Spacer(Modifier.height((36 + 8 + 16 + 8).dp))

@@ -132,6 +132,9 @@ struct ExploreView: View {
 
                         favoritesBlock
 
+                        // 同系列圣经软件（D-42）：直接列在探索页下面，不进菜单
+                        SiblingAppsSection(locale: locale)
+
                         // 查经资料格子（让经文发声 / 圣经的模型 / 正式研读）Josh 2026-09-18 收起来，探索页不再摆出来。
                         // `articleGrid` 和文章数据都留着：读经计划页的「麦克阿瑟研经法」链接仍然要能打开文章页。
                         // articleGrid(width: geo.size.width)

@@ -133,6 +133,7 @@ fun HomeScreen(
     // 收起时只压淡、不位移（iOS 同值 0.55）
     val chromeAlpha by animateFloatAsState(if (chromeHidden) 0.55f else 1f, tween(400), label = "homeChrome")
     val swipePx = with(LocalDensity.current) { HomeMetrics.SCENE_SWIPE.dp.toPx() }
+    val swipeScene by rememberUpdatedState(onSwipeScene)
 
     Box(Modifier.fillMaxSize().background(Color(0xFF1A1512))
         // 点空白处：收起的界面叫回来；已显示时再点就立即收起（按键自己吃掉点击，不会走到这里）
@@ -149,8 +150,8 @@ fun HomeScreen(
             detectVerticalDragGestures(
                 onDragStart = { dy = 0f },
                 onDragEnd = {
-                    if (dy <= -swipePx) { idleEpoch += 1; onSwipeScene(1) }
-                    else if (dy >= swipePx) { idleEpoch += 1; onSwipeScene(-1) }
+                    if (dy <= -swipePx) { idleEpoch += 1; swipeScene(1) }
+                    else if (dy >= swipePx) { idleEpoch += 1; swipeScene(-1) }
                 },
             ) { _, amount -> dy += amount }
         }) {

@@ -647,6 +647,17 @@ private fun RootScreen() {
                         NatureScenes.scene(id)?.defaultAmbient?.let { ambient.start(it) }
                     }
                 },
+                // 上下滑换场景：按固定顺序循环，不记点选次数（免得场景条跟着乱跳）；
+                // 环境音开着才跟到新场景的默认音，没开就不出声（首页打开不打扰）
+                onSwipeScene = { step ->
+                    val all = NatureScenes.scenes
+                    if (all.size > 1) {
+                        val i = all.indexOfFirst { it.id == naturePrefs.sceneId }.coerceAtLeast(0)
+                        val next = all[Math.floorMod(i + step, all.size)]
+                        naturePrefs.selectScene(next.id)
+                        if (ambient.slotId != null) next.defaultAmbient?.let { ambient.start(it) }
+                    }
+                },
                 onToggleLiveVideo = { naturePrefs.toggleLiveVideo(!naturePrefs.liveVideo) },
                 onToggleAmbient = { id -> if (ambient.slotId == id) ambient.stop() else ambient.start(id) },
                 onBumpTextScale = { naturePrefs.bumpTextScale(it) },

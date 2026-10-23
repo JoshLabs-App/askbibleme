@@ -1,0 +1,4 @@
+Version 1.0.51
+• Swipe up or down on the home screen to change the nature scene
+• New "More Apps" section on the Explore page with our other Bible apps
+• Stability improvements

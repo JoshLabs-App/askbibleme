@@ -161,6 +161,38 @@ struct RootView: View {
         )
     }
 
+    /// 装载某章的朗读音源（同一章重复调用是空操作）。换章时由 audioURL 的 onChange 调；
+    /// 自动跳章时 skipToNextChapter 直接调——后台 / 锁屏时 SwiftUI 不保证跑视图更新，
+    /// 只改状态的话可能一章播完就停、回前台才接下一章（安卓 2026-10-13 实测如此，iOS 同步加固）。
+    private func loadChapterAudio(_ book: BookRef, _ chapter: Int) {
+        guard let url = ChapterAudioSource.resolve(
+            translationId: store.translation.id, bookId: book.id, bookNumber: book.number,
+            bookName: book.name, chapter: chapter) else { return }
+        let key = "\(store.translation.id).\(book.id).\(chapter)"
+        let title = ReadChrome.chapterTitle(bookName: bookLabel(book), chapter: chapter, locale: titleLocale)
+        let tid = store.translation.id
+        if ChapterAudioSource.isResolverURL(url) {
+            // YouVersion 译本：先问网站代理拿 CDN mp3，再装载
+            audio.beginResolving(key: key, title: title)
+            Task {
+                if let src = await ChapterAudioSource.fetchResolved(url, cacheKey: key) {
+                    audio.load(url: src, key: key, title: title, translationId: tid, bookId: book.id, chapter: chapter, resolved: true)
+                } else {
+                    audio.failResolving(key: key)
+                }
+            }
+        } else {
+            audio.load(url: url, key: key, title: title, translationId: tid, bookId: book.id, chapter: chapter)
+        }
+    }
+
+    /// 自动跳章：不等视图更新，立刻装下一章并起播（取地址期间 resume 只记意图，拿到后自动起播）
+    private func playChapterNow(_ book: BookRef, _ chapter: Int) {
+        autoPlayPending = false
+        loadChapterAudio(book, chapter)
+        audio.resume()
+    }
+
     private func skipToNextChapter() {
         if planFlowActive {
             if let cur = audioTarget {
@@ -172,8 +204,10 @@ struct RootView: View {
             if next < planQueue.count {
                 planQueueIndex = next
                 // 在播放页听（章页没开）→ 只换音源不开章页；在章页 → 顺到下一章页
-                if planFlowHost == .listen, openedChapter == nil { listenPlanChapter(planQueue[next], autoPlay: true) }
-                else { openPlanChapter(planQueue[next], autoPlay: true) }
+                let p = planQueue[next]
+                if planFlowHost == .listen, openedChapter == nil { listenPlanChapter(p, autoPlay: true) }
+                else { openPlanChapter(p, autoPlay: true) }
+                if let b = BibleCatalog.book(id: p.bookId) { playChapterNow(b, p.chapter) }
             } else {
                 planFlowActive = false
             }
@@ -190,12 +224,11 @@ struct RootView: View {
         if nextChapter == opened.chapter {
             // 单章书循环：音源没变，onChange 不会触发，直接回开头续播
             audio.seek(to: 0); audio.resume()
-        } else if openedChapter != nil {
-            // 自动跳章要接着播：交给 audioURL 的 onChange 起播
-            autoPlayPending = true
-            openedChapter = (opened.book, nextChapter)
+        } else {
+            if openedChapter != nil { openedChapter = (opened.book, nextChapter) }
+            else { listenChapter = (opened.book, nextChapter) }
+            playChapterNow(opened.book, nextChapter)
         }
-        else { listenChapter = (opened.book, nextChapter); audio.resume() }
     }
 
     /// 睡眠定时：首页定时角标与音乐页睡眠单同一份分钟数，四路播放器一起设（0 = 关）
@@ -429,23 +462,8 @@ struct RootView: View {
                 home.setSource(store.translation)
             }
             .onChange(of: audioURL) { _, url in
-                guard let url, let opened = audioTarget else { return }
-                let key = "\(store.translation.id).\(opened.book.id).\(opened.chapter)"
-                let title = ReadChrome.chapterTitle(bookName: bookLabel(opened.book), chapter: opened.chapter, locale: titleLocale)
-                if ChapterAudioSource.isResolverURL(url) {
-                    // YouVersion 译本：先问网站代理拿 CDN mp3，再装载
-                    let tid = store.translation.id, bookId = opened.book.id, chapter = opened.chapter
-                    audio.beginResolving(key: key, title: title)
-                    Task {
-                        if let src = await ChapterAudioSource.fetchResolved(url, cacheKey: key) {
-                            audio.load(url: src, key: key, title: title, translationId: tid, bookId: bookId, chapter: chapter, resolved: true)
-                        } else {
-                            audio.failResolving(key: key)
-                        }
-                    }
-                } else {
-                    audio.load(url: url, key: key, title: title, translationId: store.translation.id, bookId: opened.book.id, chapter: opened.chapter)
-                }
+                guard url != nil, let opened = audioTarget else { return }
+                loadChapterAudio(opened.book, opened.chapter)
                 if autoPlayPending {
                     autoPlayPending = false
                     audio.resume()

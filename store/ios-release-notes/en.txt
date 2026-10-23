@@ -1,5 +1,3 @@
-• A new nature scene on the home screen every day
-• The home screen no longer pops up "where we left off" — your last chapter is in History on the reading page
-• The settings menu now uses the parchment background for clearer text
-• Contact email is now hello@askbible.me
+• Swipe up or down on the home screen to change the nature scene
+• New "More Apps" section on the Explore page with our other Bible apps
 • Stability improvements

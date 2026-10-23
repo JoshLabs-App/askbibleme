@@ -3,6 +3,7 @@ import SwiftUI
 /// 首页：全屏场景视频 / 柔焦静帧 + 金句 + 底部「场景与音效」带。与 RN HomeNatureScreen 对等（Android HomeScreen 同构）：
 /// 右上齿轮展开 字号/定时 行、环境音九槽、场景条（首格「模糊」），闲置 7 秒自动收起；
 /// 最下一排是 安静专辑 / 金句朗读 / 下午茶专辑 三个开关（RN HomeNatureAlbumStrip）—— 咖啡杯是「下午茶」专辑，不是环境音。
+/// 整屏上下滑换场景：上滑下一景、下滑上一景（按场景固定顺序循环）。
 /// 金句排版来自 verseTypography()：body 24 / 行高 37 / 700，ref 18 / 行高 26 / 700 / 上距 12，随字号档缩放。
 struct HomeView: View {
     @ObservedObject var home: HomeVerseController
@@ -47,6 +48,7 @@ struct HomeView: View {
         static let albumBtn: CGFloat = 52         // HOME_ALBUM_BTN_SIZE
         static let albumGap: CGFloat = 28         // transportMainGap
         static let toolsAutoCloseNs: UInt64 = 7_000_000_000  // HOME_SCENE_TOOLS_AUTO_CLOSE_MS
+        static let sceneSwipe: CGFloat = 72       // 上下滑换场景的最小距离（同安卓）
     }
 
     var body: some View {
@@ -130,6 +132,14 @@ struct HomeView: View {
                 onChromeHidden(!next)
                 idleEpoch += 1
             })
+            // 上下滑换场景（JOSHUA 2026-10-22，跟安卓同）：上滑下一景、下滑上一景。
+            // 只认竖向为主的滑动，场景条 / 环境音条的横向滚动不会误触；只重新计时，不叫回收起的界面。
+            .simultaneousGesture(DragGesture(minimumDistance: 20).onEnded { g in
+                let dy = g.translation.height
+                guard abs(dy) >= M.sceneSwipe, abs(dy) > abs(g.translation.width) * 1.5 else { return }
+                idleEpoch += 1
+                swipeScene(dy < 0 ? 1 : -1)
+            })
         }
         // 点开设置后闲置 7 秒自动收起（HOME_SCENE_TOOLS_AUTO_CLOSE_MS）；任何一次操作都重新计时
         // 闲置 7 秒：先收设置簇，再过 7 秒淡出整层界面；任何一次操作都重新计时
@@ -140,6 +150,17 @@ struct HomeView: View {
             withAnimation(.easeInOut(duration: 0.6)) { chromeVisible = false }
             onChromeHidden(true)
         }
+    }
+
+    /// 按场景固定顺序循环，不记点选次数（免得场景条跟着乱跳）；
+    /// 环境音开着才跟到新场景的默认音，没开就不出声（首页打开不打扰）
+    private func swipeScene(_ step: Int) {
+        let all = NatureScenes.scenes
+        guard all.count > 1 else { return }
+        let i = all.firstIndex { $0.id == prefs.sceneId } ?? 0
+        let next = all[((i + step) % all.count + all.count) % all.count]
+        prefs.selectScene(next.id)
+        if ambient.isOn, let slot = next.defaultAmbient { ambient.start(slotId: slot) }
     }
 
     private func touch() {

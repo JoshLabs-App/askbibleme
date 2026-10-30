@@ -1066,7 +1066,7 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
           <div
             ref={natureVerseFitBoxRef}
             className={[
-              "pointer-events-none absolute inset-x-0 top-[38.2%] z-[12]",
+              "nature-verse-fit-box pointer-events-none absolute inset-x-0 top-[38.2%] z-[12]",
               "flex max-h-[min(52dvh,calc(100%-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-11rem))]",
               "-translate-y-1/2 flex-col items-center justify-center overflow-hidden px-5 sm:px-6",
               "[@media(max-height:500px)_and_(orientation:portrait)]:top-[32%]",

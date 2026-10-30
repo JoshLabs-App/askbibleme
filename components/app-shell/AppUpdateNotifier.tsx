@@ -51,13 +51,6 @@ export function AppUpdateNotifier() {
   const loadedRef = useRef<string | null>(null);
   const reloadScheduledRef = useRef(false);
   const reloadTimerRef = useRef<number | null>(null);
-  const hide = useCallback(() => {
-    setVisible(false);
-    if (reloadTimerRef.current != null) {
-      window.clearTimeout(reloadTimerRef.current);
-      reloadTimerRef.current = null;
-    }
-  }, []);
 
   const check = useCallback(async () => {
     if (reloadScheduledRef.current) return;
@@ -91,10 +84,8 @@ export function AppUpdateNotifier() {
     };
   }, [check]);
 
-  useEffect(() => {
-    if (immersive) hide();
-  }, [hide, immersive]);
-
+  // 沉浸模式（首页全屏、电视常开）只是不弹提示条，已排定的刷新照样执行；
+  // 以前这里会取消刷新定时器，而 reloadScheduledRef 又不复位，结果这个标签再也不会自动更新
   if (immersive) return null;
   if (!visible) return null;
 

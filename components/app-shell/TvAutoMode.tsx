@@ -17,6 +17,11 @@ export function TvAutoMode() {
 
   useEffect(() => {
     if (!isTvBrowser()) return;
+    // 电视专用页：从网页首页 / 官网首页进来的电视一律转到 /tv
+    if (location.pathname === "/" || location.pathname === "/web") {
+      location.replace("/tv");
+      return;
+    }
     const root = document.documentElement;
     root.setAttribute("data-tv", "");
     setImmersive(true);

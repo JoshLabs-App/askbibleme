@@ -10,3 +10,16 @@ html[data-nature-home-shell="1"] .app-shell-safe-area-fill,
 html[data-nature-home-shell="1"] [data-app-shell-scroll] {
   background-color: transparent !important;
 }
+
+/* 旧内核（电视 webOS 22/23 等 Chromium < 108）不认 dvh：整条 max-height 失效，经文框没了上限，字就被裁掉。
+   不支持 dvh 时改用 vh（电视没有会伸缩的地址栏，vh 就是可见高度）。 */
+@supports not (height: 1dvh) {
+  .nature-verse-fit-box {
+    max-height: min(52vh, calc(100% - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 11rem));
+  }
+  @media (orientation: landscape) {
+    .nature-verse-fit-box {
+      max-height: min(44vh, calc(100% - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 9.5rem));
+    }
+  }
+}

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>电视检查</title>
+<style>html,body{margin:0;background:#222;color:#fff;font:28px/1.5 sans-serif}pre{margin:0;padding:24px;white-space:pre-wrap}video{position:fixed;right:0;bottom:0;width:480px;height:270px;background:#444}</style></head>
+<body><pre id="o">检查中…</pre>
+<video id="v" muted playsinline loop src="/nature/uploads/005ff1000c2046e2af6055b0d0d78792-720.mp4"></video>
+<script>
+var L=[],o=document.getElementById('o'),v=document.getElementById('v');
+function add(k,x){L.push(k+': '+x);o.textContent=L.join('\n')}
+function t(f){try{return String(f())}catch(e){return 'ERR '+e.message}}
+add('UA',navigator.userAgent);
+add('窗口 inner',innerWidth+'x'+innerHeight+'  屏幕 screen '+screen.width+'x'+screen.height+'  DPR '+devicePixelRatio);
+add('CSS dvh / svh / :has',t(function(){return CSS.supports('height','1dvh')+' / '+CSS.supports('height','1svh')+' / '+CSS.supports('selector(:has(a))')}));
+add('全屏 API',t(function(){return !!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen)}));
+add('视频 H.264',t(function(){return v.canPlayType('video/mp4; codecs="avc1.42E01E"')||'否'}));
+add('音频 mp3 / aac',t(function(){return (v.canPlayType('audio/mpeg')||'否')+' / '+(v.canPlayType('audio/mp4; codecs="mp4a.40.2"')||'否')}));
+add('内存 deviceMemory',navigator.deviceMemory||'未知');
+var vs=['loadstart','loadeddata','playing','waiting','stalled','suspend','error','ended'];
+vs.forEach(function(n){v.addEventListener(n,function(){add('视频事件',n+(n==='error'&&v.error?' code '+v.error.code:'')+' t='+v.currentTime.toFixed(1))})});
+v.play&&v.play().catch(function(e){add('视频 play 被拒',e.name)});
+window.addEventListener('error',function(e){add('JS 错误',e.message)});
+document.addEventListener('keydown',function(e){if(e.key==='Enter'||e.keyCode===13){var d=document.documentElement,f=d.requestFullscreen||d.webkitRequestFullscreen;add('按确定键进全屏',f?'尝试':'不支持');if(f)try{var r=f.call(d);r&&r.catch&&r.catch(function(x){add('全屏失败',x.name)})}catch(x){add('全屏异常',x.message)}}});
+add('提示','按遥控器「确定」试全屏；右下角小窗是视频，看它是不是一直在动');
+setInterval(function(){document.title='t='+v.currentTime.toFixed(0)},1000);
+</script></body></html>

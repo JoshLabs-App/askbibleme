@@ -10,6 +10,7 @@ import "./globals.css";
 import "./(app-shell)/read/read-parchment-background.css";
 import "./(app-shell)/read/read-parchment-shell-chrome.css";
 import { AppUpdateNotifier } from "@/components/app-shell/AppUpdateNotifier";
+import { TvAutoMode } from "@/components/app-shell/TvAutoMode";
 import { EndpointsBoot } from "@/components/shell/EndpointsBoot";
 import { AppImmersiveProvider } from "@/components/app-shell/AppImmersiveProvider";
 import { PwaServiceWorkerRegistration } from "@/components/app-shell/PwaServiceWorkerRegistration";
@@ -139,6 +140,7 @@ export default async function RootLayout({
                     <PwaServiceWorkerRegistration />
                     <EndpointsBoot />
                     <AppUpdateNotifier />
+                    <TvAutoMode />
                   </MediaPlaybackCoordinatorProvider>
                 </MusicShellPlaybackProvider>
               </CuvChapterAudioVoiceProvider>

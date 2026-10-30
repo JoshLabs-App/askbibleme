@@ -4,7 +4,6 @@ import { HomeDockChromeProvider } from "@/components/home/HomeDockChromeContext"
 import { HomePrayerVerseFeedProvider } from "@/components/home/HomePrayerVerseFeedContext";
 import { ShellTemplateDockPreviewProvider } from "@/components/shell/ShellTemplateDockPreviewContext";
 import { NatureBackgroundVideoPrefetch } from "@/components/nature/NatureBackgroundVideoPrefetch";
-import { TvRemoteKeys } from "@/components/app-shell/TvRemoteKeys";
 import { AppShellFixedChrome } from "@/components/app-shell/AppShellFixedChrome";
 import { AppShellScrollArea } from "@/components/app-shell/AppShellScrollArea";
 import { ReadBibleTypographyProvider } from "@/components/bible/ReadBibleTypographyProvider";
@@ -24,7 +23,6 @@ export function AppShellProviders({ children, verseFallbackByLocale }: Props) {
           <HomeDockChromeProvider>
             <HomePrayerVerseFeedProvider fallbackByLocale={verseFallbackByLocale}>
               <NatureBackgroundVideoPrefetch />
-              <TvRemoteKeys />
               <AppShellScrollArea>{children}</AppShellScrollArea>
             </HomePrayerVerseFeedProvider>
           </HomeDockChromeProvider>

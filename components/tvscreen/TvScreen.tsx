@@ -98,10 +98,13 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       a.src = src;
       void a.play().then(
         () => say(`正在播放：${label}`),
-        () => say("按遥控器任意键开始播放"),
+        (err) => {
+          say("按遥控器任意键开始播放");
+          beacon({ what: "music-play-rejected", name: err?.name, msg: String(err?.message ?? "").slice(0, 120), src });
+        },
       );
     },
-    [say],
+    [say, beacon],
   );
 
   // 打开就放轻音乐
@@ -202,6 +205,14 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     }
   }, []);
 
+  const beacon = useCallback((o: Record<string, unknown>) => {
+    try {
+      navigator.sendBeacon?.("/api/tv-report", JSON.stringify({ tv: "dbg", ...o }));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   const reportAudio = useCallback(
     (which: string) => (e: React.SyntheticEvent<HTMLAudioElement>) => {
       const a = e.currentTarget;
@@ -236,6 +247,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   useEffect(() => {
     showLegend();
     const onKey = (e: KeyboardEvent) => {
+      beacon({ what: "key", key: e.key, code: e.keyCode, musicPaused: musicRef.current?.paused, videoPaused: videoRef.current?.paused });
       showLegend();
       kickVideo();
       const m = musicRef.current;
@@ -266,7 +278,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       document.removeEventListener("keydown", onKey);
       if (legendTimerRef.current != null) window.clearTimeout(legendTimerRef.current);
     };
-  }, [showLegend, kickVideo]);
+  }, [showLegend, kickVideo, beacon]);
 
   const fontSize = useMemo(() => verseFontSize(verseText.length), [verseText]);
 

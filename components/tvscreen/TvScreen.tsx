@@ -64,6 +64,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   const legendTimerRef = useRef<number | null>(null);
   const planRef = useRef<{ chapters: PlanChapter[]; i: number } | null>(null);
   const planAudioRef = useRef<HTMLAudioElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const entries = entriesByLocale[locale] ?? entriesByLocale["zh-CN"] ?? [];
   const entry = entries.length ? entries[activeIndex % entries.length] : null;
@@ -178,6 +179,41 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     );
   }, [activeIndex, locale, say, verseKeys]);
 
+  // 视频：电视浏览器常拦自动播放，或解码失败。尝试补播，并把状态报到 /api/tv-report（Vercel 日志搜 [tv-report]）
+  const reportVideo = useCallback((what: string) => {
+    const v = videoRef.current;
+    try {
+      navigator.sendBeacon?.(
+        "/api/tv-report",
+        JSON.stringify({
+          tv: "video",
+          what,
+          src: v?.currentSrc ?? "",
+          readyState: v?.readyState,
+          networkState: v?.networkState,
+          errCode: v?.error?.code,
+          errMsg: v?.error?.message,
+          paused: v?.paused,
+          ua: navigator.userAgent,
+        }),
+      );
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const kickVideo = useCallback(() => {
+    const v = videoRef.current;
+    if (!v || !v.paused) return;
+    void v.play().catch(() => reportVideo("play-rejected"));
+  }, [reportVideo]);
+
+  useEffect(() => {
+    kickVideo();
+    const t = window.setTimeout(() => reportVideo(videoRef.current?.paused ? "paused-after-3s" : "playing-after-3s"), 3000);
+    return () => window.clearTimeout(t);
+  }, [video?.id, kickVideo, reportVideo]);
+
   const live = useRef({ playAlbum, playVerseAudio, startPlan });
   live.current = { playAlbum, playVerseAudio, startPlan };
 
@@ -185,6 +221,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     showLegend();
     const onKey = (e: KeyboardEvent) => {
       showLegend();
+      kickVideo();
       const m = musicRef.current;
       const va = verseAudioRef.current;
       const pa = planAudioRef.current;
@@ -211,17 +248,20 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       document.removeEventListener("keydown", onKey);
       if (legendTimerRef.current != null) window.clearTimeout(legendTimerRef.current);
     };
-  }, [showLegend]);
+  }, [showLegend, kickVideo]);
 
   const fontSize = useMemo(() => verseFontSize(verseText.length), [verseText]);
 
   return (
     <div
-      style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "#000", overflow: "hidden", color: "#fff" }}
+      style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "linear-gradient(160deg, #1f3a4d 0%, #3d5a4a 55%, #6b5a3a 100%)", overflow: "hidden", color: "#fff" }}
     >
       {video ? (
         <video
+          ref={videoRef}
           key={video.id}
+          onError={() => reportVideo("error")}
+          onStalled={() => reportVideo("stalled")}
           src={video.src}
           autoPlay
           muted

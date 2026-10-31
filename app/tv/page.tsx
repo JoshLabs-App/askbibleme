@@ -11,6 +11,6 @@ export const dynamic = "force-dynamic";
 
 export default async function TvPage() {
   const settings = await readNatureSettings(process.cwd());
-  const videos = settings.videos.map((v) => ({ id: v.id, src: v.src, title: v.title ?? "" }));
+  const videos = settings.videos.map((v) => ({ id: v.id, src: v.src, title: v.title ?? "", poster: v.previewFrameSrc ?? v.thumbSrc ?? "" }));
   return <TvScreen videos={videos} />;
 }

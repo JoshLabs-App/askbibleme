@@ -55,7 +55,7 @@ import me.askbible.native_.data.ShellMetrics
 /**
  * 读经播放坞。几何逐值来自 core 的 ShellMetrics（已三端对拍），图标与 RN `ReadScripturePlaybackDock` 同源：
  * 进度行 minHeight 23 / 时间 12sp 500 minWidth 36；下一行分三段，
- * 左 search 24（框 44），中段 gap 28 装「语速图 56×22 + 播放 64（图标 34）+ 循环 44（自绘 24）」，右 skip-next 36（框 48）。
+ * 左 search 24（框 44；传了 onSkipPrevious 时换成 skip-previous 36（框 48），与右侧对称），中段 gap 28 装「语速图 56×22 + 播放 64（图标 34）+ 循环 44（自绘 24）」，右 skip-next 36（框 48）。
  */
 @Composable
 fun PlaybackDock(
@@ -65,6 +65,8 @@ fun PlaybackDock(
     theme: Parchment = Parchment.light,
     onSearch: () -> Unit = {},
     onSkipNext: () -> Unit = {},
+    /** 左键换成上一章（读经章页，Josh 2026-10-17「左边的搜索，改为上一章」）；null 仍是搜索 */
+    onSkipPrevious: (() -> Unit)? = null,
     /** 播放键的自定义动作（计划播放页：没建池时从选中章起播）；null 走 audio.toggle() */
     onToggle: (() -> Unit)? = null,
 ) {
@@ -144,12 +146,16 @@ fun PlaybackDock(
                      modifier = Modifier.width(ShellMetrics.timeLabelMinWidth.dp))
             }
 
-            // 传输控制（transportMarginTop 2）：左搜索 / 中间 gap 28 三件套 / 右下一章
+            // 传输控制（transportMarginTop 2）：左搜索或上一章 / 中间 gap 28 三件套 / 右下一章
             Row(
                 Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = ShellMetrics.dockMarginBottom.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                GlyphBox(ShellMetrics.loopButtonSize, ShellMetrics.loopIconSize, MI.SEARCH, ink, onSearch)
+                if (onSkipPrevious != null) {
+                    GlyphBox(ShellMetrics.transportButtonSize, ShellMetrics.skipIconSize, MI.SKIP_PREVIOUS, ink, onSkipPrevious)
+                } else {
+                    GlyphBox(ShellMetrics.loopButtonSize, ShellMetrics.loopIconSize, MI.SEARCH, ink, onSearch)
+                }
                 Spacer(Modifier.weight(1f))
 
                 Row(

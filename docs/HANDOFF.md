@@ -753,3 +753,21 @@ manifest `start_url=/web`；手机截图和金句字体文件都取得到。本�
 - 改标题要带全 snippet（title / description / tags / categoryId / defaultLanguage），只给 title 会被清空别的字段。
 - 外语译本**章节数对得上不等于内容对得上**：getbible 的 Gdańska 1881 把诗篇标题塞进第 1 节、整篇错一位；eBible 的 RV1909 用空节占位（约拿 1:17 空、2 章后移）。改译本后一定跑 `check`，并用近亲语言逐节比（做法见 D-35 补）。
 - getbible 的书名是英文，当地书名从同语言的 eBible USFM 取（`LANGS` 第三栏）；Wikimedia 接口不带像样的 User-Agent 会 403。
+
+## 附：电视版 /tv 交接（2026-10-30）
+
+### 当前状态
+- 三次提交（均在分支 `claude/tv-page`，已推到 `origin/claude/tv-page`；**是否已合并 main / 已部署：未核实**）：
+  - `b2d71ecc`（#18）网页版电视适配：沉浸模式下自动刷新不再被取消；旧内核不认 `dvh` 时经文框用 `vh` 回退；新增 `public/tv-check.html` 诊断页；`components/app-shell/TvAutoMode.tsx` 检测到电视浏览器自动进沉浸、尝试全屏，并经 `app/api/tv-report/route.ts` 上报环境和播放异常；判断函数在 `lib/dom/is-tv-browser.ts`。
+  - `c5231627`（#19）遥控器数字键（`TvRemoteKeys.tsx`）：打开自动放轻音乐，1–9 选内容，0 进检查页，屏幕显示说明。
+  - `d0c1ff4c` 电视专用页 `/tv`（`app/tv/*`、`components/tvscreen/TvScreen.tsx`）：全屏影像 + 金句 + 数字键选音乐 + 今日读经；电视访问 `/` 和 `/web` 自动转到 `/tv`（逻辑在 `TvAutoMode.tsx`）。`TvRemoteKeys.tsx` 已并入 TvScreen，原文件删除。
+- 验证：这几次提交未在本文档记录真电视实测结果。
+
+### 下一步
+1. 在真电视上打开 `/tv`，核对：自动跳转、数字键选音乐、金句与经文不截断、长时间播放不卡死。
+2. 看 `/api/tv-report` 收到的上报，确认有无播放异常。
+3. 实测通过后开 PR 合并 main（main 受保护，由 JOSHUA 合并）。
+
+### 别踩的坑
+- 旧电视内核不认 `dvh`，布局高度要带 `vh` 回退。
+- 电视浏览器判断集中在 `lib/dom/is-tv-browser.ts`，别在别处另写一份。

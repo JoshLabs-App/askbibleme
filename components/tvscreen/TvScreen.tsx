@@ -169,9 +169,22 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     }
   }, []);
 
+  const planDbgRef = useRef(0);
   const onPlanTime = useCallback(() => {
     const a = planAudioRef.current;
     if (!a) return;
+    const nowMs = Date.now();
+    if (nowMs - planDbgRef.current > 15000) {
+      planDbgRef.current = nowMs;
+      const st = planRef.current;
+      beacon({
+        what: "plan-sync",
+        ch: st ? `${st.chapters[st.i]?.bookId}-${st.chapters[st.i]?.chapter}` : "",
+        t: Math.round(a.currentTime * 10) / 10,
+        dur: Math.round((a.duration || 0) * 10) / 10,
+        timings: planTimingsRef.current ? planTimingsRef.current.length : 0,
+      });
+    }
     setPlanView((pv) => {
       if (!pv || pv.verses.length === 0) return pv;
       const t = a.currentTime;
@@ -196,7 +209,15 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       cur = Math.max(0, Math.min(pv.verses.length - 1, cur));
       return cur === pv.cur ? pv : { ...pv, cur };
     });
-  }, []);
+  }, [beacon]);
+
+  // 旧电视的 timeupdate 触发很稀，读经时另用定时器每 0.3 秒对一次时间
+  const planActive = planView !== null;
+  useEffect(() => {
+    if (!planActive) return;
+    const id = window.setInterval(onPlanTime, 300);
+    return () => window.clearInterval(id);
+  }, [planActive, onPlanTime]);
 
   const playPlanChapter = useCallback(
     (i: number) => {
@@ -358,13 +379,14 @@ export function TvScreen({ videos }: { videos: Video[] }) {
 
   return (
     <div
-      style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "linear-gradient(160deg, #1f3a4d 0%, #3d5a4a 55%, #6b5a3a 100%)", overflow: "hidden", color: "#fff" }}
+      style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "linear-gradient(160deg, #3b6f8f 0%, #5b8a6a 55%, #b0884a 100%)", overflow: "hidden", color: "#fff" }}
     >
       {video ? (
         <video
           ref={videoRef}
           key={video.id}
           onPlaying={() => setVideoPlaying(true)}
+          onPause={() => setVideoPlaying(false)}
           onError={() => reportVideo("error")}
           onStalled={() => reportVideo("stalled")}
           src={video.src}
@@ -375,7 +397,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
           style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", opacity: videoPlaying ? 1 : 0 }}
         />
       ) : null}
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.45))" }} />
+      <div style={{ position: "absolute", inset: 0, background: videoPlaying ? "linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.45))" : "linear-gradient(rgba(0,0,0,0.08), rgba(0,0,0,0.3))" }} />
       {entry ? (
         <div
           style={{
@@ -437,7 +459,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
         ) : null}
       </div>
       <audio ref={musicRef} onEnded={onMusicEnded} onError={reportAudio("音乐")} preload="none" />
-      <audio ref={planAudioRef} onEnded={onPlanEnded} onTimeUpdate={onPlanTime} onError={reportAudio("读经")} preload="none" />
+      <audio ref={planAudioRef} onEnded={onPlanEnded} onTimeUpdate={onPlanTime} onPlaying={onPlanTime} onError={reportAudio("读经")} preload="none" />
       <audio ref={verseAudioRef} onEnded={onVerseAudioEnded} onError={reportAudio("金句")} preload="none" />
     </div>
   );

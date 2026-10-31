@@ -66,6 +66,10 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   const planAudioRef = useRef<HTMLAudioElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoPlaying, setVideoPlaying] = useState(false);
+  // 今日读经：当前章的经文与朗读进度
+  const [planView, setPlanView] = useState<{ title: string; verses: string[]; cur: number } | null>(null);
+  const planTimingsRef = useRef<{ verse: number; start: number; end: number }[] | null>(null);
+  const bookCacheRef = useRef<Record<string, Record<string, { t: string }[]>>>({});
 
   const entries = entriesByLocale[locale] ?? entriesByLocale["zh-CN"] ?? [];
   const entry = entries.length ? entries[activeIndex % entries.length] : null;
@@ -103,6 +107,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       verseAudioRef.current?.pause();
       planAudioRef.current?.pause();
       planRef.current = null;
+      setPlanView(null);
       albumRef.current = album;
       a.volume = 1;
       a.src = src;
@@ -137,6 +142,62 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     void m?.play().catch(() => {});
   }, []);
 
+  const loadPlanChapterText = useCallback(async (bookId: string, chapter: number, title: string) => {
+    planTimingsRef.current = null;
+    setPlanView({ title, verses: [], cur: 0 });
+    try {
+      let book = bookCacheRef.current[bookId];
+      if (!book) {
+        const r = await fetch(`/scripture/cuv-simp/${bookId}.json`);
+        book = ((await r.json()) as { c: Record<string, { t: string }[]> }).c;
+        bookCacheRef.current[bookId] = book;
+      }
+      const verses = (book[String(chapter)] ?? []).map((v) => v.t);
+      setPlanView({ title, verses, cur: 0 });
+      for (const u of [`/verse-timings/cuv-v20/${bookId}-${chapter}.json`, `/verse-timings/${bookId}-${chapter}.json`]) {
+        try {
+          const r = await fetch(u);
+          if (!r.ok) continue;
+          planTimingsRef.current = (await r.json()) as { verse: number; start: number; end: number }[];
+          break;
+        } catch {
+          /* 试下一个 */
+        }
+      }
+    } catch {
+      /* 取不到经文就只听朗读 */
+    }
+  }, []);
+
+  const onPlanTime = useCallback(() => {
+    const a = planAudioRef.current;
+    if (!a) return;
+    setPlanView((pv) => {
+      if (!pv || pv.verses.length === 0) return pv;
+      const t = a.currentTime;
+      let cur = 0;
+      const tm = planTimingsRef.current;
+      if (tm && tm.length) {
+        for (let i = 0; i < tm.length; i += 1) if (t >= tm[i].start) cur = tm[i].verse - 1;
+      } else if (a.duration > 0) {
+        const w = pv.verses.map((x) => Math.max(10, x.length));
+        const total = w.reduce((x, y) => x + y, 0);
+        let acc = 0;
+        const target = (t / a.duration) * total;
+        for (let i = 0; i < w.length; i += 1) {
+          acc += w[i];
+          if (target < acc) {
+            cur = i;
+            break;
+          }
+          cur = i;
+        }
+      }
+      cur = Math.max(0, Math.min(pv.verses.length - 1, cur));
+      return cur === pv.cur ? pv : { ...pv, cur };
+    });
+  }, []);
+
   const playPlanChapter = useCallback(
     (i: number) => {
       const st = planRef.current;
@@ -145,6 +206,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       const ch = st.chapters[i];
       if (!ch) {
         planRef.current = null;
+        setPlanView(null);
         say("今日读经读完了");
         void musicRef.current?.play().catch(() => {});
         return;
@@ -159,12 +221,13 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       verseAudioRef.current?.pause();
       a.src = src;
       const name = `${getScriptureBookDisplayName(ch.bookId, "zh-CN")} ${ch.chapter} 章`;
+      void loadPlanChapterText(ch.bookId, ch.chapter, name);
       void a.play().then(
         () => say(`今日读经：${name}（${i + 1}/${st.chapters.length}）`),
         () => say("读经播放失败"),
       );
     },
-    [say],
+    [say, loadPlanChapterText],
   );
 
   const startPlan = useCallback(() => {
@@ -189,6 +252,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     const m = musicRef.current;
     if (m) m.volume = 0.25;
     planAudioRef.current?.pause();
+    setPlanView(null);
     v.src = src;
     void v.play().then(
       () => say("金句朗读"),
@@ -329,8 +393,24 @@ export function TvScreen({ videos }: { videos: Video[] }) {
             textShadow: "0 2px 12px rgba(0,0,0,0.7)",
           }}
         >
-          <p style={{ margin: 0, fontSize, lineHeight: 1.45, fontWeight: 700 }}>{verseText}</p>
-          <p style={{ margin: "3vh 0 0", fontSize: "min(1.9vw, 3vh)", fontWeight: 600, opacity: 0.92 }}>{entry.ref}</p>
+          {planView && planView.verses.length > 0 ? (
+            <>
+              {planView.verses.slice(planView.cur, planView.cur + 3).map((t, i) => (
+                <p
+                  key={planView.cur + i}
+                  style={{ margin: "0 0 2vh", fontSize: i === 0 ? "min(3vw, 4.8vh)" : "min(2.3vw, 3.7vh)", lineHeight: 1.5, fontWeight: i === 0 ? 700 : 500, opacity: i === 0 ? 1 : 0.6 }}
+                >
+                  {planView.cur + i + 1} {t}
+                </p>
+              ))}
+              <p style={{ margin: "1vh 0 0", fontSize: "min(1.9vw, 3vh)", fontWeight: 600, opacity: 0.92 }}>{planView.title}</p>
+            </>
+          ) : (
+            <>
+              <p style={{ margin: 0, fontSize, lineHeight: 1.45, fontWeight: 700 }}>{verseText}</p>
+              <p style={{ margin: "3vh 0 0", fontSize: "min(1.9vw, 3vh)", fontWeight: 600, opacity: 0.92 }}>{entry.ref}</p>
+            </>
+          )}
         </div>
       ) : null}
       <div style={{ position: "absolute", left: "3vw", bottom: "3vh", textShadow: "0 1px 6px rgba(0,0,0,0.8)" }}>
@@ -357,7 +437,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
         ) : null}
       </div>
       <audio ref={musicRef} onEnded={onMusicEnded} onError={reportAudio("音乐")} preload="none" />
-      <audio ref={planAudioRef} onEnded={onPlanEnded} onError={reportAudio("读经")} preload="none" />
+      <audio ref={planAudioRef} onEnded={onPlanEnded} onTimeUpdate={onPlanTime} onError={reportAudio("读经")} preload="none" />
       <audio ref={verseAudioRef} onEnded={onVerseAudioEnded} onError={reportAudio("金句")} preload="none" />
     </div>
   );

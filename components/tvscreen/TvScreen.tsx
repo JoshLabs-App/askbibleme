@@ -65,6 +65,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   const planRef = useRef<{ chapters: PlanChapter[]; i: number } | null>(null);
   const planAudioRef = useRef<HTMLAudioElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoPlaying, setVideoPlaying] = useState(false);
 
   const entries = entriesByLocale[locale] ?? entriesByLocale["zh-CN"] ?? [];
   const entry = entries.length ? entries[activeIndex % entries.length] : null;
@@ -74,6 +75,14 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   const say = useCallback((t: string) => {
     setToast(t);
     window.setTimeout(() => setToast(""), 3000);
+  }, []);
+
+  const beacon = useCallback((o: Record<string, unknown>) => {
+    try {
+      navigator.sendBeacon?.("/api/tv-report", JSON.stringify({ tv: "dbg", ...o }));
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   const showLegend = useCallback(() => {
@@ -205,14 +214,6 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     }
   }, []);
 
-  const beacon = useCallback((o: Record<string, unknown>) => {
-    try {
-      navigator.sendBeacon?.("/api/tv-report", JSON.stringify({ tv: "dbg", ...o }));
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
   const reportAudio = useCallback(
     (which: string) => (e: React.SyntheticEvent<HTMLAudioElement>) => {
       const a = e.currentTarget;
@@ -236,6 +237,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   }, [reportVideo]);
 
   useEffect(() => {
+    setVideoPlaying(false);
     kickVideo();
     const t = window.setTimeout(() => reportVideo(videoRef.current?.paused ? "paused-after-3s" : "playing-after-3s"), 3000);
     return () => window.clearTimeout(t);
@@ -290,6 +292,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
         <video
           ref={videoRef}
           key={video.id}
+          onPlaying={() => setVideoPlaying(true)}
           onError={() => reportVideo("error")}
           onStalled={() => reportVideo("stalled")}
           src={video.src}
@@ -297,7 +300,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
           muted
           loop
           playsInline
-          style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", opacity: videoPlaying ? 1 : 0 }}
         />
       ) : null}
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.45))" }} />

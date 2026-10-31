@@ -26,10 +26,10 @@ const LEGEND_MS = 15_000;
 
 /** 按字数定字号：用 vw/vh，旧电视浏览器也认；长经文自动缩小，不会被截断 */
 function verseFontSize(chars: number): string {
-  if (chars <= 24) return "min(5.6vw, 9vh)";
-  if (chars <= 48) return "min(4.6vw, 7.4vh)";
-  if (chars <= 80) return "min(3.9vw, 6.2vh)";
-  return "min(3.2vw, 5vh)";
+  if (chars <= 24) return "min(3.8vw, 6.2vh)";
+  if (chars <= 48) return "min(3.2vw, 5.2vh)";
+  if (chars <= 80) return "min(2.8vw, 4.4vh)";
+  return "min(2.3vw, 3.6vh)";
 }
 
 type PlanChapter = { bookId: string; chapter: number };
@@ -202,6 +202,22 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     }
   }, []);
 
+  const reportAudio = useCallback(
+    (which: string) => (e: React.SyntheticEvent<HTMLAudioElement>) => {
+      const a = e.currentTarget;
+      say(`${which}加载失败（错误 ${a.error?.code ?? "?"}）`);
+      try {
+        navigator.sendBeacon?.(
+          "/api/tv-report",
+          JSON.stringify({ tv: "audio", which, src: a.currentSrc || a.src, errCode: a.error?.code, errMsg: a.error?.message, networkState: a.networkState, ua: navigator.userAgent }),
+        );
+      } catch {
+        /* ignore */
+      }
+    },
+    [say],
+  );
+
   const kickVideo = useCallback(() => {
     const v = videoRef.current;
     if (!v || !v.paused) return;
@@ -225,7 +241,9 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       const m = musicRef.current;
       const va = verseAudioRef.current;
       const pa = planAudioRef.current;
-      const k = e.key;
+      let k = e.key;
+      if (!/^[0-9]$/.test(k) && e.keyCode >= 48 && e.keyCode <= 57) k = String(e.keyCode - 48);
+      else if (!/^[0-9]$/.test(k) && e.keyCode >= 96 && e.keyCode <= 105) k = String(e.keyCode - 96);
       if (ALBUM_KEYS[k]) live.current.playAlbum(ALBUM_KEYS[k].album, ALBUM_KEYS[k].label);
       else if (k === "2") live.current.playVerseAudio();
       else if (k === "8") live.current.startPlan();
@@ -289,11 +307,11 @@ export function TvScreen({ videos }: { videos: Video[] }) {
           }}
         >
           <p style={{ margin: 0, fontSize, lineHeight: 1.45, fontWeight: 700 }}>{verseText}</p>
-          <p style={{ margin: "3vh 0 0", fontSize: "min(2.6vw, 4.2vh)", fontWeight: 600, opacity: 0.92 }}>{entry.ref}</p>
+          <p style={{ margin: "3vh 0 0", fontSize: "min(1.9vw, 3vh)", fontWeight: 600, opacity: 0.92 }}>{entry.ref}</p>
         </div>
       ) : null}
       <div style={{ position: "absolute", left: "3vw", bottom: "3vh", textShadow: "0 1px 6px rgba(0,0,0,0.8)" }}>
-        {toast ? <p style={{ margin: "0 0 1vh", fontSize: "min(2.4vw, 4vh)", fontWeight: 600 }}>{toast}</p> : null}
+        {toast ? <p style={{ margin: "0 0 1vh", fontSize: "min(1.8vw, 2.8vh)", fontWeight: 600 }}>{toast}</p> : null}
         {legendOn ? (
           <ul
             style={{
@@ -304,7 +322,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
               gridTemplateColumns: "repeat(3, auto)",
               columnGap: "2.4vw",
               rowGap: "0.6vh",
-              fontSize: "min(1.7vw, 2.9vh)",
+              fontSize: "min(1.3vw, 2.2vh)",
               background: "rgba(0,0,0,0.45)",
               borderRadius: 16,
             }}
@@ -315,9 +333,9 @@ export function TvScreen({ videos }: { videos: Video[] }) {
           </ul>
         ) : null}
       </div>
-      <audio ref={musicRef} onEnded={onMusicEnded} preload="none" />
-      <audio ref={planAudioRef} onEnded={onPlanEnded} preload="none" />
-      <audio ref={verseAudioRef} onEnded={onVerseAudioEnded} preload="none" />
+      <audio ref={musicRef} onEnded={onMusicEnded} onError={reportAudio("音乐")} preload="none" />
+      <audio ref={planAudioRef} onEnded={onPlanEnded} onError={reportAudio("读经")} preload="none" />
+      <audio ref={verseAudioRef} onEnded={onVerseAudioEnded} onError={reportAudio("金句")} preload="none" />
     </div>
   );
 }

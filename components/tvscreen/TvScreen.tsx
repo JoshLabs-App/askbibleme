@@ -26,10 +26,10 @@ const LEGEND_MS = 15_000;
 
 /** 按字数定字号：用 vw/vh，旧电视浏览器也认；长经文自动缩小，不会被截断 */
 function verseFontSize(chars: number): string {
-  if (chars <= 24) return "min(5.6vw, 9vh)";
-  if (chars <= 48) return "min(4.6vw, 7.4vh)";
-  if (chars <= 80) return "min(3.9vw, 6.2vh)";
-  return "min(3.2vw, 5vh)";
+  if (chars <= 24) return "min(3.8vw, 6.2vh)";
+  if (chars <= 48) return "min(3.2vw, 5.2vh)";
+  if (chars <= 80) return "min(2.8vw, 4.4vh)";
+  return "min(2.3vw, 3.6vh)";
 }
 
 type PlanChapter = { bookId: string; chapter: number };
@@ -65,6 +65,11 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   const planRef = useRef<{ chapters: PlanChapter[]; i: number } | null>(null);
   const planAudioRef = useRef<HTMLAudioElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoPlaying, setVideoPlaying] = useState(false);
+  // 今日读经：当前章的经文与朗读进度
+  const [planView, setPlanView] = useState<{ title: string; verses: string[]; cur: number } | null>(null);
+  const planTimingsRef = useRef<{ verse: number; start: number; end: number }[] | null>(null);
+  const bookCacheRef = useRef<Record<string, Record<string, { t: string }[]>>>({});
 
   const entries = entriesByLocale[locale] ?? entriesByLocale["zh-CN"] ?? [];
   const entry = entries.length ? entries[activeIndex % entries.length] : null;
@@ -74,6 +79,14 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   const say = useCallback((t: string) => {
     setToast(t);
     window.setTimeout(() => setToast(""), 3000);
+  }, []);
+
+  const beacon = useCallback((o: Record<string, unknown>) => {
+    try {
+      navigator.sendBeacon?.("/api/tv-report", JSON.stringify({ tv: "dbg", ...o }));
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   const showLegend = useCallback(() => {
@@ -94,14 +107,19 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       verseAudioRef.current?.pause();
       planAudioRef.current?.pause();
       planRef.current = null;
+      setPlanView(null);
       albumRef.current = album;
+      a.volume = 1;
       a.src = src;
       void a.play().then(
         () => say(`正在播放：${label}`),
-        () => say("按遥控器任意键开始播放"),
+        (err) => {
+          say("按遥控器任意键开始播放");
+          beacon({ what: "music-play-rejected", name: err?.name, msg: String(err?.message ?? "").slice(0, 120), src });
+        },
       );
     },
-    [say],
+    [say, beacon],
   );
 
   // 打开就放轻音乐
@@ -119,7 +137,65 @@ export function TvScreen({ videos }: { videos: Video[] }) {
 
   // 金句读完回到音乐
   const onVerseAudioEnded = useCallback(() => {
-    void musicRef.current?.play().catch(() => {});
+    const m = musicRef.current;
+    if (m) m.volume = 1;
+    void m?.play().catch(() => {});
+  }, []);
+
+  const loadPlanChapterText = useCallback(async (bookId: string, chapter: number, title: string) => {
+    planTimingsRef.current = null;
+    setPlanView({ title, verses: [], cur: 0 });
+    try {
+      let book = bookCacheRef.current[bookId];
+      if (!book) {
+        const r = await fetch(`/scripture/cuv-simp/${bookId}.json`);
+        book = ((await r.json()) as { c: Record<string, { t: string }[]> }).c;
+        bookCacheRef.current[bookId] = book;
+      }
+      const verses = (book[String(chapter)] ?? []).map((v) => v.t);
+      setPlanView({ title, verses, cur: 0 });
+      for (const u of [`/verse-timings/cuv-v20/${bookId}-${chapter}.json`, `/verse-timings/${bookId}-${chapter}.json`]) {
+        try {
+          const r = await fetch(u);
+          if (!r.ok) continue;
+          planTimingsRef.current = (await r.json()) as { verse: number; start: number; end: number }[];
+          break;
+        } catch {
+          /* 试下一个 */
+        }
+      }
+    } catch {
+      /* 取不到经文就只听朗读 */
+    }
+  }, []);
+
+  const onPlanTime = useCallback(() => {
+    const a = planAudioRef.current;
+    if (!a) return;
+    setPlanView((pv) => {
+      if (!pv || pv.verses.length === 0) return pv;
+      const t = a.currentTime;
+      let cur = 0;
+      const tm = planTimingsRef.current;
+      if (tm && tm.length) {
+        for (let i = 0; i < tm.length; i += 1) if (t >= tm[i].start) cur = tm[i].verse - 1;
+      } else if (a.duration > 0) {
+        const w = pv.verses.map((x) => Math.max(10, x.length));
+        const total = w.reduce((x, y) => x + y, 0);
+        let acc = 0;
+        const target = (t / a.duration) * total;
+        for (let i = 0; i < w.length; i += 1) {
+          acc += w[i];
+          if (target < acc) {
+            cur = i;
+            break;
+          }
+          cur = i;
+        }
+      }
+      cur = Math.max(0, Math.min(pv.verses.length - 1, cur));
+      return cur === pv.cur ? pv : { ...pv, cur };
+    });
   }, []);
 
   const playPlanChapter = useCallback(
@@ -130,6 +206,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       const ch = st.chapters[i];
       if (!ch) {
         planRef.current = null;
+        setPlanView(null);
         say("今日读经读完了");
         void musicRef.current?.play().catch(() => {});
         return;
@@ -144,12 +221,13 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       verseAudioRef.current?.pause();
       a.src = src;
       const name = `${getScriptureBookDisplayName(ch.bookId, "zh-CN")} ${ch.chapter} 章`;
+      void loadPlanChapterText(ch.bookId, ch.chapter, name);
       void a.play().then(
         () => say(`今日读经：${name}（${i + 1}/${st.chapters.length}）`),
         () => say("读经播放失败"),
       );
     },
-    [say],
+    [say, loadPlanChapterText],
   );
 
   const startPlan = useCallback(() => {
@@ -170,12 +248,18 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       say("这句暂无朗读");
       return;
     }
-    musicRef.current?.pause();
+    // 音乐不停，压低音量，和金句朗读同时出声
+    const m = musicRef.current;
+    if (m) m.volume = 0.25;
     planAudioRef.current?.pause();
+    setPlanView(null);
     v.src = src;
     void v.play().then(
       () => say("金句朗读"),
-      () => say("朗读失败"),
+      () => {
+        if (m) m.volume = 1;
+        say("朗读失败");
+      },
     );
   }, [activeIndex, locale, say, verseKeys]);
 
@@ -202,6 +286,22 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     }
   }, []);
 
+  const reportAudio = useCallback(
+    (which: string) => (e: React.SyntheticEvent<HTMLAudioElement>) => {
+      const a = e.currentTarget;
+      say(`${which}加载失败（错误 ${a.error?.code ?? "?"}）`);
+      try {
+        navigator.sendBeacon?.(
+          "/api/tv-report",
+          JSON.stringify({ tv: "audio", which, src: a.currentSrc || a.src, errCode: a.error?.code, errMsg: a.error?.message, networkState: a.networkState, ua: navigator.userAgent }),
+        );
+      } catch {
+        /* ignore */
+      }
+    },
+    [say],
+  );
+
   const kickVideo = useCallback(() => {
     const v = videoRef.current;
     if (!v || !v.paused) return;
@@ -209,6 +309,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   }, [reportVideo]);
 
   useEffect(() => {
+    setVideoPlaying(false);
     kickVideo();
     const t = window.setTimeout(() => reportVideo(videoRef.current?.paused ? "paused-after-3s" : "playing-after-3s"), 3000);
     return () => window.clearTimeout(t);
@@ -220,12 +321,15 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   useEffect(() => {
     showLegend();
     const onKey = (e: KeyboardEvent) => {
+      beacon({ what: "key", key: e.key, code: e.keyCode, musicPaused: musicRef.current?.paused, videoPaused: videoRef.current?.paused });
       showLegend();
       kickVideo();
       const m = musicRef.current;
       const va = verseAudioRef.current;
       const pa = planAudioRef.current;
-      const k = e.key;
+      let k = e.key;
+      if (!/^[0-9]$/.test(k) && e.keyCode >= 48 && e.keyCode <= 57) k = String(e.keyCode - 48);
+      else if (!/^[0-9]$/.test(k) && e.keyCode >= 96 && e.keyCode <= 105) k = String(e.keyCode - 96);
       if (ALBUM_KEYS[k]) live.current.playAlbum(ALBUM_KEYS[k].album, ALBUM_KEYS[k].label);
       else if (k === "2") live.current.playVerseAudio();
       else if (k === "8") live.current.startPlan();
@@ -248,7 +352,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       document.removeEventListener("keydown", onKey);
       if (legendTimerRef.current != null) window.clearTimeout(legendTimerRef.current);
     };
-  }, [showLegend, kickVideo]);
+  }, [showLegend, kickVideo, beacon]);
 
   const fontSize = useMemo(() => verseFontSize(verseText.length), [verseText]);
 
@@ -260,6 +364,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
         <video
           ref={videoRef}
           key={video.id}
+          onPlaying={() => setVideoPlaying(true)}
           onError={() => reportVideo("error")}
           onStalled={() => reportVideo("stalled")}
           src={video.src}
@@ -267,7 +372,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
           muted
           loop
           playsInline
-          style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", opacity: videoPlaying ? 1 : 0 }}
         />
       ) : null}
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.45))" }} />
@@ -288,12 +393,28 @@ export function TvScreen({ videos }: { videos: Video[] }) {
             textShadow: "0 2px 12px rgba(0,0,0,0.7)",
           }}
         >
-          <p style={{ margin: 0, fontSize, lineHeight: 1.45, fontWeight: 700 }}>{verseText}</p>
-          <p style={{ margin: "3vh 0 0", fontSize: "min(2.6vw, 4.2vh)", fontWeight: 600, opacity: 0.92 }}>{entry.ref}</p>
+          {planView && planView.verses.length > 0 ? (
+            <>
+              {planView.verses.slice(planView.cur, planView.cur + 3).map((t, i) => (
+                <p
+                  key={planView.cur + i}
+                  style={{ margin: "0 0 2vh", fontSize: i === 0 ? "min(3vw, 4.8vh)" : "min(2.3vw, 3.7vh)", lineHeight: 1.5, fontWeight: i === 0 ? 700 : 500, opacity: i === 0 ? 1 : 0.6 }}
+                >
+                  {planView.cur + i + 1} {t}
+                </p>
+              ))}
+              <p style={{ margin: "1vh 0 0", fontSize: "min(1.9vw, 3vh)", fontWeight: 600, opacity: 0.92 }}>{planView.title}</p>
+            </>
+          ) : (
+            <>
+              <p style={{ margin: 0, fontSize, lineHeight: 1.45, fontWeight: 700 }}>{verseText}</p>
+              <p style={{ margin: "3vh 0 0", fontSize: "min(1.9vw, 3vh)", fontWeight: 600, opacity: 0.92 }}>{entry.ref}</p>
+            </>
+          )}
         </div>
       ) : null}
       <div style={{ position: "absolute", left: "3vw", bottom: "3vh", textShadow: "0 1px 6px rgba(0,0,0,0.8)" }}>
-        {toast ? <p style={{ margin: "0 0 1vh", fontSize: "min(2.4vw, 4vh)", fontWeight: 600 }}>{toast}</p> : null}
+        {toast ? <p style={{ margin: "0 0 1vh", fontSize: "min(1.8vw, 2.8vh)", fontWeight: 600 }}>{toast}</p> : null}
         {legendOn ? (
           <ul
             style={{
@@ -304,7 +425,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
               gridTemplateColumns: "repeat(3, auto)",
               columnGap: "2.4vw",
               rowGap: "0.6vh",
-              fontSize: "min(1.7vw, 2.9vh)",
+              fontSize: "min(1.3vw, 2.2vh)",
               background: "rgba(0,0,0,0.45)",
               borderRadius: 16,
             }}
@@ -315,9 +436,9 @@ export function TvScreen({ videos }: { videos: Video[] }) {
           </ul>
         ) : null}
       </div>
-      <audio ref={musicRef} onEnded={onMusicEnded} preload="none" />
-      <audio ref={planAudioRef} onEnded={onPlanEnded} preload="none" />
-      <audio ref={verseAudioRef} onEnded={onVerseAudioEnded} preload="none" />
+      <audio ref={musicRef} onEnded={onMusicEnded} onError={reportAudio("音乐")} preload="none" />
+      <audio ref={planAudioRef} onEnded={onPlanEnded} onTimeUpdate={onPlanTime} onError={reportAudio("读经")} preload="none" />
+      <audio ref={verseAudioRef} onEnded={onVerseAudioEnded} onError={reportAudio("金句")} preload="none" />
     </div>
   );
 }

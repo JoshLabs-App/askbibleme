@@ -10,7 +10,7 @@ import { buildTripleLoopDayPayload } from "@/lib/read/today-reading-plan-payload
 import { shippedPublicMusicCompanionStore } from "@/lib/music-companion/shipped-store";
 import { inferTrackAlbumFromCompanionTrack } from "@/lib/music/album-playback";
 
-type Video = { id: string; src: string; title: string };
+type Video = { id: string; src: string; title: string; poster: string };
 
 /** 遥控器数字键 → 专辑。改这里，屏幕上的说明跟着变。 */
 const ALBUM_KEYS: Record<string, { album: string; label: string }> = {
@@ -65,6 +65,8 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   const planRef = useRef<{ chapters: PlanChapter[]; i: number } | null>(null);
   const planAudioRef = useRef<HTMLAudioElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  // 电视（LG webOS 等）常把视频管线让给音乐：视频暂停后画面是一片黑。暂停时藏起视频，露出封面图
+  const [videoShown, setVideoShown] = useState(true);
 
   const entries = entriesByLocale[locale] ?? entriesByLocale["zh-CN"] ?? [];
   const entry = entries.length ? entries[activeIndex % entries.length] : null;
@@ -256,9 +258,18 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     <div
       style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "linear-gradient(160deg, #1f3a4d 0%, #3d5a4a 55%, #6b5a3a 100%)", overflow: "hidden", color: "#fff" }}
     >
+      {video?.poster ? (
+        <img
+          src={video.poster}
+          alt=""
+          style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      ) : null}
       {video ? (
         <video
           ref={videoRef}
+          onPlaying={() => setVideoShown(true)}
+          onPause={() => setVideoShown(false)}
           key={video.id}
           onError={() => reportVideo("error")}
           onStalled={() => reportVideo("stalled")}
@@ -267,7 +278,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
           muted
           loop
           playsInline
-          style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", visibility: videoShown ? "visible" : "hidden" }}
         />
       ) : null}
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.45))" }} />

@@ -104,6 +104,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       planAudioRef.current?.pause();
       planRef.current = null;
       albumRef.current = album;
+      a.volume = 1;
       a.src = src;
       void a.play().then(
         () => say(`正在播放：${label}`),
@@ -131,7 +132,9 @@ export function TvScreen({ videos }: { videos: Video[] }) {
 
   // 金句读完回到音乐
   const onVerseAudioEnded = useCallback(() => {
-    void musicRef.current?.play().catch(() => {});
+    const m = musicRef.current;
+    if (m) m.volume = 1;
+    void m?.play().catch(() => {});
   }, []);
 
   const playPlanChapter = useCallback(
@@ -182,12 +185,17 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       say("这句暂无朗读");
       return;
     }
-    musicRef.current?.pause();
+    // 音乐不停，压低音量，和金句朗读同时出声
+    const m = musicRef.current;
+    if (m) m.volume = 0.25;
     planAudioRef.current?.pause();
     v.src = src;
     void v.play().then(
       () => say("金句朗读"),
-      () => say("朗读失败"),
+      () => {
+        if (m) m.volume = 1;
+        say("朗读失败");
+      },
     );
   }, [activeIndex, locale, say, verseKeys]);
 

@@ -18,4 +18,6 @@ OAuth 回调先确认终点：从 App 发起的登录默认必须回到 App；�
 
 ## 发布（2026-10-31 用户授权）
 
-改完并验证通过后，由 Agent 自己直接发布正式站；提交、推送、构建、部署与线上验证都由 Agent 完成，不再问「是否发布」，不要求 Josh 手动发布。遵循 `AGENTS.md` 的发布范围和回滚要求；网页使用 `scripts/deploy-direct.sh`，从已推送的干净提交直接部署 Vercel。
+改完并验证通过后，由 Agent 自己直接发布正式站；提交、推送、构建、部署与线上验证都由 Agent 完成，不再问「是否发布」，不要求 Josh 手动发布。遵循 `AGENTS.md` 的发布范围和回滚要求；网页只使用 `scripts/deploy-direct.sh`，从已推送的干净提交直接部署 Vercel。
+
+**网页只在本机构建（2026-10-31 用户明确要求）**：Agent 在本机完成生产构建，只上传 `.vercel/output` 产物（`vercel deploy --prebuilt --prod`）。禁止 Vercel 云端构建、`--remote` 回退和通过 Git 自动构建发布；`vercel.json` 关闭 Git 自动部署。缺失本地构建配置时先补齐，不得改用云端构建。服务端运行时配置继续由 Vercel 正式环境提供。

@@ -63,7 +63,7 @@
    真源：`.cursor/rules/mobile-local-media-playback-first.mdc`、`docs/mobile-golden-verse-audio.md`。
 4. **外站拉取音频等**：禁止压缩/转码/降码率；原样直存。`.cursor/rules/no-compression-on-remote-fetch.mdc`。
 5. **OAuth**：从 App 发起的登录默认回调回 App；勿盲目改成网页 HTTPS 回调。验收：`.cursor/skills/验收-OAuth/SKILL.md`。
-6. **改完且验证通过，由 Agent 自行提交、推送并直接发布正式站，不再确认，也不交回 Josh 操作**（2026-10-31 明确授权）。网页使用 `scripts/deploy-direct.sh` 从已推送的干净提交本机构建并部署 Vercel；发布后核对 `/app-build.json` 和实际页面，保留上一部署用于回滚。不得夹带其它会话改动。新增费用、生产迁移、真实用户数据改写与不可逆删除不在此授权内。
+6. **改完且验证通过，由 Agent 自行提交、推送并直接发布正式站，不再确认，也不交回 Josh 操作**（2026-10-31 明确授权）。网页只使用 `scripts/deploy-direct.sh` 从已推送的干净提交本机构建并部署 Vercel；发布后核对 `/app-build.json` 和实际页面，保留上一部署用于回滚。不得夹带其它会话改动。新增费用、生产迁移、真实用户数据改写与不可逆删除不在此授权内。
 7. **禁止无门禁直推 main**；合入走 PR + `auto-merge` 标签。见 `docs/mobile-maestro-auto-merge.md`。
 8. UI：安静羊皮卷气质；不擅自加装饰/动画/工业风系统默认壳。
 
@@ -771,3 +771,5 @@ manifest `start_url=/web`；手机截图和金句字体文件都取得到。本�
 ### 别踩的坑
 - 旧电视内核不认 `dvh`，布局高度要带 `vh` 回退。
 - 电视浏览器判断集中在 `lib/dom/is-tv-browser.ts`，别在别处另写一份。
+
+**网页只在本机构建（2026-10-31 用户明确要求）**：Agent 在本机完成生产构建，只上传 `.vercel/output` 产物（`vercel deploy --prebuilt --prod`）。禁止 Vercel 云端构建、`--remote` 回退和通过 Git 自动构建发布；`vercel.json` 关闭 Git 自动部署。缺失本地构建配置时先补齐，不得改用云端构建。服务端运行时配置继续由 Vercel 正式环境提供。

@@ -11,7 +11,6 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { HOME_VERSE_FADE_MS } from "@/components/home/home-verse-constants";
 import { useHomeVerseAdvanceGapSec } from "@/components/home/useHomeVerseAdvanceGap";
 import {
@@ -57,29 +56,28 @@ export function useOptionalHomePrayerVerseFeedContext(): HomePrayerVerseFeedCont
 type ProviderProps = {
   fallbackByLocale: Record<AppLocale, HomeVerseEntry[]>;
   children: ReactNode;
-  rememberTvPosition?: boolean;
+  randomOrder?: boolean;
 };
 
 /**
  * 全站壳内单一经文池 + 单一轮播进度：子路由切换不另起一套 `useHomePrayerVerseFeed` 或本地下标。
  * 若已在更外层 Provider 内，本层不重复挂载（避免嵌套覆盖进度与 fallback）。
  */
-export function HomePrayerVerseFeedProvider({ fallbackByLocale, children, rememberTvPosition }: ProviderProps) {
+export function HomePrayerVerseFeedProvider({ fallbackByLocale, children, randomOrder }: ProviderProps) {
   const existing = useOptionalHomePrayerVerseFeedContext();
   if (existing) {
     return <>{children}</>;
   }
-  return <HomePrayerVerseFeedProviderInner fallbackByLocale={fallbackByLocale} rememberTvPosition={rememberTvPosition}>{children}</HomePrayerVerseFeedProviderInner>;
+  return <HomePrayerVerseFeedProviderInner randomOrder={randomOrder} fallbackByLocale={fallbackByLocale}>{children}</HomePrayerVerseFeedProviderInner>;
 }
 
-function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children, rememberTvPosition }: ProviderProps) {
+function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children, randomOrder }: ProviderProps) {
   const { locale } = useLocale();
-  const { user, bootstrapped } = useAskbibleUser();
   const { entriesByLocale, bilingual, verseKeys, homeVerseStableMs, onVerseCommitted, onVerseAudioCompleted, onNearEnd } =
     useHomePrayerVerseFeed({
       fallbackByLocale,
       locale,
-      resumeStorageKey: rememberTvPosition && bootstrapped ? `askbible-tv-verse-cursor-v1:${user?.id ?? "guest"}` : undefined,
+      randomOrder,
     });
 
   const [activeIndex, setActiveIndex] = useState(0);
@@ -206,15 +204,6 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children, remember
     }
     lastCommittedIndex.current = activeIndex;
   }, [activeIndex, verseKeys, onVerseCommitted]);
-
-  useEffect(() => {
-    if (!rememberTvPosition) return;
-    const save = () => { const key = verseKeys?.[activeIndex]; if (key) onVerseCommitted(key); };
-    const onHidden = () => { if (document.visibilityState === "hidden") save(); };
-    window.addEventListener("pagehide", save);
-    document.addEventListener("visibilitychange", onHidden);
-    return () => { window.removeEventListener("pagehide", save); document.removeEventListener("visibilitychange", onHidden); };
-  }, [rememberTvPosition, verseKeys, activeIndex, onVerseCommitted]);
 
   useEffect(() => {
     onNearEnd(nearEndIndex, nVerses);

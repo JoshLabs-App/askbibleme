@@ -15,3 +15,7 @@ alwaysApply: true
 ## OAuth
 
 OAuth 回调先确认终点：从 App 发起的登录默认必须回到 App；网页 HTTPS 回调只能在明确要求网页完成登录时启用。修改 OAuth 前先确认登录承载端、回调终点与参考实现，不得盲目替换 App 回调。
+
+## 发布（2026-10-31 用户授权）
+
+改完并验证通过后，由 Agent 自己直接发布正式站；提交、推送、构建、部署与线上验证都由 Agent 完成，不再问「是否发布」，不要求 Josh 手动发布。遵循 `AGENTS.md` 的发布范围和回滚要求；网页使用 `scripts/deploy-direct.sh`，从已推送的干净提交直接部署 Vercel。

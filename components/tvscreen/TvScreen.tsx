@@ -9,8 +9,9 @@ import { getScriptureBookDisplayName } from "@/lib/bible/scripture-book-display-
 import { buildTripleLoopDayPayload } from "@/lib/read/today-reading-plan-payload";
 import { shippedPublicMusicCompanionStore } from "@/lib/music-companion/shipped-store";
 import { inferTrackAlbumFromCompanionTrack } from "@/lib/music/album-playback";
+import { resolveMediaPlaybackPolicyTier } from "@/lib/media/media-playback-policy";
 
-type Video = { id: string; src: string; title: string };
+type Video = { id: string; src: string; title: string; posterSrc?: string };
 
 /** 遥控器数字键 → 专辑。改这里，屏幕上的说明跟着变。 */
 const ALBUM_KEYS: Record<string, { album: string; label: string }> = {
@@ -66,6 +67,41 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   const planAudioRef = useRef<HTMLAudioElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoPlaying, setVideoPlaying] = useState(false);
+  const [mediaReady, setMediaReady] = useState(false);
+  const [audioBlocksVideo, setAudioBlocksVideo] = useState(true);
+
+  const syncAudioBackground = useCallback(() => {
+    setAudioBlocksVideo(
+      resolveMediaPlaybackPolicyTier() === "tvCoexist" &&
+        [musicRef.current, verseAudioRef.current, planAudioRef.current].some(
+          (a) => a && !a.paused && !a.ended,
+        ),
+    );
+  }, []);
+
+  // 在 audio.play() 之前释放电视的视频解码器；仅改 opacity 无法释放硬件视频层。
+  const playAudio = useCallback((a: HTMLAudioElement) => {
+    if (resolveMediaPlaybackPolicyTier() === "tvCoexist") {
+      setAudioBlocksVideo(true);
+      const v = videoRef.current;
+      if (v) {
+        v.pause();
+        v.removeAttribute("src");
+        v.load();
+      }
+    }
+    return a.play().catch((error: unknown) => {
+      syncAudioBackground();
+      throw error;
+    });
+  }, [syncAudioBackground]);
+
+  useEffect(() => {
+    setMediaReady(true);
+    syncAudioBackground();
+  }, [syncAudioBackground]);
+  const showVideo = mediaReady && !audioBlocksVideo;
+
   // 今日读经：当前章的经文与朗读进度
   const [planView, setPlanView] = useState<{ title: string; verses: string[]; cur: number } | null>(null);
   const planTimingsRef = useRef<{ verse: number; start: number; end: number }[] | null>(null);
@@ -111,7 +147,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       albumRef.current = album;
       a.volume = 1;
       a.src = src;
-      void a.play().then(
+      void playAudio(a).then(
         () => say(`正在播放：${label}`),
         (err) => {
           say("按遥控器任意键开始播放");
@@ -119,7 +155,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
         },
       );
     },
-    [say, beacon],
+    [say, beacon, playAudio],
   );
 
   // 打开就放轻音乐
@@ -139,8 +175,8 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   const onVerseAudioEnded = useCallback(() => {
     const m = musicRef.current;
     if (m) m.volume = 1;
-    void m?.play().catch(() => {});
-  }, []);
+    if (m) void playAudio(m).catch(() => {});
+  }, [playAudio]);
 
   const loadPlanChapterText = useCallback(async (bookId: string, chapter: number, title: string) => {
     planTimingsRef.current = null;
@@ -229,7 +265,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
         planRef.current = null;
         setPlanView(null);
         say("今日读经读完了");
-        void musicRef.current?.play().catch(() => {});
+        if (musicRef.current) void playAudio(musicRef.current).catch(() => {});
         return;
       }
       const src = buildExternalCuvChapterAudioUrl(ch.bookId, ch.chapter);
@@ -243,12 +279,12 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       a.src = src;
       const name = `${getScriptureBookDisplayName(ch.bookId, "zh-CN")} ${ch.chapter} 章`;
       void loadPlanChapterText(ch.bookId, ch.chapter, name);
-      void a.play().then(
+      void playAudio(a).then(
         () => say(`今日读经：${name}（${i + 1}/${st.chapters.length}）`),
         () => say("读经播放失败"),
       );
     },
-    [say, loadPlanChapterText],
+    [say, loadPlanChapterText, playAudio],
   );
 
   const startPlan = useCallback(() => {
@@ -275,14 +311,14 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     planAudioRef.current?.pause();
     setPlanView(null);
     v.src = src;
-    void v.play().then(
+    void playAudio(v).then(
       () => say("金句朗读"),
       () => {
         if (m) m.volume = 1;
         say("朗读失败");
       },
     );
-  }, [activeIndex, locale, say, verseKeys]);
+  }, [activeIndex, locale, say, verseKeys, playAudio]);
 
   // 视频：电视浏览器常拦自动播放，或解码失败。尝试补播，并把状态报到 /api/tv-report（Vercel 日志搜 [tv-report]）
   const reportVideo = useCallback((what: string) => {
@@ -310,6 +346,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   const reportAudio = useCallback(
     (which: string) => (e: React.SyntheticEvent<HTMLAudioElement>) => {
       const a = e.currentTarget;
+      syncAudioBackground();
       say(`${which}加载失败（错误 ${a.error?.code ?? "?"}）`);
       try {
         navigator.sendBeacon?.(
@@ -320,21 +357,24 @@ export function TvScreen({ videos }: { videos: Video[] }) {
         /* ignore */
       }
     },
-    [say],
+    [say, syncAudioBackground],
   );
 
   const kickVideo = useCallback(() => {
     const v = videoRef.current;
     if (!v || !v.paused) return;
+    if (resolveMediaPlaybackPolicyTier() === "tvCoexist" &&
+      [musicRef.current, verseAudioRef.current, planAudioRef.current].some((a) => a && !a.paused && !a.ended)) return;
     void v.play().catch(() => reportVideo("play-rejected"));
   }, [reportVideo]);
 
   useEffect(() => {
     setVideoPlaying(false);
+    if (!showVideo) return;
     kickVideo();
     const t = window.setTimeout(() => reportVideo(videoRef.current?.paused ? "paused-after-3s" : "playing-after-3s"), 3000);
     return () => window.clearTimeout(t);
-  }, [video?.id, kickVideo, reportVideo]);
+  }, [video?.id, showVideo, kickVideo, reportVideo]);
 
   const live = useRef({ playAlbum, playVerseAudio, startPlan });
   live.current = { playAlbum, playVerseAudio, startPlan };
@@ -357,7 +397,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       else if (k === "9" || k === "Enter" || k === " ") {
         const cur = [pa, va, m].find((x) => x && !x.paused) ?? (planRef.current ? pa : m);
         if (cur && !cur.paused) cur.pause();
-        else void cur?.play().catch(() => {});
+        else if (cur) void playAudio(cur).catch(() => {});
       } else if (k === "ArrowUp" || k === "ArrowDown") {
         live.current.playAlbum(albumRef.current, "换一首", m?.getAttribute("src") ?? undefined);
       } else if (k === "0") window.location.href = "/tv-check.html";
@@ -365,7 +405,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       else if (k === "ArrowLeft") setSceneIdx((i) => i - 1);
       else if (m && m.paused && va?.paused && pa?.paused && !planRef.current) {
         // 其它键：自动播放被拦时补一次
-        void m.play().catch(() => {});
+        void playAudio(m).catch(() => {});
       }
     };
     document.addEventListener("keydown", onKey);
@@ -373,7 +413,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       document.removeEventListener("keydown", onKey);
       if (legendTimerRef.current != null) window.clearTimeout(legendTimerRef.current);
     };
-  }, [showLegend, kickVideo, beacon]);
+  }, [showLegend, kickVideo, beacon, playAudio]);
 
   const fontSize = useMemo(() => verseFontSize(verseText.length), [verseText]);
 
@@ -381,7 +421,12 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     <div
       style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "linear-gradient(160deg, #3b6f8f 0%, #5b8a6a 55%, #b0884a 100%)", overflow: "hidden", color: "#fff" }}
     >
-      {video ? (
+      {video?.posterSrc ? (
+        // 普通 img 不占媒体解码器，电视音频播放期间仍能显示风景。
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={video.posterSrc} alt="" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+      ) : null}
+      {video && showVideo ? (
         <video
           ref={videoRef}
           key={video.id}
@@ -458,9 +503,9 @@ export function TvScreen({ videos }: { videos: Video[] }) {
           </ul>
         ) : null}
       </div>
-      <audio ref={musicRef} onEnded={onMusicEnded} onError={reportAudio("音乐")} preload="none" />
-      <audio ref={planAudioRef} onEnded={onPlanEnded} onTimeUpdate={onPlanTime} onPlaying={onPlanTime} onError={reportAudio("读经")} preload="none" />
-      <audio ref={verseAudioRef} onEnded={onVerseAudioEnded} onError={reportAudio("金句")} preload="none" />
+      <audio onPlay={syncAudioBackground} onPause={syncAudioBackground} ref={musicRef} onEnded={() => { syncAudioBackground(); onMusicEnded(); }} onError={reportAudio("音乐")} preload="none" />
+      <audio onPlay={syncAudioBackground} onPause={syncAudioBackground} ref={planAudioRef} onEnded={() => { syncAudioBackground(); onPlanEnded(); }} onTimeUpdate={onPlanTime} onPlaying={onPlanTime} onError={reportAudio("读经")} preload="none" />
+      <audio onPlay={syncAudioBackground} onPause={syncAudioBackground} ref={verseAudioRef} onEnded={() => { syncAudioBackground(); onVerseAudioEnded(); }} onError={reportAudio("金句")} preload="none" />
     </div>
   );
 }

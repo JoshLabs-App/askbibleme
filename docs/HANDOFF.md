@@ -63,7 +63,7 @@
    真源：`.cursor/rules/mobile-local-media-playback-first.mdc`、`docs/mobile-golden-verse-audio.md`。
 4. **外站拉取音频等**：禁止压缩/转码/降码率；原样直存。`.cursor/rules/no-compression-on-remote-fetch.mdc`。
 5. **OAuth**：从 App 发起的登录默认回调回 App；勿盲目改成网页 HTTPS 回调。验收：`.cursor/skills/验收-OAuth/SKILL.md`。
-6. **未要求不 commit / 不 push / 不发版**。Push `main` 会触发 Vercel 自动部署 + CI。
+6. **改完且验证通过，由 Agent 自行提交、推送并直接发布正式站，不再确认，也不交回 Josh 操作**（2026-10-31 明确授权）。网页使用 `scripts/deploy-direct.sh` 从已推送的干净提交本机构建并部署 Vercel；发布后核对 `/app-build.json` 和实际页面，保留上一部署用于回滚。不得夹带其它会话改动。新增费用、生产迁移、真实用户数据改写与不可逆删除不在此授权内。
 7. **禁止无门禁直推 main**；合入走 PR + `auto-merge` 标签。见 `docs/mobile-maestro-auto-merge.md`。
 8. UI：安静羊皮卷气质；不擅自加装饰/动画/工业风系统默认壳。
 
@@ -243,7 +243,7 @@ adb -s R5CW11DNS2K shell am start -n me.askbible.native/me.askbible.native_.Main
 
 ### 工作习惯提醒
 
-- 默认只本地改；用户说「上线 / 发布 / push / ship」才 push。  
+- 默认改完并验证后，由 Agent 自行提交、推送并直接发布正式站，不再询问发布许可（2026-10-31 授权）。
 - iOS 用户说「上传 / 发版 / 上架」= 完整发版一条龙（见 `.cursor/rules/ios-release.mdc`），除非说「只上传不提审」。  
 - 讲道集 `/jd` 源在姊妹项目 `03CHURCH`：先 `SKIP_UPDATE=1 npm run deploy:jd` 同步到 `public/jd/`，确认后再单独 commit。
 
@@ -295,7 +295,7 @@ adb -s R5CW11DNS2K shell am start -n me.askbible.native/me.askbible.native_.Main
 先读 docs/HANDOFF.md，再读 AGENTS.md 与 joshlabs-dev skill。
 产品：AskBible.me = 安静进圣经的入口，不是 Bible tool / chatbot / 游戏化。
 平台：iOS → Android → Web；App 在 apps/askbible-mobile。
-硬禁：不擅自扩功能；禁止 EAS 云构建；媒体不走 askbible.me 增量；PAD 默认关；未要求不 commit/push。
+硬禁：不擅自扩功能；禁止 EAS 云构建；媒体不走 askbible.me 增量；PAD 默认关；改完验证通过后自行直接发布；只提交本任务改动。
 改 App 后跑 npm run mobile:maestro:smoke；合 main 走 PR + npm run pr:auto-merge。
 当前 backlog 见 docs/overnight-optimization-2026-08-27.md。
 用户说 DD = 质疑后继续。
@@ -310,7 +310,7 @@ adb -s R5CW11DNS2K shell am start -n me.askbible.native/me.askbible.native_.Main
 - [ ] 是否违反媒体 / OAuth / 构建 / 产品边界硬禁？
 - [ ] App 改动是否对照 Feature Map？能否跑 Maestro？
 - [ ] 超范围想法是否只进了 `docs/10-parking-lot.md`？
-- [ ] 未要求是否避免了 commit / push / 发版？
+- [ ] 是否已自行完成本任务提交、推送、直接发布和线上验证，并保留回滚部署？
 
 ---
 

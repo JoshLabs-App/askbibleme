@@ -70,6 +70,7 @@ function rotateFallbackByLocale(
 type Args = {
   fallbackByLocale: Record<AppLocale, HomeVerseEntry[]>;
   locale: AppLocale;
+  resumeStorageKey?: string;
 };
 
 function pickScopeIdForFeed(
@@ -83,7 +84,7 @@ function pickScopeIdForFeed(
   return HOME_PRAYER_POOL_SCOPE_ID;
 }
 
-export function useHomePrayerVerseFeed({ fallbackByLocale, locale }: Args): {
+export function useHomePrayerVerseFeed({ fallbackByLocale, locale, resumeStorageKey }: Args): {
   entriesByLocale: Record<AppLocale, HomeVerseEntry[]>;
   bilingual: boolean;
   verseKeys: string[] | undefined;
@@ -160,7 +161,10 @@ export function useHomePrayerVerseFeed({ fallbackByLocale, locale }: Args): {
         return;
       }
       manifestRef.current = manifest;
-      const cursor = homeListeningCursor(menuScope);
+      let cursor = homeListeningCursor(menuScope);
+      if (resumeStorageKey) {
+        try { const raw = localStorage.getItem(resumeStorageKey); const saved = Number(raw); if (raw !== null && Number.isSafeInteger(saved) && saved >= 0) cursor = saved; } catch { /* storage unavailable */ }
+      }
       const sourceKeys = manifest.entries.map((entry) => entry.verseKey);
       const keys = buildFixedVerseFlow(sourceKeys, cursor, HOME_PRAYER_FEED_BATCH_SIZE);
       bodiesRef.current = new Map();
@@ -206,10 +210,16 @@ export function useHomePrayerVerseFeed({ fallbackByLocale, locale }: Args): {
       }
       if (fallbackTimer != null) window.clearTimeout(fallbackTimer);
     };
-  }, [prefsToken, locale]);
+  }, [prefsToken, locale, resumeStorageKey]);
 
   /** 文字轮播不再代表听过；保留旧回调形状供现有轮播组件使用。 */
-  const onVerseCommitted = useCallback((_key: string) => {}, []);
+  const onVerseCommitted = useCallback((key: string) => {
+    if (!resumeStorageKey) return;
+    const index = keysQueueRef.current.indexOf(key);
+    const cursor = queueCursorPositionsRef.current[index];
+    if (cursor == null) return;
+    try { localStorage.setItem(resumeStorageKey, String(cursor + 1)); } catch { /* storage unavailable */ }
+  }, [resumeStorageKey]);
 
   const onVerseAudioCompleted = useCallback((key: string, feedIndex: number) => {
     const position = queueCursorPositionsRef.current[feedIndex];

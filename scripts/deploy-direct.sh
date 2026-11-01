@@ -27,12 +27,18 @@ JSON
 cd "$TMP"
 vercel pull --yes --environment=production >/dev/null
 node "$ROOT/scripts/prepare-web-build-env.cjs" "$ROOT" "$TMP" "$SHA"
-ln -s "$ROOT/node_modules" node_modules
+# Next 的追踪结果必须指向独立构建目录；软链会把本机绝对路径写入产物。
+# macOS APFS clone 复用磁盘块，目录本身是真实目录。
+if [ "$(uname -s)" = Darwin ]; then
+  cp -cR "$ROOT/node_modules" node_modules
+else
+  cp -a "$ROOT/node_modules" node_modules
+fi
 export VERCEL_GIT_COMMIT_SHA="$SHA"
 echo "本机构建 $REF @ $SHA …"
 vercel build --prod --yes
 if grep -R -l '\[SENSITIVE\]' .vercel/output/static/_next >/dev/null 2>&1; then
   echo '产物含配置占位符，停止发布。' >&2; exit 1
 fi
-vercel deploy --prebuilt --prod --archive=split-tgz --yes
+vercel deploy --prebuilt --prod --archive=tgz --yes
 echo "发布完成，预期 /app-build.json id=$SHA；继续核对正式站实际页面。"

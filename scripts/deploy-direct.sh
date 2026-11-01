@@ -34,5 +34,8 @@ vercel build --prod --yes
 if grep -R -l '\[SENSITIVE\]' .vercel/output/static/_next >/dev/null 2>&1; then
   echo '产物含配置占位符，停止发布。' >&2; exit 1
 fi
-vercel deploy --prebuilt --prod --archive=split-tgz --yes
+# 本地构建完成后移除仅用于复用依赖的软链，不能把本机绝对路径传到部署端。
+if [ -L node_modules ]; then unlink node_modules; fi
+mkdir -p node_modules
+vercel deploy --prebuilt --prod --archive=tgz --yes
 echo "发布完成，预期 /app-build.json id=$SHA；继续核对正式站实际页面。"

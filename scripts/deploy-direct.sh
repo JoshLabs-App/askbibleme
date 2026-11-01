@@ -13,7 +13,11 @@ if [ ! -d node_modules ] || ! git show "$SHA:package-lock.json" | cmp -s - packa
   echo '本地依赖与发布提交不一致；请先补齐依赖。不会回退云端构建。' >&2; exit 1
 fi
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/askbible-deploy.XXXXXX")"
-trap 'rm -rf "$TMP"' EXIT
+cleanup() {
+  local status=$?
+  if [ "$status" -eq 0 ]; then rm -rf "$TMP"; else echo "发布未完成，保留本地产物供重试：$TMP" >&2; fi
+}
+trap cleanup EXIT
 git archive "$SHA" -- . ':!apps' | tar -x -C "$TMP"
 find "$TMP" -type l -delete
 mkdir -p "$TMP/.vercel"
@@ -30,5 +34,5 @@ vercel build --prod --yes
 if grep -R -l '\[SENSITIVE\]' .vercel/output/static/_next >/dev/null 2>&1; then
   echo '产物含配置占位符，停止发布。' >&2; exit 1
 fi
-vercel deploy --prebuilt --prod --yes
+vercel deploy --prebuilt --prod --archive=split-tgz --yes
 echo "发布完成，预期 /app-build.json id=$SHA；继续核对正式站实际页面。"

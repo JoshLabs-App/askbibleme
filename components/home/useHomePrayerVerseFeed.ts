@@ -163,7 +163,7 @@ export function useHomePrayerVerseFeed({ fallbackByLocale, locale, resumeStorage
       manifestRef.current = manifest;
       let cursor = homeListeningCursor(menuScope);
       if (resumeStorageKey) {
-        try { const saved = Number(localStorage.getItem(resumeStorageKey)); if (Number.isSafeInteger(saved) && saved >= 0) cursor = saved; } catch { /* storage unavailable */ }
+        try { const raw = localStorage.getItem(resumeStorageKey); const saved = Number(raw); if (raw !== null && Number.isSafeInteger(saved) && saved >= 0) cursor = saved; } catch { /* storage unavailable */ }
       }
       const sourceKeys = manifest.entries.map((entry) => entry.verseKey);
       const keys = buildFixedVerseFlow(sourceKeys, cursor, HOME_PRAYER_FEED_BATCH_SIZE);

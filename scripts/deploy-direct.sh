@@ -36,9 +36,15 @@ else
 fi
 export VERCEL_GIT_COMMIT_SHA="$SHA"
 echo "本机构建 $REF @ $SHA …"
-vercel build --prod --yes
+vercel build --prod --standalone --yes
 if grep -R -l '\[SENSITIVE\]' .vercel/output/static/_next >/dev/null 2>&1; then
   echo '产物含配置占位符，停止发布。' >&2; exit 1
 fi
-vercel deploy --prebuilt --prod --archive=tgz --yes
+# 只向上传目录复制独立产物和部署配置。
+UPLOAD="$TMP/upload"
+mkdir -p "$UPLOAD/.vercel"
+cp -R .vercel/output "$UPLOAD/.vercel/output"
+cp .vercel/project.json "$UPLOAD/.vercel/project.json"
+cp vercel.json "$UPLOAD/vercel.json"
+vercel deploy --prebuilt --prod --archive=tgz --yes --cwd "$UPLOAD"
 echo "发布完成，预期 /app-build.json id=$SHA；继续核对正式站实际页面。"

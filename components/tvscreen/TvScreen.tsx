@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { buildGoldenVerseAudioRemoteSrc } from "@/lib/bible/golden-verse-audio";
+import { parseCuvChapterVerseTimingsPayload, verseNumberAtChapterAudioTime } from "@/lib/bible/cuv-chapter-verse-timings";
 import { buildExternalCuvChapterAudioUrl } from "@/lib/bible/cuv-chapter-audio";
 import { getScriptureBookDisplayName } from "@/lib/bible/scripture-book-display-name";
 import { resolveTodayReadingAudioStart } from "@/lib/read/today-reading-audio-start";
@@ -178,6 +179,8 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   }, [playAudio]);
 
   const loadPlanChapterText = useCallback(async (bookId: string, chapter: number, title: string) => {
+    const request = planRequestRef.current;
+    const isCurrent = () => request === planRequestRef.current && planRef.current?.chapters[planRef.current.i]?.bookId === bookId && planRef.current?.chapters[planRef.current.i]?.chapter === chapter;
     planTimingsRef.current = null;
     setPlanView({ title, verses: [], cur: 0 });
     try {
@@ -188,12 +191,15 @@ export function TvScreen({ videos }: { videos: Video[] }) {
         bookCacheRef.current[bookId] = book;
       }
       const verses = (book[String(chapter)] ?? []).map((v) => v.t);
+      if (!isCurrent()) return;
       setPlanView({ title, verses, cur: 0 });
-      for (const u of [`/verse-timings/cuv-v20/${bookId}-${chapter}.json`, `/verse-timings/${bookId}-${chapter}.json`]) {
+      for (const u of [`/verse-timings/cuv-v20/${bookId}-${chapter}.json`]) {
         try {
           const r = await fetch(u);
           if (!r.ok) continue;
-          planTimingsRef.current = (await r.json()) as { verse: number; start: number; end: number }[];
+          const timings = parseCuvChapterVerseTimingsPayload(await r.json());
+          if (!isCurrent()) return;
+          planTimingsRef.current = timings;
           break;
         } catch {
           /* 试下一个 */
@@ -227,22 +233,8 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       const t = a.currentTime;
       let cur = 0;
       const tm = planTimingsRef.current;
-      if (tm && tm.length) {
-        for (let i = 0; i < tm.length; i += 1) if (t >= tm[i].start) cur = tm[i].verse - 1;
-      } else if (a.duration > 0) {
-        const w = pv.verses.map((x) => Math.max(10, x.length));
-        const total = w.reduce((x, y) => x + y, 0);
-        let acc = 0;
-        const target = (t / a.duration) * total;
-        for (let i = 0; i < w.length; i += 1) {
-          acc += w[i];
-          if (target < acc) {
-            cur = i;
-            break;
-          }
-          cur = i;
-        }
-      }
+      // Only the timing track aligned to this recording can drive highlighting.
+      if (tm?.length) cur = (verseNumberAtChapterAudioTime(t, tm) ?? 1) - 1;
       cur = Math.max(0, Math.min(pv.verses.length - 1, cur));
       return cur === pv.cur ? pv : { ...pv, cur };
     });
@@ -277,6 +269,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       st.i = i;
       musicRef.current?.pause();
       verseAudioRef.current?.pause();
+      planRequestRef.current += 1;
       a.src = src;
       const name = `${getScriptureBookDisplayName(ch.bookId, "zh-CN")} ${ch.chapter} 章`;
       void loadPlanChapterText(ch.bookId, ch.chapter, name);
@@ -483,14 +476,13 @@ export function TvScreen({ videos }: { videos: Video[] }) {
         >
           {planView && planView.verses.length > 0 ? (
             <>
-              {planView.verses.slice(planView.cur, planView.cur + 3).map((t, i) => (
-                <p
-                  key={planView.cur + i}
-                  style={{ margin: "0 0 2vh", fontSize: i === 0 ? "min(3vw, 4.8vh)" : "min(2.3vw, 3.7vh)", lineHeight: 1.5, fontWeight: i === 0 ? 700 : 500, opacity: i === 0 ? 1 : 0.6 }}
-                >
-                  {planView.cur + i + 1} {t}
-                </p>
-              ))}
+              <p style={{ margin: 0, width: "100%", maxHeight: "55vh", overflow: "hidden", textAlign: "left", fontSize: "min(2.6vw, 4.2vh)", lineHeight: 1.65, fontWeight: 500 }}>
+                {planView.verses.slice(planView.cur, planView.cur + 12).map((t, i) => (
+                  <span key={planView.cur + i} aria-current={i === 0 ? "true" : undefined} style={{ fontWeight: i === 0 ? 700 : 500, opacity: i === 0 ? 1 : 0.65 }}>
+                    <sup style={{ fontSize: "0.55em", marginRight: "0.3em" }}>{planView.cur + i + 1}</sup>{t}{" "}
+                  </span>
+                ))}
+              </p>
               <p style={{ margin: "1vh 0 0", fontSize: "min(1.9vw, 3vh)", fontWeight: 600, opacity: 0.92 }}>{planView.title}</p>
             </>
           ) : (

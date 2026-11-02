@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { buildGoldenVerseAudioRemoteSrc } from "@/lib/bible/golden-verse-audio";
+import type { StaticScriptureVerse } from "@/lib/bible/static-scripture-shape";
 import { parseCuvChapterVerseTimingsPayload, verseNumberAtChapterAudioTime } from "@/lib/bible/cuv-chapter-verse-timings";
 import { buildExternalCuvChapterAudioUrl } from "@/lib/bible/cuv-chapter-audio";
 import { getScriptureBookDisplayName } from "@/lib/bible/scripture-book-display-name";
@@ -110,7 +111,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   // 今日读经：当前章的经文与朗读进度
   const [planView, setPlanView] = useState<{ title: string; verses: string[]; cur: number } | null>(null);
   const planTimingsRef = useRef<{ verse: number; start: number; end: number }[] | null>(null);
-  const bookCacheRef = useRef<Record<string, Record<string, { t: string }[]>>>({});
+  const bookCacheRef = useRef<Record<string, Record<string, StaticScriptureVerse[]>>>({});
 
   const entries = entriesByLocale[locale] ?? entriesByLocale["zh-CN"] ?? [];
   const entry = entries.length ? entries[activeIndex % entries.length] : null;
@@ -186,10 +187,10 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       let book = bookCacheRef.current[bookId];
       if (!book) {
         const r = await fetch(`/scripture/cuv-simp/${bookId}.json`);
-        book = ((await r.json()) as { c: Record<string, { t: string }[]> }).c;
+        book = ((await r.json()) as { c: Record<string, StaticScriptureVerse[]> }).c;
         bookCacheRef.current[bookId] = book;
       }
-      const verses = (book[String(chapter)] ?? []).map((v) => v.t);
+      const verses = (book[String(chapter)] ?? []).map((v) => typeof v === "string" ? v : v.t);
       if (!isCurrent()) return;
       setPlanView({ title, verses, cur: 0 });
       for (const u of [`/verse-timings/cuv-v20/${bookId}-${chapter}.json`]) {

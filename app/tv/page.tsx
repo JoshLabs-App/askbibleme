@@ -1,3 +1,4 @@
+import { readBibleTranslationRegistry } from "@/lib/bible/providers/registry";
 import type { Metadata } from "next";
 import { TvScreen } from "@/components/tvscreen/TvScreen";
 import { readNatureSettings } from "@/lib/nature/read-nature-settings";
@@ -12,5 +13,6 @@ export const dynamic = "force-dynamic";
 export default async function TvPage() {
   const settings = await readNatureSettings(process.cwd());
   const videos = settings.videos.map((v) => ({ id: v.id, src: v.src, title: v.title ?? "", posterSrc: v.previewFrameSrc || v.thumbSrc || settings.posterSrc }));
-  return <TvScreen videos={videos} />;
+  const translations = readBibleTranslationRegistry(process.cwd()).translations.filter((t) => t.enabled !== false && /^(zh|en)/.test(t.language)).map(({ id, labelZh, labelEn, language }) => ({ id, labelZh, labelEn, language }));
+  return <TvScreen videos={videos} translations={translations} />;
 }

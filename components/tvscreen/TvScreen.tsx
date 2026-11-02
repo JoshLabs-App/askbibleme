@@ -4,9 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { buildGoldenVerseAudioRemoteSrc } from "@/lib/bible/golden-verse-audio";
-import type { StaticScriptureVerse } from "@/lib/bible/static-scripture-shape";
+import { parseVerseKey } from "@/lib/bible/parse-verse-key";
+import { toZhTwText } from "@/lib/i18n/zh-tw-text";
+import type { AppLocale } from "@/lib/i18n/config";
+import { resolveChapterAudioPlayableSrc, translationSupportsChapterAudio } from "@/lib/bible/read-chapter-audio";
 import { parseCuvChapterVerseTimingsPayload, verseNumberAtChapterAudioTime } from "@/lib/bible/cuv-chapter-verse-timings";
-import { buildExternalCuvChapterAudioUrl } from "@/lib/bible/cuv-chapter-audio";
+
 import { getScriptureBookDisplayName } from "@/lib/bible/scripture-book-display-name";
 import { resolveTodayReadingAudioStart } from "@/lib/read/today-reading-audio-start";
 import { resolveTodayPlanScriptureStartTarget, writeTodayPlanScriptureResume } from "@/lib/read/today-plan-scripture-resume";
@@ -28,6 +31,7 @@ const ALBUM_KEYS: Record<string, { album: string; label: string }> = {
   "6": { album: "睡眠", label: "睡眠" },
 };
 const LEGEND = ["1 轻音乐", "2 金句朗读", "3 下午茶轻快", "4 钢琴", "5 圣诗", "6 睡眠", "7 TovCore", "8 今日读经", "9 暂停/继续", "↑↓ 换一首", "← → 换场景", "0 切换场景"];
+const LEGEND_EN = ["1 Quiet music", "2 Verse audio", "3 Afternoon tea", "4 Piano", "5 Hymns", "6 Sleep", "7 TovCore", "8 Today’s reading", "9 Pause / resume", "↑↓ Next track", "← → Next scene", "0 Change scene"];
 const LEGEND_MS = 15_000;
 
 /** 按字数定字号：用 vw/vh，旧电视浏览器也认；长经文自动缩小，不会被截断 */
@@ -48,11 +52,30 @@ function pickTrack(album: string, avoid?: string): string | null {
   return tracks[Math.floor(Math.random() * tracks.length)].src;
 }
 
-export function TvScreen({ videos }: { videos: Video[] }) {
-  const { locale } = useLocale();
+type Translation = { id: string; labelZh: string; labelEn: string; language: string };
+export function TvScreen({ videos, translations }: { videos: Video[]; translations: Translation[] }) {
+  const { locale, setLocale } = useLocale();
+  const [selectedVersion, setSelectedVersion] = useState("");
+  const [fontStep, setFontStep] = useState(1);
+  const version = selectedVersion || (locale === "en" ? "web-en" : locale === "zh-TW" ? "cuv-trad" : "cuv-simp");
+  const scale = [0.8, 1, 1.2, 1.4][fontStep];
+  const copy = useCallback((zh: string, en: string) => locale === "en" ? en : locale === "zh-TW" ? toZhTwText(zh) : zh, [locale]);
+  const noAudio = copy("此版本暂不支持朗读", "Audio is unavailable for this version");
+  const goldenVersion = version === "cuv-simp" || version === "cuv-trad" ? "cuv-simp" : version === "web-en" ? "web-en" : null;
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("askbible-tv-reading") || "{}");
+      if (translations.some((t) => t.id === saved.version && (locale === "en" ? t.language.startsWith("en") : t.language.startsWith("zh")))) setSelectedVersion(saved.version);
+      if ([0, 1, 2, 3].includes(saved.fontStep)) setFontStep(saved.fontStep);
+    } catch { /* storage may be unavailable on TV */ }
+  }, [translations, locale]);
+  const saveSettings = (nextVersion: string, nextSize: number) => {
+    try { localStorage.setItem("askbible-tv-reading", JSON.stringify({ version: nextVersion, fontStep: nextSize })); } catch { /* optional persistence */ }
+  };
   const { user, bootstrapped, logout } = useAskbibleUser();
   const [planLoading, setPlanLoading] = useState(false);
   const planRequestRef = useRef(0);
+  useEffect(() => () => { planRequestRef.current += 1; }, []);
   const resumeAtRef = useRef(0);
   const { entriesByLocale, verseKeys, activeIndex, setVerseAudioSequenceActive, advanceVerseAudioNow } = useHomePrayerVerseFeedContext();
   const [sceneIdx, setSceneIdx] = useState(0);
@@ -85,11 +108,56 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   // 今日读经：当前章的经文与朗读进度
   const [planView, setPlanView] = useState<{ title: string; verses: string[]; cur: number } | null>(null);
   const planTimingsRef = useRef<{ verse: number; start: number; end: number }[] | null>(null);
-  const bookCacheRef = useRef<Record<string, Record<string, StaticScriptureVerse[]>>>({});
+  const chapterCacheRef = useRef<Record<string, { verse: number; text: string }[]>>({});
+  const loadChapter = useCallback(async (bookId: string, chapter: number) => {
+    const key = `${version}:${bookId}:${chapter}`;
+    if (chapterCacheRef.current[key]) return chapterCacheRef.current[key];
+    const query = new URLSearchParams({ translationId: version, bookId, chapter: String(chapter) });
+    const response = await fetch(`/api/read/chapter?${query}`);
+    const body = await response.json();
+    if (!response.ok || !body.ok || body.data.translationId !== version) throw new Error("chapter unavailable");
+    const rows = body.data.verses as { verse: number; text: string }[];
+    chapterCacheRef.current[key] = rows;
+    return rows;
+  }, [version]);
+  const [translatedVerse, setTranslatedVerse] = useState<{ identity: string; text: string } | null>(null);
+  const verseKey = verseKeys?.[activeIndex] || "";
+  const verseIdentity = `${version}:${verseKey}`;
+  useEffect(() => {
+    let cancelled = false;
+    const start = parseVerseKey(verseKey);
+    if (!start) return;
+    const end = parseVerseKey(verseKey.split("-")[1] || verseKey);
+    void loadChapter(start.bookId, start.chapter).then((rows) => {
+      const text = rows.filter((r) => r.verse >= start.verse && r.verse <= (end?.verse || start.verse)).map((r) => r.text).join(" ");
+      if (!cancelled) setTranslatedVerse({ identity: verseIdentity, text: text || copy("此版本暂无这段经文", "This passage is unavailable in this version") });
+    }).catch(() => { if (!cancelled) setTranslatedVerse({ identity: verseIdentity, text: copy("经文加载失败，请切换版本重试", "Could not load this passage. Please select a version again.") }); });
+    return () => { cancelled = true; };
+  }, [verseKey, verseIdentity, loadChapter, copy]);
+  const resetReading = () => {
+    planRequestRef.current += 1;
+    planAudioRef.current?.pause();
+    planAudioRef.current?.removeAttribute("src");
+    verseAudioRef.current?.pause();
+    stopVerseSequence();
+    planRef.current = null;
+    planTimingsRef.current = null;
+    resumeAtRef.current = 0;
+    setPlanView(null);
+    setPlanLoading(false);
+    if (musicRef.current) musicRef.current.volume = 1;
+  };
+  const changeVersion = (id: string) => { resetReading(); setSelectedVersion(id); saveSettings(id, fontStep); };
+  const changeLanguage = (next: AppLocale) => {
+    resetReading();
+    setLocale(next);
+    const id = next === "en" ? "web-en" : next === "zh-TW" ? "cuv-trad" : "cuv-simp";
+    setSelectedVersion(id); saveSettings(id, fontStep);
+  };
 
   const entries = entriesByLocale[locale] ?? entriesByLocale["zh-CN"] ?? [];
   const entry = entries.length ? entries[activeIndex % entries.length] : null;
-  const verseText = entry ? entry.lines.join(locale === "en" ? " " : "") : "";
+  const verseText = translatedVerse?.identity === verseIdentity ? translatedVerse.text : copy("正在加载经文…", "Loading passage…");
   const video = videos.length ? videos[((sceneIdx % videos.length) + videos.length) % videos.length] : null;
 
   const say = useCallback((t: string) => {
@@ -161,16 +229,11 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     planTimingsRef.current = null;
     setPlanView({ title, verses: [], cur: 0 });
     try {
-      let book = bookCacheRef.current[bookId];
-      if (!book) {
-        const r = await fetch(`/scripture/cuv-simp/${bookId}.json`);
-        book = ((await r.json()) as { c: Record<string, StaticScriptureVerse[]> }).c;
-        bookCacheRef.current[bookId] = book;
-      }
-      const verses = (book[String(chapter)] ?? []).map((v) => typeof v === "string" ? v : v.t);
+      const rows = await loadChapter(bookId, chapter);
+      const verses = Array.from({ length: Math.max(...rows.map((r) => r.verse)) }, (_, i) => rows.find((r) => r.verse === i + 1)?.text || "");
       if (!isCurrent()) return;
       setPlanView({ title, verses, cur: 0 });
-      for (const u of [`/verse-timings/cuv-v20/${bookId}-${chapter}.json`]) {
+      for (const u of (version === "cuv-simp" || version === "cuv-trad" ? [`/verse-timings/cuv-v20/${bookId}-${chapter}.json`] : [])) {
         try {
           const r = await fetch(u);
           if (!r.ok) continue;
@@ -183,16 +246,16 @@ export function TvScreen({ videos }: { videos: Video[] }) {
         }
       }
     } catch {
-      /* 取不到经文就只听朗读 */
+      if (isCurrent()) say(copy("经文加载失败", "Could not load passage"));
     }
-  }, []);
+  }, [loadChapter, version, say, copy]);
 
   const planDbgRef = useRef(0);
   const onPlanTime = useCallback(() => {
     const a = planAudioRef.current;
     if (!a) return;
     const ch = planRef.current?.chapters[planRef.current.i];
-    if (ch && a.currentTime > 0) writeTodayPlanScriptureResume({ ...ch, scopeKey: resolveLocalTodayReadingScopeKey(), positionSec: a.currentTime });
+    if (ch && a.getAttribute("src") && a.currentTime > 0) writeTodayPlanScriptureResume({ ...ch, scopeKey: resolveLocalTodayReadingScopeKey(), positionSec: a.currentTime });
     const nowMs = Date.now();
     if (nowMs - planDbgRef.current > 15000) {
       planDbgRef.current = nowMs;
@@ -211,7 +274,8 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       let cur = 0;
       const tm = planTimingsRef.current;
       // Only the timing track aligned to this recording can drive highlighting.
-      if (tm?.length) cur = (verseNumberAtChapterAudioTime(t, tm) ?? 1) - 1;
+      if (!tm?.length || a.paused) return pv;
+      cur = (verseNumberAtChapterAudioTime(t, tm) ?? 1) - 1;
       cur = Math.max(0, Math.min(pv.verses.length - 1, cur));
       return cur === pv.cur ? pv : { ...pv, cur };
     });
@@ -226,7 +290,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   }, [planActive, onPlanTime]);
 
   const playPlanChapter = useCallback(
-    (i: number) => {
+    async (i: number) => {
       const st = planRef.current;
       const a = planAudioRef.current;
       if (!st || !a) return;
@@ -234,29 +298,32 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       if (!ch) {
         planRef.current = null;
         setPlanView(null);
-        say("今日读经读完了");
+        say(copy("今日读经读完了", "Today’s reading is complete"));
         if (musicRef.current) void playAudio(musicRef.current).catch(() => {});
         return;
       }
-      const src = buildExternalCuvChapterAudioUrl(ch.bookId, ch.chapter);
-      if (!src) {
-        say("这一章暂无朗读");
-        return;
-      }
+      a.pause();
+      a.removeAttribute("src");
       st.i = i;
       musicRef.current?.pause();
       stopVerseSequence();
       verseAudioRef.current?.pause();
-      planRequestRef.current += 1;
-      a.src = src;
-      const name = `${getScriptureBookDisplayName(ch.bookId, "zh-CN")} ${ch.chapter} 章`;
+      const request = ++planRequestRef.current;
+      const name = `${getScriptureBookDisplayName(ch.bookId, locale)} ${ch.chapter}`;
       void loadPlanChapterText(ch.bookId, ch.chapter, name);
+      if (!translationSupportsChapterAudio(version)) { say(noAudio); return; }
+      let result;
+      try { result = await resolveChapterAudioPlayableSrc({ translationId: version, bookName: getScriptureBookDisplayName(ch.bookId, "zh-CN"), ...ch }); }
+      catch { if (request === planRequestRef.current) say(copy("这一章音频暂不可用", "Audio is unavailable for this chapter")); return; }
+      if (request !== planRequestRef.current) return;
+      if (!result.ok) { say(copy("这一章音频暂不可用", "Audio is unavailable for this chapter")); return; }
+      a.src = result.src;
       void playAudio(a).then(
-        () => say(`今日读经：${name}（${i + 1}/${st.chapters.length}）`),
-        () => say("读经播放失败"),
+        () => say(`${copy("今日读经", "Today’s reading")}: ${name} (${i + 1}/${st.chapters.length})`),
+        () => say(copy("读经播放失败", "Could not play chapter audio")),
       );
     },
-    [say, loadPlanChapterText, playAudio, stopVerseSequence],
+    [say, loadPlanChapterText, playAudio, stopVerseSequence, version, locale, noAudio, copy],
   );
 
   const startPlan = useCallback(async () => {
@@ -279,11 +346,11 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       const target = resume && resume.startAtSec > 0 ? resume.target : last ?? resume?.target;
       const index = start.queue.findIndex((ch) => ch.bookId === target?.bookId && ch.chapter === target?.chapter);
       planRef.current = { chapters: start.queue, i: Math.max(0, index) };
-      resumeAtRef.current = resume && index >= 0 && resume.target.bookId === target?.bookId && resume.target.chapter === target?.chapter ? resume.startAtSec : 0;
+      resumeAtRef.current = (version === "cuv-simp" || version === "cuv-trad") && resume && index >= 0 && resume.target.bookId === target?.bookId && resume.target.chapter === target?.chapter ? resume.startAtSec : 0;
       playPlanChapter(planRef.current.i);
     } catch { say("读经进度加载失败，请重试"); }
     finally { setPlanLoading(false); }
-  }, [bootstrapped, user, planLoading, playPlanChapter, say]);
+  }, [bootstrapped, user, planLoading, playPlanChapter, say, version]);
 
   const onPlanEnded = useCallback(() => {
     const st = planRef.current;
@@ -292,11 +359,11 @@ export function TvScreen({ videos }: { videos: Video[] }) {
 
   const playVerseAudio = useCallback(() => {
     const key = verseKeys?.[activeIndex];
-    const src = key ? buildGoldenVerseAudioRemoteSrc(key, locale === "en" ? "web-en" : "cuv-simp") : null;
+    const src = key && goldenVersion ? buildGoldenVerseAudioRemoteSrc(key, goldenVersion) : null;
     const v = verseAudioRef.current;
     if (!v || !src) {
       stopVerseSequence();
-      say("这句暂无朗读");
+      say(copy("此版本暂无金句音频", "Verse audio is unavailable for this version"));
       return;
     }
     verseSequenceRef.current = true;
@@ -318,14 +385,14 @@ export function TvScreen({ videos }: { videos: Video[] }) {
         say("朗读失败");
       },
     );
-  }, [activeIndex, locale, say, verseKeys, playAudio, setVerseAudioSequenceActive, stopVerseSequence]);
+  }, [activeIndex, goldenVersion, copy, say, verseKeys, playAudio, setVerseAudioSequenceActive, stopVerseSequence]);
 
   useEffect(() => {
     if (!verseSequenceRef.current || versePausedRef.current) return;
     const key = verseKeys?.[activeIndex];
-    const src = key ? buildGoldenVerseAudioRemoteSrc(key, locale === "en" ? "web-en" : "cuv-simp") : null;
+    const src = key && goldenVersion ? buildGoldenVerseAudioRemoteSrc(key, goldenVersion) : null;
     if (src !== verseSourceRef.current) playVerseAudio();
-  }, [activeIndex, locale, verseKeys, playVerseAudio]);
+  }, [activeIndex, goldenVersion, verseKeys, playVerseAudio]);
 
   const reportAudio = useCallback(
     (which: string) => (e: React.SyntheticEvent<HTMLAudioElement>) => {
@@ -360,7 +427,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
         } else {
           versePausedRef.current = false;
           const key = verseKeys?.[activeIndex];
-          const src = key ? buildGoldenVerseAudioRemoteSrc(key, locale === "en" ? "web-en" : "cuv-simp") : null;
+          const src = key && goldenVersion ? buildGoldenVerseAudioRemoteSrc(key, goldenVersion) : null;
           if (src !== verseSourceRef.current) playVerseAudio();
           else if (v?.ended) advanceVerseAudioNow();
           else if (v) { if (m) m.volume = 0.25; void playAudio(v).catch(() => {}); }
@@ -374,14 +441,22 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     } else if (k === "ArrowUp" || k === "ArrowDown") playAlbum(albumRef.current, "换一首", musicRef.current?.getAttribute("src") ?? undefined);
     else if (k === "0" || k === "ArrowRight") setSceneIdx((i) => i + 1);
     else if (k === "ArrowLeft") setSceneIdx((i) => i - 1);
-  }, [showLegend, playAlbum, playVerseAudio, startPlan, playAudio, verseKeys, activeIndex, locale, advanceVerseAudioNow]);
+  }, [showLegend, playAlbum, playVerseAudio, startPlan, playAudio, verseKeys, activeIndex, goldenVersion, advanceVerseAudioNow]);
   const live = useRef(runAction);
   live.current = runAction;
   useEffect(() => {
     showLegend();
     const onKey = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement)?.getAttribute("aria-label") === "Passage" || (e.target as HTMLElement)?.getAttribute("aria-label") === "经文" || (e.target as HTMLElement)?.getAttribute("aria-label") === "經文") { if (e.key.startsWith("Arrow")) return; }
       const interactive = (e.target as HTMLElement)?.closest("button, a, input, select, textarea");
+      if (interactive?.tagName === "SELECT") return;
       if (interactive && (e.key === "Enter" || e.key === " ")) return;
+      if (interactive && e.key.startsWith("Arrow")) {
+        const controls = Array.from(document.querySelectorAll<HTMLElement>("[data-tv-controls] button, [data-tv-controls] a, [data-tv-controls] select"));
+        const at = controls.indexOf(interactive as HTMLElement);
+        controls[(at + (e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 1) + controls.length) % controls.length]?.focus();
+        e.preventDefault(); return;
+      }
       let k = e.key;
       if (!/^[0-9]$/.test(k) && e.keyCode >= 48 && e.keyCode <= 57) k = String(e.keyCode - 48);
       else if (!/^[0-9]$/.test(k) && e.keyCode >= 96 && e.keyCode <= 105) k = String(e.keyCode - 96);
@@ -401,7 +476,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     while (start < planView.verses.length) {
       let end = start;
       let chars = 0;
-      while (end < planView.verses.length && (end === start || (end - start < 4 && chars + planView.verses[end].length <= 160))) {
+      while (end < planView.verses.length && (end === start || (end - start < 4 && chars + planView.verses[end].length <= 160 / (scale * scale)))) {
         chars += planView.verses[end].length;
         end += 1;
       }
@@ -409,9 +484,9 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       start = end;
     }
     return { start: 0, end: 0 };
-  }, [planView]);
+  }, [planView, scale]);
 
-  const fontSize = useMemo(() => verseFontSize(verseText.length), [verseText]);
+  const fontSize = useMemo(() => `calc(${verseFontSize(verseText.length)} * ${scale})`, [verseText, scale]);
 
   return (
     <div
@@ -425,26 +500,34 @@ export function TvScreen({ videos }: { videos: Video[] }) {
         // eslint-disable-next-line @next/next/no-img-element
         <img src={video.posterSrc} alt="" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" }} />
       ) : null}
+      <div data-tv-controls style={{ position: "absolute", top: "2vh", left: "3vw", right: "3vw", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "1vw", padding: "1vh 1vw", borderRadius: 12, background: "rgba(0,0,0,.55)", fontSize: "min(1.5vw, 2.5vh)" }}>
+        <label>{copy("语言", "Language")} <select aria-label={copy("语言", "Language")} value={locale} onChange={(e) => changeLanguage(e.target.value as AppLocale)} style={{ color: "white", background: "#26332c", font: "inherit" }}><option value="zh-CN">简体中文</option><option value="zh-TW">繁體中文</option><option value="en">English</option></select></label>
+        <label>{copy("圣经版本", "Bible version")} <select aria-label={copy("圣经版本", "Bible version")} value={version} onChange={(e) => changeVersion(e.target.value)} style={{ color: "white", background: "#26332c", font: "inherit", maxWidth: "36vw" }}>{translations.filter((t) => locale === "en" ? t.language.startsWith("en") : t.language.startsWith("zh")).map((t) => <option key={t.id} value={t.id}>{locale === "en" ? t.labelEn : locale === "zh-TW" ? toZhTwText(t.labelZh) : t.labelZh} · {translationSupportsChapterAudio(t.id) ? copy("可朗读", "Audio") : copy("不能朗读", "No audio")}</option>)}</select></label>
+        <label>{copy("字号", "Text size")} <select aria-label={copy("字号", "Text size")} value={fontStep} onChange={(e) => { const step = Number(e.target.value); setFontStep(step); saveSettings(version, step); }} style={{ color: "white", background: "#26332c", font: "inherit" }}>{[copy("小", "Small"), copy("标准", "Standard"), copy("大", "Large"), copy("特大", "Extra large")].map((label, i) => <option key={i} value={i}>{label}</option>)}</select></label>
+        <span role="status">{!translationSupportsChapterAudio(version) ? noAudio : !goldenVersion ? copy("整章可朗读 · 金句暂无音频", "Chapter audio available · No verse audio") : copy("整章与金句均可朗读", "Chapter and verse audio available")}</span>
+      </div>
       {entry ? (
         <div
+          tabIndex={0}
+          aria-label={copy("经文", "Passage")}
           style={{
             position: "absolute",
             left: "8vw",
             right: "8vw",
-            top: "8vh",
-            bottom: "22vh",
+            top: "12vh",
+            bottom: legendOn ? "29vh" : "8vh",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
             textAlign: "center",
-            overflow: "hidden",
+            overflow: "auto",
             textShadow: "0 2px 12px rgba(0,0,0,0.7)",
           }}
         >
           {planView && planView.verses.length > 0 ? (
             <>
-              <p style={{ margin: 0, width: "100%", maxHeight: "55vh", overflow: "hidden", textAlign: "left", fontSize: "min(2.6vw, 4.2vh)", lineHeight: 1.65, fontWeight: 500 }}>
+              <p style={{ margin: 0, width: "100%", maxHeight: "45vh", overflow: "auto", textAlign: "left", fontSize: `min(${2.6 * scale}vw, ${4.2 * scale}vh)`, lineHeight: 1.65, fontWeight: 500 }}>
                 {planView.verses.slice(planPage.start, planPage.end).map((t, i) => (
                   <span key={planPage.start + i} aria-current={planPage.start + i === planView.cur ? "true" : undefined} style={{ color: planPage.start + i === planView.cur ? "#ffe4a3" : "#fff" }}>
                     <sup style={{ fontSize: "0.55em", marginRight: "0.3em" }}>{planPage.start + i + 1}</sup>{t}{" "}
@@ -456,7 +539,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
           ) : (
             <>
               <p style={{ margin: 0, fontSize, lineHeight: 1.45, fontWeight: 700 }}>{verseText}</p>
-              <p style={{ margin: "3vh 0 0", fontSize: "min(1.9vw, 3vh)", fontWeight: 600, opacity: 0.92 }}>{entry.ref}</p>
+              <p style={{ margin: "3vh 0 0", fontSize: "min(1.9vw, 3vh)", fontWeight: 600, opacity: 0.92 }}>{entry.ref} · {translations.find((t) => t.id === version)?.[locale === "en" ? "labelEn" : "labelZh"]}</p>
             </>
           )}
         </div>
@@ -476,13 +559,14 @@ export function TvScreen({ videos }: { videos: Video[] }) {
             }}
           >
             <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gridTemplateColumns: "repeat(3, auto)", columnGap: "2.4vw", rowGap: "0.6vh" }}>
-            {LEGEND.map((l) => (
-              <li key={l}><button type="button" onClick={() => runAction(l.startsWith("↑") ? "ArrowUp" : l.startsWith("←") ? "ArrowRight" : l[0])} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", padding: "0.5vh 0", cursor: "pointer", textShadow: "inherit" }}>{l === "8 今日读经" && planLoading ? "8 同步进度中…" : l}</button></li>
+            {LEGEND.map((l, index) => (
+              <li key={l}><button type="button" onClick={() => runAction(l.startsWith("↑") ? "ArrowUp" : l.startsWith("←") ? "ArrowRight" : l[0])} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", padding: "0.5vh 0", cursor: "pointer", textShadow: "inherit" }}>{l === "8 今日读经" && planLoading ? copy("8 同步进度中…", "8 Syncing…") : copy(l, LEGEND_EN[index])}</button></li>
             ))}
             </ul>
+            {planView ? <div><button onClick={() => setPlanView((p) => p ? { ...p, cur: Math.max(0, planPage.start - 1) } : p)}>{copy("上一页经文", "Previous passage")}</button> <button onClick={() => setPlanView((p) => p ? { ...p, cur: Math.min(p.verses.length - 1, planPage.end) } : p)}>{copy("下一页经文", "Next passage")}</button></div> : null}
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6vh 2.4vw", marginTop: "0.6vh", width: 0, minWidth: "100%", overflowWrap: "anywhere" }}>
-            <span>{user ? <button type="button" onClick={() => void logout().catch(() => say("退出失败，请重试"))} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", cursor: "pointer" }}>已登录 · {user.name || "我的账号"}（退出）</button> : <a href="/login?next=/tv" style={{ color: "inherit" }}>登录</a>}</span>
-            <a href="/tv-check.html" style={{ color: "inherit" }}>检查页</a>
+            <span>{user ? <button type="button" onClick={() => void logout().catch(() => say("退出失败，请重试"))} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", cursor: "pointer" }}>已登录 · {user.name || "我的账号"}（退出）</button> : <a href="/login?next=/tv" style={{ color: "inherit" }}>{copy("登录", "Sign in")}</a>}</span>
+            <a href="/tv-check.html" style={{ color: "inherit" }}>{copy("检查页", "Diagnostics")}</a>
             </div>
           </div>
         ) : null}

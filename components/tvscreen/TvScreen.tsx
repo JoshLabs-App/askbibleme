@@ -26,9 +26,8 @@ const ALBUM_KEYS: Record<string, { album: string; label: string }> = {
   "4": { album: "钢琴", label: "钢琴" },
   "5": { album: "赞美诗", label: "圣诗" },
   "6": { album: "睡眠", label: "睡眠" },
-  "7": { album: "专注工作", label: "专注" },
 };
-const LEGEND = ["1 轻音乐", "2 金句朗读", "3 下午茶轻快", "4 钢琴", "5 圣诗", "6 睡眠", "7 专注", "8 今日读经", "9 暂停/继续", "↑↓ 换一首", "← → 换场景", "0 切换场景"];
+const LEGEND = ["1 轻音乐", "2 金句朗读", "3 下午茶轻快", "4 钢琴", "5 圣诗", "6 睡眠", "7 TovCore", "8 今日读经", "9 暂停/继续", "↑↓ 换一首", "← → 换场景", "0 切换场景"];
 const LEGEND_MS = 15_000;
 
 /** 按字数定字号：用 vw/vh，旧电视浏览器也认；长经文自动缩小，不会被截断 */
@@ -395,6 +394,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   const runAction = useCallback((k: string) => {
     showLegend();
     if (ALBUM_KEYS[k]) playAlbum(ALBUM_KEYS[k].album, ALBUM_KEYS[k].label);
+    else if (k === "7") window.location.assign("https://tovcore.com/radio?tv=1");
     else if (k === "2") playVerseAudio();
     else if (k === "8") void startPlan();
     else if (k === "9") {

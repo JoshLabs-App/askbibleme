@@ -518,14 +518,14 @@ export function TvScreen({ videos, translations }: { videos: Video[]; translatio
           label={copy("经文", "Passage")}
           text={verseText}
           passage={planView?.verses.length ? {
-            verses: planView.verses.slice(planPage.start, planPage.end),
-            start: planPage.start,
+            verses: showParchment ? planView.verses : planView.verses.slice(planPage.start, planPage.end),
+            start: showParchment ? 0 : planPage.start,
             current: planView.cur,
           } : undefined}
           controlsVisible={legendOn}
           parchment={showParchment}
           reference={planView?.verses.length
-            ? `${planView.title}:${planPage.start + 1}${planPage.end > planPage.start + 1 ? `–${planPage.end}` : ""}`
+            ? showParchment ? planView.title : `${planView.title}:${planPage.start + 1}${planPage.end > planPage.start + 1 ? `–${planPage.end}` : ""}`
             : `${entry.ref} · ${translations.find((t) => t.id === version)?.[locale === "en" ? "labelEn" : "labelZh"] ?? ""}`}
           scale={scale}
         />
@@ -561,7 +561,7 @@ export function TvScreen({ videos, translations }: { videos: Video[]; translatio
               <li key={l}><button type="button" onClick={() => runAction(l.startsWith("↑") ? "ArrowUp" : l.startsWith("←") ? "ArrowRight" : l[0])} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", padding: "0.5vh 0", cursor: "pointer", textShadow: "inherit" }}>{l === "8 今日读经" && planLoading ? copy("8 同步进度中…", "8 Syncing…") : copy(l, LEGEND_EN[index])}</button></li>
             ))}
             </ul>
-            {planView ? <div><button onClick={() => setPlanView((p) => p ? { ...p, cur: Math.max(0, planPage.start - 1) } : p)}>{copy("上一页经文", "Previous passage")}</button> <button onClick={() => setPlanView((p) => p ? { ...p, cur: Math.min(p.verses.length - 1, planPage.end) } : p)}>{copy("下一页经文", "Next passage")}</button></div> : null}
+            {planView && !showParchment ? <div><button onClick={() => setPlanView((p) => p ? { ...p, cur: Math.max(0, planPage.start - 1) } : p)}>{copy("上一页经文", "Previous passage")}</button> <button onClick={() => setPlanView((p) => p ? { ...p, cur: Math.min(p.verses.length - 1, planPage.end) } : p)}>{copy("下一页经文", "Next passage")}</button></div> : null}
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6vh 2.4vw", marginTop: "0.6vh", overflowWrap: "anywhere" }}>
             <span>{user ? <button type="button" onClick={() => void logout().catch(() => say("退出失败，请重试"))} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", cursor: "pointer" }}>已登录 · {user.name || "我的账号"}（退出）</button> : <a href="/login?next=/tv" style={{ color: "inherit" }}>{copy("登录", "Sign in")}</a>}</span>
             <a href="/tv-check.html" style={{ color: "inherit" }}>{copy("检查页", "Diagnostics")}</a>

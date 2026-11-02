@@ -66,7 +66,27 @@
 
 /* Reuse the reader's parchment canvas with ink instead of video-overlay shadows. */
 .parchment {
+  top: 5vh;
+  transform: none;
   text-shadow: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.parchment .reference {
+  order: -1;
+  margin: 0 0 2vh;
+}
+
+.parchment .paragraph {
+  font-size: calc(3.4vh * var(--lyric-scale, 1));
+  line-height: 1.65;
+  max-height: 76vh;
+  scrollbar-width: thin;
+}
+
+.parchment.withControls .paragraph {
+  max-height: 50vh;
 }
 
 .parchment .current,

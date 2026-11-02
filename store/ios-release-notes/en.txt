@@ -1,3 +1,1 @@
-• Swipe up or down on the home screen to change the nature scene
-• New "More Apps" section on the Explore page with our other Bible apps
-• Stability improvements
+Choose System, Light, or Dark appearance from the user menu. Your choice is remembered across launches. Improved dark appearance for reading, menus, sheets, and playback controls.

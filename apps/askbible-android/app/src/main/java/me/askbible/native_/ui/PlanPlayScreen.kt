@@ -80,7 +80,7 @@ fun PlanPlayScreen(
     bookLabel: (BookRef) -> String = { it.name(AppLocale.current) },
     onConfirmDay: () -> Unit,
     onStageSet: () -> Unit,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     /** 习惯统计里的已读日（云端同步下来的也在）；月历标黄 = 它 ∪ 播放页点听日（RN habitCompletedDates） */
     habitDates: Set<String> = emptySet(),
     /** 每日灵修卡片（D-7：入口只在计划页；只在中文界面，壳里决定 show） */
@@ -226,12 +226,12 @@ fun PlanPlayScreen(
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         Text(locale.zh(PlanCopy.f("pages.read.ntDeepRepeatStageLabel", mapOf("n" to "${i + 1}"))), Modifier.width(58.dp),
-                             color = if (isCurrent) Color(0xFF8A5A00) else faint, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                             color = if (isCurrent) theme.readingAccent else faint, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                         Text(NtDeepRepeat.stageRange(seg), Modifier.weight(1f), color = ink, fontSize = 16.sp,
                              fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Normal)
                         if (isCurrent) {
                             Text(locale.zh(PlanCopy.f("pages.read.ntDeepRepeatStageCurrent", mapOf("day" to "${s.dayInSegment}", "total" to "${s.segmentDayTarget}"))),
-                                 color = Color(0xFF8A5A00), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                 color = theme.readingAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         } else if (done) {
                             Text(locale.zh(PlanCopy.t("pages.read.ntDeepRepeatStageDone")), color = faint, fontSize = 12.sp)
                         }
@@ -271,7 +271,7 @@ fun PlanMonthCalendar(
     dayCount: Int?,
     viewAhead: Int,
     listened: Set<String>,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     onSelectAhead: (Int) -> Unit,
 ) {
     val today = LocalDate.now()

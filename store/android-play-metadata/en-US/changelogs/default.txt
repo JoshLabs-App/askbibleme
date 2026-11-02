@@ -1,3 +1,1 @@
-Version 1.0.35
-• Fixed Home golden verse sometimes starting two sounds at once on Android
-• Background music gently lowers while a golden verse is playing
+Choose System, Light, or Dark appearance from the user menu. Your choice is remembered across launches. Improved dark appearance for reading, menus, sheets, and playback controls.

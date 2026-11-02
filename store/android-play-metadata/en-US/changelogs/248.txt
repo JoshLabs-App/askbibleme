@@ -1,4 +1,4 @@
-Version 1.0.51
-• Swipe up or down on the home screen to change the nature scene
-• New "More Apps" section on the Explore page with our other Bible apps
-• Stability improvements
+A clearer reading experience in Dark Mode.
+• Redesigned Explore and Reference entry cards with crisp icons.
+• Improved contrast for text, headings, quotations, links, and the book catalog.
+• Cards now stack vertically at larger reading sizes.

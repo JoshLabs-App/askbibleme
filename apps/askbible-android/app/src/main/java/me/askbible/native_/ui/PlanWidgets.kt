@@ -90,7 +90,7 @@ fun planTrackStyle(id: String): Pair<String, Color> = when (id) {
 
 /** 子页左上返回键（RN ShellSystemBackButton），与 iOS 的 PlanBackButton 对等 */
 @Composable
-fun PlanBackButton(onBack: () -> Unit, theme: Parchment = Parchment.light) {
+fun PlanBackButton(onBack: () -> Unit, theme: Parchment = LocalParchment.current) {
     Box(Modifier.statusBarsPadding().padding(start = 12.dp, top = 8.dp).size(44.dp).clickableNoRipple(onBack), contentAlignment = Alignment.Center) {
         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = theme.ink.toColor(), modifier = Modifier.size(26.dp))
     }
@@ -98,7 +98,7 @@ fun PlanBackButton(onBack: () -> Unit, theme: Parchment = Parchment.light) {
 
 /** 羊皮卷子页的滚动容器：顶部留出返回键；独立页没有底栏，底部只留导航条 + 24 */
 @Composable
-fun PlanPageColumn(theme: Parchment = Parchment.light, content: LazyListScope.() -> Unit) {
+fun PlanPageColumn(theme: Parchment = LocalParchment.current, content: LazyListScope.() -> Unit) {
     val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     Box(Modifier.fillMaxSize()) {
         ParchmentBackground(theme = theme)
@@ -112,13 +112,13 @@ fun PlanPageColumn(theme: Parchment = Parchment.light, content: LazyListScope.()
 
 /** 下划线小链接 */
 @Composable
-fun PlanLink(text: String, theme: Parchment = Parchment.light, size: Int = 14, color: Color = theme.muted.toColor(), modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun PlanLink(text: String, theme: Parchment = LocalParchment.current, size: Int = 14, color: Color = theme.muted.toColor(), modifier: Modifier = Modifier, onClick: () -> Unit) {
     Text(text, modifier.clickableNoRipple(onClick), color = color, fontSize = size.sp, textDecoration = TextDecoration.Underline)
 }
 
 /** 要点胶囊：图标 16 + 文字 14/600 */
 @Composable
-fun PlanFactChip(fact: PlanFact, theme: Parchment = Parchment.light) {
+fun PlanFactChip(fact: PlanFact, theme: Parchment = LocalParchment.current) {
     Row(
         Modifier.clip(CircleShape).background(theme.surface.toColor().copy(alpha = 0.85f)).border(0.5.dp, theme.border.toColor(), CircleShape)
             .padding(horizontal = 12.dp, vertical = 7.dp),
@@ -132,7 +132,7 @@ fun PlanFactChip(fact: PlanFact, theme: Parchment = Parchment.light) {
 /** 要点 chips 一行，放不下就折行（卡片里三颗 chip 曾被挤得每颗都换行） */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun PlanFactRow(facts: List<PlanFact>, centered: Boolean = false, theme: Parchment = Parchment.light) {
+fun PlanFactRow(facts: List<PlanFact>, centered: Boolean = false, theme: Parchment = LocalParchment.current) {
     FlowRow(
         Modifier.fillMaxWidth(),
         horizontalArrangement = if (centered) Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally) else Arrangement.spacedBy(8.dp),
@@ -144,7 +144,7 @@ fun PlanFactRow(facts: List<PlanFact>, centered: Boolean = false, theme: Parchme
 
 /** 「怎么读」一行：金色圆底图标 + 16/500 短句 */
 @Composable
-fun PlanHowRow(fact: PlanFact, theme: Parchment = Parchment.light) {
+fun PlanHowRow(fact: PlanFact, theme: Parchment = LocalParchment.current) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Box(Modifier.size(36.dp).clip(CircleShape).background(Brand.logo.toColor().copy(alpha = 0.2f)), contentAlignment = Alignment.Center) {
             MaterialIcon(planIconGlyph(fact.icon), 20f, theme.ink.toColor())
@@ -155,7 +155,7 @@ fun PlanHowRow(fact: PlanFact, theme: Parchment = Parchment.light) {
 
 /** 今日读经卡：轨道图标 / 轨道名 13 / 书章 22/700 / 说明 14 / 可选进度条；整卡可点进章 */
 @Composable
-fun PlanTodayCard(track: String?, label: String, title: String, subtitle: String?, progress: Double? = null, theme: Parchment = Parchment.light, onClick: () -> Unit) {
+fun PlanTodayCard(track: String?, label: String, title: String, subtitle: String?, progress: Double? = null, theme: Parchment = LocalParchment.current, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color(0xB8FFFCF5)).border(0.5.dp, theme.border.toColor(), RoundedCornerShape(14.dp))
             .clickableNoRipple(onClick).padding(horizontal = 16.dp, vertical = 14.dp),
@@ -178,7 +178,7 @@ fun PlanTodayCard(track: String?, label: String, title: String, subtitle: String
 }
 
 @Composable
-fun PlanProgressBar(value: Double, modifier: Modifier = Modifier, theme: Parchment = Parchment.light) {
+fun PlanProgressBar(value: Double, modifier: Modifier = Modifier, theme: Parchment = LocalParchment.current) {
     Box(modifier.fillMaxWidth().height(5.dp).clip(CircleShape).background(theme.border.toColor())) {
         Box(Modifier.fillMaxWidth(value.coerceIn(0.0, 1.0).toFloat()).height(5.dp).clip(CircleShape).background(Brand.logo.toColor()))
     }
@@ -186,7 +186,7 @@ fun PlanProgressBar(value: Double, modifier: Modifier = Modifier, theme: Parchme
 
 /** 整宽主按钮 52 高：filled = 墨底米字；否则米底墨字（次要） */
 @Composable
-fun PlanPrimaryButton(title: String, filled: Boolean = true, theme: Parchment = Parchment.light, onClick: () -> Unit) {
+fun PlanPrimaryButton(title: String, filled: Boolean = true, theme: Parchment = LocalParchment.current, onClick: () -> Unit) {
     Box(
         Modifier.fillMaxWidth().height(52.dp).clip(RoundedCornerShape(14.dp))
             .background(if (filled) theme.ink.toColor() else theme.surface.toColor())
@@ -199,7 +199,7 @@ fun PlanPrimaryButton(title: String, filled: Boolean = true, theme: Parchment = 
 }
 
 @Composable
-fun PlanSectionHeader(title: String, hint: String? = null, theme: Parchment = Parchment.light) {
+fun PlanSectionHeader(title: String, hint: String? = null, theme: Parchment = LocalParchment.current) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(title, color = theme.ink.toColor(), fontSize = 20.sp, fontWeight = FontWeight.Bold)
         if (hint != null) Text(hint, color = theme.muted.toColor(), fontSize = 15.sp)
@@ -208,19 +208,19 @@ fun PlanSectionHeader(title: String, hint: String? = null, theme: Parchment = Pa
 
 /** 「✓ 当前计划 · 第 N 天」金色胶囊 */
 @Composable
-fun PlanStatusPill(text: String) {
+fun PlanStatusPill(text: String, theme: Parchment) {
     Row(
         Modifier.clip(CircleShape).background(Brand.logo.toColor().copy(alpha = 0.26f)).padding(horizontal = 12.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        MaterialIcon(MI.CHECK_CIRCLE, 18f, Color(0xFF8A5A00))
-        Text(text, color = Color(0xFF5B3A00), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+        MaterialIcon(MI.CHECK_CIRCLE, 18f, theme.readingAccent)
+        Text(text, color = theme.readingAccent, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
     }
 }
 
 /** 单选格（深读节奏 / 起算方式）：标题 18/700 + 副题 13，选中金底金边 */
 @Composable
-fun RowScope.PlanChoiceTile(title: String, subtitle: String, on: Boolean, theme: Parchment = Parchment.light, onClick: () -> Unit) {
+fun RowScope.PlanChoiceTile(title: String, subtitle: String, on: Boolean, theme: Parchment = LocalParchment.current, onClick: () -> Unit) {
     Column(
         Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
             .background(if (on) Brand.logo.toColor().copy(alpha = 0.28f) else theme.surface.toColor().copy(alpha = 0.6f))
@@ -235,7 +235,7 @@ fun RowScope.PlanChoiceTile(title: String, subtitle: String, on: Boolean, theme:
 
 /** 第几天步进器：44 触控键 + 24/700 数字 */
 @Composable
-fun PlanStepper(value: Int, min: Int, max: Int, theme: Parchment = Parchment.light, onChange: (Int) -> Unit) {
+fun PlanStepper(value: Int, min: Int, max: Int, theme: Parchment = LocalParchment.current, onChange: (Int) -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         PlanStepButton(MI.REMOVE, value > min, theme) { onChange(maxOf(min, value - 1)) }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -258,7 +258,7 @@ private fun PlanStepButton(glyph: String, enabled: Boolean, theme: Parchment, on
 
 /** 展开 / 收起（「了解更多」「展开全部 52 阶」） */
 @Composable
-fun PlanDisclosure(openTitle: String, closeTitle: String, theme: Parchment = Parchment.light, content: @Composable () -> Unit) {
+fun PlanDisclosure(openTitle: String, closeTitle: String, theme: Parchment = LocalParchment.current, content: @Composable () -> Unit) {
     var open by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(Modifier.heightIn(min = 44.dp).clickableNoRipple { open = !open }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -271,7 +271,7 @@ fun PlanDisclosure(openTitle: String, closeTitle: String, theme: Parchment = Par
 
 /** 跳到另一条路线的卡：标题 17/600 + 一句 14 + 右箭头 */
 @Composable
-fun PlanLinkCard(title: String, lead: String, theme: Parchment = Parchment.light, onClick: () -> Unit) {
+fun PlanLinkCard(title: String, lead: String, theme: Parchment = LocalParchment.current, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(theme.surface.toColor().copy(alpha = 0.6f))
             .border(0.5.dp, theme.border.toColor(), RoundedCornerShape(14.dp)).clickableNoRipple(onClick).padding(16.dp),

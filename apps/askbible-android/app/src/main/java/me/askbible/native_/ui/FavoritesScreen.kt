@@ -49,7 +49,7 @@ fun FavoritesScreen(
     size: ReadSize,
     onBack: () -> Unit,
     onOpen: (VerseBookmark) -> Unit,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     locale: AppLocale = AppLocale.ZH_CN,
 ) {
     val insets = WindowInsets.systemBars.asPaddingValues()

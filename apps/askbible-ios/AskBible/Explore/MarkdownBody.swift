@@ -77,10 +77,8 @@ struct MarkdownBody: View {
     var size: ReadSize = .default
     let theme: Parchment
 
-    static let accent = Color(parchment: 0xA56A2D)
+    static let accent = Color(parchment: 0x784B1E)
     private static let quoteInk = Color(parchment: 0x8C562A)
-    /// RN postReadingTheme.mdBody：rgba(28,20,16,.82)（探索文章与读后两版同一套正文色）
-    static let bodyInk = Color(red: 28 / 255, green: 20 / 255, blue: 16 / 255, opacity: 0.82)
 
     private var scale: CGFloat { max(0.8, min(2.8, size.metrics.verseFontSize / 16)) }
     private func sx(_ n: CGFloat) -> CGFloat { max(1, (n * scale * 10).rounded() / 10) }
@@ -112,13 +110,13 @@ struct MarkdownBody: View {
                     .padding(.top, sx(22)).padding(.bottom, sx(10))
             }
         case .paragraph(let text):
-            inline(text, size: sx(16), weight: .regular, color: Self.bodyInk, line: sx(30))
+            inline(text, size: sx(16), weight: .regular, color: theme.inkSoft, line: sx(30))
                 .padding(.bottom, sx(18))
         case .bullets(let items):
             // RN bullet_list_icon 宽 0：条目不带圆点，逐条成段（间距 10）
             VStack(alignment: .leading, spacing: sx(10)) {
                 ForEach(items.indices, id: \.self) { i in
-                    inline(items[i], size: sx(16), weight: .regular, color: Self.bodyInk, line: sx(30))
+                    inline(items[i], size: sx(16), weight: .regular, color: theme.inkSoft, line: sx(30))
                 }
             }
             .padding(.top, sx(6)).padding(.bottom, sx(18))
@@ -131,7 +129,7 @@ struct MarkdownBody: View {
                             .foregroundStyle(Self.accent)
                             .lineSpacing(max(0, sx(30) - sx(15)))
                             .frame(minWidth: sx(18), alignment: .leading)
-                        inline(items[i], size: sx(16), weight: .regular, color: Self.bodyInk, line: sx(30))
+                        inline(items[i], size: sx(16), weight: .regular, color: theme.inkSoft, line: sx(30))
                     }
                 }
             }

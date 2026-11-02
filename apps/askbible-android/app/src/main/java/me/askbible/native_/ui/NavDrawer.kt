@@ -7,6 +7,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -73,7 +75,7 @@ fun NavDrawer(
     /** 删除账户（只在登录后出；二次确认在壳里弹） */
     onDeleteAccount: () -> Unit = {},
     onClose: () -> Unit,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
 ) {
     AnimatedVisibility(open, enter = fadeIn(), exit = fadeOut()) {
         Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.42f)).clickableNoRipple(onClose))
@@ -114,6 +116,16 @@ fun NavDrawer(
                                 }
                             }
                         }
+                        val appearance = LocalAppearance.current
+                        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+                            Text(SiteCopy.t("native.appearance", locale), color = theme.ink.toColor(), fontSize = 16.sp)
+                            Spacer(Modifier.height(8.dp))
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                for ((mode, key) in listOf("system" to "native.followSystem", "light" to "native.appearanceLight", "dark" to "native.appearanceDark")) {
+                                    DrawerLocaleChip(SiteCopy.t(key, locale), appearance.value == mode, theme) { appearance.select(mode) }
+                                }
+                            }
+                        }
                         DrawerRow(SiteCopy.t("native.bibleVersion", locale), "$translationLabel ›", theme, onOpenTranslations)
                         if (userName != null) {
                             DrawerRow(SiteCopy.t("native.signedIn", locale), userName, theme, onClose)
@@ -133,11 +145,11 @@ fun NavDrawer(
                                      color = theme.ink.toColor(), fontSize = 16.sp, maxLines = 1)
                                 Box(
                                     Modifier.clip(RoundedCornerShape(999.dp))
-                                        .background(if (reminderEnabled) Color(0x38FFB101) else Color(0x80FFF8EB))
+                                        .background(if (reminderEnabled) Color(0x38FFB101) else theme.surfaceSolid.toColor())
                                         .padding(horizontal = 8.dp, vertical = 3.dp),
                                 ) {
                                     Text(SiteCopy.t(if (reminderEnabled) "native.reminderOn" else "native.reminderOff", locale),
-                                         color = if (reminderEnabled) Color(0xFF784B1E) else theme.ink.toColor().copy(alpha = 0.5f),
+                                         color = if (reminderEnabled) theme.readingAccent else theme.ink.toColor().copy(alpha = 0.5f),
                                          fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                                 }
                             }
@@ -173,14 +185,14 @@ private fun androidx.compose.foundation.layout.RowScope.DrawerLocaleChip(
     label: String, on: Boolean, theme: Parchment, onClick: () -> Unit,
 ) {
     Box(
-        Modifier.weight(1f).heightIn(min = 32.dp).clip(RoundedCornerShape(999.dp))
+        Modifier.weight(1f).heightIn(min = 44.dp).clip(RoundedCornerShape(999.dp))
             .background(if (on) Color(0x2EFFB101) else theme.surface.toColor().copy(alpha = 0.45f))
             .border(if (on) 1.dp else 0.5.dp,
                     if (on) Color(0xBFFFB101) else theme.border.toColor(), RoundedCornerShape(999.dp))
-            .clickableNoRipple(onClick),
+            .selectable(selected = on, role = Role.RadioButton, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = if (on) Color(0xFF784B1E) else theme.ink.toColor().copy(alpha = 0.72f),
+        Text(label, color = if (on) theme.readingAccent else theme.ink.toColor().copy(alpha = 0.72f),
              fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1,
              overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
     }

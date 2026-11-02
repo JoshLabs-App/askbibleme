@@ -47,3 +47,7 @@ fun rememberAssetThumb(name: String, maxDim: Int = 256): ImageBitmap? {
     val context = LocalContext.current
     return remember(name, maxDim) { AssetImages.loadThumb(context, name, maxDim) }
 }
+
+/** Reading links and small accent labels need full contrast on both paper surfaces. */
+val me.askbible.native_.data.Parchment.readingAccent: Color
+    get() = if (isDark) Color(0xFFD9B48A) else Color(0xFF784B1E)

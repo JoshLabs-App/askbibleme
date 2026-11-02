@@ -20,11 +20,6 @@ struct PostReadingEditions: View {
     private var scale: CGFloat { max(0.8, min(2.8, size.metrics.verseFontSize / 16)) }
     private func sx(_ n: CGFloat) -> CGFloat { (n * scale * 10).rounded() / 10 }
 
-    private static let lead = Color(red: 120 / 255, green: 75 / 255, blue: 30 / 255, opacity: 0.9)
-    private static let hint = Color(red: 140 / 255, green: 90 / 255, blue: 42 / 255, opacity: 0.92)
-    private static let navInk = Color(parchment: 0x8C5A2A)
-    private static let paper = Color(parchment: 0xF2E4CF)
-
     var body: some View {
         VStack(spacing: 0) {
             heading
@@ -46,15 +41,15 @@ struct PostReadingEditions: View {
                 .padding(.bottom, 10)
             Text(SiteCopy.t("pages.read.postReadingEditionsLead"))
                 .font(.system(size: sx(13))).lineSpacing(max(0, sx(21) - sx(13)))
-                .foregroundStyle(Self.lead).multilineTextAlignment(.center)
+                .foregroundStyle(theme.muted).multilineTextAlignment(.center)
                 .padding(.horizontal, 18).padding(.bottom, 10)
             Text(SiteCopy.t("pages.read.postReadingEditionsTapHint"))
                 .font(.system(size: sx(12), weight: .medium)).tracking(0.2)
                 .lineSpacing(max(0, sx(18) - sx(12)))
-                .foregroundStyle(Self.hint).multilineTextAlignment(.center)
+                .foregroundStyle(theme.muted).multilineTextAlignment(.center)
                 .padding(.bottom, 8)
             GeometryReader { geo in
-                Rectangle().fill(Color(red: 72 / 255, green: 52 / 255, blue: 34 / 255, opacity: 0.28))
+                Rectangle().fill(theme.border)
                     .frame(width: min(224, geo.size.width * 0.56), height: 1 / UIScreen.main.scale)
                     .frame(maxWidth: .infinity)
             }
@@ -63,9 +58,10 @@ struct PostReadingEditions: View {
         .padding(.bottom, 20)
     }
 
-    /// bookSpread：两页各占一半，外圈圆角 12；页面本身透明（羊皮透出）
+    /// Theme-aware icon cards replace the transparent artwork.
     private var bookSpread: some View {
-        HStack(alignment: .top, spacing: 0) {
+        let layout = scale > 1.5 ? AnyLayout(VStackLayout(spacing: 12)) : AnyLayout(HStackLayout(alignment: .top, spacing: 12))
+        return layout {
             page(.guide)
             page(.info)
         }
@@ -74,33 +70,32 @@ struct PostReadingEditions: View {
 
     private func page(_ v: InfoEditionVariant) -> some View {
         let isActive = active == v
-        let art = v == .guide ? "post-reading-discover" : "post-reading-consult"
         let title = SiteCopy.t(v == .guide ? "pages.read.postReadingEditionGuideTitle" : "pages.read.postReadingEditionInfoTitle")
         let blurb = SiteCopy.t(v == .guide ? "pages.read.postReadingEditionGuideBlurb" : "pages.read.postReadingEditionInfoBlurb")
         return Button {
             if active != v { active = v }
         } label: {
             VStack(spacing: 0) {
-                if let img = BundleImage.load(art, ext: "png") {
-                    Image(uiImage: img).resizable().aspectRatio(1, contentMode: .fill).opacity(0.8)
-                } else {
-                    Color.clear.aspectRatio(1, contentMode: .fill)
-                }
+                Image(systemName: v == .guide ? "safari" : "books.vertical")
+                    .font(.system(size: 28, weight: .regular))
+                    .foregroundStyle(theme.ink)
+                    .frame(height: 64)
+                    .accessibilityHidden(true)
                 VStack(spacing: 7) {
                     Text(title)
                         .font(.system(size: sx(17), weight: .semibold)).tracking(0.6)
                         .lineSpacing(max(0, sx(24) - sx(17)))
-                        .foregroundStyle(MarkdownBody.accent).multilineTextAlignment(.center)
+                        .foregroundStyle(theme.ink).multilineTextAlignment(.center)
                     Text(blurb)
                         .font(.system(size: sx(11))).lineSpacing(max(0, sx(17) - sx(11)))
-                        .foregroundStyle(Color(red: 120 / 255, green: 75 / 255, blue: 30 / 255, opacity: 0.86))
-                        .multilineTextAlignment(.center).frame(maxWidth: 168)
+                        .foregroundStyle(theme.muted)
+                        .multilineTextAlignment(.center).frame(maxWidth: sx(168))
                     HStack(spacing: 2) {
                         Text(SiteCopy.t(isActive ? "pages.read.postReadingEditionSelected" : "pages.read.postReadingEditionTapAction"))
-                            .font(.system(size: 11, weight: .medium)).tracking(0.2)
-                            .foregroundStyle(Self.hint)
+                            .font(.system(size: sx(11), weight: .medium)).tracking(0.2)
+                            .foregroundStyle(theme.muted)
                         MaterialIcon(glyph: isActive ? MI.checkCircle : MI.chevronRight, size: 14,
-                                     color: isActive ? Color(parchment: 0x7A633A) : Self.navInk)
+                                     color: theme.ink)
                     }
                     .frame(minHeight: 18).padding(.top, 2)
                 }
@@ -110,6 +105,9 @@ struct PostReadingEditions: View {
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity)
+        .background(theme.surfaceSolid, in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(isActive ? theme.ink : theme.border, lineWidth: isActive ? 1.5 : 1))
+        .accessibilityAddTraits(isActive ? .isSelected : [])
     }
 
     /// 底部「上一章 / 回到顶部 / 下一章」（上下各 50）
@@ -119,9 +117,9 @@ struct PostReadingEditions: View {
                 if let p = prev {
                     Button { onNavigate(p.bookId, p.chapter) } label: {
                         HStack(spacing: 1) {
-                            MaterialIcon(glyph: MI.chevronLeft, size: 16, color: Self.navInk)
+                            MaterialIcon(glyph: MI.chevronLeft, size: 16, color: theme.ink)
                             Text(SiteCopy.t("pages.read.chapterEndNavPrev")).font(.system(size: 13, weight: .medium)).tracking(0.1)
-                                .foregroundStyle(Color(red: 140 / 255, green: 90 / 255, blue: 42 / 255, opacity: 0.88))
+                                .foregroundStyle(theme.muted)
                         }
                         .padding(6)
                     }
@@ -131,7 +129,7 @@ struct PostReadingEditions: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             Button(action: onBackToTop) {
                 Text(SiteCopy.t("pages.read.postReadingBackToTop")).font(.system(size: sx(14), weight: .medium)).tracking(0.2)
-                    .foregroundStyle(Color(red: 140 / 255, green: 90 / 255, blue: 42 / 255, opacity: 0.84))
+                    .foregroundStyle(theme.muted)
                     .padding(.horizontal, 8).padding(.vertical, 6)
             }
             .buttonStyle(.plain)
@@ -140,8 +138,8 @@ struct PostReadingEditions: View {
                     Button { onNavigate(n.bookId, n.chapter) } label: {
                         HStack(spacing: 1) {
                             Text(SiteCopy.t("pages.read.chapterChromeNext")).font(.system(size: 13, weight: .medium)).tracking(0.1)
-                                .foregroundStyle(Color(red: 140 / 255, green: 90 / 255, blue: 42 / 255, opacity: 0.88))
-                            MaterialIcon(glyph: MI.chevronRight, size: 16, color: Self.navInk)
+                                .foregroundStyle(theme.muted)
+                            MaterialIcon(glyph: MI.chevronRight, size: 16, color: theme.ink)
                         }
                         .padding(6)
                     }
@@ -226,7 +224,7 @@ private struct EditionBlock: View {
                             Text(h)
                                 .font(.system(size: sx(24), weight: .bold)).tracking(0.5)
                                 .lineSpacing(max(0, sx(36) - sx(24)))
-                                .foregroundStyle(MarkdownBody.accent).multilineTextAlignment(.center)
+                                .foregroundStyle(theme.ink).multilineTextAlignment(.center)
                                 .frame(maxWidth: .infinity)
                                 .padding(.top, sx(30)).padding(.bottom, 22)
                         }

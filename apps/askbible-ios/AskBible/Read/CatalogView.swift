@@ -72,14 +72,14 @@ struct CatalogView: View {
             ForEach(groups) { group in
                 Text(group.title(locale))
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(group.color)
+                    .foregroundStyle(theme.isDark ? theme.ink : group.color)
                     .padding(.top, 7)
                     .padding(.bottom, 3)
 
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(group.books) { book in
                         CatalogBookRow(
-                            book: book, color: group.color, theme: theme,
+                            book: book, color: theme.isDark ? theme.ink : group.color, theme: theme,
                             label: bookLabel(book),
                             fontSize: size.metrics.catalogBookSize * 0.85,
                             // RN 的 catalogBookLine：行高跟着字号档走，放大字号时行距也开，手指更好点

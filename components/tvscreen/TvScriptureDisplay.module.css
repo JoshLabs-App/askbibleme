@@ -63,3 +63,18 @@
 @media (prefers-reduced-motion: reduce) {
   .lines { animation: none; }
 }
+
+/* Reuse the reader's parchment canvas with ink instead of video-overlay shadows. */
+.parchment {
+  text-shadow: none;
+}
+
+.parchment .current,
+.parchment .reference {
+  color: #3f3024;
+}
+
+.parchment .paragraph [aria-current="true"] {
+  color: #703d18;
+  background-color: rgba(169, 122, 57, .18);
+}

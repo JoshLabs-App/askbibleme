@@ -2,20 +2,21 @@ import type { CSSProperties } from "react";
 import styles from "./TvScriptureDisplay.module.css";
 
 /** TovCore typography for centered golden verses and stable reading paragraphs. */
-export function TvScriptureDisplay({ text, passage, reference, scale, label, controlsVisible }: {
+export function TvScriptureDisplay({ text, passage, reference, scale, label, controlsVisible, parchment }: {
   text: string;
   passage?: { verses: string[]; start: number; current: number };
   reference: string;
   scale: number;
   label: string;
   controlsVisible?: boolean;
+  parchment?: boolean;
 }) {
   const content = passage ? passage.verses.join(" ") : text;
   const lengthScale = content.length > 240 ? 0.72 : content.length > 120 ? 0.86 : 1;
   return (
     <section
       data-tv-scripture
-      className={`${styles.display} ${passage && controlsVisible ? styles.withControls : ""}`}
+      className={`${styles.display} ${passage && controlsVisible ? styles.withControls : ""} ${parchment ? styles.parchment : ""}`}
       aria-label={label}
       style={{ "--lyric-scale": scale * lengthScale, "--reference-scale": scale } as CSSProperties}
     >

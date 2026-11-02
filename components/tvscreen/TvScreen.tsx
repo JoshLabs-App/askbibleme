@@ -169,7 +169,11 @@ export function TvScreen({ videos, translations }: { videos: Video[]; translatio
   const showLegend = useCallback(() => {
     setLegendOn(true);
     if (legendTimerRef.current != null) window.clearTimeout(legendTimerRef.current);
-    legendTimerRef.current = window.setTimeout(() => { if (!document.activeElement?.closest("[data-tv-controls]")) setLegendOn(false); }, LEGEND_MS);
+    legendTimerRef.current = window.setTimeout(() => {
+      const focused = document.activeElement;
+      if (focused instanceof HTMLElement && focused.closest("[data-tv-controls]")) focused.blur();
+      setLegendOn(false);
+    }, LEGEND_MS);
   }, []);
 
   const playAlbum = useCallback(
@@ -347,7 +351,9 @@ export function TvScreen({ videos, translations }: { videos: Video[]; translatio
 
   const onPlanEnded = useCallback(() => {
     const st = planRef.current;
-    if (st) playPlanChapter(st.i + 1);
+    if (!st?.chapters.length) return;
+    resumeAtRef.current = 0;
+    void playPlanChapter((st.i + 1) % st.chapters.length);
   }, [playPlanChapter]);
 
   const playVerseAudio = useCallback(() => {
@@ -468,6 +474,8 @@ export function TvScreen({ videos, translations }: { videos: Video[]; translatio
       onPointerMove={showLegend}
       onClick={showLegend}
       onFocusCapture={showLegend}
+      onKeyDownCapture={showLegend}
+      onChangeCapture={showLegend}
       style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "linear-gradient(160deg, #3b6f8f 0%, #5b8a6a 55%, #b0884a 100%)", overflow: "hidden", color: "#fff" }}
     >
       {video?.posterSrc ? (
@@ -475,12 +483,6 @@ export function TvScreen({ videos, translations }: { videos: Video[]; translatio
         // eslint-disable-next-line @next/next/no-img-element
         <img src={video.posterSrc} alt="" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" }} />
       ) : null}
-      <div data-tv-controls style={{ position: "absolute", top: "2vh", left: "3vw", right: "3vw", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "1vw", padding: "1vh 1vw", borderRadius: 12, background: "rgba(0,0,0,.55)", fontSize: "min(1.5vw, 2.5vh)" }}>
-        <label>{copy("语言", "Language")} <select aria-label={copy("语言", "Language")} value={locale} onChange={(e) => changeLanguage(e.target.value as AppLocale)} style={{ color: "white", background: "#26332c", font: "inherit" }}><option value="zh-CN">简体中文</option><option value="zh-TW">繁體中文</option><option value="en">English</option></select></label>
-        <label>{copy("圣经版本", "Bible version")} <select aria-label={copy("圣经版本", "Bible version")} value={version} onChange={(e) => changeVersion(e.target.value)} style={{ color: "white", background: "#26332c", font: "inherit", maxWidth: "36vw" }}>{translations.filter((t) => locale === "en" ? t.language.startsWith("en") : t.language.startsWith("zh")).map((t) => <option key={t.id} value={t.id}>{locale === "en" ? t.labelEn : locale === "zh-TW" ? toZhTwText(t.labelZh) : t.labelZh} · {translationSupportsChapterAudio(t.id) ? copy("可朗读", "Audio") : copy("不能朗读", "No audio")}</option>)}</select></label>
-        <label>{copy("字号", "Text size")} <select aria-label={copy("字号", "Text size")} value={fontStep} onChange={(e) => { const step = Number(e.target.value); setFontStep(step); saveSettings(version, step); }} style={{ color: "white", background: "#26332c", font: "inherit" }}>{[copy("小", "Small"), copy("标准", "Standard"), copy("大", "Large"), copy("特大", "Extra large")].map((label, i) => <option key={i} value={i}>{label}</option>)}</select></label>
-        <span role="status">{!translationSupportsChapterAudio(version) ? noAudio : !goldenVersion ? copy("整章可朗读 · 金句暂无音频", "Chapter audio available · No verse audio") : copy("整章与金句均可朗读", "Chapter and verse audio available")}</span>
-      </div>
       {entry ? (
         <TvScriptureDisplay
           label={copy("经文", "Passage")}
@@ -499,20 +501,26 @@ export function TvScreen({ videos, translations }: { videos: Video[]; translatio
             style={{
               margin: 0,
               padding: "1.6vh 2vw",
-              width: "max-content",
-              maxWidth: "94vw",
+              width: "94vw",
+              boxSizing: "border-box",
               fontSize: "min(1.3vw, 2.2vh)",
               background: "rgba(0,0,0,0.45)",
               borderRadius: 16,
             }}
           >
-            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gridTemplateColumns: "repeat(3, auto)", columnGap: "2.4vw", rowGap: "0.6vh" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "1vh 1.6vw", marginBottom: "1.2vh" }}>
+              <label>{copy("语言", "Language")} <select aria-label={copy("语言", "Language")} value={locale} onChange={(e) => changeLanguage(e.target.value as AppLocale)} style={{ color: "white", background: "#26332c", font: "inherit" }}><option value="zh-CN">简体中文</option><option value="zh-TW">繁體中文</option><option value="en">English</option></select></label>
+              <label>{copy("圣经版本", "Bible version")} <select aria-label={copy("圣经版本", "Bible version")} value={version} onChange={(e) => changeVersion(e.target.value)} style={{ color: "white", background: "#26332c", font: "inherit", maxWidth: "36vw" }}>{translations.filter((t) => locale === "en" ? t.language.startsWith("en") : t.language.startsWith("zh")).map((t) => <option key={t.id} value={t.id}>{locale === "en" ? t.labelEn : locale === "zh-TW" ? toZhTwText(t.labelZh) : t.labelZh} · {translationSupportsChapterAudio(t.id) ? copy("可朗读", "Audio") : copy("不能朗读", "No audio")}</option>)}</select></label>
+              <label>{copy("字号", "Text size")} <select aria-label={copy("字号", "Text size")} value={fontStep} onChange={(e) => { const step = Number(e.target.value); setFontStep(step); saveSettings(version, step); }} style={{ color: "white", background: "#26332c", font: "inherit" }}>{[copy("小", "Small"), copy("标准", "Standard"), copy("大", "Large"), copy("特大", "Extra large")].map((label, i) => <option key={i} value={i}>{label}</option>)}</select></label>
+              <span role="status" style={{ opacity: 0.8 }}>{!translationSupportsChapterAudio(version) ? noAudio : !goldenVersion ? copy("整章可朗读 · 金句暂无音频", "Chapter audio available · No verse audio") : copy("整章与金句均可朗读", "Chapter and verse audio available")}</span>
+            </div>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gridTemplateColumns: "repeat(6, minmax(0, 1fr))", columnGap: "2.4vw", rowGap: "0.6vh" }}>
             {LEGEND.map((l, index) => (
               <li key={l}><button type="button" onClick={() => runAction(l.startsWith("↑") ? "ArrowUp" : l.startsWith("←") ? "ArrowRight" : l[0])} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", padding: "0.5vh 0", cursor: "pointer", textShadow: "inherit" }}>{l === "8 今日读经" && planLoading ? copy("8 同步进度中…", "8 Syncing…") : copy(l, LEGEND_EN[index])}</button></li>
             ))}
             </ul>
             {planView ? <div><button onClick={() => setPlanView((p) => p ? { ...p, cur: Math.max(0, p.cur - 1) } : p)}>{copy("上一节经文", "Previous verse")}</button> <button onClick={() => setPlanView((p) => p ? { ...p, cur: Math.min(p.verses.length - 1, p.cur + 1) } : p)}>{copy("下一节经文", "Next verse")}</button></div> : null}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6vh 2.4vw", marginTop: "0.6vh", width: 0, minWidth: "100%", overflowWrap: "anywhere" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6vh 2.4vw", marginTop: "0.6vh", overflowWrap: "anywhere" }}>
             <span>{user ? <button type="button" onClick={() => void logout().catch(() => say("退出失败，请重试"))} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", cursor: "pointer" }}>已登录 · {user.name || "我的账号"}（退出）</button> : <a href="/login?next=/tv" style={{ color: "inherit" }}>{copy("登录", "Sign in")}</a>}</span>
             <a href="/tv-check.html" style={{ color: "inherit" }}>{copy("检查页", "Diagnostics")}</a>
             </div>

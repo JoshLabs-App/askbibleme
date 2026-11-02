@@ -66,7 +66,7 @@ fun CatalogScreen(
     onOpenFavorites: () -> Unit = {},
     /** 右侧竖排最后一个「历史」：回到上次读到的那一章；没有记录时按钮变淡且点不动 */
     onLastRead: (() -> Unit)? = null,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
 ) {
     Box(Modifier.fillMaxSize()) {
         ParchmentBackground(theme = theme)

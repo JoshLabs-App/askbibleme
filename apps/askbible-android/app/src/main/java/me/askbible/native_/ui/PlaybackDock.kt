@@ -62,7 +62,7 @@ fun PlaybackDock(
     audio: ChapterAudioPlayer,
     available: Boolean,
     modifier: Modifier = Modifier,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     onSearch: () -> Unit = {},
     onSkipNext: () -> Unit = {},
     /** 播放键的自定义动作（计划播放页：没建池时从选中章起播）；null 走 audio.toggle() */

@@ -80,7 +80,7 @@ fun PlanPlayScreen(
     bookLabel: (BookRef) -> String = { it.name(AppLocale.current) },
     onConfirmDay: () -> Unit,
     onStageSet: () -> Unit,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     /** 习惯统计里的已读日（云端同步下来的也在）；月历标黄 = 它 ∪ 播放页点听日（RN habitCompletedDates） */
     habitDates: Set<String> = emptySet(),
     /** 每日灵修卡片（D-7：入口只在计划页；只在中文界面，壳里决定 show） */
@@ -271,7 +271,7 @@ fun PlanMonthCalendar(
     dayCount: Int?,
     viewAhead: Int,
     listened: Set<String>,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     onSelectAhead: (Int) -> Unit,
 ) {
     val today = LocalDate.now()

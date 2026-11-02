@@ -60,7 +60,7 @@ import java.util.Locale
 fun PlanDetailScreen(
     store: ReadingPlanStore, planId: String,
     onBack: () -> Unit, onOpenPlan: (String) -> Unit, onOpenChapter: (PlanPointer) -> Unit, onGoHome: () -> Unit,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
 ) {
     val plan = ReadingPlanCatalog.plan(planId)
     val isTriple = planId == ReadingPlanCatalog.TRIPLE_LOOP_ID

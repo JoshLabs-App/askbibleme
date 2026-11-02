@@ -38,7 +38,7 @@ fun ChapterPickerSheet(
     bookLabel: (BookRef) -> String = { it.name(AppLocale.current) },
     onPick: (Int) -> Unit,
     onClose: () -> Unit,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     locale: AppLocale = AppLocale.ZH_CN,
 ) {
     val count = if (chapterCount > 0) chapterCount else book.chapterCount

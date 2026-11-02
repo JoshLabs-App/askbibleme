@@ -599,5 +599,17 @@
   "native.planLegendViewing": {
     "zh": "正在看",
     "en": "Viewing"
+  },
+  "native.appearance": {
+    "zh": "外观",
+    "en": "Appearance"
+  },
+  "native.appearanceLight": {
+    "zh": "浅色",
+    "en": "Light"
+  },
+  "native.appearanceDark": {
+    "zh": "深色",
+    "en": "Dark"
   }
 }

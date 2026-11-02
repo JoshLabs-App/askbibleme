@@ -7,6 +7,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -73,7 +75,7 @@ fun NavDrawer(
     /** 删除账户（只在登录后出；二次确认在壳里弹） */
     onDeleteAccount: () -> Unit = {},
     onClose: () -> Unit,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
 ) {
     AnimatedVisibility(open, enter = fadeIn(), exit = fadeOut()) {
         Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.42f)).clickableNoRipple(onClose))
@@ -111,6 +113,16 @@ fun NavDrawer(
                                 DrawerLocaleChip(SiteCopy.t("native.followSystem", locale), localeOverride == null, theme) { onSetLocale(null) }
                                 for (l in listOf(AppLocale.ZH_CN, AppLocale.ZH_TW, AppLocale.EN)) {
                                     DrawerLocaleChip(l.settingLabel, localeOverride == l, theme) { onSetLocale(l) }
+                                }
+                            }
+                        }
+                        val appearance = LocalAppearance.current
+                        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+                            Text(SiteCopy.t("native.appearance", locale), color = theme.ink.toColor(), fontSize = 16.sp)
+                            Spacer(Modifier.height(8.dp))
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                for ((mode, key) in listOf("system" to "native.followSystem", "light" to "native.appearanceLight", "dark" to "native.appearanceDark")) {
+                                    DrawerLocaleChip(SiteCopy.t(key, locale), appearance.value == mode, theme) { appearance.select(mode) }
                                 }
                             }
                         }
@@ -173,11 +185,11 @@ private fun androidx.compose.foundation.layout.RowScope.DrawerLocaleChip(
     label: String, on: Boolean, theme: Parchment, onClick: () -> Unit,
 ) {
     Box(
-        Modifier.weight(1f).heightIn(min = 32.dp).clip(RoundedCornerShape(999.dp))
+        Modifier.weight(1f).heightIn(min = 44.dp).clip(RoundedCornerShape(999.dp))
             .background(if (on) Color(0x2EFFB101) else theme.surface.toColor().copy(alpha = 0.45f))
             .border(if (on) 1.dp else 0.5.dp,
                     if (on) Color(0xBFFFB101) else theme.border.toColor(), RoundedCornerShape(999.dp))
-            .clickableNoRipple(onClick),
+            .selectable(selected = on, role = Role.RadioButton, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(label, color = if (on) theme.readingAccent else theme.ink.toColor().copy(alpha = 0.72f),

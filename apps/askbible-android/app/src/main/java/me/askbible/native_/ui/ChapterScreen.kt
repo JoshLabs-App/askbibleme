@@ -111,7 +111,7 @@ fun ChapterScreen(
     onOpenSettings: () -> Unit,
     onSizeUp: () -> Unit,
     onSizeDown: () -> Unit,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     isPlaying: Boolean = false,
     /** 副译本对照：节号 → 对照文；空则不显示 */
     contrast: Map<Int, String> = emptyMap(),

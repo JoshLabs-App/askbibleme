@@ -1,4 +1,1 @@
-A clearer reading experience in Dark Mode.
-• Redesigned Explore and Reference entry cards with crisp icons.
-• Improved contrast for text, headings, quotations, links, and the book catalog.
-• Cards now stack vertically at larger reading sizes.
+Choose System, Light, or Dark appearance from the user menu. Your choice is remembered across launches. Improved dark appearance for reading, menus, sheets, and playback controls.

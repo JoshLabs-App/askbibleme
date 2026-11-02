@@ -72,7 +72,7 @@ object MigrateGate {
     }
 
     @Composable
-    fun Host(theme: Parchment = Parchment.light) {
+    fun Host(theme: Parchment = me.askbible.native_.ui.LocalParchment.current) {
         val context = LocalContext.current
         var cfg by remember { mutableStateOf<Config?>(null) }
         LaunchedEffect(Unit) { cfg = fetch(context) }

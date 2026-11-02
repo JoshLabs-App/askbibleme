@@ -1,7 +1,7 @@
 {
   "_note": "android_dir 相对于此文件所在目录（01AskBible/）",
   "app_name": "AskBible",
-  "version": "1.0.51",
+  "version": "1.0.52",
   "apk_prefix": "AskBible",
   "bucket": "askbible-media",
   "android_dir": "apps/askbible-android",
@@ -12,11 +12,11 @@
   "min_android": "Android 8.0+",
   "gradle_task": "assembleWeb",
   "apk_rel_path": "app/build/outputs/apk/web/app-web.apk",
-  "notes": "改善暗黑模式文字对比度，重新设计探索与资料入口，大字号布局更清晰。",
+  "notes": "新增外观设置：跟随系统、浅色、深色；完善深色页面与弹窗显示。",
   "changelog": [
-    "探索与资料入口改用清晰图标卡片",
-    "改善正文、标题、引用、链接与目录的暗黑模式显示",
-    "大字号下卡片使用单列布局"
+    "在用户菜单中切换浅色、深色或跟随系统",
+    "自动记住外观选择",
+    "改善深色模式下页面、弹窗与底部播放栏的显示"
   ],
   "intro": "AskBible 是一本能问问题的圣经：读经、听读、按计划跟进度，遇到不懂的地方随时问。",
   "icon_image": "apps/askbible-ios/AskBible/Assets.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png"

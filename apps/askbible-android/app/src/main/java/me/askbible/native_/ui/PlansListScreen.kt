@@ -40,7 +40,7 @@ fun PlansListScreen(
     store: ReadingPlanStore, onOpenPlan: (String) -> Unit, onBack: () -> Unit,
     /** 正式研读卡上的「背景与原理见 麦克阿瑟的研经方法 →」（RN ReadPlansFeaturedPlanCard → 探索文章） */
     onOpenArticle: (String) -> Unit = {},
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
 ) {
     Box(Modifier.fillMaxSize()) {
         PlanPageColumn(theme) {

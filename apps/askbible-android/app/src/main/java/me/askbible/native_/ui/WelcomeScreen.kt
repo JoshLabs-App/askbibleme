@@ -57,7 +57,7 @@ fun WelcomeScreen(
     localeOverride: AppLocale?,
     onSetLocale: (AppLocale?) -> Unit,
     onDone: () -> Unit,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }

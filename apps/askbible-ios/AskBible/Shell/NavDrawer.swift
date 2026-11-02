@@ -3,6 +3,7 @@ import SwiftUI
 /// 首页左上角的用户菜单，对齐 RN `ShellNavDrawer`：自左侧滑出、宽度 80%、羊皮卷底。
 /// 行样式来自 `shellNavDrawerMenuStyles`（圆角 10、内边 12 × 10、正文 16、右侧细节 12）。
 struct NavDrawerView: View {
+    @AppStorage("askbible.appearance") private var appearance = "system"
     let locale: AppLocale
     /// 界面语言手动设置（nil = 跟随系统）
     let localeOverride: AppLocale?
@@ -84,6 +85,7 @@ struct NavDrawerView: View {
     @ViewBuilder
     private var rows: some View {
         localeRow
+        appearanceRow
         menuRow(SiteCopy.t("native.bibleVersion", locale), detail: "\(translationLabel) \u{203A}", action: onOpenTranslations)
         if let userName {
             menuRow(SiteCopy.t("native.signedIn", locale), detail: userName, action: onClose)
@@ -111,6 +113,21 @@ struct NavDrawerView: View {
             }
             .buttonStyle(.plain)
         }
+    }
+
+    private var appearanceRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(SiteCopy.t("native.appearance", locale))
+                .font(.system(size: 16)).foregroundStyle(theme.ink)
+            Picker(SiteCopy.t("native.appearance", locale), selection: $appearance) {
+                Text(SiteCopy.t("native.followSystem", locale)).tag("system")
+                Text(SiteCopy.t("native.appearanceLight", locale)).tag("light")
+                Text(SiteCopy.t("native.appearanceDark", locale)).tag("dark")
+            }
+            .pickerStyle(.segmented)
+            .accessibilityIdentifier("appearancePicker")
+        }
+        .padding(.horizontal, 12).padding(.vertical, 10)
     }
 
     /// 每日读经提醒：左边开关（点文字切换），右边时间（点时间改）

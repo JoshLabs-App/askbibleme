@@ -93,7 +93,7 @@ fun ExploreScreen(
     /** 成就 / XP：等级条卡片，点进成就页 */
     achievements: me.askbible.native_.data.AchievementStore? = null,
     onOpenAchievements: () -> Unit = {},
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
 ) {
     if (article != null) {
         ExploreArticleScreen(article, size, onBack = { onOpenArticle(null) }, onOpenChapter = onOpenChapter,

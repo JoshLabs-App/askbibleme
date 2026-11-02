@@ -140,11 +140,13 @@ class MainActivity : ComponentActivity() {
         // 记下「首次运行」时间，好评邀请要用（装机满 3 天才问）
         RatePrompt.noteLaunch(this)
         setContent {
+            me.askbible.native_.ui.AppAppearance {
             RootScreen()
             // 站外分发版的自助更新弹窗；Play / sideload 变体里是空操作
             UpdateGate()
             // 商店版 → 站外版的迁移提示；默认关，开关在远端 migrate.json
             MigrateGate.Host()
+            }
         }
     }
 
@@ -710,7 +712,7 @@ private fun RootScreen() {
             else when (planRoute) {
                 "devotional" -> DevotionalScreen(
                     date = devotionalDate, onDate = { devotionalDate = it }, player = devotional, size = size,
-                    theme = me.askbible.native_.data.Parchment.light, onBack = { planRoute = "play" },
+                    theme = me.askbible.native_.ui.LocalParchment.current, onBack = { planRoute = "play" },
                     onOpenChapter = { id, ch ->
                         // 出处 → 读经 Tab 开那一章；返回回到灵修页（chapterFromPlan 让返回键回计划 Tab）
                         BibleCatalog.book(id)?.let { b ->
@@ -868,7 +870,7 @@ private fun RootScreen() {
                 // RN shellTabBarStyles.wrap.gap：坞与 Tab 行之间 6
                 Spacer(Modifier.height(ShellMetrics.tabBarDockGap.dp))
             } else if (showDevotionalDock) {
-                DevotionalDock(devotional, me.askbible.native_.data.Parchment.light,
+                DevotionalDock(devotional, me.askbible.native_.ui.LocalParchment.current,
                                onOpen = { devotional.currentKey?.let { md -> devotionalDate = me.askbible.native_.data.SolidJoys.dateForKey(md) }; planRoute = "devotional" })
                 Spacer(Modifier.height(ShellMetrics.tabBarDockGap.dp))
             } else if (showPlanDock) {
@@ -1096,7 +1098,7 @@ private fun RootScreen() {
 
         // 成就页：从探索页的等级条卡片进来，盖在最上面（返回键由 BackHandler 接）
         if (showAchievements) {
-            AchievementsScreen(achievements, auth.user?.name.orEmpty(), appLocale, Parchment.light,
+            AchievementsScreen(achievements, auth.user?.name.orEmpty(), appLocale, me.askbible.native_.ui.LocalParchment.current,
                                onBack = { showAchievements = false })
         }
         // +XP 飘字 + 勋章 / 印章 / 升级提示（Josh 2026-09-18「要感觉到 XP 一直在增加」）
@@ -1105,7 +1107,7 @@ private fun RootScreen() {
                 // 首页一律不弹（首页静默，Josh 2026-10-02「保持首页不打扰」）——事件留在 pending 里不消费，离开首页后照常补上；
                 // +XP 飘字在首页直接不进队列（AchievementStore.quiet）
                 if (tab != ShellTab.HOME) {
-                    EarnedToast(achievements, appLocale, Parchment.light, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                    EarnedToast(achievements, appLocale, me.askbible.native_.ui.LocalParchment.current, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
                 }
                 XPFloater(achievements, Modifier.padding(top = 60.dp))
             }

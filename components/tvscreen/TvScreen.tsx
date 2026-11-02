@@ -480,7 +480,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
               <li key={l}><button type="button" onClick={() => runAction(l.startsWith("↑") ? "ArrowUp" : l.startsWith("←") ? "ArrowRight" : l[0])} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", padding: "0.5vh 0", cursor: "pointer", textShadow: "inherit" }}>{l === "8 今日读经" && planLoading ? "8 同步进度中…" : l}</button></li>
             ))}
             </ul>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6vh 2.4vw", marginTop: "0.6vh", contain: "inline-size", overflowWrap: "anywhere" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6vh 2.4vw", marginTop: "0.6vh", width: 0, minWidth: "100%", overflowWrap: "anywhere" }}>
             <span>{user ? <button type="button" onClick={() => void logout().catch(() => say("退出失败，请重试"))} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", cursor: "pointer" }}>已登录 · {user.name || "我的账号"}（退出）</button> : <a href="/login?next=/tv" style={{ color: "inherit" }}>登录</a>}</span>
             <a href="/tv-check.html" style={{ color: "inherit" }}>检查页</a>
             </div>

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { buildGoldenVerseAudioRemoteSrc } from "@/lib/bible/golden-verse-audio";
+import type { StaticScriptureVerse } from "@/lib/bible/static-scripture-shape";
 import { parseCuvChapterVerseTimingsPayload, verseNumberAtChapterAudioTime } from "@/lib/bible/cuv-chapter-verse-timings";
 import { buildExternalCuvChapterAudioUrl } from "@/lib/bible/cuv-chapter-audio";
 import { getScriptureBookDisplayName } from "@/lib/bible/scripture-book-display-name";
@@ -26,9 +27,8 @@ const ALBUM_KEYS: Record<string, { album: string; label: string }> = {
   "4": { album: "钢琴", label: "钢琴" },
   "5": { album: "赞美诗", label: "圣诗" },
   "6": { album: "睡眠", label: "睡眠" },
-  "7": { album: "专注工作", label: "专注" },
 };
-const LEGEND = ["1 轻音乐", "2 金句朗读", "3 下午茶轻快", "4 钢琴", "5 圣诗", "6 睡眠", "7 专注", "8 今日读经", "9 暂停/继续", "↑↓ 换一首", "← → 换场景", "0 切换场景"];
+const LEGEND = ["1 轻音乐", "2 金句朗读", "3 下午茶轻快", "4 钢琴", "5 圣诗", "6 睡眠", "7 TovCore", "8 今日读经", "9 暂停/继续", "↑↓ 换一首", "← → 换场景", "0 切换场景"];
 const LEGEND_MS = 15_000;
 
 /** 按字数定字号：用 vw/vh，旧电视浏览器也认；长经文自动缩小，不会被截断 */
@@ -111,7 +111,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   // 今日读经：当前章的经文与朗读进度
   const [planView, setPlanView] = useState<{ title: string; verses: string[]; cur: number } | null>(null);
   const planTimingsRef = useRef<{ verse: number; start: number; end: number }[] | null>(null);
-  const bookCacheRef = useRef<Record<string, Record<string, { t: string }[]>>>({});
+  const bookCacheRef = useRef<Record<string, Record<string, StaticScriptureVerse[]>>>({});
 
   const entries = entriesByLocale[locale] ?? entriesByLocale["zh-CN"] ?? [];
   const entry = entries.length ? entries[activeIndex % entries.length] : null;
@@ -187,10 +187,10 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       let book = bookCacheRef.current[bookId];
       if (!book) {
         const r = await fetch(`/scripture/cuv-simp/${bookId}.json`);
-        book = ((await r.json()) as { c: Record<string, { t: string }[]> }).c;
+        book = ((await r.json()) as { c: Record<string, StaticScriptureVerse[]> }).c;
         bookCacheRef.current[bookId] = book;
       }
-      const verses = (book[String(chapter)] ?? []).map((v) => v.t);
+      const verses = (book[String(chapter)] ?? []).map((v) => typeof v === "string" ? v : v.t);
       if (!isCurrent()) return;
       setPlanView({ title, verses, cur: 0 });
       for (const u of [`/verse-timings/cuv-v20/${bookId}-${chapter}.json`]) {
@@ -395,6 +395,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   const runAction = useCallback((k: string) => {
     showLegend();
     if (ALBUM_KEYS[k]) playAlbum(ALBUM_KEYS[k].album, ALBUM_KEYS[k].label);
+    else if (k === "7") window.location.assign("https://tovcore.com/radio?tv=1");
     else if (k === "2") playVerseAudio();
     else if (k === "8") void startPlan();
     else if (k === "9") {

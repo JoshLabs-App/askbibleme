@@ -102,11 +102,11 @@ fun CatalogScreen(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(ReadChrome.testamentOld(locale), color = Color(0xFF2F6291),
+                    Text(ReadChrome.testamentOld(locale), color = if (theme.isDark) Color(0xFF8DB6E6) else Color(0xFF2F6291),
                          fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     // RN BibleCatalogOutlineContent：MaterialIcons notes 22，未开时 faint
                     MaterialIcon(MI.NOTES, 22f, theme.faint.toColor(), modifier = Modifier.padding(horizontal = 14.dp))
-                    Text(ReadChrome.testamentNew(locale), color = Color(0xFFC1660B),
+                    Text(ReadChrome.testamentNew(locale), color = if (theme.isDark) Color(0xFFF29A4A) else Color(0xFFC1660B),
                          fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
                 Spacer(Modifier.height(16.dp))
@@ -156,7 +156,7 @@ private fun CatalogColumn(
             Text(
                 group.title(locale),
                 Modifier.padding(top = 7.dp, bottom = 3.dp),
-                color = Color(0xFF000000 or group.colorHex.toLong()),
+                color = if (theme.isDark) theme.ink.toColor() else Color(0xFF000000 or group.colorHex.toLong()),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
             )
@@ -180,7 +180,7 @@ private fun CatalogColumn(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             Text(book.displayNumber,
-                                 color = Color(0xFF000000 or group.colorHex.toLong()),
+                                 color = if (theme.isDark) theme.ink.toColor() else Color(0xFF000000 or group.colorHex.toLong()),
                                  fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                             // softWrap=false + Ellipsis：否则「1 Thessalonians」装不下时会在空格处折行，
                             // maxLines=1 只留下第一行的「1」。iOS 的 lineLimit(1) 默认就是截断加省略号。

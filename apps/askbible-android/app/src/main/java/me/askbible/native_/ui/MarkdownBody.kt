@@ -93,11 +93,7 @@ object MarkdownParser {
     }
 }
 
-val MARKDOWN_ACCENT = Color(0xFFA56A2D)
-private val ACCENT = MARKDOWN_ACCENT
-private val QUOTE_INK = Color(0xFF8C562A)
-/** RN postReadingTheme.mdBody：rgba(28,20,16,.82)（探索文章与读后两版同一套正文色） */
-private val BODY_INK = Color(0xD11C1410)
+private val LocalMarkdownAccent = androidx.compose.runtime.staticCompositionLocalOf { Color(0xFF784B1E) }
 
 /** 文章里的站内链接：/read/GEN/3?verse=9 → 章；/explore/articles/<slug> → 文章。完整域名（askbible.me）也认。 */
 sealed class ArticleLink {
@@ -127,52 +123,55 @@ fun MarkdownBody(markdown: String, size: ReadSize, theme: Parchment, onLink: (St
     val blocks = remember(markdown) { MarkdownParser.parse(markdown) }
     val scale = (size.metrics.verseFontSize / 16f).coerceIn(0.8f, 2.8f)
     fun sx(n: Float) = maxOf(1f, Math.round(n * scale * 10f) / 10f)
-    val body = BODY_INK
+    val body = theme.inkSoft.toColor()
+    val accent = theme.readingAccent
 
-    Column(Modifier.fillMaxWidth()) {
-        for (b in blocks) when (b) {
-            is MarkdownBlock.Heading -> when (b.level) {
-                1 -> Inline(b.text, sx(20f), FontWeight.Bold, ACCENT, sx(32f), onLink,
-                            Modifier.fillMaxWidth().padding(bottom = (sx(22f) + sx(8f)).dp), TextAlign.Center, 0.5f)
-                2 -> Inline(b.text, sx(18f), FontWeight.Bold, ACCENT, sx(30f), onLink,
-                            Modifier.padding(top = sx(24f).dp, bottom = (sx(14f) + sx(5f)).dp), letterSpacing = 0.3f)
-                else -> Inline(b.text, sx(16f), FontWeight.SemiBold, ACCENT, sx(27f), onLink,
-                               Modifier.padding(top = sx(22f).dp, bottom = sx(10f).dp))
-            }
-            is MarkdownBlock.Paragraph -> Inline(b.text, sx(16f), FontWeight.Normal, body, sx(30f), onLink,
-                                                 Modifier.padding(bottom = sx(18f).dp))
-            // RN bullet_list_icon 宽 0：条目不带圆点，逐条成段（间距 10）
-            is MarkdownBlock.Bullets -> Column(Modifier.padding(top = sx(6f).dp, bottom = sx(18f).dp),
-                                               verticalArrangement = Arrangement.spacedBy(sx(10f).dp)) {
-                for (item in b.items) Inline(item, sx(16f), FontWeight.Normal, body, sx(30f), onLink)
-            }
-            is MarkdownBlock.Ordered -> Column(Modifier.padding(top = sx(6f).dp, bottom = sx(18f).dp),
-                                               verticalArrangement = Arrangement.spacedBy(sx(10f).dp)) {
-                b.items.forEachIndexed { i, item ->
-                    Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(sx(4f).dp)) {
-                        Text("${i + 1}.", color = ACCENT, fontSize = sx(15f).sp, lineHeight = sx(30f).sp,
-                             fontWeight = FontWeight.Medium, modifier = Modifier.widthIn(min = sx(18f).dp))
-                        Inline(item, sx(16f), FontWeight.Normal, body, sx(30f), onLink)
-                    }
+    androidx.compose.runtime.CompositionLocalProvider(LocalMarkdownAccent provides accent) {
+        Column(Modifier.fillMaxWidth()) {
+            for (b in blocks) when (b) {
+                is MarkdownBlock.Heading -> when (b.level) {
+                    1 -> Inline(b.text, sx(20f), FontWeight.Bold, accent, sx(32f), onLink,
+                                Modifier.fillMaxWidth().padding(bottom = (sx(22f) + sx(8f)).dp), TextAlign.Center, 0.5f)
+                    2 -> Inline(b.text, sx(18f), FontWeight.Bold, accent, sx(30f), onLink,
+                                Modifier.padding(top = sx(24f).dp, bottom = (sx(14f) + sx(5f)).dp), letterSpacing = 0.3f)
+                    else -> Inline(b.text, sx(16f), FontWeight.SemiBold, accent, sx(27f), onLink,
+                                   Modifier.padding(top = sx(22f).dp, bottom = sx(10f).dp))
                 }
-            }
-            // 引用左线要跟文字一样高：Row 用 IntrinsicSize.Min 量高，再让左线 fillMaxHeight
-            is MarkdownBlock.Quote -> Row(Modifier.padding(vertical = sx(16f).dp).height(IntrinsicSize.Min)) {
-                Box(Modifier.width(3.dp).fillMaxHeight().background(ACCENT))
-                Inline(b.text, sx(16f), FontWeight.Normal, QUOTE_INK, sx(30f), onLink, Modifier.padding(start = sx(14f).dp))
-            }
-            // RN hr：高 0、透明 —— 分隔线不画
-            MarkdownBlock.Rule -> Unit
-            is MarkdownBlock.Table -> Column(Modifier.padding(bottom = sx(18f).dp)) {
-                b.rows.forEachIndexed { r, row ->
-                    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.Top,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        for (cell in row) Box(Modifier.weight(1f)) {
-                            Inline(cell, sx(14f), if (r == 0) FontWeight.SemiBold else FontWeight.Normal,
-                                   if (r == 0) ACCENT else body, sx(22f), onLink)
+                is MarkdownBlock.Paragraph -> Inline(b.text, sx(16f), FontWeight.Normal, body, sx(30f), onLink,
+                                                     Modifier.padding(bottom = sx(18f).dp))
+                // RN bullet_list_icon 宽 0：条目不带圆点，逐条成段（间距 10）
+                is MarkdownBlock.Bullets -> Column(Modifier.padding(top = sx(6f).dp, bottom = sx(18f).dp),
+                                                   verticalArrangement = Arrangement.spacedBy(sx(10f).dp)) {
+                    for (item in b.items) Inline(item, sx(16f), FontWeight.Normal, body, sx(30f), onLink)
+                }
+                is MarkdownBlock.Ordered -> Column(Modifier.padding(top = sx(6f).dp, bottom = sx(18f).dp),
+                                                   verticalArrangement = Arrangement.spacedBy(sx(10f).dp)) {
+                    b.items.forEachIndexed { i, item ->
+                        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(sx(4f).dp)) {
+                            Text("${i + 1}.", color = accent, fontSize = sx(15f).sp, lineHeight = sx(30f).sp,
+                                 fontWeight = FontWeight.Medium, modifier = Modifier.widthIn(min = sx(18f).dp))
+                            Inline(item, sx(16f), FontWeight.Normal, body, sx(30f), onLink)
                         }
                     }
-                    Box(Modifier.fillMaxWidth().height(0.5.dp).background(theme.border.toColor().copy(alpha = 0.6f)))
+                }
+                // 引用左线要跟文字一样高：Row 用 IntrinsicSize.Min 量高，再让左线 fillMaxHeight
+                is MarkdownBlock.Quote -> Row(Modifier.padding(vertical = sx(16f).dp).height(IntrinsicSize.Min)) {
+                    Box(Modifier.width(3.dp).fillMaxHeight().background(accent))
+                    Inline(b.text, sx(16f), FontWeight.Normal, theme.muted.toColor(), sx(30f), onLink, Modifier.padding(start = sx(14f).dp))
+                }
+                // RN hr：高 0、透明 —— 分隔线不画
+                MarkdownBlock.Rule -> Unit
+                is MarkdownBlock.Table -> Column(Modifier.padding(bottom = sx(18f).dp)) {
+                    b.rows.forEachIndexed { r, row ->
+                        Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            for (cell in row) Box(Modifier.weight(1f)) {
+                                Inline(cell, sx(14f), if (r == 0) FontWeight.SemiBold else FontWeight.Normal,
+                                       if (r == 0) accent else body, sx(22f), onLink)
+                            }
+                        }
+                        Box(Modifier.fillMaxWidth().height(0.5.dp).background(theme.border.toColor().copy(alpha = 0.6f)))
+                    }
                 }
             }
         }
@@ -189,32 +188,33 @@ private fun Inline(
     text: String, fontSize: Float, weight: FontWeight, color: Color, lineHeight: Float,
     onLink: (String) -> Unit, modifier: Modifier = Modifier, align: TextAlign? = null, letterSpacing: Float = 0f,
 ) {
-    val annotated = remember(text, color) { buildInline(text, onLink) }
+    val accent = LocalMarkdownAccent.current
+    val annotated = remember(text, color, accent, onLink) { buildInline(text, accent, onLink) }
     Text(
         annotated, modifier, color = color, fontSize = fontSize.sp, lineHeight = lineHeight.sp,
         fontWeight = weight, textAlign = align, letterSpacing = letterSpacing.sp,
     )
 }
 
-private fun buildInline(text: String, onLink: (String) -> Unit): AnnotatedString = buildAnnotatedString {
+private fun buildInline(text: String, accent: Color, onLink: (String) -> Unit): AnnotatedString = buildAnnotatedString {
     // 先切链接，再在每段里切粗体
     var idx = 0
     for (m in LINK.findAll(text)) {
-        appendBold(text.substring(idx, m.range.first))
+        appendBold(text.substring(idx, m.range.first), accent)
         val url = m.groupValues[2]
-        withLink(LinkAnnotation.Url(url, TextLinkStyles(SpanStyle(color = ACCENT))) { onLink(url) }) {
-            appendBold(m.groupValues[1])
+        withLink(LinkAnnotation.Url(url, TextLinkStyles(SpanStyle(color = accent))) { onLink(url) }) {
+            appendBold(m.groupValues[1], accent)
         }
         idx = m.range.last + 1
     }
-    appendBold(text.substring(idx))
+    appendBold(text.substring(idx), accent)
 }
 
-private fun androidx.compose.ui.text.AnnotatedString.Builder.appendBold(s: String) {
+private fun androidx.compose.ui.text.AnnotatedString.Builder.appendBold(s: String, accent: Color) {
     var idx = 0
     for (m in BOLD.findAll(s)) {
         append(s.substring(idx, m.range.first))
-        withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = ACCENT)) { append(m.groupValues[1]) }
+        withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = accent)) { append(m.groupValues[1]) }
         idx = m.range.last + 1
     }
     append(s.substring(idx))

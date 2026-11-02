@@ -92,7 +92,7 @@ fun FeaturedPlanCard(plan: ReadingPlanEntry, isActive: Boolean, theme: Parchment
                      color = Color(0xE04D3522), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }
             Spacer(Modifier.weight(1f))
-            if (isActive) PlanStatusPill(PlanText.t("activePill"))
+            if (isActive) PlanStatusPill(PlanText.t("activePill"), theme)
         }
         Text(plan.title, Modifier.padding(top = 8.dp), color = theme.ink.toColor(), fontSize = 24.sp, fontWeight = FontWeight.Bold)
         Text(plan.tagline, Modifier.padding(top = 6.dp), color = Color(0xD62B1D15), fontSize = 17.sp, lineHeight = 25.sp)
@@ -120,7 +120,7 @@ private fun ClassicPlanCard(plan: ReadingPlanEntry, isActive: Boolean, theme: Pa
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(plan.title, color = theme.ink.toColor(), fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                if (isActive) PlanStatusPill(PlanText.t("activePill"))
+                if (isActive) PlanStatusPill(PlanText.t("activePill"), theme)
             }
             if (plan.subtitle.isNotEmpty()) Text(plan.subtitle, Modifier.padding(top = 3.dp), color = theme.faint.toColor(), fontSize = 14.sp)
             Text(plan.tagline, Modifier.padding(top = 6.dp), color = theme.muted.toColor(), fontSize = 16.sp, lineHeight = 23.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)

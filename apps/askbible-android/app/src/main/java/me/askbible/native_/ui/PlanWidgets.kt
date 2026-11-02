@@ -208,13 +208,13 @@ fun PlanSectionHeader(title: String, hint: String? = null, theme: Parchment = Pa
 
 /** 「✓ 当前计划 · 第 N 天」金色胶囊 */
 @Composable
-fun PlanStatusPill(text: String) {
+fun PlanStatusPill(text: String, theme: Parchment) {
     Row(
         Modifier.clip(CircleShape).background(Brand.logo.toColor().copy(alpha = 0.26f)).padding(horizontal = 12.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        MaterialIcon(MI.CHECK_CIRCLE, 18f, Color(0xFF8A5A00))
-        Text(text, color = Color(0xFF5B3A00), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+        MaterialIcon(MI.CHECK_CIRCLE, 18f, theme.readingAccent)
+        Text(text, color = theme.readingAccent, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
     }
 }
 

@@ -226,12 +226,12 @@ fun PlanPlayScreen(
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         Text(locale.zh(PlanCopy.f("pages.read.ntDeepRepeatStageLabel", mapOf("n" to "${i + 1}"))), Modifier.width(58.dp),
-                             color = if (isCurrent) Color(0xFF8A5A00) else faint, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                             color = if (isCurrent) theme.readingAccent else faint, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                         Text(NtDeepRepeat.stageRange(seg), Modifier.weight(1f), color = ink, fontSize = 16.sp,
                              fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Normal)
                         if (isCurrent) {
                             Text(locale.zh(PlanCopy.f("pages.read.ntDeepRepeatStageCurrent", mapOf("day" to "${s.dayInSegment}", "total" to "${s.segmentDayTarget}"))),
-                                 color = Color(0xFF8A5A00), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                 color = theme.readingAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         } else if (done) {
                             Text(locale.zh(PlanCopy.t("pages.read.ntDeepRepeatStageDone")), color = faint, fontSize = 12.sp)
                         }

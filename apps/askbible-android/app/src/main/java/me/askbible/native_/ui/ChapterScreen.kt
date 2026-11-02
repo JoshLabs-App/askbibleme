@@ -415,7 +415,7 @@ private fun ParagraphBlock(
             Text(
                 h,
                 Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 18.dp, bottom = 16.dp),
-                color = Color(0xFF70451F).copy(alpha = 0.92f),
+                color = theme.muted.toColor(),
                 fontSize = (m.verseFontSize + 1).sp,
                 lineHeight = (m.verseLineHeight + 2).sp,
                 fontWeight = FontWeight.SemiBold,

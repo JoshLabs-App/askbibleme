@@ -174,9 +174,9 @@ fun ExploreScreen(
                     verticalAlignment = Alignment.CenterVertically) {
                     Stat(tl.dayOfYear.toString(), SiteCopy.t("pages.read.todayReadingStatYearDayLabel", locale), theme.parchmentAccent.toColor(), theme, Modifier.weight(1f))
                     Divider(theme)
-                    Stat((activity?.readDays ?: 0).toString(), SiteCopy.t("pages.read.todayReadingStatReadLabel", locale), Color(0xFF4F7A54), theme, Modifier.weight(1f))
+                    Stat((activity?.readDays ?: 0).toString(), SiteCopy.t("pages.read.todayReadingStatReadLabel", locale), if (theme.isDark) Color(0xFF8FC79A) else Color(0xFF4F7A54), theme, Modifier.weight(1f))
                     Divider(theme)
-                    Stat((activity?.streakDays ?: 0).toString(), SiteCopy.t("pages.read.todayReadingStatStreakLabel", locale), Color(0xFF4F7A54), theme, Modifier.weight(1f))
+                    Stat((activity?.streakDays ?: 0).toString(), SiteCopy.t("pages.read.todayReadingStatStreakLabel", locale), if (theme.isDark) Color(0xFF8FC79A) else Color(0xFF4F7A54), theme, Modifier.weight(1f))
                 }
                 // 等级条：探索页最显眼的常驻反馈，整张卡片可点进成就页
                 if (achievements != null) {

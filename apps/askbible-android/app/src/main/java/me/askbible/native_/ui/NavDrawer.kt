@@ -133,11 +133,11 @@ fun NavDrawer(
                                      color = theme.ink.toColor(), fontSize = 16.sp, maxLines = 1)
                                 Box(
                                     Modifier.clip(RoundedCornerShape(999.dp))
-                                        .background(if (reminderEnabled) Color(0x38FFB101) else Color(0x80FFF8EB))
+                                        .background(if (reminderEnabled) Color(0x38FFB101) else theme.surfaceSolid.toColor())
                                         .padding(horizontal = 8.dp, vertical = 3.dp),
                                 ) {
                                     Text(SiteCopy.t(if (reminderEnabled) "native.reminderOn" else "native.reminderOff", locale),
-                                         color = if (reminderEnabled) Color(0xFF784B1E) else theme.ink.toColor().copy(alpha = 0.5f),
+                                         color = if (reminderEnabled) theme.readingAccent else theme.ink.toColor().copy(alpha = 0.5f),
                                          fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                                 }
                             }
@@ -180,7 +180,7 @@ private fun androidx.compose.foundation.layout.RowScope.DrawerLocaleChip(
             .clickableNoRipple(onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = if (on) Color(0xFF784B1E) else theme.ink.toColor().copy(alpha = 0.72f),
+        Text(label, color = if (on) theme.readingAccent else theme.ink.toColor().copy(alpha = 0.72f),
              fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1,
              overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
     }

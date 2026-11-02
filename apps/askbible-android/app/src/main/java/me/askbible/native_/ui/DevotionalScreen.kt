@@ -62,13 +62,6 @@ import me.askbible.native_.data.SolidJoys
 import java.time.LocalDate
 
 // 灵修页的配色：按 ChatGPT 建议（D-8）把层级拉开——书名 / 日期偏浅，标题最深，正文深棕不用纯黑
-private val ACCENT = Color(0xFF8C5A2A)      // 「今日灵修」、出处、回到今天
-private val META = Color(0xFF6B5545)        // 书名、日期箭头、播放条文字
-private val TITLE = Color(0xFF241F1B)
-private val BODY = Color(0xFF2D2722)
-private val CREDIT = Color(0xFF765E4C)
-private val CREDIT_LINK = Color(0xFF5C3F28)
-private val CREDIT_RULE = Color(0x99BFAF9C)
 private val ON_DARK = Color(0xFFF5EFE4)
 
 /** 固定文案跟界面语言（繁体界面转繁）；灵修正文本身已按界面语言下载对应的一份 */
@@ -100,12 +93,12 @@ fun DevotionalCard(
             .padding(horizontal = 18.dp, vertical = 16.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(zh("今日灵修"), color = ACCENT, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-            if (day != null) Text("  ·  ${day.dateLabel}", color = META, fontSize = 14.sp)
+            Text(zh("今日灵修"), color = theme.readingAccent, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            if (day != null) Text("  ·  ${day.dateLabel}", color = theme.muted.toColor(), fontSize = 14.sp)
         }
         when {
             day != null -> {
-                Text(day.title, Modifier.padding(top = 6.dp), color = TITLE, fontSize = 19.sp, lineHeight = 26.sp,
+                Text(day.title, Modifier.padding(top = 6.dp), color = theme.ink.toColor(), fontSize = 19.sp, lineHeight = 26.sp,
                      fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 if (day.verse.isNotEmpty()) {
                     Text(day.verse, Modifier.padding(top = 6.dp), color = muted, fontSize = 15.sp, lineHeight = 22.sp,
@@ -121,10 +114,10 @@ fun DevotionalCard(
                                 .padding(start = 10.dp, end = 14.dp, top = 6.dp, bottom = 6.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            if (mine && player.isLoading) CircularProgressIndicator(Modifier.size(18.dp), color = META, strokeWidth = 2.dp)
-                            else MaterialIcon(if (playing) MI.PAUSE else MI.PLAY_ARROW, 22f, TITLE)
+                            if (mine && player.isLoading) CircularProgressIndicator(Modifier.size(18.dp), color = theme.muted.toColor(), strokeWidth = 2.dp)
+                            else MaterialIcon(if (playing) MI.PAUSE else MI.PLAY_ARROW, 22f, theme.ink.toColor())
                             Text(if (playing) zh("正在播放") else minutesLabel(day.audioSec) ?: zh("收听"),
-                                 Modifier.padding(start = 4.dp), color = META, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                 Modifier.padding(start = 4.dp), color = theme.muted.toColor(), fontSize = 14.sp, fontWeight = FontWeight.Medium)
                         }
                     }
                 }
@@ -178,26 +171,26 @@ fun DevotionalScreen(
                 // ① 页面身份：返回 · 书名（浅、小）
                 Box(Modifier.fillMaxWidth().height(44.dp), contentAlignment = Alignment.Center) {
                     Box(Modifier.align(Alignment.CenterStart).size(44.dp).clickableNoRipple(onBack), contentAlignment = Alignment.CenterStart) {
-                        MaterialIcon(MI.ARROW_BACK, 24f, TITLE)
+                        MaterialIcon(MI.ARROW_BACK, 24f, theme.ink.toColor())
                     }
-                    Text(zh(SolidJoys.TITLE), color = META, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                    Text(zh(SolidJoys.TITLE), color = theme.muted.toColor(), fontSize = 16.sp, fontWeight = FontWeight.Medium)
                 }
                 // ② 日期：‹ 9月30日 ›，箭头 48dp 好点；离开今天时下面出「回到今天」
                 Row(Modifier.fillMaxWidth().padding(top = 20.dp), verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center) {
                     Box(Modifier.size(48.dp).clickableNoRipple { onDate(date.minusDays(1)) }, contentAlignment = Alignment.Center) {
-                        MaterialIcon(MI.CHEVRON_LEFT, 28f, META)
+                        MaterialIcon(MI.CHEVRON_LEFT, 28f, theme.muted.toColor())
                     }
-                    Text("${date.monthValue}月${date.dayOfMonth}日", Modifier.padding(horizontal = 32.dp), color = TITLE,
+                    Text("${date.monthValue}月${date.dayOfMonth}日", Modifier.padding(horizontal = 32.dp), color = theme.ink.toColor(),
                          fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                     Box(Modifier.size(48.dp).clickableNoRipple { onDate(date.plusDays(1)) }, contentAlignment = Alignment.Center) {
-                        MaterialIcon(MI.CHEVRON_RIGHT, 28f, META)
+                        MaterialIcon(MI.CHEVRON_RIGHT, 28f, theme.muted.toColor())
                     }
                 }
                 Box(Modifier.fillMaxWidth().height(22.dp), contentAlignment = Alignment.Center) {
                     if (date != LocalDate.now()) {
                         Text(zh("回到今天"), Modifier.clickableNoRipple { onDate(LocalDate.now()) },
-                             color = ACCENT, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                             color = theme.readingAccent, fontSize = 13.sp, fontWeight = FontWeight.Medium)
                     }
                 }
             }
@@ -211,19 +204,19 @@ fun DevotionalScreen(
             item {
                 // ③ 当日标题：最大最深；均衡断行，不让最后一行只剩一两个字
                 Text(day.title, Modifier.fillMaxWidth().padding(top = 18.dp, bottom = 24.dp),
-                     style = TextStyle(color = TITLE, fontSize = (30 * scale).sp, lineHeight = (40 * scale).sp, fontWeight = FontWeight.Bold,
+                     style = TextStyle(color = theme.ink.toColor(), fontSize = (30 * scale).sp, lineHeight = (40 * scale).sp, fontWeight = FontWeight.Bold,
                                        textAlign = TextAlign.Center, lineBreak = LineBreak.Heading))
                 if (day.verse.isNotEmpty()) {
                     // ④ 当天经文：赭色竖线引文块，正常字重；均衡断行防止「乐。」孤字掉行
                     Row(Modifier.fillMaxWidth().padding(bottom = 22.dp).height(androidx.compose.foundation.layout.IntrinsicSize.Min)) {
-                        Box(Modifier.width(3.dp).fillMaxHeight().background(ACCENT.copy(alpha = 0.5f)))
+                        Box(Modifier.width(3.dp).fillMaxHeight().background(theme.readingAccent.copy(alpha = 0.5f)))
                         Column(Modifier.padding(start = 14.dp)) {
-                            Text(day.verse, style = TextStyle(color = TITLE, fontSize = (19 * scale).sp, lineHeight = (32 * scale).sp,
+                            Text(day.verse, style = TextStyle(color = theme.ink.toColor(), fontSize = (19 * scale).sp, lineHeight = (32 * scale).sp,
                                                               lineBreak = LineBreak.Heading))
                             val book = day.refBook; val ch = day.refChapter
                             Text("（${day.ref}）", Modifier.padding(top = 10.dp).then(
                                 if (book != null && ch != null) Modifier.clickableNoRipple { onOpenChapter(book, ch) } else Modifier),
-                                 color = if (book != null) ACCENT else muted, fontSize = (15 * scale).sp, fontWeight = FontWeight.Medium)
+                                 color = if (book != null) theme.readingAccent else muted, fontSize = (15 * scale).sp, fontWeight = FontWeight.Medium)
                         }
                     }
                 }
@@ -231,17 +224,17 @@ fun DevotionalScreen(
             }
             items(day.paragraphs.size) { i ->
                 Text(day.paragraphs[i], Modifier.fillMaxWidth().padding(top = if (i == 0) 28.dp else 0.dp, bottom = (24 * scale).dp),
-                     style = TextStyle(color = BODY, fontSize = (18 * scale).sp, lineHeight = (33 * scale).sp, lineBreak = LineBreak.Paragraph))
+                     style = TextStyle(color = theme.inkSoft.toColor(), fontSize = (18 * scale).sp, lineHeight = (33 * scale).sp, lineBreak = LineBreak.Paragraph))
             }
             item {
                 // 署名：出版信息块（授权条件，14sp 清楚可读）
-                Box(Modifier.fillMaxWidth().padding(top = 20.dp).height(1.dp).background(CREDIT_RULE))
+                Box(Modifier.fillMaxWidth().padding(top = 20.dp).height(1.dp).background(theme.border.toColor()))
                 Column(Modifier.fillMaxWidth().padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(zh("原作：") + SolidJoys.CREDIT_AUTHOR, color = CREDIT, fontSize = 14.sp, lineHeight = 22.sp)
-                    Text(zh("译文与音频：${SolidJoys.CREDIT_TRANSLATION}"), color = CREDIT, fontSize = 14.sp, lineHeight = 22.sp)
+                    Text(zh("原作：") + SolidJoys.CREDIT_AUTHOR, color = theme.muted.toColor(), fontSize = 14.sp, lineHeight = 22.sp)
+                    Text(zh("译文与音频：${SolidJoys.CREDIT_TRANSLATION}"), color = theme.muted.toColor(), fontSize = 14.sp, lineHeight = 22.sp)
                     Text("befaithful.net", Modifier.clickableNoRipple {
                         runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SolidJoys.CREDIT_LINK))) }
-                    }, color = CREDIT_LINK, fontSize = 14.sp, lineHeight = 22.sp, fontWeight = FontWeight.Medium,
+                    }, color = theme.readingAccent, fontSize = 14.sp, lineHeight = 22.sp, fontWeight = FontWeight.Medium,
                          textDecoration = TextDecoration.Underline)
                 }
                 // 读完了：一行小字收尾，不打卡、不计数（D-8：完成感要有，但不游戏化）
@@ -265,25 +258,25 @@ private fun DevotionalAudioBar(day: DevotionalDay, player: DevotionalPlayer, the
             .border(0.5.dp, theme.border.toColor(), shape).clickableNoRipple(toggle).padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(48.dp).clip(CircleShape).background(TITLE), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(48.dp).clip(CircleShape).background(Color(0xFF241F1B)), contentAlignment = Alignment.Center) {
             if (mine && player.isLoading) CircularProgressIndicator(Modifier.size(20.dp), color = ON_DARK, strokeWidth = 2.dp)
             else MaterialIcon(if (playing) MI.PAUSE else MI.PLAY_ARROW, 26f, ON_DARK)
         }
         Column(Modifier.weight(1f).padding(start = 12.dp)) {
-            Text(zh(if (mine && player.failed) "音频暂时无法播放，文字照常可读" else "灵修朗读"), color = META, fontSize = 15.sp, fontWeight = FontWeight.Medium)
-            DevotionalProgress(pos, dur, enabled = mine && player.durationMs > 0, onSeek = player::seekTo)
+            Text(zh(if (mine && player.failed) "音频暂时无法播放，文字照常可读" else "灵修朗读"), color = theme.muted.toColor(), fontSize = 15.sp, fontWeight = FontWeight.Medium)
+            DevotionalProgress(pos, dur, theme, enabled = mine && player.durationMs > 0, onSeek = player::seekTo)
         }
     }
 }
 
 /** 4dp 进度条 + 两端时间；轨道外套一层 32dp 高的触控框，点 / 拖都能定位 */
 @Composable
-private fun DevotionalProgress(pos: Long, dur: Long, enabled: Boolean, onSeek: (Long) -> Unit) {
+private fun DevotionalProgress(pos: Long, dur: Long, theme: Parchment, enabled: Boolean, onSeek: (Long) -> Unit) {
     var drag by remember { mutableStateOf<Float?>(null) }
     var widthPx by remember { mutableStateOf(1f) }
     val fraction = drag ?: if (dur > 0) (pos.toFloat() / dur).coerceIn(0f, 1f) else 0f
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(clock(drag?.let { (it * dur).toLong() } ?: pos), Modifier.width(40.dp), color = META, fontSize = 13.sp)
+        Text(clock(drag?.let { (it * dur).toLong() } ?: pos), Modifier.width(40.dp), color = theme.muted.toColor(), fontSize = 13.sp)
         Box(
             Modifier.weight(1f).height(32.dp).onSizeChanged { widthPx = it.width.toFloat().coerceAtLeast(1f) }
                 .then(if (!enabled) Modifier else Modifier
@@ -301,7 +294,7 @@ private fun DevotionalProgress(pos: Long, dur: Long, enabled: Boolean, onSeek: (
                 Box(Modifier.fillMaxWidth(fraction).height(4.dp).clip(CircleShape).background(Brand.logo.toColor()))
             }
         }
-        Text(if (dur > 0) clock(dur) else "--:--", Modifier.width(40.dp), color = META, fontSize = 13.sp, textAlign = TextAlign.End)
+        Text(if (dur > 0) clock(dur) else "--:--", Modifier.width(40.dp), color = theme.muted.toColor(), fontSize = 13.sp, textAlign = TextAlign.End)
     }
 }
 
@@ -319,19 +312,19 @@ fun DevotionalDock(player: DevotionalPlayer, theme: Parchment, onOpen: () -> Uni
             .padding(start = ShellMetrics.dockPaddingH.dp + 4.dp, end = ShellMetrics.dockPaddingH.dp, top = 10.dp, bottom = 6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f).clickableNoRipple(onOpen)) {
-                    Text(zh(SolidJoys.TITLE), color = META, fontSize = 13.sp)
-                    Text(day?.let { "${it.dateLabel} · ${it.title}" } ?: "", color = TITLE, fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
+                    Text(zh(SolidJoys.TITLE), color = theme.muted.toColor(), fontSize = 13.sp)
+                    Text(day?.let { "${it.dateLabel} · ${it.title}" } ?: "", color = theme.ink.toColor(), fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
                          maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 Box(Modifier.size(40.dp).clickableNoRipple { player.stop() }, contentAlignment = Alignment.Center) {
-                    MaterialIcon(MI.CLOSE, 20f, META)
+                    MaterialIcon(MI.CLOSE, 20f, theme.muted.toColor())
                 }
             }
             Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.weight(1f)) {
-                    DevotionalProgress(player.positionMs, player.durationMs, enabled = player.durationMs > 0, onSeek = player::seekTo)
+                    DevotionalProgress(player.positionMs, player.durationMs, theme, enabled = player.durationMs > 0, onSeek = player::seekTo)
                 }
-                Box(Modifier.padding(start = 10.dp).size(52.dp).clip(CircleShape).background(TITLE).clickableNoRipple {
+                Box(Modifier.padding(start = 10.dp).size(52.dp).clip(CircleShape).background(Color(0xFF241F1B)).clickableNoRipple {
                     if (player.isPlaying) player.pause() else day?.audio?.let { player.play(day.md, it, "${day.dateLabel} ${day.title}") }
                 }, contentAlignment = Alignment.Center) {
                     if (player.isLoading) CircularProgressIndicator(Modifier.size(22.dp), color = ON_DARK, strokeWidth = 2.dp)

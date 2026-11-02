@@ -108,7 +108,7 @@ fun PlanDetailScreen(
                     PlanFactRow(plan.facts, centered = true, theme = theme)
                     if (isActive) {
                         Spacer(Modifier.height(14.dp))
-                        PlanStatusPill(PlanText.t("activePill") + (currentDay?.let { " · " + PlanText.f("currentDay", mapOf("n" to "$it")) } ?: ""))
+                        PlanStatusPill(PlanText.t("activePill") + (currentDay?.let { " · " + PlanText.f("currentDay", mapOf("n" to "$it")) } ?: ""), theme)
                     }
                 }
 
@@ -241,7 +241,7 @@ fun PlanDetailScreen(
                                         Text(NtDeepRepeat.stageRange(seg), Modifier.weight(1f),
                                              color = if (isCurrent) theme.ink.toColor() else if (isDone) theme.muted.toColor() else theme.faint.toColor(), fontSize = 16.sp,
                                              fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Normal)
-                                        if (isCurrent) Text(PlanText.t("stageCurrent"), color = Color(0xFF8A5A00), fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                                        if (isCurrent) Text(PlanText.t("stageCurrent"), color = theme.readingAccent, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                                         else if (isDone) MaterialIcon(MI.CHECK, 18f, theme.faint.toColor())
                                     }
                                 }

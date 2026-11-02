@@ -55,10 +55,19 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   const [planLoading, setPlanLoading] = useState(false);
   const planRequestRef = useRef(0);
   const resumeAtRef = useRef(0);
-  const { entriesByLocale, verseKeys, activeIndex } = useHomePrayerVerseFeedContext();
+  const { entriesByLocale, verseKeys, activeIndex, setVerseAudioSequenceActive, advanceVerseAudioNow } = useHomePrayerVerseFeedContext();
   const [sceneIdx, setSceneIdx] = useState(0);
   const [legendOn, setLegendOn] = useState(true);
   const [toast, setToast] = useState("");
+  const verseSequenceRef = useRef(false);
+  const versePausedRef = useRef(false);
+  const verseSourceRef = useRef("");
+  const stopVerseSequence = useCallback(() => {
+    verseSequenceRef.current = false;
+    versePausedRef.current = false;
+    setVerseAudioSequenceActive(false);
+  }, [setVerseAudioSequenceActive]);
+  useEffect(() => () => setVerseAudioSequenceActive(false), [setVerseAudioSequenceActive]);
   const musicRef = useRef<HTMLAudioElement>(null);
   const verseAudioRef = useRef<HTMLAudioElement>(null);
   const albumRef = useRef("安静");
@@ -146,6 +155,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
         say(`${label}：没有曲目`);
         return;
       }
+      stopVerseSequence();
       verseAudioRef.current?.pause();
       planAudioRef.current?.pause();
       planRequestRef.current += 1;
@@ -162,21 +172,23 @@ export function TvScreen({ videos }: { videos: Video[] }) {
         },
       );
     },
-    [say, beacon, playAudio],
+    [say, beacon, playAudio, stopVerseSequence],
   );
 
   // 一首放完接同专辑的下一首
   const onMusicEnded = useCallback(() => {
     const a = musicRef.current;
-    playAlbum(albumRef.current, "下一首", a?.getAttribute("src") ?? undefined);
-  }, [playAlbum]);
+    if (!a) return;
+    const src = pickTrack(albumRef.current, a.getAttribute("src") ?? undefined);
+    if (!src) return;
+    a.src = src;
+    void playAudio(a).catch(() => say("音乐播放失败"));
+  }, [playAudio, say]);
 
-  // 金句读完回到音乐
+  // 金句结束后推进共用经文池；轮播计时在连续朗读期间暂停。
   const onVerseAudioEnded = useCallback(() => {
-    const m = musicRef.current;
-    if (m) m.volume = 1;
-    if (m) void playAudio(m).catch(() => {});
-  }, [playAudio]);
+    if (verseSequenceRef.current && !versePausedRef.current) advanceVerseAudioNow();
+  }, [advanceVerseAudioNow]);
 
   const loadPlanChapterText = useCallback(async (bookId: string, chapter: number, title: string) => {
     const request = planRequestRef.current;
@@ -268,6 +280,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       }
       st.i = i;
       musicRef.current?.pause();
+      stopVerseSequence();
       verseAudioRef.current?.pause();
       planRequestRef.current += 1;
       a.src = src;
@@ -278,7 +291,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
         () => say("读经播放失败"),
       );
     },
-    [say, loadPlanChapterText, playAudio],
+    [say, loadPlanChapterText, playAudio, stopVerseSequence],
   );
 
   const startPlan = useCallback(async () => {
@@ -317,24 +330,38 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     const src = key ? buildGoldenVerseAudioRemoteSrc(key, locale === "en" ? "web-en" : "cuv-simp") : null;
     const v = verseAudioRef.current;
     if (!v || !src) {
+      stopVerseSequence();
       say("这句暂无朗读");
       return;
     }
+    verseSequenceRef.current = true;
+    versePausedRef.current = false;
+    verseSourceRef.current = src;
+    setVerseAudioSequenceActive(true);
     // 音乐不停，压低音量，和金句朗读同时出声
     const m = musicRef.current;
     if (m) m.volume = 0.25;
     planRequestRef.current += 1;
     planAudioRef.current?.pause();
+    planRef.current = null;
     setPlanView(null);
     v.src = src;
     void playAudio(v).then(
       () => say("金句朗读"),
       () => {
         if (m) m.volume = 1;
+        stopVerseSequence();
         say("朗读失败");
       },
     );
-  }, [activeIndex, locale, say, verseKeys, playAudio]);
+  }, [activeIndex, locale, say, verseKeys, playAudio, setVerseAudioSequenceActive, stopVerseSequence]);
+
+  useEffect(() => {
+    if (!verseSequenceRef.current || versePausedRef.current) return;
+    const key = verseKeys?.[activeIndex];
+    const src = key ? buildGoldenVerseAudioRemoteSrc(key, locale === "en" ? "web-en" : "cuv-simp") : null;
+    if (src !== verseSourceRef.current) playVerseAudio();
+  }, [activeIndex, locale, verseKeys, playVerseAudio]);
 
   // 视频：电视浏览器常拦自动播放，或解码失败。尝试补播，并把状态报到 /api/tv-report（Vercel 日志搜 [tv-report]）
   const reportVideo = useCallback((what: string) => {
@@ -400,6 +427,22 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     else if (k === "8") void startPlan();
     else if (k === "9") {
       const m = musicRef.current;
+      if (verseSequenceRef.current) {
+        const v = verseAudioRef.current;
+        if (!versePausedRef.current) {
+          versePausedRef.current = true;
+          v?.pause();
+          if (m) m.volume = 1;
+        } else {
+          versePausedRef.current = false;
+          const key = verseKeys?.[activeIndex];
+          const src = key ? buildGoldenVerseAudioRemoteSrc(key, locale === "en" ? "web-en" : "cuv-simp") : null;
+          if (src !== verseSourceRef.current) playVerseAudio();
+          else if (v?.ended) advanceVerseAudioNow();
+          else if (v) { if (m) m.volume = 0.25; void playAudio(v).catch(() => {}); }
+        }
+        return;
+      }
       const cur = [planAudioRef.current, verseAudioRef.current, m].find((x) => x && !x.paused) ?? (planRef.current ? planAudioRef.current : m);
       if (cur && !cur.paused) cur.pause();
       else if (cur?.getAttribute("src")) void playAudio(cur).catch(() => {});
@@ -407,7 +450,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     } else if (k === "ArrowUp" || k === "ArrowDown") playAlbum(albumRef.current, "换一首", musicRef.current?.getAttribute("src") ?? undefined);
     else if (k === "0" || k === "ArrowRight") setSceneIdx((i) => i + 1);
     else if (k === "ArrowLeft") setSceneIdx((i) => i - 1);
-  }, [showLegend, playAlbum, playVerseAudio, startPlan, playAudio]);
+  }, [showLegend, playAlbum, playVerseAudio, startPlan, playAudio, verseKeys, activeIndex, locale, advanceVerseAudioNow]);
   const live = useRef(runAction);
   live.current = runAction;
   useEffect(() => {
@@ -521,7 +564,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       </div>
       <audio onPlay={syncAudioBackground} onPause={syncAudioBackground} ref={musicRef} onEnded={() => { syncAudioBackground(); onMusicEnded(); }} onError={reportAudio("音乐")} preload="none" />
       <audio onPlay={syncAudioBackground} onPause={syncAudioBackground} ref={planAudioRef} onLoadedMetadata={(e) => { if (resumeAtRef.current > 0) { e.currentTarget.currentTime = resumeAtRef.current; resumeAtRef.current = 0; } }} onEnded={() => { syncAudioBackground(); onPlanEnded(); }} onTimeUpdate={onPlanTime} onPlaying={onPlanTime} onError={reportAudio("读经")} preload="none" />
-      <audio onPlay={syncAudioBackground} onPause={syncAudioBackground} ref={verseAudioRef} onEnded={() => { syncAudioBackground(); onVerseAudioEnded(); }} onError={reportAudio("金句")} preload="none" />
+      <audio onPlay={syncAudioBackground} onPause={syncAudioBackground} ref={verseAudioRef} onEnded={() => { syncAudioBackground(); onVerseAudioEnded(); }} onError={(e) => { stopVerseSequence(); if (musicRef.current) musicRef.current.volume = 1; reportAudio("金句")(e); }} preload="none" />
     </div>
   );
 }

@@ -383,14 +383,8 @@ final class AchievementStore: ObservableObject {
     }
 
     private func emit(_ e: Event) {
-        if quiet && Self.isFloater(e) { return }
-        // 飘字合并：连着来的 +XP 合成一条，免得刷屏
-        if case .xp(let n, let r) = e, case .xp(let prev, let pr)? = pending.last, pr == r {
-            pending[pending.count - 1] = .xp(prev + n, reason: r)
-            return
-        }
-        pending.append(e)
-        if pending.count > 24 { pending.removeFirst(pending.count - 24) }
+        // 暂停即时奖励反馈（2026-11-02）：记录照常更新，不排队、不补弹。
+        // 积分、升级和成就的呈现方式待重新决定。
     }
 
     func consume() { if !pending.isEmpty { pending.removeFirst() } }

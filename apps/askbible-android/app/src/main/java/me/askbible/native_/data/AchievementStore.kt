@@ -461,16 +461,9 @@ class AchievementStore(context: Context) {
         return events
     }
 
-    private fun emit(e: Event) {
-        if (quiet && isFloater(e)) return
-        // 飘字合并：连着来的 +XP 合成一条，免得刷屏
-        val last = pending.lastOrNull()
-        if (e is Event.Xp && last is Event.Xp && last.reason == e.reason) {
-            pending = pending.dropLast(1) + Event.Xp(last.amount + e.amount, e.reason)
-            return
-        }
-        val next = pending + e
-        pending = if (next.size > 24) next.takeLast(24) else next
+    private fun emit(@Suppress("UNUSED_PARAMETER") e: Event) {
+        // 暂停即时奖励反馈（2026-11-02）：记录照常更新，不排队、不补弹。
+        // 积分、升级和成就的呈现方式待重新决定。
     }
 
     fun consume() { if (pending.isNotEmpty()) pending = pending.drop(1) }

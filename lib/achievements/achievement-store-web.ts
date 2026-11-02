@@ -412,14 +412,9 @@ function addBonus(base: number): number {
   return bonus;
 }
 
-function emitEvent(e: AchievementEvent): void {
-  const last = pending[pending.length - 1];
-  if (e.kind === "xp" && last?.kind === "xp" && last.reason === e.reason) {
-    pending[pending.length - 1] = { kind: "xp", amount: last.amount + e.amount, reason: e.reason };
-    return;
-  }
-  pending.push(e);
-  if (pending.length > 24) pending = pending.slice(pending.length - 24);
+function emitEvent(_e: AchievementEvent): void {
+  // 暂停即时奖励反馈（2026-11-02）：记录照常更新，不排队、不补弹。
+  // 积分、升级和成就的呈现方式待重新决定。
 }
 
 // MARK: 上报

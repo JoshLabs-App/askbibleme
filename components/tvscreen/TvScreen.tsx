@@ -16,7 +16,6 @@ import { scheduleMemberReadingSyncWeb } from "@/lib/member-reading-sync/client/r
 import { readLastReadPosition } from "@/lib/read/read-last-position";
 import { shippedPublicMusicCompanionStore } from "@/lib/music-companion/shipped-store";
 import { inferTrackAlbumFromCompanionTrack } from "@/lib/music/album-playback";
-import { resolveMediaPlaybackPolicyTier } from "@/lib/media/media-playback-policy";
 
 type Video = { id: string; src: string; title: string; posterSrc?: string };
 
@@ -74,42 +73,8 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   const legendTimerRef = useRef<number | null>(null);
   const planRef = useRef<{ chapters: PlanChapter[]; i: number } | null>(null);
   const planAudioRef = useRef<HTMLAudioElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [videoPlaying, setVideoPlaying] = useState(false);
-  const [mediaReady, setMediaReady] = useState(false);
-  const [audioBlocksVideo, setAudioBlocksVideo] = useState(true);
-
-  const syncAudioBackground = useCallback(() => {
-    setAudioBlocksVideo(
-      resolveMediaPlaybackPolicyTier() === "tvCoexist" &&
-        [musicRef.current, verseAudioRef.current, planAudioRef.current].some(
-          (a) => a && !a.paused && !a.ended,
-        ),
-    );
-  }, []);
-
-  // 在 audio.play() 之前释放电视的视频解码器；仅改 opacity 无法释放硬件视频层。
-  const playAudio = useCallback((a: HTMLAudioElement) => {
-    if (resolveMediaPlaybackPolicyTier() === "tvCoexist") {
-      setAudioBlocksVideo(true);
-      const v = videoRef.current;
-      if (v) {
-        v.pause();
-        v.removeAttribute("src");
-        v.load();
-      }
-    }
-    return a.play().catch((error: unknown) => {
-      syncAudioBackground();
-      throw error;
-    });
-  }, [syncAudioBackground]);
-
-  useEffect(() => {
-    setMediaReady(true);
-    syncAudioBackground();
-  }, [syncAudioBackground]);
-  const showVideo = mediaReady && !audioBlocksVideo;
+  // TV keeps a still background across playback, pauses, and track transitions.
+  const playAudio = useCallback((a: HTMLAudioElement) => a.play(), []);
   useEffect(() => {
     planRequestRef.current += 1;
     planAudioRef.current?.pause();
@@ -346,8 +311,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     planRef.current = null;
     setPlanView(null);
     v.src = src;
-    void playAudio(v).then(
-      () => say("金句朗读"),
+    void playAudio(v).catch(
       () => {
         if (m) m.volume = 1;
         stopVerseSequence();
@@ -363,33 +327,9 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     if (src !== verseSourceRef.current) playVerseAudio();
   }, [activeIndex, locale, verseKeys, playVerseAudio]);
 
-  // 视频：电视浏览器常拦自动播放，或解码失败。尝试补播，并把状态报到 /api/tv-report（Vercel 日志搜 [tv-report]）
-  const reportVideo = useCallback((what: string) => {
-    const v = videoRef.current;
-    try {
-      navigator.sendBeacon?.(
-        "/api/tv-report",
-        JSON.stringify({
-          tv: "video",
-          what,
-          src: v?.currentSrc ?? "",
-          readyState: v?.readyState,
-          networkState: v?.networkState,
-          errCode: v?.error?.code,
-          errMsg: v?.error?.message,
-          paused: v?.paused,
-          ua: navigator.userAgent,
-        }),
-      );
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
   const reportAudio = useCallback(
     (which: string) => (e: React.SyntheticEvent<HTMLAudioElement>) => {
       const a = e.currentTarget;
-      syncAudioBackground();
       say(`${which}加载失败（错误 ${a.error?.code ?? "?"}）`);
       try {
         navigator.sendBeacon?.(
@@ -400,24 +340,8 @@ export function TvScreen({ videos }: { videos: Video[] }) {
         /* ignore */
       }
     },
-    [say, syncAudioBackground],
+    [say],
   );
-
-  const kickVideo = useCallback(() => {
-    const v = videoRef.current;
-    if (!v || !v.paused) return;
-    if (resolveMediaPlaybackPolicyTier() === "tvCoexist" &&
-      [musicRef.current, verseAudioRef.current, planAudioRef.current].some((a) => a && !a.paused && !a.ended)) return;
-    void v.play().catch(() => reportVideo("play-rejected"));
-  }, [reportVideo]);
-
-  useEffect(() => {
-    setVideoPlaying(false);
-    if (!showVideo) return;
-    kickVideo();
-    const t = window.setTimeout(() => reportVideo(videoRef.current?.paused ? "paused-after-3s" : "playing-after-3s"), 3000);
-    return () => window.clearTimeout(t);
-  }, [video?.id, showVideo, kickVideo, reportVideo]);
 
   const runAction = useCallback((k: string) => {
     showLegend();
@@ -501,22 +425,6 @@ export function TvScreen({ videos }: { videos: Video[] }) {
         // eslint-disable-next-line @next/next/no-img-element
         <img src={video.posterSrc} alt="" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" }} />
       ) : null}
-      {video && showVideo ? (
-        <video
-          ref={videoRef}
-          key={video.id}
-          onPlaying={() => setVideoPlaying(true)}
-          onPause={() => setVideoPlaying(false)}
-          onError={() => reportVideo("error")}
-          onStalled={() => reportVideo("stalled")}
-          src={video.src}
-          autoPlay
-          muted
-          loop
-          playsInline
-          style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", opacity: videoPlaying ? 1 : 0 }}
-        />
-      ) : null}
       {entry ? (
         <div
           style={{
@@ -538,7 +446,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
             <>
               <p style={{ margin: 0, width: "100%", maxHeight: "55vh", overflow: "hidden", textAlign: "left", fontSize: "min(2.6vw, 4.2vh)", lineHeight: 1.65, fontWeight: 500 }}>
                 {planView.verses.slice(planPage.start, planPage.end).map((t, i) => (
-                  <span key={planPage.start + i} aria-current={planPage.start + i === planView.cur ? "true" : undefined} style={{ opacity: planPage.start + i === planView.cur ? 1 : 0.55 }}>
+                  <span key={planPage.start + i} aria-current={planPage.start + i === planView.cur ? "true" : undefined} style={{ color: planPage.start + i === planView.cur ? "#ffe4a3" : "#fff" }}>
                     <sup style={{ fontSize: "0.55em", marginRight: "0.3em" }}>{planPage.start + i + 1}</sup>{t}{" "}
                   </span>
                 ))}
@@ -578,9 +486,9 @@ export function TvScreen({ videos }: { videos: Video[] }) {
           </ul>
         ) : null}
       </div>
-      <audio onPlay={syncAudioBackground} onPause={syncAudioBackground} ref={musicRef} onEnded={() => { syncAudioBackground(); onMusicEnded(); }} onError={reportAudio("音乐")} preload="none" />
-      <audio onPlay={syncAudioBackground} onPause={syncAudioBackground} ref={planAudioRef} onLoadedMetadata={(e) => { if (resumeAtRef.current > 0) { e.currentTarget.currentTime = resumeAtRef.current; resumeAtRef.current = 0; } }} onEnded={() => { syncAudioBackground(); onPlanEnded(); }} onTimeUpdate={onPlanTime} onPlaying={onPlanTime} onError={reportAudio("读经")} preload="none" />
-      <audio onPlay={syncAudioBackground} onPause={syncAudioBackground} ref={verseAudioRef} onEnded={() => { syncAudioBackground(); onVerseAudioEnded(); }} onError={(e) => { stopVerseSequence(); if (musicRef.current) musicRef.current.volume = 1; reportAudio("金句")(e); }} preload="none" />
+      <audio ref={musicRef} onEnded={onMusicEnded} onError={reportAudio("音乐")} preload="none" />
+      <audio ref={planAudioRef} onLoadedMetadata={(e) => { if (resumeAtRef.current > 0) { e.currentTarget.currentTime = resumeAtRef.current; resumeAtRef.current = 0; } }} onEnded={onPlanEnded} onTimeUpdate={onPlanTime} onPlaying={onPlanTime} onError={reportAudio("读经")} preload="none" />
+      <audio ref={verseAudioRef} onEnded={onVerseAudioEnded} onError={(e) => { stopVerseSequence(); if (musicRef.current) musicRef.current.volume = 1; reportAudio("金句")(e); }} preload="none" />
     </div>
   );
 }

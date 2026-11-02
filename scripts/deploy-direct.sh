@@ -43,7 +43,12 @@ fi
 # 只向上传目录复制独立产物和部署配置。
 UPLOAD="$TMP/upload"
 mkdir -p "$UPLOAD/.vercel"
-cp -R .vercel/output "$UPLOAD/.vercel/output"
+# APFS clone avoids duplicating a complete build while staging the upload.
+if [ "$(uname -s)" = Darwin ]; then
+  cp -cR .vercel/output "$UPLOAD/.vercel/output"
+else
+  cp -R .vercel/output "$UPLOAD/.vercel/output"
+fi
 cp .vercel/project.json "$UPLOAD/.vercel/project.json"
 cp vercel.json "$UPLOAD/vercel.json"
 vercel deploy --prebuilt --prod --archive=tgz --yes --cwd "$UPLOAD"

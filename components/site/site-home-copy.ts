@@ -83,7 +83,7 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
     heroChadao: {
       tab: "查到",
       title: "小组查经，一套做完。",
-      sub: "给小组长用的归纳法查经工具：读经、备课、带组、排期。工具只做参考，理念与方法全部公开。",
+      sub: "提供给小组查经使用的归纳法查经工具：读经、备课、带组、排期。工具只做参考，理念与方法全部公开。",
       phoneAlt: "查到 App 里的画面",
       entries: [
         { name: "App Store", sub: "iPhone / iPad" },
@@ -146,7 +146,7 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
     },
     siblingChadao: {
       title: "查到",
-      body: "给小组长用的归纳法查经工具：读经、备课、带组、排期，一套做完。工具只做参考，理念与方法全部公开。iPhone 和安卓都有。",
+      body: "提供给小组查经使用的归纳法查经工具：读经、备课、带组、排期，一套做完。工具只做参考，理念与方法全部公开。iPhone 和安卓都有。",
       action: "下载",
     },
     siblingTovcore: {
@@ -174,7 +174,7 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
     heroChadao: {
       tab: "查到",
       title: "Group Bible study, all in one place.",
-      sub: "An inductive Bible study tool for small-group leaders: read, prepare, lead and schedule. Tools are for reference only — our convictions and method are open to all.",
+      sub: "An inductive Bible study tool for small-group Bible study: read, prepare, lead and schedule. Tools are for reference only — our convictions and method are open to all.",
       phoneAlt: "Inside the 查到 app",
       entries: [
         { name: "App Store", sub: "iPhone & iPad" },
@@ -237,7 +237,7 @@ export const SITE_HOME_COPY: Record<"zh-CN" | "en", SiteHomeCopy> = {
     },
     siblingChadao: {
       title: "查到 · Group Bible Study",
-      body: "An inductive Bible study tool for small-group leaders: read, prepare, lead and schedule in one place. Tools are for reference only; our convictions and method are open to all. On iPhone and Android.",
+      body: "An inductive Bible study tool for small-group Bible study: read, prepare, lead and schedule in one place. Tools are for reference only; our convictions and method are open to all. On iPhone and Android.",
       action: "Download",
     },
     siblingTovcore: {

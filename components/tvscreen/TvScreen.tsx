@@ -50,6 +50,15 @@ export function TvScreen({ videos, translations }: { videos: Video[]; translatio
   const { locale, setLocale } = useLocale();
   const [selectedVersion, setSelectedVersion] = useState("");
   const [fontStep, setFontStep] = useState(1);
+  const [parchmentOn, setParchmentOn] = useState(false);
+  useEffect(() => {
+    try { setParchmentOn(localStorage.getItem("askbible-tv-parchment") === "1"); } catch { /* optional preference */ }
+  }, []);
+  const toggleParchment = () => {
+    const next = !parchmentOn;
+    setParchmentOn(next);
+    try { localStorage.setItem("askbible-tv-parchment", next ? "1" : "0"); } catch { /* optional persistence */ }
+  };
   const version = selectedVersion || (locale === "en" ? "web-en" : locale === "zh-TW" ? "cuv-trad" : "cuv-simp");
   const scale = [0.8, 1, 1.2, 1.4][fontStep];
   const copy = useCallback((zh: string, en: string) => locale === "en" ? en : locale === "zh-TW" ? toZhTwText(zh) : zh, [locale]);
@@ -280,6 +289,7 @@ export function TvScreen({ videos, translations }: { videos: Video[]; translatio
 
   // 旧电视的 timeupdate 触发很稀，读经时另用定时器每 0.3 秒对一次时间
   const planActive = planView !== null;
+  const showParchment = planActive && parchmentOn;
   useEffect(() => {
     if (!planActive) return;
     const id = window.setInterval(onPlanTime, 300);
@@ -495,29 +505,33 @@ export function TvScreen({ videos, translations }: { videos: Video[]; translatio
       onChangeCapture={showLegend}
       style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "linear-gradient(160deg, #3b6f8f 0%, #5b8a6a 55%, #b0884a 100%)", overflow: "hidden", color: "#fff" }}
     >
-      {video?.posterSrc ? (
+      {!showParchment && video?.posterSrc ? (
         // 普通 img 不占媒体解码器，电视音频播放期间仍能显示风景。
         // eslint-disable-next-line @next/next/no-img-element
         <img src={video.posterSrc} alt="" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+      ) : null}
+      {showParchment ? (
+        <div data-tv-parchment aria-hidden="true" style={{ position: "absolute", inset: 0, background: '#ecd9b9 url("/read/parchment-scroll-bg-wide.jpg") center / 100% 100% no-repeat' }} />
       ) : null}
       {entry ? (
         <TvScriptureDisplay
           label={copy("经文", "Passage")}
           text={verseText}
           passage={planView?.verses.length ? {
-            verses: planView.verses.slice(planPage.start, planPage.end),
-            start: planPage.start,
+            verses: showParchment ? planView.verses : planView.verses.slice(planPage.start, planPage.end),
+            start: showParchment ? 0 : planPage.start,
             current: planView.cur,
           } : undefined}
           controlsVisible={legendOn}
+          parchment={showParchment}
           reference={planView?.verses.length
-            ? `${planView.title}:${planPage.start + 1}${planPage.end > planPage.start + 1 ? `–${planPage.end}` : ""}`
+            ? showParchment ? planView.title : `${planView.title}:${planPage.start + 1}${planPage.end > planPage.start + 1 ? `–${planPage.end}` : ""}`
             : `${entry.ref} · ${translations.find((t) => t.id === version)?.[locale === "en" ? "labelEn" : "labelZh"] ?? ""}`}
           scale={scale}
         />
       ) : null}
-      <div style={{ position: "absolute", left: "3vw", bottom: "3vh", textShadow: "0 1px 6px rgba(0,0,0,0.8)" }}>
-        {toast ? <p style={{ margin: "0 0 1vh", fontSize: "min(1.8vw, 2.8vh)", fontWeight: 600 }}>{toast}</p> : null}
+      <div style={{ position: "absolute", left: "3vw", bottom: "3vh", textShadow: showParchment ? "none" : "0 1px 6px rgba(0,0,0,0.8)" }}>
+        {toast ? <p style={{ margin: "0 0 1vh", fontSize: "min(1.8vw, 2.8vh)", fontWeight: 600, color: showParchment ? "#3f3024" : "inherit" }}>{toast}</p> : null}
         {legendOn ? (
           <div data-tv-controls
             style={{
@@ -526,7 +540,7 @@ export function TvScreen({ videos, translations }: { videos: Video[]; translatio
               width: "94vw",
               boxSizing: "border-box",
               fontSize: "min(1.3vw, 2.2vh)",
-              background: "rgba(0,0,0,0.45)",
+              background: showParchment ? "rgba(48,35,24,.88)" : "rgba(0,0,0,0.45)",
               borderRadius: 16,
             }}
           >
@@ -534,6 +548,12 @@ export function TvScreen({ videos, translations }: { videos: Video[]; translatio
               <label>{copy("语言", "Language")} <select aria-label={copy("语言", "Language")} value={locale} onChange={(e) => changeLanguage(e.target.value as AppLocale)} style={{ color: "white", background: "#26332c", font: "inherit" }}><option value="zh-CN">简体中文</option><option value="zh-TW">繁體中文</option><option value="en">English</option></select></label>
               <label>{copy("圣经版本", "Bible version")} <select aria-label={copy("圣经版本", "Bible version")} value={version} onChange={(e) => changeVersion(e.target.value)} style={{ color: "white", background: "#26332c", font: "inherit", maxWidth: "36vw" }}>{translations.filter((t) => locale === "en" ? t.language.startsWith("en") : t.language.startsWith("zh")).map((t) => <option key={t.id} value={t.id}>{locale === "en" ? t.labelEn : locale === "zh-TW" ? toZhTwText(t.labelZh) : t.labelZh} · {translationSupportsChapterAudio(t.id) ? copy("可朗读", "Audio") : copy("不能朗读", "No audio")}</option>)}</select></label>
               <label>{copy("字号", "Text size")} <select aria-label={copy("字号", "Text size")} value={fontStep} onChange={(e) => { const step = Number(e.target.value); setFontStep(step); saveSettings(version, step); }} style={{ color: "white", background: "#26332c", font: "inherit" }}>{[copy("小", "Small"), copy("标准", "Standard"), copy("大", "Large"), copy("特大", "Extra large")].map((label, i) => <option key={i} value={i}>{label}</option>)}</select></label>
+              {planActive ? <button
+                type="button"
+                aria-pressed={parchmentOn}
+                onClick={toggleParchment}
+                style={{ color: "inherit", font: "inherit", border: "1px solid currentColor", borderRadius: 6, padding: "0.4vh 0.8vw", background: parchmentOn ? "rgba(255,255,255,.2)" : "transparent", cursor: "pointer" }}
+              >{copy("羊皮卷", "Parchment")}</button> : null}
               <span role="status" style={{ opacity: 0.8 }}>{!translationSupportsChapterAudio(version) ? noAudio : !goldenVersion ? copy("整章可朗读 · 金句暂无音频", "Chapter audio available · No verse audio") : copy("整章与金句均可朗读", "Chapter and verse audio available")}</span>
             </div>
             <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gridTemplateColumns: "repeat(6, minmax(0, 1fr))", columnGap: "2.4vw", rowGap: "0.6vh" }}>
@@ -541,7 +561,7 @@ export function TvScreen({ videos, translations }: { videos: Video[]; translatio
               <li key={l}><button type="button" onClick={() => runAction(l.startsWith("↑") ? "ArrowUp" : l.startsWith("←") ? "ArrowRight" : l[0])} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", padding: "0.5vh 0", cursor: "pointer", textShadow: "inherit" }}>{l === "8 今日读经" && planLoading ? copy("8 同步进度中…", "8 Syncing…") : copy(l, LEGEND_EN[index])}</button></li>
             ))}
             </ul>
-            {planView ? <div><button onClick={() => setPlanView((p) => p ? { ...p, cur: Math.max(0, planPage.start - 1) } : p)}>{copy("上一页经文", "Previous passage")}</button> <button onClick={() => setPlanView((p) => p ? { ...p, cur: Math.min(p.verses.length - 1, planPage.end) } : p)}>{copy("下一页经文", "Next passage")}</button></div> : null}
+            {planView && !showParchment ? <div><button onClick={() => setPlanView((p) => p ? { ...p, cur: Math.max(0, planPage.start - 1) } : p)}>{copy("上一页经文", "Previous passage")}</button> <button onClick={() => setPlanView((p) => p ? { ...p, cur: Math.min(p.verses.length - 1, planPage.end) } : p)}>{copy("下一页经文", "Next passage")}</button></div> : null}
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6vh 2.4vw", marginTop: "0.6vh", overflowWrap: "anywhere" }}>
             <span>{user ? <button type="button" onClick={() => void logout().catch(() => say("退出失败，请重试"))} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", cursor: "pointer" }}>已登录 · {user.name || "我的账号"}（退出）</button> : <a href="/login?next=/tv" style={{ color: "inherit" }}>{copy("登录", "Sign in")}</a>}</span>
             <a href="/tv-check.html" style={{ color: "inherit" }}>{copy("检查页", "Diagnostics")}</a>

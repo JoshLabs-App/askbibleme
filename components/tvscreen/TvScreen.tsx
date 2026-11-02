@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { TvScriptureDisplay } from "./TvScriptureDisplay";
 import { useHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { buildGoldenVerseAudioRemoteSrc } from "@/lib/bible/golden-verse-audio";
@@ -33,14 +34,6 @@ const ALBUM_KEYS: Record<string, { album: string; label: string }> = {
 const LEGEND = ["1 轻音乐", "2 金句朗读", "3 下午茶轻快", "4 钢琴", "5 圣诗", "6 睡眠", "7 TovCore", "8 今日读经", "9 暂停/继续", "↑↓ 换一首", "← → 换场景", "0 切换场景"];
 const LEGEND_EN = ["1 Quiet music", "2 Verse audio", "3 Afternoon tea", "4 Piano", "5 Hymns", "6 Sleep", "7 TovCore", "8 Today’s reading", "9 Pause / resume", "↑↓ Next track", "← → Next scene", "0 Change scene"];
 const LEGEND_MS = 15_000;
-
-/** 按字数定字号：用 vw/vh，旧电视浏览器也认；长经文自动缩小，不会被截断 */
-function verseFontSize(chars: number): string {
-  if (chars <= 24) return "min(3.8vw, 6.2vh)";
-  if (chars <= 48) return "min(3.2vw, 5.2vh)";
-  if (chars <= 80) return "min(2.8vw, 4.4vh)";
-  return "min(2.3vw, 3.6vh)";
-}
 
 type PlanChapter = { bookId: string; chapter: number };
 
@@ -470,24 +463,6 @@ export function TvScreen({ videos, translations }: { videos: Video[]; translatio
     };
   }, [showLegend]);
 
-  const planPage = useMemo(() => {
-    if (!planView) return { start: 0, end: 0 };
-    let start = 0;
-    while (start < planView.verses.length) {
-      let end = start;
-      let chars = 0;
-      while (end < planView.verses.length && (end === start || (end - start < 4 && chars + planView.verses[end].length <= 160 / (scale * scale)))) {
-        chars += planView.verses[end].length;
-        end += 1;
-      }
-      if (planView.cur < end) return { start, end };
-      start = end;
-    }
-    return { start: 0, end: 0 };
-  }, [planView, scale]);
-
-  const fontSize = useMemo(() => `calc(${verseFontSize(verseText.length)} * ${scale})`, [verseText, scale]);
-
   return (
     <div
       onPointerMove={showLegend}
@@ -507,42 +482,15 @@ export function TvScreen({ videos, translations }: { videos: Video[]; translatio
         <span role="status">{!translationSupportsChapterAudio(version) ? noAudio : !goldenVersion ? copy("整章可朗读 · 金句暂无音频", "Chapter audio available · No verse audio") : copy("整章与金句均可朗读", "Chapter and verse audio available")}</span>
       </div>
       {entry ? (
-        <div
-          tabIndex={0}
-          aria-label={copy("经文", "Passage")}
-          style={{
-            position: "absolute",
-            left: "8vw",
-            right: "8vw",
-            top: "12vh",
-            bottom: legendOn ? "29vh" : "8vh",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-            overflow: "auto",
-            textShadow: "0 2px 12px rgba(0,0,0,0.7)",
-          }}
-        >
-          {planView && planView.verses.length > 0 ? (
-            <>
-              <p style={{ margin: 0, width: "100%", maxHeight: "45vh", overflow: "auto", textAlign: "left", fontSize: `min(${2.6 * scale}vw, ${4.2 * scale}vh)`, lineHeight: 1.65, fontWeight: 500 }}>
-                {planView.verses.slice(planPage.start, planPage.end).map((t, i) => (
-                  <span key={planPage.start + i} aria-current={planPage.start + i === planView.cur ? "true" : undefined} style={{ color: planPage.start + i === planView.cur ? "#ffe4a3" : "#fff" }}>
-                    <sup style={{ fontSize: "0.55em", marginRight: "0.3em" }}>{planPage.start + i + 1}</sup>{t}{" "}
-                  </span>
-                ))}
-              </p>
-              <p style={{ margin: "1vh 0 0", fontSize: "min(1.9vw, 3vh)", fontWeight: 600, opacity: 0.92 }}>{planView.title}</p>
-            </>
-          ) : (
-            <>
-              <p style={{ margin: 0, fontSize, lineHeight: 1.45, fontWeight: 700 }}>{verseText}</p>
-              <p style={{ margin: "3vh 0 0", fontSize: "min(1.9vw, 3vh)", fontWeight: 600, opacity: 0.92 }}>{entry.ref} · {translations.find((t) => t.id === version)?.[locale === "en" ? "labelEn" : "labelZh"]}</p>
-            </>
-          )}
-        </div>
+        <TvScriptureDisplay
+          label={copy("经文", "Passage")}
+          text={planView?.verses.length ? planView.verses[planView.cur] : verseText}
+          nextText={planView?.verses[planView.cur + 1]}
+          reference={planView?.verses.length
+            ? `${planView.title} · ${planView.cur + 1}`
+            : `${entry.ref} · ${translations.find((t) => t.id === version)?.[locale === "en" ? "labelEn" : "labelZh"] ?? ""}`}
+          scale={scale}
+        />
       ) : null}
       <div style={{ position: "absolute", left: "3vw", bottom: "3vh", textShadow: "0 1px 6px rgba(0,0,0,0.8)" }}>
         {toast ? <p style={{ margin: "0 0 1vh", fontSize: "min(1.8vw, 2.8vh)", fontWeight: 600 }}>{toast}</p> : null}
@@ -563,7 +511,7 @@ export function TvScreen({ videos, translations }: { videos: Video[]; translatio
               <li key={l}><button type="button" onClick={() => runAction(l.startsWith("↑") ? "ArrowUp" : l.startsWith("←") ? "ArrowRight" : l[0])} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", padding: "0.5vh 0", cursor: "pointer", textShadow: "inherit" }}>{l === "8 今日读经" && planLoading ? copy("8 同步进度中…", "8 Syncing…") : copy(l, LEGEND_EN[index])}</button></li>
             ))}
             </ul>
-            {planView ? <div><button onClick={() => setPlanView((p) => p ? { ...p, cur: Math.max(0, planPage.start - 1) } : p)}>{copy("上一页经文", "Previous passage")}</button> <button onClick={() => setPlanView((p) => p ? { ...p, cur: Math.min(p.verses.length - 1, planPage.end) } : p)}>{copy("下一页经文", "Next passage")}</button></div> : null}
+            {planView ? <div><button onClick={() => setPlanView((p) => p ? { ...p, cur: Math.max(0, p.cur - 1) } : p)}>{copy("上一节经文", "Previous verse")}</button> <button onClick={() => setPlanView((p) => p ? { ...p, cur: Math.min(p.verses.length - 1, p.cur + 1) } : p)}>{copy("下一节经文", "Next verse")}</button></div> : null}
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6vh 2.4vw", marginTop: "0.6vh", width: 0, minWidth: "100%", overflowWrap: "anywhere" }}>
             <span>{user ? <button type="button" onClick={() => void logout().catch(() => say("退出失败，请重试"))} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", cursor: "pointer" }}>已登录 · {user.name || "我的账号"}（退出）</button> : <a href="/login?next=/tv" style={{ color: "inherit" }}>{copy("登录", "Sign in")}</a>}</span>
             <a href="/tv-check.html" style={{ color: "inherit" }}>{copy("检查页", "Diagnostics")}</a>

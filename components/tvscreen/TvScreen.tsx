@@ -33,7 +33,7 @@ const ALBUM_KEYS: Record<string, { album: string; label: string }> = {
 };
 const LEGEND = ["1 轻音乐", "2 金句朗读", "3 下午茶轻快", "4 钢琴", "5 圣诗", "6 睡眠", "7 TovCore", "8 今日读经", "9 暂停/继续", "↑↓ 换一首", "← → 换场景", "0 切换场景"];
 const LEGEND_EN = ["1 Quiet music", "2 Verse audio", "3 Afternoon tea", "4 Piano", "5 Hymns", "6 Sleep", "7 TovCore", "8 Today’s reading", "9 Pause / resume", "↑↓ Next track", "← → Next scene", "0 Change scene"];
-const LEGEND_MS = 15_000;
+const LEGEND_MS = 10_000;
 
 type PlanChapter = { bookId: string; chapter: number };
 

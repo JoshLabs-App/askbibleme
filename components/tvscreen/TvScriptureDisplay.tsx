@@ -1,23 +1,37 @@
 import type { CSSProperties } from "react";
 import styles from "./TvScriptureDisplay.module.css";
 
-/** TovCore TV's centered lyric typography, shared by verses and today's reading. */
-export function TvScriptureDisplay({ text, nextText, reference, scale, label }: {
+/** TovCore typography for centered golden verses and stable reading paragraphs. */
+export function TvScriptureDisplay({ text, passage, reference, scale, label, controlsVisible }: {
   text: string;
-  nextText?: string;
+  passage?: { verses: string[]; start: number; current: number };
   reference: string;
   scale: number;
   label: string;
+  controlsVisible?: boolean;
 }) {
-  // Scripture can be longer than a lyric. Keep all words reachable at every text size.
-  const lengthScale = text.length > 240 ? 0.72 : text.length > 120 ? 0.86 : 1;
+  const content = passage ? passage.verses.join(" ") : text;
+  const lengthScale = content.length > 240 ? 0.72 : content.length > 120 ? 0.86 : 1;
   return (
-    <section className={styles.display} aria-label={label} style={{ "--lyric-scale": scale * lengthScale } as CSSProperties}>
-      <div key={`${reference}:${text}`} className={styles.lines}>
-        <p className={styles.current} tabIndex={0}>{text}</p>
-        {nextText ? <p className={styles.next} tabIndex={0}>{nextText}</p> : null}
-        <p className={styles.reference}>{reference}</p>
+    <section
+      data-tv-scripture
+      className={`${styles.display} ${passage && controlsVisible ? styles.withControls : ""}`}
+      aria-label={label}
+      style={{ "--lyric-scale": scale * lengthScale, "--reference-scale": scale } as CSSProperties}
+    >
+      {/* Keep the paragraph mounted as narration advances within the same page. */}
+      <div key={`${reference}:${content}`} className={styles.lines}>
+        {passage ? (
+          <p className={`${styles.current} ${styles.paragraph}`} tabIndex={0}>
+            {passage.verses.map((verse, index) => (
+              <span key={passage.start + index} aria-current={passage.start + index === passage.current ? "true" : undefined}>
+                <sup className={styles.number}>{passage.start + index + 1}</sup>{verse}{" "}
+              </span>
+            ))}
+          </p>
+        ) : <p className={styles.current} tabIndex={0}>{text}</p>}
       </div>
+      <p className={styles.reference}>{reference}</p>
     </section>
   );
 }

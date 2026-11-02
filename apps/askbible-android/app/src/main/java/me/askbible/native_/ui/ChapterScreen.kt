@@ -271,8 +271,13 @@ fun ChapterScreen(
             modifier = Modifier.fillMaxSize().parchmentFade(ParchmentFadePreset.CHAPTER),
             contentPadding = PaddingValues(
                 start = 20.dp, end = 20.dp, top = 59.dp + statusBarTop,
-                bottom = (ShellMetrics.tabRowHeight + ShellMetrics.tabBarDockGap +
-                          ShellMetrics.dockContentHeight + 24f).dp,
+                // The dock's seek target is 44dp, taller than the original 23dp row.
+                // Include the same system inset as the shell, then keep chapter-end
+                // exploration links comfortably above the entire player.
+                bottom = shellTabBarBottomInset() +
+                    (ShellMetrics.tabRowHeight + ShellMetrics.tabBarDockGap +
+                     ShellMetrics.dockContentHeight +
+                     (44f - ShellMetrics.scrubberRowHeight) + 48f).dp,
             ),
         ) {
             item(key = "header") {

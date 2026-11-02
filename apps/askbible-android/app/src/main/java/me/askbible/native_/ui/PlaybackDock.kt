@@ -133,7 +133,7 @@ fun PlaybackDock(
                     contentAlignment = Alignment.CenterStart,
                 ) {
                     Box(
-                        Modifier.fillMaxWidth().height(3.dp).clip(CircleShape).background(Color(0x385C4030))
+                        Modifier.fillMaxWidth().height(3.dp).clip(CircleShape).background(theme.ink.toColor().copy(alpha = 0.22f))
                     ) {
                         Box(Modifier.fillMaxWidth(fraction).height(3.dp)
                             .clip(CircleShape).background(Brand.logo.toColor()))

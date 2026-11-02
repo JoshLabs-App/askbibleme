@@ -464,26 +464,27 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       <div style={{ position: "absolute", left: "3vw", bottom: "3vh", textShadow: "0 1px 6px rgba(0,0,0,0.8)" }}>
         {toast ? <p style={{ margin: "0 0 1vh", fontSize: "min(1.8vw, 2.8vh)", fontWeight: 600 }}>{toast}</p> : null}
         {legendOn ? (
-          <ul data-tv-controls
+          <div data-tv-controls
             style={{
               margin: 0,
               padding: "1.6vh 2vw",
-              listStyle: "none",
-              display: "grid",
-              gridTemplateColumns: "repeat(3, auto)",
-              columnGap: "2.4vw",
-              rowGap: "0.6vh",
+              width: "max-content",
+              maxWidth: "94vw",
               fontSize: "min(1.3vw, 2.2vh)",
               background: "rgba(0,0,0,0.45)",
               borderRadius: 16,
             }}
           >
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gridTemplateColumns: "repeat(3, auto)", columnGap: "2.4vw", rowGap: "0.6vh" }}>
             {LEGEND.map((l) => (
               <li key={l}><button type="button" onClick={() => runAction(l.startsWith("↑") ? "ArrowUp" : l.startsWith("←") ? "ArrowRight" : l[0])} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", padding: "0.5vh 0", cursor: "pointer", textShadow: "inherit" }}>{l === "8 今日读经" && planLoading ? "8 同步进度中…" : l}</button></li>
             ))}
-            <li>{user ? <button type="button" onClick={() => void logout().catch(() => say("退出失败，请重试"))} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", cursor: "pointer" }}>已登录 · {user.name || "我的账号"}（退出）</button> : <a href="/login?next=/tv" style={{ color: "inherit" }}>登录</a>}</li>
-            <li><a href="/tv-check.html" style={{ color: "inherit" }}>检查页</a></li>
-          </ul>
+            </ul>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6vh 2.4vw", marginTop: "0.6vh", contain: "inline-size", overflowWrap: "anywhere" }}>
+            <span>{user ? <button type="button" onClick={() => void logout().catch(() => say("退出失败，请重试"))} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", cursor: "pointer" }}>已登录 · {user.name || "我的账号"}（退出）</button> : <a href="/login?next=/tv" style={{ color: "inherit" }}>登录</a>}</span>
+            <a href="/tv-check.html" style={{ color: "inherit" }}>检查页</a>
+            </div>
+          </div>
         ) : null}
       </div>
       <audio ref={musicRef} onEnded={onMusicEnded} onError={reportAudio("音乐")} preload="none" />

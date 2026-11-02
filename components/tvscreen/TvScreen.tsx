@@ -471,6 +471,22 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     };
   }, [showLegend]);
 
+  const planPage = useMemo(() => {
+    if (!planView) return { start: 0, end: 0 };
+    let start = 0;
+    while (start < planView.verses.length) {
+      let end = start;
+      let chars = 0;
+      while (end < planView.verses.length && (end === start || (end - start < 4 && chars + planView.verses[end].length <= 160))) {
+        chars += planView.verses[end].length;
+        end += 1;
+      }
+      if (planView.cur < end) return { start, end };
+      start = end;
+    }
+    return { start: 0, end: 0 };
+  }, [planView]);
+
   const fontSize = useMemo(() => verseFontSize(verseText.length), [verseText]);
 
   return (
@@ -521,9 +537,9 @@ export function TvScreen({ videos }: { videos: Video[] }) {
           {planView && planView.verses.length > 0 ? (
             <>
               <p style={{ margin: 0, width: "100%", maxHeight: "55vh", overflow: "hidden", textAlign: "left", fontSize: "min(2.6vw, 4.2vh)", lineHeight: 1.65, fontWeight: 500 }}>
-                {planView.verses.slice(planView.cur, planView.cur + 12).map((t, i) => (
-                  <span key={planView.cur + i} aria-current={i === 0 ? "true" : undefined} style={{ fontWeight: i === 0 ? 700 : 500, opacity: i === 0 ? 1 : 0.65 }}>
-                    <sup style={{ fontSize: "0.55em", marginRight: "0.3em" }}>{planView.cur + i + 1}</sup>{t}{" "}
+                {planView.verses.slice(planPage.start, planPage.end).map((t, i) => (
+                  <span key={planPage.start + i} aria-current={planPage.start + i === planView.cur ? "true" : undefined} style={{ opacity: planPage.start + i === planView.cur ? 1 : 0.55 }}>
+                    <sup style={{ fontSize: "0.55em", marginRight: "0.3em" }}>{planPage.start + i + 1}</sup>{t}{" "}
                   </span>
                 ))}
               </p>

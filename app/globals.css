@@ -632,3 +632,4 @@ html[data-app-immersive] .app-pwa-install-prompt {
 .home-bottom-nav--surface .home-bottom-nav__tab-icon,
 .home-bottom-nav--surface .home-bottom-nav__play-icon { width: 26px; height: 26px; font-size: 26px; }
 .home-bottom-nav__label { font-size: 10px; line-height: 1; white-space: nowrap; }
+.read-scripture-dock--surface { background: var(--bc-read-surface-solid, #f7efdf); }

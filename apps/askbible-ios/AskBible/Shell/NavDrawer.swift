@@ -172,7 +172,7 @@ struct NavDrawerView: View {
             Text(SiteCopy.t("nav.language", locale))
                 .askFont(size: 16)
                 .foregroundStyle(theme.ink)
-            HStack(spacing: 6) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 118))], spacing: 8) {
                 localeChip(nil, label: SiteCopy.t("native.followSystem", locale))
                 ForEach([AppLocale.zhCN, .zhTW, .en], id: \.rawValue) { l in
                     localeChip(l, label: l.settingLabel)
@@ -189,8 +189,9 @@ struct NavDrawerView: View {
             Text(label)
                 .askFont(size: 12, weight: .semibold)
                 .foregroundStyle(on ? Color(parchment: 0x784b1e) : theme.ink.opacity(0.72))
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, minHeight: 32)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 8)
+                .frame(maxWidth: .infinity, minHeight: 44)
                 .background(
                     RoundedRectangle(cornerRadius: 999)
                         .fill(on ? Color(rgb: 0xffb101, opacity: 0.18) : Color(parchment: 0xfff8eb, opacity: 0.45))

@@ -436,6 +436,37 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
               listenedDates={listenedDates}
             />
 
+      <div className="read-plan-play-screen__dock pointer-events-none flex justify-center px-3">
+        <ReadScripturePlaybackDock
+          visible={hasQueue}
+          busy={busy}
+          disabled={!hasQueue}
+          className="pointer-events-auto bg-[var(--bc-read-surface,rgba(250,246,238,0.96))] backdrop-blur-sm"
+          playing={isScripturePlaying}
+          preparing={isPreparing}
+          currentSec={currentSec}
+          durationSec={durationSec}
+          seekRatio={seekRatio}
+          scripturePlaybackRate={scripturePlaybackRate}
+          loopMode={loopMode}
+          onTogglePlay={() => void onTogglePlay()}
+          onNext={() => void onNext()}
+          onRead={onOpenSearch}
+          readIconName="search"
+          readAccessibilityLabel={t("pages.read.chapterChromeSearch")}
+          onCycleRate={() => setScripturePlaybackRate(nextScripturePlaybackRate(scripturePlaybackRate))}
+          onCycleLoop={() => {
+            const next =
+              scriptureAudioRepeatMode === "off"
+                ? "chapter"
+                : scriptureAudioRepeatMode === "chapter"
+                  ? "book"
+                  : "off";
+            setScriptureAudioRepeatMode(next);
+          }}
+        />
+      </div>
+
             {needsConfirm ? (
               <button
                 type="button"
@@ -546,36 +577,7 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
         ) : null}
       </div>
 
-      <div className="read-plan-play-screen__dock pointer-events-none sticky bottom-0 z-20 flex justify-center px-3">
-        <ReadScripturePlaybackDock
-          visible={hasQueue}
-          busy={busy}
-          disabled={!hasQueue}
-          className="pointer-events-auto bg-[var(--bc-read-surface,rgba(250,246,238,0.96))] backdrop-blur-sm"
-          playing={isScripturePlaying}
-          preparing={isPreparing}
-          currentSec={currentSec}
-          durationSec={durationSec}
-          seekRatio={seekRatio}
-          scripturePlaybackRate={scripturePlaybackRate}
-          loopMode={loopMode}
-          onTogglePlay={() => void onTogglePlay()}
-          onNext={() => void onNext()}
-          onRead={onOpenSearch}
-          readIconName="search"
-          readAccessibilityLabel={t("pages.read.chapterChromeSearch")}
-          onCycleRate={() => setScripturePlaybackRate(nextScripturePlaybackRate(scripturePlaybackRate))}
-          onCycleLoop={() => {
-            const next =
-              scriptureAudioRepeatMode === "off"
-                ? "chapter"
-                : scriptureAudioRepeatMode === "chapter"
-                  ? "book"
-                  : "off";
-            setScriptureAudioRepeatMode(next);
-          }}
-        />
-      </div>
+
     </div>
   );
 }

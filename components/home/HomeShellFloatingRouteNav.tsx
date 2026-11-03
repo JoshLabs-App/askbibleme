@@ -26,6 +26,7 @@ import {
   type ShellTabMaterialIconName,
 } from "@/lib/shell/shell-chrome-icons";
 import { WEB_APP_HOME_PATH, isWebAppHomePath } from "@/lib/web-app-home-path";
+import { isMusicShellPath } from "@/lib/music/music-auto-hide-chrome";
 
 type NavItemDef = {
   href: string;
@@ -133,6 +134,11 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
   const router = useRouter();
   const { t, locale } = useLocale();
   const navLabel = (key: string) => key === "nav.panorama" ? (locale === "en" ? "Bible panorama" : locale === "zh-TW" ? "聖經全景" : "圣经全景") : t(key);
+  const tabLabel = (key: string) => {
+    if (key === "nav.home") return locale === "en" ? "Home" : locale === "zh-TW" ? "首頁" : "首页";
+    if (key === "nav.panorama") return locale === "en" ? "Panorama" : "全景";
+    return navLabel(key);
+  };
   const { canPlayMusic, playing, effectiveSrc, togglePlayMusic, loading } = useMusicShellPlayback();
   const readChapterRoute = useMemo(() => parseReadChapterRoute(pathname), [pathname]);
   const isPlanPlay = isReadPlanPlayPath(pathname);
@@ -168,22 +174,23 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
 
   const outer =
     placement === "fixedShell"
-      ? "home-bottom-nav pointer-events-none fixed inset-x-0 bottom-0 z-30 flex flex-col items-center justify-end gap-1.5 px-3 pb-[max(0.375rem,env(safe-area-inset-bottom,0px))] pt-0"
+      ? `home-bottom-nav ${isMusicShellPath(pathname) ? "" : "home-bottom-nav--surface"} pointer-events-none fixed inset-x-0 bottom-0 z-30 flex flex-col items-center justify-end gap-1.5 px-3 pb-[max(0.375rem,env(safe-area-inset-bottom,0px))] pt-0`
       : "pointer-events-none absolute inset-x-0 bottom-0 z-[18] flex flex-col items-center justify-end gap-1.5 px-3 pb-[max(0.375rem,env(safe-area-inset-bottom,0px))] pt-0";
 
   const navTapTarget = (_item: NavItemDef): void => {};
 
-  const renderTabIcon = (item: NavItemDef) => (
+  const renderTabIcon = (item: NavItemDef) => (<>
     <ShellMaterialIcon
       name={item.materialIcon}
       size={SHELL_TAB_ICON_SIZE_PX}
-      color={SHELL_TAB_BAR_ICON}
+      color={placement === "fixedShell" && !isMusicShellPath(pathname) ? "currentColor" : SHELL_TAB_BAR_ICON}
       className="home-bottom-nav__tab-icon"
     />
-  );
+    {placement === "fixedShell" && !isMusicShellPath(pathname) ? <span className="home-bottom-nav__label">{tabLabel(item.labelKey)}</span> : null}
+  </>);
 
   const renderIconLink = (item: NavItemDef) => {
-    const active = item.match(pathname);
+    const active = item.match(pathname) && !(item.labelKey === "nav.read" && isPlanPlay);
     if (item.labelKey === "nav.read" && readChapterRoute !== null) {
       return (
         <button
@@ -318,7 +325,7 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
             <ShellMaterialCommunityIcon
               name="account-voice"
               size={SHELL_PLAY_ICON_SIZE_PX}
-              color={fabActive ? "var(--brand-logo-background)" : SHELL_TAB_BAR_ICON}
+              color={fabActive ? "var(--brand-logo-background)" : placement === "fixedShell" && !isMusicShellPath(pathname) ? "var(--bc-read-book, #3d2e24)" : SHELL_TAB_BAR_ICON}
               className="home-bottom-nav__play-icon"
             />
           ) : (
@@ -329,6 +336,7 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
               className="home-bottom-nav__play-icon"
             />
           )}
+          {placement === "fixedShell" && !isMusicShellPath(pathname) ? <span className="home-bottom-nav__label">{locale === "en" ? "Plan" : locale === "zh-TW" ? "讀經" : "读经"}</span> : null}
         </button>
 
         <div className="home-bottom-nav__side home-bottom-nav__side--right">

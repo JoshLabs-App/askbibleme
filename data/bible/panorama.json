@@ -1,0 +1,1090 @@
+{
+  "acts": [
+    {
+      "en": "Creation",
+      "sections": [
+        {
+          "en": "The world and humanity",
+          "id": "creation",
+          "spans": [
+            {
+              "bookId": "GEN",
+              "first": 1,
+              "last": 2
+            }
+          ],
+          "summaryEn": "God creates the world and entrusts humanity with its care.",
+          "summaryZh": "神创造天地，人受托照管受造世界。",
+          "zh": "天地与人"
+        }
+      ],
+      "subtitleEn": "A good beginning",
+      "subtitleZh": "美好的开始",
+      "zh": "创造"
+    },
+    {
+      "en": "The fall",
+      "sections": [
+        {
+          "en": "From Eden to Babel",
+          "id": "fall",
+          "spans": [
+            {
+              "bookId": "GEN",
+              "first": 3,
+              "last": 11
+            }
+          ],
+          "summaryEn": "Human rebellion brings rupture and death; judgment and preservation intertwine.",
+          "summaryZh": "人的背离带来破裂与死亡；审判与保守交织。",
+          "zh": "从伊甸园到巴别"
+        }
+      ],
+      "subtitleEn": "A fractured world",
+      "subtitleZh": "世界的破裂",
+      "zh": "堕落"
+    },
+    {
+      "en": "Israel",
+      "sections": [
+        {
+          "en": "Ancestors and promise",
+          "id": "ancestors",
+          "spans": [
+            {
+              "bookId": "GEN",
+              "first": 12,
+              "last": 50
+            }
+          ],
+          "summaryEn": "Abraham is called; his family's story leads to Egypt, carrying a promise of blessing for all peoples (Gen 12:1–3).",
+          "summaryZh": "亚伯拉罕蒙召；一家人的故事走向埃及，万族得福的应许贯穿其中（创12:1–3）。",
+          "zh": "先祖与应许"
+        },
+        {
+          "en": "Exodus and covenant",
+          "id": "exodus",
+          "spans": [
+            {
+              "bookId": "EXO",
+              "first": 1,
+              "last": 40
+            },
+            {
+              "bookId": "LEV",
+              "first": 1,
+              "last": 27
+            }
+          ],
+          "summaryEn": "Freed from slavery, the people enter a covenant at Sinai and learn worship and life (Exod 19–20). Leviticus belongs in this setting.",
+          "summaryZh": "百姓离开奴役，在西奈立约，学习敬拜与生活（出19–20）。利未记连接这一处境。",
+          "zh": "出埃及与立约"
+        },
+        {
+          "en": "Wilderness",
+          "id": "wilderness",
+          "spans": [
+            {
+              "bookId": "NUM",
+              "first": 1,
+              "last": 36
+            },
+            {
+              "bookId": "DEU",
+              "first": 1,
+              "last": 34
+            }
+          ],
+          "summaryEn": "One generation journeys through the wilderness; another prepares to enter the land (Num 13–14; Deut 1).",
+          "summaryZh": "一代人经历旷野，下一代准备进入土地（民13–14；申1）。",
+          "zh": "旷野"
+        },
+        {
+          "en": "Entering the land",
+          "id": "land",
+          "spans": [
+            {
+              "bookId": "JOS",
+              "first": 1,
+              "last": 24
+            }
+          ],
+          "summaryEn": "Crossing the Jordan, battles, allocation of land, and renewed allegiance to God (Josh 3; 24).",
+          "summaryZh": "过约旦河、争战、分配土地，重申对神的忠诚（书3；24）。",
+          "zh": "进入土地"
+        },
+        {
+          "en": "The judges",
+          "id": "judges",
+          "spans": [
+            {
+              "bookId": "JDG",
+              "first": 1,
+              "last": 21
+            },
+            {
+              "bookId": "RUT",
+              "first": 1,
+              "last": 4
+            }
+          ],
+          "summaryEn": "Judges recounts repeated unfaithfulness and deliverance. Ruth 1:1 places its family story in this era; its genealogy leads to David (4:17, 22).",
+          "summaryZh": "士师记呈现反复失信与蒙拯救。路得记1:1明确将家庭故事放在这一时期；4:17、22的家谱连接到大卫。",
+          "zh": "士师时期"
+        },
+        {
+          "en": "The kingdom rises",
+          "id": "kingdom",
+          "spans": [
+            {
+              "bookId": "1SA",
+              "first": 1,
+              "last": 31
+            },
+            {
+              "bookId": "2SA",
+              "first": 1,
+              "last": 24
+            },
+            {
+              "bookId": "1KI",
+              "first": 1,
+              "last": 11
+            },
+            {
+              "bookId": "1CH",
+              "first": 1,
+              "last": 29
+            },
+            {
+              "bookId": "2CH",
+              "first": 1,
+              "last": 9
+            }
+          ],
+          "summaryEn": "Saul, David, and Solomon: kingship and the temple. The promise to David's house is a landmark (2 Sam 7). Chronicles retells this history.",
+          "summaryZh": "扫罗、大卫与所罗门：王权兴起、圣殿建立，大卫家室的应许成为路标（撒下7）。历代志从另一角度重述。",
+          "zh": "王国兴起"
+        },
+        {
+          "en": "A divided kingdom",
+          "id": "divided",
+          "spans": [
+            {
+              "bookId": "1KI",
+              "first": 12,
+              "last": 22
+            },
+            {
+              "bookId": "2KI",
+              "first": 1,
+              "last": 16
+            },
+            {
+              "bookId": "2CH",
+              "first": 10,
+              "last": 35
+            }
+          ],
+          "summaryEn": "Israel and Judah become separate kingdoms; prophets confront kings and people with warning and hope (1 Kgs 12).",
+          "summaryZh": "以色列与犹大两国并行，君王与百姓面对先知的警告与盼望（王上12）。",
+          "zh": "王国分裂"
+        },
+        {
+          "en": "Defeat and exile",
+          "id": "exile",
+          "spans": [
+            {
+              "bookId": "2KI",
+              "first": 17,
+              "last": 25
+            },
+            {
+              "bookId": "2CH",
+              "first": 36,
+              "last": 36
+            },
+            {
+              "bookId": "LAM",
+              "first": 1,
+              "last": 5
+            },
+            {
+              "bookId": "EZK",
+              "first": 1,
+              "last": 48
+            },
+            {
+              "bookId": "DAN",
+              "first": 1,
+              "last": 12
+            }
+          ],
+          "summaryEn": "The northern kingdom falls, and later Jerusalem is destroyed. Lamentations voices grief; Ezekiel and Daniel connect with exile.",
+          "summaryZh": "北国覆亡，后来耶路撒冷被毁。哀歌表达悲痛；以西结书和但以理书连接被掳处境。",
+          "zh": "亡国与被掳"
+        },
+        {
+          "en": "Return and rebuilding",
+          "id": "return",
+          "spans": [
+            {
+              "bookId": "EZR",
+              "first": 1,
+              "last": 10
+            },
+            {
+              "bookId": "NEH",
+              "first": 1,
+              "last": 13
+            },
+            {
+              "bookId": "EST",
+              "first": 1,
+              "last": 10
+            },
+            {
+              "bookId": "HAG",
+              "first": 1,
+              "last": 2
+            },
+            {
+              "bookId": "ZEC",
+              "first": 1,
+              "last": 14
+            },
+            {
+              "bookId": "MAL",
+              "first": 1,
+              "last": 4
+            }
+          ],
+          "summaryEn": "Some return to rebuild temple and walls; Esther portrays a Jewish community remaining in Persia.",
+          "summaryZh": "部分百姓归回，重建圣殿与城墙；以斯帖记呈现留在波斯的犹太群体。",
+          "zh": "归回与重建"
+        },
+        {
+          "en": "Poetry and wisdom",
+          "id": "wisdom",
+          "spans": [
+            {
+              "bookId": "JOB",
+              "first": 1,
+              "last": 42
+            },
+            {
+              "bookId": "PSA",
+              "first": 1,
+              "last": 150
+            },
+            {
+              "bookId": "PRO",
+              "first": 1,
+              "last": 31
+            },
+            {
+              "bookId": "ECC",
+              "first": 1,
+              "last": 12
+            },
+            {
+              "bookId": "SNG",
+              "first": 1,
+              "last": 8
+            }
+          ],
+          "summaryEn": "Prayer, suffering, love, and wisdom for life. These books span contexts and are not assigned a single historical date.",
+          "summaryZh": "祷告、痛苦、爱与生活智慧。这些书卷跨越处境，不把整卷固定在一个历史时期。",
+          "zh": "诗歌与智慧"
+        },
+        {
+          "en": "Prophetic voices",
+          "id": "prophets",
+          "spans": [
+            {
+              "bookId": "ISA",
+              "first": 1,
+              "last": 66
+            },
+            {
+              "bookId": "JER",
+              "first": 1,
+              "last": 52
+            },
+            {
+              "bookId": "HOS",
+              "first": 1,
+              "last": 14
+            },
+            {
+              "bookId": "JOL",
+              "first": 1,
+              "last": 3
+            },
+            {
+              "bookId": "AMO",
+              "first": 1,
+              "last": 9
+            },
+            {
+              "bookId": "OBA",
+              "first": 1,
+              "last": 1
+            },
+            {
+              "bookId": "JON",
+              "first": 1,
+              "last": 4
+            },
+            {
+              "bookId": "MIC",
+              "first": 1,
+              "last": 7
+            },
+            {
+              "bookId": "NAM",
+              "first": 1,
+              "last": 3
+            },
+            {
+              "bookId": "HAB",
+              "first": 1,
+              "last": 3
+            },
+            {
+              "bookId": "ZEP",
+              "first": 1,
+              "last": 3
+            }
+          ],
+          "summaryEn": "In different settings, prophets confront unfaithfulness, call for repentance, and proclaim hope. This reading index does not imply they lived at the same time.",
+          "summaryZh": "在不同处境中指出失信、呼召悔改、宣告盼望。本组是阅读索引，不表示这些先知同时生活。",
+          "zh": "先知的声音"
+        }
+      ],
+      "subtitleEn": "A people and a promise",
+      "subtitleZh": "应许中的百姓",
+      "zh": "以色列"
+    },
+    {
+      "en": "Jesus Christ",
+      "sections": [
+        {
+          "en": "Four Gospel witnesses",
+          "id": "jesus",
+          "spans": [
+            {
+              "bookId": "MAT",
+              "first": 1,
+              "last": 28
+            },
+            {
+              "bookId": "MRK",
+              "first": 1,
+              "last": 16
+            },
+            {
+              "bookId": "LUK",
+              "first": 1,
+              "last": 24
+            },
+            {
+              "bookId": "JHN",
+              "first": 1,
+              "last": 21
+            }
+          ],
+          "summaryEn": "Four Gospels witness to Jesus' life, teaching, death, and resurrection from distinct perspectives.",
+          "summaryZh": "四卷福音从各自角度见证耶稣的生活、教导、受死与复活。",
+          "zh": "四福音的见证"
+        }
+      ],
+      "subtitleEn": "The center of the story",
+      "subtitleZh": "故事的中心",
+      "zh": "耶稣基督"
+    },
+    {
+      "en": "The church's mission",
+      "sections": [
+        {
+          "en": "Outward from Jerusalem",
+          "id": "mission",
+          "spans": [
+            {
+              "bookId": "ACT",
+              "first": 1,
+              "last": 28
+            }
+          ],
+          "summaryEn": "The Spirit comes; witnesses carry the gospel across places and peoples (Acts 1:8; 2).",
+          "summaryZh": "圣灵降临，门徒作见证，福音跨越地域与族群（徒1:8；2）。",
+          "zh": "从耶路撒冷向外"
+        },
+        {
+          "en": "Faith and life together",
+          "id": "letters",
+          "spans": [
+            {
+              "bookId": "ROM",
+              "first": 1,
+              "last": 16
+            },
+            {
+              "bookId": "1CO",
+              "first": 1,
+              "last": 16
+            },
+            {
+              "bookId": "2CO",
+              "first": 1,
+              "last": 13
+            },
+            {
+              "bookId": "GAL",
+              "first": 1,
+              "last": 6
+            },
+            {
+              "bookId": "EPH",
+              "first": 1,
+              "last": 6
+            },
+            {
+              "bookId": "PHP",
+              "first": 1,
+              "last": 4
+            },
+            {
+              "bookId": "COL",
+              "first": 1,
+              "last": 4
+            },
+            {
+              "bookId": "1TH",
+              "first": 1,
+              "last": 5
+            },
+            {
+              "bookId": "2TH",
+              "first": 1,
+              "last": 3
+            },
+            {
+              "bookId": "1TI",
+              "first": 1,
+              "last": 6
+            },
+            {
+              "bookId": "2TI",
+              "first": 1,
+              "last": 4
+            },
+            {
+              "bookId": "TIT",
+              "first": 1,
+              "last": 3
+            },
+            {
+              "bookId": "PHM",
+              "first": 1,
+              "last": 1
+            },
+            {
+              "bookId": "HEB",
+              "first": 1,
+              "last": 13
+            },
+            {
+              "bookId": "JAS",
+              "first": 1,
+              "last": 5
+            },
+            {
+              "bookId": "1PE",
+              "first": 1,
+              "last": 5
+            },
+            {
+              "bookId": "2PE",
+              "first": 1,
+              "last": 3
+            },
+            {
+              "bookId": "1JN",
+              "first": 1,
+              "last": 5
+            },
+            {
+              "bookId": "2JN",
+              "first": 1,
+              "last": 1
+            },
+            {
+              "bookId": "3JN",
+              "first": 1,
+              "last": 1
+            },
+            {
+              "bookId": "JUD",
+              "first": 1,
+              "last": 1
+            }
+          ],
+          "summaryEn": "Letters address communities and individuals, teaching faith, life, and hope; read alongside Acts.",
+          "summaryZh": "书信回应具体群体与个人，教导信仰、生活与盼望；可结合使徒行传阅读。",
+          "zh": "教会的信仰与生活"
+        },
+        {
+          "en": "Witness and hope",
+          "id": "witness",
+          "spans": [
+            {
+              "bookId": "REV",
+              "first": 1,
+              "last": 22
+            }
+          ],
+          "summaryEn": "Revelation addresses real churches (Rev 1–3), offering exhortation and hope through visions; the whole book is not simply a future timetable.",
+          "summaryZh": "启示录首先写给现实中的教会（启1–3），通过异象带来劝勉与盼望；整卷不能只当作未来时间表。",
+          "zh": "苦难中的见证与盼望"
+        }
+      ],
+      "subtitleEn": "Good news for all peoples",
+      "subtitleZh": "福音传向万民",
+      "zh": "教会的使命"
+    },
+    {
+      "en": "New creation",
+      "sections": [
+        {
+          "en": "God with humanity",
+          "id": "renewal",
+          "spans": [
+            {
+              "bookId": "REV",
+              "first": 21,
+              "last": 22
+            }
+          ],
+          "summaryEn": "New heaven and earth, the tree of life, and God with humanity (Rev 21–22). This shows the story's hope without prescribing disputed end-times sequences.",
+          "summaryZh": "新天新地、生命树、神与人同在（启21–22）。这里呈现终点的盼望，不规定有争议的末世事件次序。",
+          "zh": "神与人同在"
+        }
+      ],
+      "subtitleEn": "The hope of renewal",
+      "subtitleZh": "万物更新的盼望",
+      "zh": "新创造"
+    }
+  ],
+  "introductions": {
+    "1CH": {
+      "en": "Genealogies and David's story recall Israel's identity and preparations for temple worship.",
+      "references": "1–9; 15–17; 22–29",
+      "zh": "借家谱和大卫的故事，回顾以色列的身份，并着重圣殿与敬拜的预备。"
+    },
+    "1CO": {
+      "en": "The cross, love, and resurrection reshape a church facing division, ethical failures, and disorder in worship.",
+      "references": "1–4; 5–7; 11–15",
+      "zh": "回应教会的分裂、伦理与敬拜问题，以十字架、爱和复活重整群体生活。"
+    },
+    "1JN": {
+      "en": "Jesus' true identity, obedience, and mutual love help believers discern truth and know they have life.",
+      "references": "1–5",
+      "zh": "围绕耶稣的真实身份、顺服与彼此相爱，帮助信徒辨认真理并确知生命。"
+    },
+    "1KI": {
+      "en": "Solomon's temple gives way to a divided kingdom, as royal choices meet prophetic warnings.",
+      "references": "1–12; 17–22",
+      "zh": "从所罗门建殿到王国分裂，君王的选择与先知的警告交织。"
+    },
+    "1PE": {
+      "en": "Those suffering for their faith are encouraged to hold hope and respond with holiness, goodness, and gentleness.",
+      "references": "1–5",
+      "zh": "帮助因信仰受苦的人持守盼望，以圣洁、善行与温柔回应周围的人。"
+    },
+    "1SA": {
+      "en": "Samuel, Saul, and David introduce Israel's monarchy and contrasting responses to God.",
+      "references": "1–3; 8–16; 24–26",
+      "zh": "从撒母耳到扫罗与大卫，讲述王权的兴起，以及人怎样回应神。"
+    },
+    "1TH": {
+      "en": "A young church is encouraged to stand firm, live holy lives, and find comfort in the Lord's return.",
+      "references": "1–5",
+      "zh": "鼓励年轻教会在患难中坚立、活出圣洁，并以主再来的盼望彼此安慰。"
+    },
+    "1TI": {
+      "en": "Timothy receives guidance on sound teaching, church service, and care for people in different circumstances.",
+      "references": "1–6",
+      "zh": "指导提摩太守护教导、安排教会服事，并照顾群体中不同处境的人。"
+    },
+    "2CH": {
+      "en": "Temple worship and royal responses to God frame the story from Solomon to exile and the decree to return.",
+      "references": "1–7; 29–36",
+      "zh": "以圣殿敬拜与君王对神的回应为重点，重述所罗门到被掳、归回诏令的历史。"
+    },
+    "2CO": {
+      "en": "Paul speaks openly of weakness, suffering, and ministry, calling for reconciliation, trust, and generosity.",
+      "references": "1–7; 8–9; 10–13",
+      "zh": "保罗坦诚谈软弱、受苦与使徒职分，呼吁和好、信任和慷慨。"
+    },
+    "2JN": {
+      "en": "Believers are urged to walk in truth and love and reject teaching that denies Christ.",
+      "references": "1",
+      "zh": "劝勉信徒在真理与爱中生活，并谨慎对待否认基督的教导。"
+    },
+    "2KI": {
+      "en": "Israel and Judah move toward defeat and exile while prophets call the people back to God.",
+      "references": "2–5; 17; 22–25",
+      "zh": "南北两国走向覆亡与被掳，先知持续呼唤百姓回转。"
+    },
+    "2PE": {
+      "en": "Warnings about false teachers accompany a call to grow in knowing Christ and patiently await God's promise.",
+      "references": "1–3",
+      "zh": "警告假教师，呼吁信徒在认识基督上成长，并耐心等候神的应许。"
+    },
+    "2SA": {
+      "en": "David becomes king and receives a promise for his house; his grave sins bring consequences for family and nation.",
+      "references": "5–7; 11–19",
+      "zh": "大卫成为王，领受家室的应许；他的严重过犯也给家庭和国家带来后果。"
+    },
+    "2TH": {
+      "en": "Confusion about the Lord's return is addressed with encouragement to persevere and fulfill daily responsibilities.",
+      "references": "1–3",
+      "zh": "纠正关于主再来的混乱，鼓励受苦者坚定，并忠实承担日常责任。"
+    },
+    "2TI": {
+      "en": "Timothy is urged to remain faithful through hardship, hold to Scripture, and pass on what he has received.",
+      "references": "1–4",
+      "zh": "劝勉提摩太在艰难中忠于福音、持守圣经，并把所领受的继续传下去。"
+    },
+    "3JN": {
+      "en": "Contrasting hospitality and rejection encourage support for faithful messengers and imitation of good.",
+      "references": "1",
+      "zh": "借接待与拒绝接待的对比，鼓励支持忠实传道者，效法善行。"
+    },
+    "ACT": {
+      "en": "The Spirit empowers witnesses as the gospel crosses peoples and places from Jerusalem to Rome.",
+      "references": "1–2; 10–11; 13–28",
+      "zh": "圣灵推动门徒作见证，福音从耶路撒冷跨越族群，传到罗马。"
+    },
+    "AMO": {
+      "en": "Oppression and hollow worship face judgment, while the closing vision promises restoration.",
+      "references": "2; 5; 8–9",
+      "zh": "斥责欺压穷人和空洞敬拜，宣告公义的审判及末后的恢复。"
+    },
+    "COL": {
+      "en": "Christ's supremacy and sufficiency ground a call to leave the old life and put on the new.",
+      "references": "1–3",
+      "zh": "高举基督的身份与充足，呼吁信徒扎根于祂，脱去旧生活、活出新人。"
+    },
+    "DAN": {
+      "en": "Faithfulness in foreign courts and visions of kingdoms affirm God's sovereignty over earthly empires.",
+      "references": "1–6; 7–12",
+      "zh": "借异邦宫廷中的忠诚信仰和异象，呈现地上帝国之上神的主权。"
+    },
+    "DEU": {
+      "en": "Moses renews the law for a new generation, calling them to remember God, love him, and keep the covenant.",
+      "references": "5–6; 28–30",
+      "zh": "摩西向新一代重申律法，呼吁他们记念神、爱神，并忠于所立的约。"
+    },
+    "ECC": {
+      "en": "Life's brevity, toil, and uncertainty prompt a search for what matters and a call to fear God.",
+      "references": "1–3; 9; 12",
+      "zh": "面对人生的短暂、劳碌与不可掌控，追问什么值得追求，呼吁敬畏神。"
+    },
+    "EPH": {
+      "en": "God unites different peoples in Christ, shaping the church, households, and everyday conduct.",
+      "references": "1–3; 4–6",
+      "zh": "讲述神在基督里使不同群体成为一体，并把这身份落实在教会、家庭与生活中。"
+    },
+    "EST": {
+      "en": "Jews in Persia face destruction; Esther and Mordecai take part in a dramatic reversal.",
+      "references": "3–9",
+      "zh": "波斯境内的犹太人面临灭族危机，以斯帖与末底改参与带来局势的逆转。"
+    },
+    "EXO": {
+      "en": "God frees enslaved Israel, makes a covenant at Sinai, and dwells among the people.",
+      "references": "1–20; 25–40",
+      "zh": "神拯救受奴役的以色列人，在西奈与他们立约，并住在百姓中间。"
+    },
+    "EZK": {
+      "en": "In exile, visions announce judgment and hope for a new heart, a new spirit, and God's returning presence.",
+      "references": "1–3; 10–11; 36–37; 40–48",
+      "zh": "在被掳处境中宣告审判，也描绘新心、新灵与神同在归回的盼望。"
+    },
+    "EZR": {
+      "en": "Returning exiles rebuild the temple and face the challenge of renewing communal life under God's law.",
+      "references": "1–6; 7–10",
+      "zh": "被掳者归回、重建圣殿，并面对重建群体生活与忠于律法的挑战。"
+    },
+    "GAL": {
+      "en": "Justification comes through faith in Christ; freedom is lived by the Spirit in love for others.",
+      "references": "2–3; 5–6",
+      "zh": "强调人因信基督得称义，并教导信徒在自由中靠圣灵生活、彼此相爱。"
+    },
+    "GEN": {
+      "en": "From creation and human rebellion to Abraham's family: the world's beginnings and God's promises.",
+      "references": "1–3; 12; 37–50",
+      "zh": "从创造与人的背离，到亚伯拉罕一家，讲述世界的起源与神应许的开始。"
+    },
+    "HAB": {
+      "en": "A prophet questions injustice and God's actions, learning trust before circumstances change.",
+      "references": "1–3",
+      "zh": "先知就不义与神的作为发问，在未见局势改变时学习信靠。"
+    },
+    "HAG": {
+      "en": "Returned exiles are urged to rebuild the temple and reconsider their priorities.",
+      "references": "1–2",
+      "zh": "鼓励归回的百姓重建圣殿，重新调整生活的优先次序。"
+    },
+    "HEB": {
+      "en": "Jesus is high priest and mediator of a better covenant; weary believers are urged to persevere in faith.",
+      "references": "1–10; 11–13",
+      "zh": "说明耶稣是更美之约的中保与大祭司，鼓励疲惫、受压的信徒持守信心。"
+    },
+    "HOS": {
+      "en": "A broken marriage portrays Israel's unfaithfulness and God's love calling the people to return.",
+      "references": "1–3; 11; 14",
+      "zh": "用破裂的婚姻揭示以色列的失信，也表达神呼唤百姓归回的爱。"
+    },
+    "ISA": {
+      "en": "Judgment on sin stands alongside comfort, the servant's work, and hope for a renewed world.",
+      "references": "1; 6; 40; 52–55; 65–66",
+      "zh": "指出百姓的罪与审判，又展开安慰、仆人的工作和更新世界的盼望。"
+    },
+    "JAS": {
+      "en": "Faith must take shape in action: trials, favoritism, speech, wealth, and prayer become practical tests.",
+      "references": "1–5",
+      "zh": "强调信心必须活在行动中，具体谈试炼、偏待、言语、财富与祷告。"
+    },
+    "JDG": {
+      "en": "Repeated rebellion, oppression, and deliverance reveal a people descending into disorder.",
+      "references": "2; 6–8; 17–21",
+      "zh": "百姓反复离弃神、受压迫又蒙拯救，整个群体逐渐陷入混乱。"
+    },
+    "JER": {
+      "en": "As Judah approaches disaster, Jeremiah calls for repentance and announces hope of return and a new covenant.",
+      "references": "1–7; 25; 29–33; 52",
+      "zh": "在犹大走向亡国时呼召悔改，并在审判中宣告归回与新约的盼望。"
+    },
+    "JHN": {
+      "en": "Jesus' signs and teaching invite belief in him as Messiah and Son of God, and life in his name.",
+      "references": "1; 3; 11; 13–17; 20",
+      "zh": "借耶稣的神迹与讲论，引导人相信祂是基督、神的儿子，并因祂得生命。"
+    },
+    "JOB": {
+      "en": "A righteous man's suffering challenges easy explanations that equate affliction with personal wrongdoing.",
+      "references": "1–2; 3–31; 38–42",
+      "zh": "一个义人的苦难引发追问，挑战把苦难简单归因于个人犯罪的解释。"
+    },
+    "JOL": {
+      "en": "Disaster becomes a call to repentance, with the day of the Lord and the promise of the Spirit.",
+      "references": "1–3",
+      "zh": "从灾难呼唤悔改，宣告耶和华的日子与神浇灌圣灵的应许。"
+    },
+    "JON": {
+      "en": "A reluctant prophet resists both his mission and mercy for enemies, exposing the reach of God's compassion.",
+      "references": "1–4",
+      "zh": "先知逃避使命，又不愿看见敌人蒙怜悯；故事追问神恩典的范围。"
+    },
+    "JOS": {
+      "en": "Israel enters Canaan, fights battles, receives land, and is called to remain faithful to God.",
+      "references": "1–6; 13–24",
+      "zh": "以色列进入迦南、争战并分配土地，受呼召继续忠于神。"
+    },
+    "JUD": {
+      "en": "Warnings against abusing grace call believers to guard their faith, show mercy, and rely on God.",
+      "references": "1",
+      "zh": "警告把恩典当作放纵借口的人，呼吁守护信仰、彼此怜悯并倚靠神。"
+    },
+    "LAM": {
+      "en": "Poems mourn Jerusalem's destruction, bringing grief to God and struggling toward hope.",
+      "references": "1–5",
+      "zh": "为耶路撒冷被毁哀哭，在痛苦中向神诉说，也挣扎着持守盼望。"
+    },
+    "LEV": {
+      "en": "Sacrifices, purity, and daily conduct teach a people to approach a holy God and love their neighbors.",
+      "references": "1–7; 16; 19",
+      "zh": "借献祭、洁净与生活条例，教导百姓怎样亲近圣洁的神、爱邻舍。"
+    },
+    "LUK": {
+      "en": "Jesus brings salvation, with particular attention to the poor, outsiders, and the lost.",
+      "references": "1–4; 10; 15; 19; 22–24",
+      "zh": "讲述耶稣带来的救恩，特别关注贫穷者、被排斥者与失丧的人。"
+    },
+    "MAL": {
+      "en": "Careless worship and broken faithfulness are challenged by a call to return to God and await his coming.",
+      "references": "1–4",
+      "zh": "指出敷衍的敬拜与关系中的失信，呼召百姓归向神并等候祂的来到。"
+    },
+    "MAT": {
+      "en": "Jesus' ministry is linked to Israel's Scriptures and promises, teaching disciples life under heaven's kingdom.",
+      "references": "1–2; 5–7; 13; 26–28",
+      "zh": "将耶稣的事奉连到以色列的经文与应许，教导门徒活在天国之下。"
+    },
+    "MIC": {
+      "en": "Corrupt leaders and injustice are confronted with a call to justice and mercy and hope for a coming ruler.",
+      "references": "1–3; 5–7",
+      "zh": "揭露领袖与百姓的不义，呼召行公义、好怜悯，并展望将来的牧者。"
+    },
+    "MRK": {
+      "en": "A fast-moving account of Jesus' authority, suffering, and cross asks what it means to follow him.",
+      "references": "1–3; 8–10; 14–16",
+      "zh": "以紧凑叙事呈现耶稣的权柄、受苦与十字架，并追问跟随祂意味着什么。"
+    },
+    "NAM": {
+      "en": "Nineveh's downfall declares that even violent empires must face God's judgment.",
+      "references": "1–3",
+      "zh": "宣告尼尼微的倾覆，指出暴力帝国也要面对神的审判。"
+    },
+    "NEH": {
+      "en": "Nehemiah leads Jerusalem's wall rebuilding as the people hear the law and reform community life.",
+      "references": "1–6; 8–13",
+      "zh": "尼希米带领重建耶路撒冷城墙，百姓也重新聆听律法、整顿群体生活。"
+    },
+    "NUM": {
+      "en": "Wilderness journeys expose unbelief and failure as God leads a new generation toward the promised land.",
+      "references": "13–14; 20–21; 26–27",
+      "zh": "记述旷野中的不信与失败，以及神带领新一代走向应许地。"
+    },
+    "OBA": {
+      "en": "Edom's pride and violence against its afflicted brother come under God's judgment.",
+      "references": "1",
+      "zh": "责备以东在弟兄遭难时的骄傲与暴力，宣告神施行公义。"
+    },
+    "PHM": {
+      "en": "Paul appeals for Onesimus to be received as a beloved brother, showing the gospel's impact on relationships.",
+      "references": "1",
+      "zh": "保罗为阿尼西谋求情，请腓利门接纳他为亲爱的弟兄，展现福音对关系的改变。"
+    },
+    "PHP": {
+      "en": "Joy in Christ amid suffering accompanies a call to share his humility and live in unity.",
+      "references": "1–4",
+      "zh": "在受苦中仍以基督为喜乐，呼吁信徒效法祂的谦卑、同心生活。"
+    },
+    "PRO": {
+      "en": "Wisdom begins with reverence for God and shapes speech, work, family, wealth, and relationships.",
+      "references": "1–9; 10–31",
+      "zh": "以敬畏神为智慧的起点，教导言语、工作、家庭、财富与待人处事。"
+    },
+    "PSA": {
+      "en": "Praise, lament, thanksgiving, and petition bring the breadth of human experience before God.",
+      "references": "1; 13; 23; 51; 104; 150",
+      "zh": "用赞美、哀哭、感恩与祈求，把人生各种处境带到神面前。"
+    },
+    "REV": {
+      "en": "Letters and visions call churches to faithfulness to Christ, with judgment and new creation grounding hope.",
+      "references": "1–3; 4–5; 21–22",
+      "zh": "借写给教会的书信与异象，呼召忠于基督，并以审判和新创造带来盼望。"
+    },
+    "ROM": {
+      "en": "God makes people right with him through faith in Christ, shaping a shared life of grace across different backgrounds.",
+      "references": "1–8; 9–11; 12–16",
+      "zh": "解释神怎样借基督使人因信称义，并使不同背景的人在恩典中共同生活。"
+    },
+    "RUT": {
+      "en": "Naomi and Ruth find care amid loss and return; their family story leads to David.",
+      "references": "1–4",
+      "zh": "拿俄米与路得在失去与归回中经历眷顾，一个家庭的故事最终连到大卫。"
+    },
+    "SNG": {
+      "en": "Love poetry voices desire, searching, delight, and the strength of love.",
+      "references": "1–8",
+      "zh": "以男女相爱的诗歌，表达爱慕、寻找、喜悦与爱情的力量。"
+    },
+    "TIT": {
+      "en": "Titus is guided to appoint elders, resist false teaching, and nurture good lives shaped by grace.",
+      "references": "1–3",
+      "zh": "指导提多设立长老、抵挡错误教导，让恩典结出良善生活的果子。"
+    },
+    "ZEC": {
+      "en": "Visions and promises encourage the returned community with cleansing, kingship, and God's presence.",
+      "references": "1–8; 9–14",
+      "zh": "借异象与应许鼓励归回群体，展望洁净、君王与神的同在。"
+    },
+    "ZEP": {
+      "en": "The day of the Lord brings judgment, a call to seek God, and hope for a restored remnant.",
+      "references": "1–3",
+      "zh": "宣告耶和华的日子，呼召寻求神，并展望余民得恢复。"
+    }
+  },
+  "notes": {
+    "creation": {
+      "en": "Creation presents good relationships; human rebellion then fractures relationships with God, one another, and the ground.",
+      "links": [],
+      "zh": "创造呈现美好的关系；接下来，人的背离使人与神、人与人、人与土地的关系破裂。"
+    },
+    "fall": {
+      "en": "Cain, the deaths in the genealogy, the flood, and Babel unfold humanity's plight. The story then turns to God's call of Abraham and a path of promise.",
+      "links": [],
+      "zh": "该隐、家谱中的死亡、洪水与巴别接续展现人的困境。故事随后转向神呼召亚伯拉罕，开启应许的道路。"
+    },
+    "ancestors": {
+      "en": "People, land, and blessing for all peoples are three reading threads. The family's move to Egypt connects the ancestors' story to the exodus.",
+      "links": [
+        {
+          "bookId": "GEN",
+          "chapter": 12,
+          "kindEn": "Key passage",
+          "kindZh": "关键经文",
+          "reasonEn": "God calls Abram to a land, promises to make him a great nation, and promises blessing for all families of the earth through him.",
+          "reasonZh": "神呼召亚伯兰，指示他前往土地，应许使他成为大国，并使地上的万族因他得福。",
+          "verses": "1–3"
+        },
+        {
+          "bookId": "GAL",
+          "chapter": 3,
+          "kindEn": "Explicit New Testament reference",
+          "kindZh": "新约明确引用",
+          "reasonEn": "Paul cites the promise of blessing for the nations as he discusses Abraham, faith, and the gospel.",
+          "reasonZh": "保罗引用万国得福的应许，讨论亚伯拉罕、信心与福音的关系。",
+          "verses": "8–9"
+        }
+      ],
+      "zh": "百姓、土地、万民得福，是阅读这一段的三个线索。家族迁往埃及，把先祖的故事连接到出埃及。"
+    },
+    "exodus": {
+      "en": "Exodus tells of rescue and covenant; Leviticus develops worship and holiness. Numbers then shows how the people respond to God in the wilderness.",
+      "links": [],
+      "zh": "出埃及记讲蒙拯救并立约；利未记展开敬拜与圣洁。接下来，民数记呈现百姓在旷野怎样回应神。"
+    },
+    "wilderness": {
+      "en": "Numbers connects two generations; Deuteronomy renews the covenant with those about to enter the land. Faithfulness remains a central question after entry.",
+      "links": [
+        {
+          "bookId": "DEU",
+          "chapter": 28,
+          "kindEn": "Key passage",
+          "kindZh": "关键经文",
+          "reasonEn": "Covenant blessings and curses frame Israel's subsequent history; they should not be used to explain every person's suffering.",
+          "reasonZh": "守约的祝福与背约的咒诅，为阅读以色列此后的历史提供背景；不能把它套用为所有人遭灾的原因。",
+          "verses": ""
+        }
+      ],
+      "zh": "民数记连接两代人；申命记向将进入土地的新一代重申约。进入土地之后，是否忠于神成为持续的问题。"
+    },
+    "land": {
+      "en": "After entry and the allocation of land, the story turns to life within it. Judges continues to ask whether the people remain faithful to God.",
+      "links": [],
+      "zh": "进入与分配土地之后，故事转向百姓如何在其中生活。士师记继续追问他们是否忠于神。"
+    },
+    "judges": {
+      "en": "Unfaithfulness → oppression → crying out → deliverance: repeated cycles accompany worsening conditions. Ruth's family story links the era of the judges to David.",
+      "links": [
+        {
+          "bookId": "RUT",
+          "chapter": 4,
+          "kindEn": "Explicit textual connection",
+          "kindZh": "经文明确连接",
+          "reasonEn": "The closing genealogy leads from Ruth's family to David, connecting the family story with the history of the kingdom.",
+          "reasonZh": "书末家谱从路得的家庭延伸到大卫，把家庭故事连接到王国历史。",
+          "verses": "17–22"
+        }
+      ],
+      "zh": "失信 → 受压迫 → 呼求 → 蒙拯救；反复的循环伴随日益恶化的局面。路得的家庭故事则把士师时期连接到大卫。"
+    },
+    "kingdom": {
+      "en": "Kingship brings a new situation but also reveals human failure. The promise to David's house carries hope beyond any one reigning king.",
+      "links": [
+        {
+          "bookId": "2SA",
+          "chapter": 7,
+          "kindEn": "Key passage",
+          "kindZh": "关键经文",
+          "reasonEn": "God promises David an offspring, a house, and an enduring throne: a key passage for later hopes of kingship.",
+          "reasonZh": "神应许大卫的后裔、家室与王位；这是理解后来王权盼望的重要经文。",
+          "verses": "12–16"
+        },
+        {
+          "bookId": "LUK",
+          "chapter": 1,
+          "kindEn": "Biblical connection",
+          "kindZh": "经文关联",
+          "reasonEn": "The announcement about Jesus names David's throne and a kingdom without end, echoing the promise to David's house.",
+          "reasonZh": "关于耶稣的宣告提到大卫的宝座和没有穷尽的国，呼应大卫家室的应许。",
+          "verses": "32–33"
+        }
+      ],
+      "zh": "君王带来新的局面，却也显出人的失败。大卫家室的应许，使王国的盼望超越眼前的一位君王。"
+    },
+    "divided": {
+      "en": "Prophets confront unfaithfulness and call for repentance while also announcing hope. Division and failure lead the story toward defeat and exile.",
+      "links": [],
+      "zh": "先知既指出失信、呼召悔改，也宣告盼望。王国的分裂与失败，把故事带向亡国与被掳。"
+    },
+    "exile": {
+      "en": "Exile brings the trauma of losing land and temple, but judgment is not the end of the story. Return and rebuilding follow.",
+      "links": [],
+      "zh": "被掳带来失地与失去圣殿的创伤，但审判并不是故事的终点；接下来出现归回与重建。"
+    },
+    "return": {
+      "en": "Restoring land, temple, and walls does not remove humanity's plight. Old Testament hope still looks forward as the Gospels open a new witness.",
+      "links": [],
+      "zh": "土地、圣殿与城墙的恢复，并未消除人的困境。旧约的盼望继续朝向将来，福音书从这里展开新的见证。"
+    },
+    "wisdom": {
+      "en": "These books help people pray, lament, reflect, and live within the story; they are not the next event in a historical sequence.",
+      "links": [],
+      "zh": "这些书卷帮助人在故事中祷告、哀哭、思考与生活；它们不是历史主线上的下一个事件。"
+    },
+    "prophets": {
+      "en": "Read prophetic judgment and hope in their settings alongside the relevant histories; the prophets do not all belong to one period.",
+      "links": [],
+      "zh": "读先知书时，把审判与盼望放回各自处境，再与相关历史书一起读；不同先知并不处在同一时代。"
+    },
+    "jesus": {
+      "en": "Jesus dies and rises, and his followers are commissioned as witnesses. Luke and Acts connect this transition especially clearly.",
+      "links": [
+        {
+          "bookId": "ACT",
+          "chapter": 1,
+          "kindEn": "Narrative continuation",
+          "kindZh": "叙事衔接",
+          "reasonEn": "Acts recalls the earlier account, describes the risen Jesus, and unfolds the Spirit-empowered mission of the witnesses.",
+          "reasonZh": "使徒行传开头回顾前书，记述复活后的耶稣，并展开圣灵赐能力、门徒作见证的使命。",
+          "verses": "1–8"
+        }
+      ],
+      "zh": "耶稣受死、复活，门徒随后受托作见证。路加福音与使徒行传尤其清楚地连接这段转折。"
+    },
+    "mission": {
+      "en": "Acts describes the Spirit carrying the gospel across places and peoples. The letters help communities address faith, shared life, and suffering.",
+      "links": [],
+      "zh": "使徒行传记述圣灵推动福音跨越地域与族群。书信则帮助这些群体面对信仰、共同生活与苦难中的问题。"
+    },
+    "letters": {
+      "en": "For each letter, notice its recipients and concrete concerns, then observe how belief shapes shared life rather than extracting isolated sentences.",
+      "links": [],
+      "zh": "读每封信，先留意收信群体和具体问题，再观察所信的道怎样成为共同生活；不要只摘出孤立的句子。"
+    },
+    "witness": {
+      "en": "As Revelation exhorts actual churches, it directs hope toward God's final renewal. This map does not arrange its visions into a single end-times timetable.",
+      "links": [],
+      "zh": "启示录在劝勉现实教会的同时，把盼望引向神最终的更新；地图不把异象排列成唯一的末世时间表。"
+    },
+    "renewal": {
+      "en": "From the garden in creation to renewed life and presence, look back across the whole story. This is a thematic correspondence, not an identity of every detail.",
+      "links": [
+        {
+          "bookId": "GEN",
+          "chapter": 2,
+          "kindEn": "Thematic correspondence",
+          "kindZh": "主题呼应",
+          "reasonEn": "The tree of life and river in Genesis can be read alongside the tree of life and water of life in Revelation 22.",
+          "reasonZh": "创世记中的生命树与河流，可与启示录22章的生命树和生命水一同阅读。",
+          "verses": "9–10"
+        },
+        {
+          "bookId": "REV",
+          "chapter": 22,
+          "kindEn": "Thematic correspondence",
+          "kindZh": "主题呼应",
+          "reasonEn": "The water of life, tree of life, and God's presence portray the story's concluding hope.",
+          "reasonZh": "生命水、生命树与神的同在，呈现故事终点的盼望。",
+          "verses": "1–5"
+        }
+      ],
+      "zh": "从创造中的园，到生命与同在的更新，可以回看整条故事。这里是主题上的呼应，不表示首尾的每个细节完全相同。"
+    }
+  }
+}

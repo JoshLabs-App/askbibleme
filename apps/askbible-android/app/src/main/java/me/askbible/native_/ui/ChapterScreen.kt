@@ -109,9 +109,10 @@ fun ChapterScreen(
     activeVerseProgress: Double = 0.0,
     onBack: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenPanorama: () -> Unit = {},
     onSizeUp: () -> Unit,
     onSizeDown: () -> Unit,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     isPlaying: Boolean = false,
     /** 副译本对照：节号 → 对照文；空则不显示 */
     contrast: Map<Int, String> = emptyMap(),
@@ -156,7 +157,7 @@ fun ChapterScreen(
     }
     val groups = remember(verses, meta) { ChapterSegments.paragraphGroups(verses, meta) }
     val neighbors = remember(bookId, chapter) { ChapterNeighbor.resolve(bookId, chapter) }
-    val listState = rememberLazyListState()
+    val listState = androidx.compose.runtime.saveable.rememberSaveable(bookId, chapter, saver = androidx.compose.foundation.lazy.LazyListState.Saver) { androidx.compose.foundation.lazy.LazyListState() }
 
     // 「读完这一章」的专属动效：标题和细线短暂亮成金色再落回静止。
     // 刻意不弹卡片 —— 这是读经页最核心的完成时刻，语气要克制（Josh 2026-09-20 定）。
@@ -183,7 +184,7 @@ fun ChapterScreen(
     // 章末「读后两版」当前展开的是哪一版；换章清空
     var activeEdition by remember(bookId, chapter) { mutableStateOf<InfoEditionVariant?>(null) }
     // 换章回到顶部：LazyColumn 状态跨章复用，不主动滚回去会停在上一章的位置（计划流顺章时标题在屏外）
-    LaunchedEffect(bookId, chapter) { listState.scrollToItem(0) }
+    // Chapter-keyed saved state starts new chapters at the top and restores map returns.
 
     // 跟读时把当前「节」滚到可读区中心（RN scrollVerseToReadableCenter / readChapterReadableCenterFromScreen：
     // 顶栏 56 + 安全区 到 底部 72 + 安全区 + 音频条 220 之间的几何中心；偏差不到 8px 不动）。
@@ -194,12 +195,15 @@ fun ChapterScreen(
     val density = LocalDensity.current
     val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val sbTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    var appliedFocus by androidx.compose.runtime.saveable.rememberSaveable(bookId, chapter) { mutableStateOf<Int?>(null) }
     LaunchedEffect(bookId, chapter, focusVerse, groups.size) {
         // 搜索 / 收藏跳进来：先把那节所在的段滚进来，等排版报上那节的位置，再把那节对到视口中间。
         // 只按段滚的话段首顶到视口顶，长段后半的节还在屏外（Josh 2026-09-26「要拉到这个经文的地方」）
         val f = focusVerse ?: return@LaunchedEffect
+        if (appliedFocus == f) return@LaunchedEffect
         val gi = groups.indexOfFirst { g -> g.any { it.number == f } }
         if (gi < 0) return@LaunchedEffect
+        appliedFocus = f
         listState.scrollToItem(gi + 1)  // +1 跳过标题 item
         var b = verseBounds[f]
         var tries = 0
@@ -278,6 +282,12 @@ fun ChapterScreen(
             item(key = "header") {
                 // header：paddingTop 4 / paddingBottom 24 / 细线 / marginBottom 12（readChapterScreenLayoutStyles.header）
                 Column(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+                    me.askbible.native_.data.BiblePanorama.location(bookId, chapter)?.let { (act, section) ->
+                        val a = me.askbible.native_.data.BiblePanorama.acts[act]
+                        Text(AppLocale.pick(a.zh + " › " + section.zh + "  ⌁", a.en + " › " + section.en + "  ⌁", uiLocale),
+                            Modifier.fillMaxWidth().clickableNoRipple(onOpenPanorama).padding(vertical = 12.dp),
+                            color = theme.ink.toColor().copy(alpha = .65f), fontSize = 12.sp, textAlign = TextAlign.Center)
+                    }
                     Text(
                         ReadChrome.chapterTitle(bookName, chapter, chromeLocale),
                         Modifier.fillMaxWidth().padding(start = 42.dp, end = 42.dp, top = 4.dp, bottom = 24.dp),
@@ -415,7 +425,7 @@ private fun ParagraphBlock(
             Text(
                 h,
                 Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 18.dp, bottom = 16.dp),
-                color = Color(0xFF70451F).copy(alpha = 0.92f),
+                color = theme.muted.toColor(),
                 fontSize = (m.verseFontSize + 1).sp,
                 lineHeight = (m.verseLineHeight + 2).sp,
                 fontWeight = FontWeight.SemiBold,
@@ -536,6 +546,7 @@ private fun TopChrome(
     theme: Parchment,
     onBack: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenPanorama: () -> Unit = {},
     onSizeUp: () -> Unit,
     onSizeDown: () -> Unit,
     onOpenSearch: () -> Unit = {},

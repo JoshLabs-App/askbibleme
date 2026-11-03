@@ -72,7 +72,7 @@ const val TAB_BAR_CLEARANCE = 72f
  * 与 iOS 的 ParchmentPinnedBottom 对等。
  */
 @Composable
-fun ParchmentPinnedBottom(modifier: Modifier = Modifier, theme: Parchment = Parchment.light) {
+fun ParchmentPinnedBottom(modifier: Modifier = Modifier, theme: Parchment = LocalParchment.current) {
     val texture = rememberAssetImage("parchment.jpg")
     val view = LocalView.current
     // Canvas 默认不裁切：整窗口大的 drawImage 会画到宿主外面、盖住上面的正文（实测章页整页被盖成空羊皮），必须 clipToBounds
@@ -82,7 +82,7 @@ fun ParchmentPinnedBottom(modifier: Modifier = Modifier, theme: Parchment = Parc
             if (texture != null) {
                 val w = view.width.takeIf { it > 0 } ?: size.width.toInt()
                 val h = view.height.takeIf { it > 0 } ?: size.height.toInt()
-                drawImage(image = texture, dstOffset = IntOffset(0, size.height.toInt() - h), dstSize = IntSize(w, h))
+                drawImage(image = texture, dstOffset = IntOffset(0, size.height.toInt() - h), dstSize = IntSize(w, h), alpha = if (theme == Parchment.dark) 0.07f else 1f)
             }
         }
     }

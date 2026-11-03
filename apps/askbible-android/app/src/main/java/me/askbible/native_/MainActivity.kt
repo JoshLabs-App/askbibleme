@@ -140,11 +140,13 @@ class MainActivity : ComponentActivity() {
         // 记下「首次运行」时间，好评邀请要用（装机满 3 天才问）
         RatePrompt.noteLaunch(this)
         setContent {
+            me.askbible.native_.ui.AppAppearance { me.askbible.native_.ui.AppTextSizingHost {
             RootScreen()
             // 站外分发版的自助更新弹窗；Play / sideload 变体里是空操作
             UpdateGate()
             // 商店版 → 站外版的迁移提示；默认关，开关在远端 migrate.json
             MigrateGate.Host()
+            } }
         }
     }
 
@@ -178,6 +180,8 @@ private fun RootScreen() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var tab by remember { mutableStateOf(ShellTab.HOME) }
+    val tabState = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
+    var panoramaLocate by remember { mutableIntStateOf(0) }
     var size by remember { mutableStateOf(ReadSize.DEFAULT) }
     // 译本选择跨启动记住（RN selah_read_bible_translation_v1）
     val translationPrefs = remember { TranslationPrefs(context) }
@@ -558,6 +562,8 @@ private fun RootScreen() {
             showAchievements -> showAchievements = false
             showFavorites -> showFavorites = false
             exploreArticle != null -> exploreArticle = null
+            tab == ShellTab.MAP -> tab = if (openedBook != null) ShellTab.READ else ShellTab.HOME
+            tab == ShellTab.MUSIC -> tab = ShellTab.HOME
             pickingBook != null -> pickingBook = null
             openedBook != null -> {
                 openedBook = null
@@ -627,7 +633,20 @@ private fun RootScreen() {
     }
 
     Box(Modifier.fillMaxSize()) {
+        tabState.SaveableStateProvider(tab.name) {
         when (tab) {
+            ShellTab.MAP -> me.askbible.native_.ui.BiblePanoramaScreen(
+                locale = appLocale, currentBook = openedBook?.id, currentChapter = chapter,
+                locateRequest = panoramaLocate, onReturnReading = { tab = ShellTab.READ },
+                onRead = { id, ch -> BibleCatalog.book(id)?.let { b ->
+                    if (openedBook?.id != id || chapter != ch) {
+                        planFlowActive = false; listenBook = null; chapterFromPlan = false
+                        focusVerse = null; focusKeyword = null; chapter = ch; openedBook = b
+                    }
+                    pickingBook = null; showSearch = false; showFavorites = false; searchReturnQuery = null
+                    tab = ShellTab.READ
+                } }, musicPlaying = music.isPlaying, onToggleMusic = { music.toggle() },
+            )
             ShellTab.HOME -> HomeScreen(
                 verse = home.verse,
                 textScale = naturePrefs.textScale,
@@ -710,7 +729,7 @@ private fun RootScreen() {
             else when (planRoute) {
                 "devotional" -> DevotionalScreen(
                     date = devotionalDate, onDate = { devotionalDate = it }, player = devotional, size = size,
-                    theme = me.askbible.native_.data.Parchment.light, onBack = { planRoute = "play" },
+                    theme = me.askbible.native_.ui.LocalParchment.current, onBack = { planRoute = "play" },
                     onOpenChapter = { id, ch ->
                         // 出处 → 读经 Tab 开那一章；返回回到灵修页（chapterFromPlan 让返回键回计划 Tab）
                         BibleCatalog.book(id)?.let { b ->
@@ -821,6 +840,7 @@ private fun RootScreen() {
                         // 从搜索结果进来的：回到搜索页，关键词和结果原样恢复
                         searchReturnQuery?.let { q -> searchReturnQuery = null; searchPrefs.resumeQuery = q; showSearch = true }
                     },
+                    onOpenPanorama = { panoramaLocate += 1; tab = ShellTab.MAP },
                     onOpenSettings = { showTranslationPanel = true },
                     onSizeUp = { size.next?.let { size = it } },
                     onSizeDown = { size.previous?.let { size = it } },
@@ -849,6 +869,8 @@ private fun RootScreen() {
             }
         }
 
+        } // retain each tab’s reading position and panorama expansion
+
         // RN：只有读经坞出现时才在坞 + 底栏后面铺羊皮（整屏图钉在屏幕底，与页面底图像素重合，看不出接缝）；
         // 其余羊皮页底栏透明，正文靠 parchmentFade 在底栏前渐隐 —— 之前整块铺一层会在坞顶露出一条硬边
         // 读经计划目录 / 详情 / 今日读经是独立子页，不放底栏（Josh「独立页下面无需放图标」，靠左上返回键回来；章页打开后照常）
@@ -868,7 +890,7 @@ private fun RootScreen() {
                 // RN shellTabBarStyles.wrap.gap：坞与 Tab 行之间 6
                 Spacer(Modifier.height(ShellMetrics.tabBarDockGap.dp))
             } else if (showDevotionalDock) {
-                DevotionalDock(devotional, me.askbible.native_.data.Parchment.light,
+                DevotionalDock(devotional, me.askbible.native_.ui.LocalParchment.current,
                                onOpen = { devotional.currentKey?.let { md -> devotionalDate = me.askbible.native_.data.SolidJoys.dateForKey(md) }; planRoute = "devotional" })
                 Spacer(Modifier.height(ShellMetrics.tabBarDockGap.dp))
             } else if (showPlanDock) {
@@ -889,6 +911,7 @@ private fun RootScreen() {
             Box {
             ShellTabBar(
                 selected = tab,
+                locale = appLocale,
                 onSelect = { tab = it },
                 // 中央键：切到读经计划 Tab（主页级页面，底栏照常；Josh「中间计划与旁边的圣经，要直接就切换过来」）
                 onCenterTap = { tab = ShellTab.PLAN; planFlowListen = true },
@@ -925,6 +948,7 @@ private fun RootScreen() {
             onLogin = { showMenu = false; authRoute = "login" },
             onRegister = { showMenu = false; authRoute = "register" },
             onLogout = { showMenu = false; scope.launch { syncEngine.prepareSignOut(); auth.signOut() } },
+            onOpenMusic = { showMenu = false; tab = ShellTab.MUSIC },
             onFeedback = { showMenu = false; openSupportMail(context) },
             reminderEnabled = reminderOn,
             reminderTime = reminderTime,
@@ -1096,7 +1120,7 @@ private fun RootScreen() {
 
         // 成就页：从探索页的等级条卡片进来，盖在最上面（返回键由 BackHandler 接）
         if (showAchievements) {
-            AchievementsScreen(achievements, auth.user?.name.orEmpty(), appLocale, Parchment.light,
+            AchievementsScreen(achievements, auth.user?.name.orEmpty(), appLocale, me.askbible.native_.ui.LocalParchment.current,
                                onBack = { showAchievements = false })
         }
         // +XP 飘字 + 勋章 / 印章 / 升级提示（Josh 2026-09-18「要感觉到 XP 一直在增加」）
@@ -1105,7 +1129,7 @@ private fun RootScreen() {
                 // 首页一律不弹（首页静默，Josh 2026-10-02「保持首页不打扰」）——事件留在 pending 里不消费，离开首页后照常补上；
                 // +XP 飘字在首页直接不进队列（AchievementStore.quiet）
                 if (tab != ShellTab.HOME) {
-                    EarnedToast(achievements, appLocale, Parchment.light, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                    EarnedToast(achievements, appLocale, me.askbible.native_.ui.LocalParchment.current, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
                 }
                 XPFloater(achievements, Modifier.padding(top = 60.dp))
             }

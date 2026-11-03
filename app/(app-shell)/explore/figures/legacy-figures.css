@@ -55,7 +55,7 @@
   border-left: 3px solid rgba(165, 106, 45, 0.72);
   border-radius: 0 10px 10px 0;
   background: rgba(120, 53, 15, 0.06);
-  font-size: 15px;
+  font-size: calc(15px * var(--app-text-scale, 1));
   line-height: 1.72;
   color: rgba(28, 20, 16, 0.92);
 }
@@ -64,7 +64,7 @@
   margin-top: 0.45rem;
   margin-bottom: 0;
   text-align: right;
-  font-size: 12px;
+  font-size: calc(12px * var(--app-text-scale, 1));
   font-weight: 600;
   color: #6e5240;
 }
@@ -358,7 +358,7 @@
 }
 
 .prayer-on-parchment .figure-parchment-page .explore-prose-back {
-  font-size: 14px;
+  font-size: calc(14px * var(--app-text-scale, 1));
 }
 
 @media (max-width: 640px) {

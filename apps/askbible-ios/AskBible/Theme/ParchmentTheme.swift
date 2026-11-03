@@ -205,8 +205,14 @@ extension Parchment {
 /// 在根视图上挂一次：读系统 colorScheme，注入对应的羊皮主题
 struct ParchmentSchemeInjector: ViewModifier {
     @Environment(\.colorScheme) private var scheme
+    @AppStorage("askbible.appearance") private var appearance = "system"
+    private var override: ColorScheme? {
+        appearance == "dark" ? .dark : appearance == "light" ? .light : nil
+    }
     func body(content: Content) -> some View {
-        content.environment(\.parchment, scheme == .dark ? .dark : .light)
+        content
+            .environment(\.parchment, (override ?? scheme) == .dark ? .dark : .light)
+            .preferredColorScheme(override)
     }
 }
 

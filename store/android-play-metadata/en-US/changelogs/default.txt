@@ -1,3 +1,3 @@
-Version 1.0.35
-• Fixed Home golden verse sometimes starting two sounds at once on Android
-• Background music gently lowers while a golden verse is playing
+• Explore the Bible panorama, with six stages, book introductions, and direct chapter links.
+• Expand the map in place and locate your current reading.
+• Choose a comfortable app text size. Find music in the Home menu.

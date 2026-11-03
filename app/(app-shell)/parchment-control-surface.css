@@ -26,7 +26,7 @@ html[data-app-shell-safe-fill="parchment"] {
   display: block;
   margin-top: 1rem;
   margin-bottom: 0.5rem;
-  font-size: 12px;
+  font-size: calc(12px * var(--app-text-scale, 1));
   font-weight: 600;
   letter-spacing: 0.02em;
   text-align: center;
@@ -43,7 +43,7 @@ html[data-app-shell-safe-fill="parchment"] {
   border: 1px solid var(--parchment-control-border);
   background: var(--parchment-control-fill);
   padding: 0.65rem 0.875rem;
-  font-size: 15px;
+  font-size: calc(15px * var(--app-text-scale, 1));
   line-height: 1.4;
   color: #1c1410;
   outline: none;
@@ -226,7 +226,7 @@ html[data-app-shell-safe-fill="parchment"] {
   border: 0;
   background: transparent;
   padding: 0 4px;
-  font-size: 18px;
+  font-size: calc(18px * var(--app-text-scale, 1));
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   color: #6e5240;
@@ -234,7 +234,7 @@ html[data-app-shell-safe-fill="parchment"] {
 }
 
 .parchment-control-picker__row--selected {
-  font-size: 20px;
+  font-size: calc(20px * var(--app-text-scale, 1));
   font-weight: 700;
   color: #1c1410;
 }
@@ -253,7 +253,7 @@ html[data-app-shell-safe-fill="parchment"] {
   border: 1px solid var(--parchment-control-border);
   background: var(--parchment-control-fill-muted);
   padding: 0.65rem 1.125rem;
-  font-size: 14px;
+  font-size: calc(14px * var(--app-text-scale, 1));
   font-weight: 600;
   color: #5c4030;
   transition: opacity 160ms ease;

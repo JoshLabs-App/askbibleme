@@ -82,24 +82,24 @@ struct XPBar: View {
         VStack(alignment: .leading, spacing: compact ? 4 : 6) {
             HStack(spacing: 8) {
                 Text("Lv.\(ach.level)")
-                    .font(.system(size: compact ? 12 : 14, weight: .heavy, design: .rounded))
+                    .askFont(size: compact ? 12 : 14, weight: .heavy, design: .rounded)
                     .foregroundStyle(Color(rgb: 0xFFB101))
                 Text(MedalLevels.title(ach.level))
-                    .font(.system(size: compact ? 12 : 14, weight: .semibold))
+                    .askFont(size: compact ? 12 : 14, weight: .semibold)
                     .foregroundStyle(Color(parchment: 0x5C4030))
                 Spacer(minLength: 0)
                 if ach.streakMultiplier > 1.001 {
                     HStack(spacing: 2) {
-                        Image(systemName: "flame.fill").font(.system(size: 10))
+                        Image(systemName: "flame.fill").askFont(size: 10)
                         Text(String(format: "×%.2f", ach.streakMultiplier))
-                            .font(.system(size: 11, weight: .bold, design: .rounded).monospacedDigit())
+                            .askFont(size: 11, weight: .bold, design: .rounded).monospacedDigit()
                     }
                     .foregroundStyle(Color(rgb: 0xE06C2A))
                     .padding(.horizontal, 6).padding(.vertical, 2)
                     .background(Color(rgb: 0xE06C2A, opacity: 0.12), in: Capsule())
                 }
                 Text("\(ach.xpInLevel) / \(ach.xpForLevel)")
-                    .font(.system(size: compact ? 11 : 12, weight: .medium, design: .rounded).monospacedDigit())
+                    .askFont(size: compact ? 11 : 12, weight: .medium, design: .rounded).monospacedDigit()
                     .foregroundStyle(Color(parchment: 0x7A633A))
                     .contentTransition(.numericText())
             }
@@ -129,7 +129,7 @@ struct XPFloater: View {
         VStack(spacing: 6) {
             ForEach(shown, id: \.id) { item in
                 Text(item.text)
-                    .font(.system(size: item.big ? 22 : 16, weight: .heavy, design: .rounded).monospacedDigit())
+                    .askFont(size: item.big ? 22 : 16, weight: .heavy, design: .rounded).monospacedDigit()
                     .foregroundStyle(Color(rgb: 0xFFB101))
                     .shadow(color: .black.opacity(0.28), radius: 4, y: 1)
                     .transition(.asymmetric(
@@ -214,14 +214,14 @@ struct EarnedToast: View {
                 else {
                     ZStack {
                         Circle().fill(Color(rgb: 0xFFB101, opacity: 0.18))
-                        Text("Lv.\(ach.level)").font(.system(size: 15, weight: .heavy, design: .rounded))
+                        Text("Lv.\(ach.level)").askFont(size: 15, weight: .heavy, design: .rounded)
                             .foregroundStyle(Color(rgb: 0xFFB101))
                     }.frame(width: 48, height: 48)
                 }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(d.title).font(.system(size: 16, weight: .semibold))
+                    Text(d.title).askFont(size: 16, weight: .semibold)
                         .foregroundStyle(Color(parchment: 0x2B1D15))
-                    Text(d.subtitle).font(.system(size: 13))
+                    Text(d.subtitle).askFont(size: 13)
                         .foregroundStyle(Color(parchment: 0x7A633A)).lineLimit(2)
                 }
                 Spacer(minLength: 0)

@@ -86,6 +86,8 @@ struct HomeView: View {
                 // 设置齿轮回到右上（Josh 2026-09-21）。2026-09-16 曾把它塞进底部专辑排末尾，
                 // 结果专辑排的宽度会随它出现/消失而变，三颗常用键跟着左右挪——那是他这次要去掉的位移。
                 HStack {
+                    chromeButton(MI.menu, color: .white.opacity(0.9)) { touch(); onOpenMenu() }
+                        .accessibilityLabel(AppLocale.pick("首页菜单", "Home menu", AppLocale.storedOverride ?? AppLocale.device))
                     Spacer()
                     chromeButton(MI.settings,
                                  color: (toolsOpen || ambient.isOn) ? Brand.logo : .white.opacity(0.9)) {
@@ -177,14 +179,14 @@ struct HomeView: View {
         let scale = prefs.textScale
         return VStack(spacing: 0) {
             Text(verse.text)
-                .font(.system(size: HomeVerseTypography.bodySize(scale: scale), weight: .bold))
+                .askFont(size: HomeVerseTypography.bodySize(scale: scale), weight: .bold)
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
                 .lineSpacing(HomeVerseTypography.bodyLineHeight(scale: scale) - HomeVerseTypography.bodySize(scale: scale))
                 .verseTextShadow()
 
             Text(verse.reference)
-                .font(.system(size: HomeVerseTypography.refSize(scale: scale), weight: .bold))
+                .askFont(size: HomeVerseTypography.refSize(scale: scale), weight: .bold)
                 .foregroundStyle(.white)
                 .kerning(0.1)
                 .padding(.top, HomeVerseTypography.refTopGap(scale: scale))
@@ -263,7 +265,7 @@ struct HomeView: View {
                         if timerOn {
                             // quickControlTimerBadge：右上角 -2/-6，黑 .55 圆角 8，黄字 10/700
                             Text("\(sleepTimerMinutes)")
-                                .font(.system(size: 10, weight: .bold))
+                                .askFont(size: 10, weight: .bold)
                                 .foregroundStyle(Brand.logo)
                                 .padding(.horizontal, 3)
                                 .padding(.vertical, 1)

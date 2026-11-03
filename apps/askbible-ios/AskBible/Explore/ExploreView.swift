@@ -60,7 +60,7 @@ struct ExploreView: View {
                             if auth.user != nil { nameDraft = auth.user?.name ?? ""; nameEditorOpen = true } else { onOpenLogin() }
                         } label: {
                             Text(greetingText)
-                                .font(.system(size: 25, weight: .bold))
+                                .askFont(size: 25, weight: .bold)
                                 .foregroundStyle(theme.ink)
                                 .lineLimit(1)
                         }
@@ -77,8 +77,8 @@ struct ExploreView: View {
                                 XPBar()
                                 HStack(spacing: 4) {
                                     Text(SiteCopy.t("native.achievementsSub", locale))
-                                        .font(.system(size: 12)).foregroundStyle(theme.muted)
-                                    Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold))
+                                        .askFont(size: 12).foregroundStyle(theme.muted)
+                                    Image(systemName: "chevron.right").askFont(size: 10, weight: .semibold)
                                         .foregroundStyle(theme.muted)
                                 }
                             }
@@ -91,16 +91,16 @@ struct ExploreView: View {
                         .padding(.top, 20)
 
                         Text(usageLine)
-                            .font(.system(size: 17))
+                            .askFont(size: 17)
                             .foregroundStyle(theme.muted)
                             .padding(.top, 18)
                         Text(listenLine)
-                            .font(.system(size: 17))
+                            .askFont(size: 17)
                             .foregroundStyle(theme.muted)
                             .padding(.top, 6)
 
                         Text(SiteCopy.t("native.recentReading", locale))
-                            .font(.system(size: 15))
+                            .askFont(size: 15)
                             .foregroundStyle(theme.faint)
                             .padding(.top, 20)
 
@@ -109,11 +109,11 @@ struct ExploreView: View {
                                 Button { onOpenChapter(item.bookId, item.chapter) } label: {
                                     HStack {
                                         Text(recentLabel(item))
-                                            .font(.system(size: 18))
+                                            .askFont(size: 18)
                                             .foregroundStyle(theme.ink)
                                         Spacer()
                                         Image(systemName: "chevron.right")
-                                            .font(.system(size: 12, weight: .semibold))
+                                            .askFont(size: 12, weight: .semibold)
                                             .foregroundStyle(theme.muted.opacity(0.5))
                                     }
                                     .frame(height: 38)
@@ -122,7 +122,7 @@ struct ExploreView: View {
                             }
                             if activity.recent.isEmpty {
                                 Text(SiteCopy.t("native.noReadingRecord", locale))
-                                    .font(.system(size: 15)).foregroundStyle(theme.faint)
+                                    .askFont(size: 15).foregroundStyle(theme.faint)
                                     .frame(maxWidth: .infinity).frame(height: 38)
                             }
                         }
@@ -180,7 +180,7 @@ struct ExploreView: View {
                                     .background(RoundedRectangle(cornerRadius: 18).fill(Color(parchment: 0xFFFCF5, opacity: 0.55)))
                                     .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(theme.border, lineWidth: 1 / UIScreen.main.scale))
                                 Text(a.exploreLabel)
-                                    .font(.system(size: 12, weight: .semibold))
+                                    .askFont(size: 12, weight: .semibold)
                                     .lineSpacing(3)
                                     .foregroundStyle(theme.ink)
                                     .multilineTextAlignment(.center)
@@ -215,13 +215,13 @@ struct ExploreView: View {
         return VStack(spacing: 0) {
             HStack {
                 Text(SiteCopy.t("pages.read.favoritesTitle", locale))
-                    .font(.system(size: 15))
+                    .askFont(size: 15)
                     .foregroundStyle(theme.faint)
                 Spacer()
                 if list.count > 3 {
                     Button(action: onOpenFavorites) {
                         Text(SiteCopy.t("native.favoritesMore", locale))
-                            .font(.system(size: 14))
+                            .askFont(size: 14)
                             .foregroundStyle(theme.muted)
                             .contentShape(Rectangle())
                     }
@@ -236,15 +236,15 @@ struct ExploreView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             HStack {
                                 Text(favoriteRef(b))
-                                    .font(.system(size: 15, weight: .semibold))
+                                    .askFont(size: 15, weight: .semibold)
                                     .foregroundStyle(theme.ink)
                                 Spacer()
                                 Image(systemName: "chevron.right")
-                                    .font(.system(size: 12, weight: .semibold))
+                                    .askFont(size: 12, weight: .semibold)
                                     .foregroundStyle(theme.muted.opacity(0.5))
                             }
                             Text(locale.zh(b.text))
-                                .font(.system(size: 14))
+                                .askFont(size: 14)
                                 .foregroundStyle(theme.muted)
                                 .lineLimit(1)
                         }
@@ -255,7 +255,7 @@ struct ExploreView: View {
                 }
                 if list.isEmpty {
                     Text(SiteCopy.t("native.noFavorites", locale))
-                        .font(.system(size: 15)).foregroundStyle(theme.faint)
+                        .askFont(size: 15).foregroundStyle(theme.faint)
                         .frame(maxWidth: .infinity).frame(height: 38)
                 }
             }
@@ -321,10 +321,10 @@ struct ExploreView: View {
     private func stat(_ value: String, _ label: String, _ color: Color) -> some View {
         VStack(spacing: 6) {
             Text(value)
-                .font(.system(size: 34, weight: .bold))
+                .askFont(size: 34, weight: .bold)
                 .foregroundStyle(color)
             Text(label)
-                .font(.system(size: 15))
+                .askFont(size: 15)
                 .foregroundStyle(theme.muted)
         }
         .frame(maxWidth: .infinity)

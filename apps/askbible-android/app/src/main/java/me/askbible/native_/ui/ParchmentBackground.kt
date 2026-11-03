@@ -25,7 +25,7 @@ import me.askbible.native_.data.Parchment
 @Composable
 fun ParchmentBackground(
     modifier: Modifier = Modifier,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     textureAlpha: Float = 1f,
     /**
      * 整屏底传 true；用作某块内容的背景时必须传 false 并配合 matchParentSize()，
@@ -42,7 +42,7 @@ fun ParchmentBackground(
                     image = texture,
                     dstOffset = IntOffset.Zero,
                     dstSize = IntSize(size.width.toInt(), size.height.toInt()),
-                    alpha = textureAlpha,
+                    alpha = textureAlpha * if (theme == Parchment.dark) 0.07f else 1f,
                 )
             }
         }
@@ -54,7 +54,8 @@ fun ParchmentBackground(
  * 羊皮 JPG 按**整屏尺寸**铺、由圆角卡片裁切（卡片露出的是整图左上角那一块，纹理与页面连续），
  * 外加 hairline 的 border 描边。设置面板 / 章节选择 / 串珠 / 环境音 / 定时器等弹层都用它，不要再写纯色底。
  */
-fun Modifier.parchmentCard(cornerRadius: androidx.compose.ui.unit.Dp, theme: Parchment = Parchment.light): Modifier = composed {
+fun Modifier.parchmentCard(cornerRadius: androidx.compose.ui.unit.Dp, theme: Parchment? = null): Modifier = composed {
+    val resolvedTheme = theme ?: LocalParchment.current
     val texture = rememberAssetImage("parchment.jpg")
     val shape = androidx.compose.foundation.shape.RoundedCornerShape(cornerRadius)
     val screen = androidx.compose.ui.platform.LocalConfiguration.current
@@ -63,8 +64,8 @@ fun Modifier.parchmentCard(cornerRadius: androidx.compose.ui.unit.Dp, theme: Par
     val h = with(density) { screen.screenHeightDp.dp.toPx() }
     this.clip(shape)
         .drawBehind {
-            drawRect(theme.canvas.toColor())
-            if (texture != null) drawImage(image = texture, dstOffset = IntOffset.Zero, dstSize = IntSize(w.toInt(), h.toInt()))
+            drawRect(resolvedTheme.canvas.toColor())
+            if (texture != null) drawImage(image = texture, dstOffset = IntOffset.Zero, dstSize = IntSize(w.toInt(), h.toInt()), alpha = if (resolvedTheme == Parchment.dark) 0.07f else 1f)
         }
-        .border(0.5.dp, theme.border.toColor(), shape)
+        .border(0.5.dp, resolvedTheme.border.toColor(), shape)
 }

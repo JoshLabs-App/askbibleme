@@ -42,7 +42,7 @@ fun HighlightBar(
     onPickColor: (String) -> Unit,
     onErase: () -> Unit,
     onDone: () -> Unit,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
 ) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
         Column(

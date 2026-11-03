@@ -85,7 +85,7 @@ fun SearchScreen(
     onBack: () -> Unit,
     /** 点了哪条命中 + 当时的关键词（章页只标关键词） */
     onOpenHit: (ScriptureSearchHit, String) -> Unit,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     /** 命中条目的书名按读经展示语言 */
     locale: AppLocale = AppLocale.ZH_CN,
 ) {

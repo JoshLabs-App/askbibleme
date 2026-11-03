@@ -29,7 +29,7 @@ import me.askbible.native_.ui.toColor
  * 只在 `web` 变体生效（见 AppUpdater 的注释），Play 版这里永远拿到 null。
  */
 @Composable
-fun UpdateGate(locale: AppLocale = AppLocale.current, theme: Parchment = Parchment.light) {
+fun UpdateGate(locale: AppLocale = AppLocale.current, theme: Parchment = me.askbible.native_.ui.LocalParchment.current) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var info by remember { mutableStateOf<AppUpdater.Info?>(null) }

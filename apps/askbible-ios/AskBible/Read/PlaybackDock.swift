@@ -94,7 +94,7 @@ struct PlaybackDock: View {
                 VStack(alignment: .leading, spacing: 4) {
                     if !title.isEmpty && !quiet {
                         Text(title)
-                            .font(.system(size: 13, weight: .bold))
+                            .askFont(size: 13, weight: .bold)
                             .foregroundStyle(fg(0.95))
                             .lineLimit(1)
                     }
@@ -154,7 +154,7 @@ struct PlaybackDock: View {
                             ProgressView().tint(playGlyph)
                         } else {
                             Image(systemName: audio.isPlaying ? "pause.fill" : "play.fill")
-                                .font(.system(size: 20, weight: .bold))
+                                .askFont(size: 20, weight: .bold)
                                 .foregroundStyle(playGlyph)
                         }
                     }
@@ -167,7 +167,7 @@ struct PlaybackDock: View {
 
                 Button(action: onSkipNext) {
                     Image(systemName: "forward.end.fill")
-                        .font(.system(size: 20, weight: .medium))
+                        .askFont(size: 20, weight: .medium)
                         .foregroundStyle(fg(available ? 0.92 : 0.3))
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
@@ -179,7 +179,7 @@ struct PlaybackDock: View {
 
                 Button(action: onSearch) {
                     Image(systemName: "magnifyingglass")
-                        .font(.system(size: 17, weight: .regular))
+                        .askFont(size: 17, weight: .regular)
                         .foregroundStyle(fg(0.62))
                         .frame(width: 48, height: 44)
                         .contentShape(Rectangle())
@@ -234,7 +234,7 @@ struct PlaybackDock: View {
                 ZStack {
                     theme.scriptureAccent.opacity(0.18)
                     Image(systemName: "book.fill")
-                        .font(.system(size: 18, weight: .semibold))
+                        .askFont(size: 18, weight: .semibold)
                         .foregroundStyle(theme.scriptureAccent)
                 }
             }
@@ -255,7 +255,7 @@ struct PlaybackDock: View {
             VStack(spacing: 0) {
                 if let message = audio.errorMessage {
                     Text(message)
-                        .font(.system(size: 11))
+                        .askFont(size: 11)
                         .foregroundStyle(theme.divineSpeech)
                         .lineLimit(1)
                 }
@@ -301,7 +301,7 @@ struct PlaybackDock: View {
 
     private func timeText(_ s: String) -> some View {
         Text(s)
-            .font(.system(size: compact ? 11 : ShellMetrics.timeFontSize, weight: compact ? .semibold : .medium))
+            .askFont(size: compact ? 11 : ShellMetrics.timeFontSize, weight: compact ? .semibold : .medium)
             .monospacedDigit()
             .foregroundStyle(compact ? .white.opacity(0.62) : theme.muted)
     }
@@ -405,7 +405,7 @@ struct SpeedRateImage: View {
                     .aspectRatio(contentMode: .fit)
                     .foregroundStyle(color)
             } else {
-                Text(key == "1" ? "1x" : "\(rate)x").font(.system(size: 22, weight: .bold)).foregroundStyle(color)
+                Text(key == "1" ? "1x" : "\(rate)x").askFont(size: 22, weight: .bold).foregroundStyle(color)
             }
         }
         .frame(width: ShellMetrics.speedButtonSize, height: 22)
@@ -440,7 +440,7 @@ struct RepeatGlyph: View {
 
             if let badge {
                 Text(badge)
-                    .font(.system(size: 8 * s, weight: .bold))
+                    .askFont(size: 8 * s, weight: .bold)
                     .foregroundStyle(color)
                     .position(x: 12 * s, y: 12.3 * s)
             }

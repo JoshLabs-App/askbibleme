@@ -17,7 +17,7 @@
 
 .legacy-articles-eyebrow {
   margin: 0;
-  font-size: 12px;
+  font-size: calc(12px * var(--app-text-scale, 1));
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -36,7 +36,7 @@
 
 .legacy-articles-lead {
   margin: 1rem 0 0;
-  font-size: 15px;
+  font-size: calc(15px * var(--app-text-scale, 1));
   line-height: 1.75;
   color: color-mix(in srgb, var(--ink, #2a241c) 68%, transparent);
 }
@@ -60,7 +60,7 @@
 
 .legacy-articles-group-count {
   font-family: var(--font-sans, system-ui, sans-serif);
-  font-size: 13px;
+  font-size: calc(13px * var(--app-text-scale, 1));
   font-weight: 400;
   color: color-mix(in srgb, var(--ink, #2a241c) 48%, transparent);
 }
@@ -92,7 +92,7 @@
 
 .legacy-articles-link-title {
   display: block;
-  font-size: 15px;
+  font-size: calc(15px * var(--app-text-scale, 1));
   line-height: 1.5;
   color: color-mix(in srgb, var(--ink, #2a241c) 88%, transparent);
 }
@@ -100,7 +100,7 @@
 .legacy-articles-link-summary {
   display: block;
   margin-top: 0.35rem;
-  font-size: 13px;
+  font-size: calc(13px * var(--app-text-scale, 1));
   line-height: 1.55;
   color: color-mix(in srgb, var(--ink, #2a241c) 58%, transparent);
 }
@@ -110,7 +110,7 @@
 }
 
 .legacy-articles-back {
-  font-size: 14px;
+  font-size: calc(14px * var(--app-text-scale, 1));
   color: color-mix(in srgb, var(--ink, #2a241c) 62%, transparent);
   text-decoration: underline;
   text-underline-offset: 4px;
@@ -141,13 +141,13 @@
   flex-wrap: wrap;
   gap: 0.5rem 1rem;
   margin: 0.75rem 0 0;
-  font-size: 13px;
+  font-size: calc(13px * var(--app-text-scale, 1));
   color: color-mix(in srgb, var(--ink, #2a241c) 52%, transparent);
 }
 
 .legacy-articles-summary {
   margin: 1rem 0 0;
-  font-size: 15px;
+  font-size: calc(15px * var(--app-text-scale, 1));
   line-height: 1.7;
   color: color-mix(in srgb, var(--ink, #2a241c) 68%, transparent);
 }

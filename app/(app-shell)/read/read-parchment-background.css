@@ -91,7 +91,7 @@ html[data-read-parchment-bg="3"] {
   border: 1px solid var(--parchment-control-border, rgba(120, 53, 15, 0.28));
   background: var(--parchment-control-fill, rgba(255, 252, 245, 0.52));
   padding: 0 0.5rem;
-  font-size: 17px;
+  font-size: calc(17px * var(--app-text-scale, 1));
   font-weight: 600;
   line-height: 1;
   color: #1c1410;

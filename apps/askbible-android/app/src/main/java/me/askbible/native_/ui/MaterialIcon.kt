@@ -142,6 +142,7 @@ fun MaterialIcon(
     community: Boolean = false,
     shadow: Boolean = false,
 ) {
+    val iconTextSize = with(androidx.compose.ui.platform.LocalDensity.current) { size.dp.toSp() }
     val context = LocalContext.current
     val family = if (community) IconFonts.community(context) else IconFonts.material(context)
     Box(modifier.size(size.dp), contentAlignment = Alignment.Center) {
@@ -149,8 +150,8 @@ fun MaterialIcon(
             glyph,
             style = TextStyle(
                 fontFamily = family,
-                fontSize = size.sp,
-                lineHeight = size.sp,
+                fontSize = iconTextSize,
+                lineHeight = iconTextSize,
                 color = color,
                 shadow = if (shadow) ShellIconShadow else null,
                 platformStyle = PlatformTextStyle(includeFontPadding = false),

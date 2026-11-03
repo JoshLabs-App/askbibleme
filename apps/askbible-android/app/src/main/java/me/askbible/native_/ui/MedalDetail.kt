@@ -109,7 +109,7 @@ fun MedalDetailDialog(
     /** 落款：登录用户的称呼；没登录传空字符串，图上就不印名字 */
     name: String = "",
     locale: AppLocale = AppLocale.current,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     onDismiss: () -> Unit,
 ) {
     val ctx = LocalContext.current

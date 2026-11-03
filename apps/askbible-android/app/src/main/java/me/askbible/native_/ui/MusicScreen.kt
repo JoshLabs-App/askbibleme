@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
@@ -174,7 +175,7 @@ fun MusicScreen(player: MusicPlayer, sleepActive: Boolean = false, onSleepTimer:
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(ChapterAudioPlayer.timeLabel(ratio * total), color = Color(0x9EFFFFFF), fontSize = 12.sp,
-                     modifier = Modifier.width(36.dp))
+                     softWrap = false, modifier = Modifier.widthIn(min = 36.dp * androidx.compose.ui.platform.LocalDensity.current.fontScale))
                 Box(Modifier.weight(1f).height(24.dp)
                     .pointerInput(Unit) {
                         detectTapGestures { off -> player.seekRatio((off.x / size.width).toDouble()) }
@@ -190,7 +191,7 @@ fun MusicScreen(player: MusicPlayer, sleepActive: Boolean = false, onSleepTimer:
                     Box(Modifier.fillMaxWidth(ratio.coerceIn(0f, 1f)).height(3.dp).clip(CircleShape).background(Color(0xEBFFFFFF)))
                 }
                 Text(ChapterAudioPlayer.timeLabel(total), color = Color(0x9EFFFFFF), fontSize = 12.sp,
-                     modifier = Modifier.width(36.dp), textAlign = TextAlign.End)
+                     softWrap = false, modifier = Modifier.widthIn(min = 36.dp * androidx.compose.ui.platform.LocalDensity.current.fontScale), textAlign = TextAlign.End)
             }
             Spacer(Modifier.height(6.dp))
 

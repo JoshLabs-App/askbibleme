@@ -29,9 +29,9 @@ struct VerseActionSheet: View {
                 .ignoresSafeArea()
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .top, spacing: 12) {
-                    Text(SiteCopy.f("pages.read.verseActionVerseTitle", ["verse": "\(verse)"])).font(.system(size: max(17, (fs * 0.95).rounded()), weight: .semibold)).foregroundStyle(theme.ink)
+                    Text(SiteCopy.f("pages.read.verseActionVerseTitle", ["verse": "\(verse)"])).askFont(size: max(17, (fs * 0.95).rounded()), weight: .semibold).foregroundStyle(theme.ink)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Button(action: onClose) { Text(SiteCopy.t("pages.read.verseActionClose")).font(.system(size: (fs * 0.85).rounded())).foregroundStyle(theme.muted) }
+                    Button(action: onClose) { Text(SiteCopy.t("pages.read.verseActionClose")).askFont(size: (fs * 0.85).rounded()).foregroundStyle(theme.muted) }
                         .buttonStyle(.plain)
                 }
                 .padding(.bottom, 10)
@@ -60,7 +60,7 @@ struct VerseActionSheet: View {
         Button(action: action) {
             VStack(spacing: 8) {
                 MaterialIcon(glyph: glyph, size: icon, color: theme.ink)
-                Text(label).font(.system(size: font, weight: .medium)).foregroundStyle(theme.ink).lineSpacing(2).multilineTextAlignment(.center).lineLimit(2)
+                Text(label).askFont(size: font, weight: .medium).foregroundStyle(theme.ink).lineSpacing(2).multilineTextAlignment(.center).lineLimit(2)
             }
             .frame(maxWidth: .infinity).padding(.horizontal, 6).padding(.vertical, 14)
         }
@@ -76,7 +76,7 @@ struct VerseFeedbackToast: View {
     var body: some View {
         if let message {
             Text(message)
-                .font(.system(size: 14, weight: .medium))
+                .askFont(size: 14, weight: .medium)
                 .foregroundStyle(Color(parchment: 0xF7F4EF))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 16).padding(.vertical, 10)

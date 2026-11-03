@@ -7,8 +7,12 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -47,6 +51,7 @@ import me.askbible.native_.data.SiteCopy
  * 首页左上角的用户菜单，对齐 RN `ShellNavDrawer`：自左侧滑出、宽度 80%、羊皮卷底。
  * 行样式来自 `shellNavDrawerMenuStyles`（圆角 10、内边 12 × 10、正文 16、右侧细节 12）。
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NavDrawer(
     open: Boolean,
@@ -65,6 +70,7 @@ fun NavDrawer(
     onRegister: () -> Unit,
     onLogout: () -> Unit,
     onFeedback: () -> Unit,
+    onOpenMusic: () -> Unit = {},
     /** 每日读经提醒：开关 + 当前时间 */
     reminderEnabled: Boolean = false,
     reminderTime: String = "07:00",
@@ -73,8 +79,9 @@ fun NavDrawer(
     /** 删除账户（只在登录后出；二次确认在壳里弹） */
     onDeleteAccount: () -> Unit = {},
     onClose: () -> Unit,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
 ) {
+    val textSizing = LocalAppTextSizing.current
     AnimatedVisibility(open, enter = fadeIn(), exit = fadeOut()) {
         Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.42f)).clickableNoRipple(onClose))
     }
@@ -103,14 +110,34 @@ fun NavDrawer(
                     }
 
                     Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+                        DrawerRow(AppLocale.pick("音乐", "Music", locale), null, theme, onOpenMusic)
                         // 语言行：RN 是「语言 + EN / 繁 / 简」三个胶囊，原生多一个「跟随系统」
                         Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
                             Text(SiteCopy.t("nav.language", locale), color = theme.ink.toColor(), fontSize = 16.sp)
                             Spacer(Modifier.height(8.dp))
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 DrawerLocaleChip(SiteCopy.t("native.followSystem", locale), localeOverride == null, theme) { onSetLocale(null) }
                                 for (l in listOf(AppLocale.ZH_CN, AppLocale.ZH_TW, AppLocale.EN)) {
                                     DrawerLocaleChip(l.settingLabel, localeOverride == l, theme) { onSetLocale(l) }
+                                }
+                            }
+                        }
+                        Column(Modifier.fillMaxWidth().padding(horizontal=12.dp,vertical=10.dp)) {
+                            Text(AppLocale.pick("全局字号", "App text size", locale),color=theme.ink.toColor(),fontSize=16.sp,fontWeight=FontWeight.SemiBold)
+                            AppTextSize.entries.forEach { option ->
+                                Text((if(textSizing.selected==option) "●  " else "○  ") + option.label(locale),
+                                    Modifier.fillMaxWidth().heightIn(min=48.dp).clickableNoRipple { textSizing.select(option) }.padding(vertical=10.dp),
+                                    color=theme.ink.toColor(),fontSize=15.sp)
+                            }
+                            Text(AppLocale.pick("预览：你的话是我脚前的灯。", "Preview: Your word is a lamp to my feet.", locale),color=theme.ink.toColor(),fontSize=16.sp,lineHeight=25.sp,modifier=Modifier.padding(top=8.dp))
+                        }
+                        val appearance = LocalAppearance.current
+                        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+                            Text(SiteCopy.t("native.appearance", locale), color = theme.ink.toColor(), fontSize = 16.sp)
+                            Spacer(Modifier.height(8.dp))
+                            FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                for ((mode, key) in listOf("system" to "native.followSystem", "light" to "native.appearanceLight", "dark" to "native.appearanceDark")) {
+                                    DrawerLocaleChip(SiteCopy.t(key, locale), appearance.value == mode, theme) { appearance.select(mode) }
                                 }
                             }
                         }
@@ -130,14 +157,14 @@ fun NavDrawer(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Text(SiteCopy.t("native.reminderTitle", locale),
-                                     color = theme.ink.toColor(), fontSize = 16.sp, maxLines = 1)
+                                     color = theme.ink.toColor(), fontSize = 16.sp)
                                 Box(
                                     Modifier.clip(RoundedCornerShape(999.dp))
-                                        .background(if (reminderEnabled) Color(0x38FFB101) else Color(0x80FFF8EB))
+                                        .background(if (reminderEnabled) Color(0x38FFB101) else theme.surfaceSolid.toColor())
                                         .padding(horizontal = 8.dp, vertical = 3.dp),
                                 ) {
                                     Text(SiteCopy.t(if (reminderEnabled) "native.reminderOn" else "native.reminderOff", locale),
-                                         color = if (reminderEnabled) Color(0xFF784B1E) else theme.ink.toColor().copy(alpha = 0.5f),
+                                         color = if (reminderEnabled) theme.readingAccent else theme.ink.toColor().copy(alpha = 0.5f),
                                          fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                                 }
                             }
@@ -169,37 +196,28 @@ fun NavDrawer(
 const val SUPPORT_EMAIL = "hello@askbible.me"
 
 @Composable
-private fun androidx.compose.foundation.layout.RowScope.DrawerLocaleChip(
+private fun DrawerLocaleChip(
     label: String, on: Boolean, theme: Parchment, onClick: () -> Unit,
 ) {
     Box(
-        Modifier.weight(1f).heightIn(min = 32.dp).clip(RoundedCornerShape(999.dp))
+        Modifier.heightIn(min = 48.dp).padding(horizontal=2.dp).clip(RoundedCornerShape(999.dp))
             .background(if (on) Color(0x2EFFB101) else theme.surface.toColor().copy(alpha = 0.45f))
             .border(if (on) 1.dp else 0.5.dp,
                     if (on) Color(0xBFFFB101) else theme.border.toColor(), RoundedCornerShape(999.dp))
-            .clickableNoRipple(onClick),
+            .selectable(selected = on, role = Role.RadioButton, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = if (on) Color(0xFF784B1E) else theme.ink.toColor().copy(alpha = 0.72f),
-             fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1,
-             overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+        Text(label, color = if (on) theme.readingAccent else theme.ink.toColor().copy(alpha = 0.72f),
+             fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier=Modifier.padding(horizontal=10.dp,vertical=8.dp), textAlign = TextAlign.Center)
     }
 }
 
 @Composable
 private fun DrawerRow(label: String, detail: String?, theme: Parchment, onClick: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).clickableNoRipple(onClick)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Text(label, color = theme.ink.toColor(), fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Spacer(Modifier.weight(1f))
-        if (detail != null) {
-            Text(detail, color = theme.ink.toColor().copy(alpha = 0.55f), fontSize = 12.sp,
-                 maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).clickableNoRipple(onClick)
+        .heightIn(min=48.dp).padding(horizontal=12.dp,vertical=10.dp)) {
+        Text(label,color=theme.ink.toColor(),fontSize=16.sp)
+        if(detail != null) Text(detail,color=theme.ink.toColor().copy(alpha=.65f),fontSize=12.sp,modifier=Modifier.padding(top=4.dp))
     }
     Spacer(Modifier.height(2.dp))
 }

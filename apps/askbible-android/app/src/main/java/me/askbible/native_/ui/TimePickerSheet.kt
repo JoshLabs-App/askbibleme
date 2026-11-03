@@ -42,7 +42,7 @@ fun TimePickerSheet(
     doneTitle: String,
     onDone: (Int, Int) -> Unit,
     onCancel: () -> Unit,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
 ) {
     var h by remember { mutableIntStateOf(hour.coerceIn(0, 23)) }
     var m by remember { mutableIntStateOf(minute.coerceIn(0, 59)) }

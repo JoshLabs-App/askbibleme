@@ -42,11 +42,11 @@ struct PlanDetailView: View {
                             crossLink
                             moreSection(plan)
                             Button(action: onGoHome) {
-                                Text(PlanText.t("seeHome") + " →").font(.system(size: 15)).underline().foregroundStyle(theme.muted)
+                                Text(PlanText.t("seeHome") + " →").askFont(size: 15).underline().foregroundStyle(theme.muted)
                             }
                             .buttonStyle(.plain).frame(maxWidth: .infinity).padding(.top, 28)
                         } else {
-                            Text(PlanCopy.t("pages.read.plansEmpty")).font(.system(size: 15)).foregroundStyle(theme.muted)
+                            Text(PlanCopy.t("pages.read.plansEmpty")).askFont(size: 15).foregroundStyle(theme.muted)
                                 .frame(maxWidth: .infinity).padding(.top, 100)
                         }
                     }
@@ -75,10 +75,10 @@ struct PlanDetailView: View {
 
     private func header(_ plan: ReadingPlanEntry) -> some View {
         VStack(spacing: 0) {
-            Text(plan.badge).font(.system(size: 14, weight: .semibold)).kerning(0.8).foregroundStyle(Color(parchment: 0x4D3522, opacity: 0.8))
-            Text(plan.title).font(.system(size: 28, weight: .bold)).foregroundStyle(theme.ink)
+            Text(plan.badge).askFont(size: 14, weight: .semibold).kerning(0.8).foregroundStyle(Color(parchment: 0x4D3522, opacity: 0.8))
+            Text(plan.title).askFont(size: 28, weight: .bold).foregroundStyle(theme.ink)
                 .multilineTextAlignment(.center).padding(.top, 8)
-            Text(plan.tagline).font(.system(size: 18)).lineSpacing(7).foregroundStyle(theme.muted)
+            Text(plan.tagline).askFont(size: 18).lineSpacing(7).foregroundStyle(theme.muted)
                 .multilineTextAlignment(.center).padding(.top, 10)
             PlanFactRow(facts: plan.facts, centered: true).padding(.top, 16)
             if isActive {
@@ -166,7 +166,7 @@ struct PlanDetailView: View {
                     }
                 }
                 .padding(.top, 10)
-                Text(PlanText.f("paceEnd", ["endDate": endDateLabel])).font(.system(size: 15)).foregroundStyle(theme.muted).padding(.top, 10)
+                Text(PlanText.f("paceEnd", ["endDate": endDateLabel])).askFont(size: 15).foregroundStyle(theme.muted).padding(.top, 10)
             } else {
                 HStack(spacing: 10) {
                     PlanChoiceTile(title: PlanText.t("anchorToday"), subtitle: PlanText.t("anchorTodayHint"), on: anchor == .fromToday) { anchor = .fromToday }
@@ -185,14 +185,14 @@ struct PlanDetailView: View {
 
     private func subheading(_ title: String, _ hint: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.system(size: 16, weight: .semibold)).foregroundStyle(theme.ink)
-            Text(hint).font(.system(size: 15)).lineSpacing(4).foregroundStyle(theme.muted)
+            Text(title).askFont(size: 16, weight: .semibold).foregroundStyle(theme.ink)
+            Text(hint).askFont(size: 15).lineSpacing(4).foregroundStyle(theme.muted)
         }
     }
 
     private var clearLink: some View {
         Button { store.clearPlan() } label: {
-            Text(PlanText.t("clear")).font(.system(size: 15)).underline().foregroundStyle(theme.muted)
+            Text(PlanText.t("clear")).askFont(size: 15).underline().foregroundStyle(theme.muted)
         }
         .buttonStyle(.plain).frame(maxWidth: .infinity)
     }
@@ -255,12 +255,12 @@ struct PlanDetailView: View {
             PlanSectionHeader(title: PlanText.t("ladderHeading"))
             PlanProgressBar(value: Double(progress.curriculumIndex) / Double(NtDeepRepeat.stageCount)).padding(.top, 4)
             Text(PlanText.f("ladderProgress", ["n": "\(progress.curriculumIndex + 1)", "day": "\(progress.dayInSegment)", "total": "\(total)"]))
-                .font(.system(size: 16, weight: .medium)).foregroundStyle(theme.ink)
-            if let current { Text(NtDeepRepeat.stageRange(current)).font(.system(size: 16)).foregroundStyle(theme.muted) }
+                .askFont(size: 16, weight: .medium).foregroundStyle(theme.ink)
+            if let current { Text(NtDeepRepeat.stageRange(current)).askFont(size: 16).foregroundStyle(theme.muted) }
             PlanDisclosure(openTitle: PlanText.t("ladderOpen"), closeTitle: PlanText.t("ladderClose")) {
                 VStack(alignment: .leading, spacing: 0) {
                     if isActive {
-                        Text(PlanCopy.t("pages.read.ntDeepRepeatStagesBelowHint")).font(.system(size: 14)).foregroundStyle(theme.faint)
+                        Text(PlanCopy.t("pages.read.ntDeepRepeatStagesBelowHint")).askFont(size: 14).foregroundStyle(theme.faint)
                             .padding(.horizontal, 10).padding(.bottom, 6)
                     }
                     ForEach(Array(NtDeepRepeat.curriculum.enumerated()), id: \.offset) { index, seg in
@@ -268,13 +268,13 @@ struct PlanDetailView: View {
                         let isDone = index < progress.curriculumIndex
                         HStack(spacing: 10) {
                             Text(PlanCopy.f("pages.read.ntDeepRepeatStageLabel", ["n": "\(index + 1)"]))
-                                .font(.system(size: 15, weight: isCurrent ? .semibold : .regular))
+                                .askFont(size: 15, weight: isCurrent ? .semibold : .regular)
                                 .foregroundStyle(isCurrent ? theme.ink : theme.faint).frame(width: 66, alignment: .leading)
-                            Text(NtDeepRepeat.stageRange(seg)).font(.system(size: 16, weight: isCurrent ? .semibold : .regular))
+                            Text(NtDeepRepeat.stageRange(seg)).askFont(size: 16, weight: isCurrent ? .semibold : .regular)
                                 .foregroundStyle(isCurrent ? theme.ink : (isDone ? theme.muted : theme.faint))
                             Spacer(minLength: 0)
                             if isCurrent {
-                                Text(PlanText.t("stageCurrent")).font(.system(size: 14, weight: .semibold)).foregroundStyle(Color(parchment: 0x8A5A00))
+                                Text(PlanText.t("stageCurrent")).askFont(size: 14, weight: .semibold).foregroundStyle(Color(parchment: 0x8A5A00))
                             } else if isDone {
                                 MaterialIcon(glyph: MI.check, size: 18, color: theme.faint)
                             }
@@ -304,20 +304,20 @@ struct PlanDetailView: View {
     private func moreSection(_ plan: ReadingPlanEntry) -> some View {
         PlanDisclosure(openTitle: PlanText.t("moreOpen"), closeTitle: PlanText.t("moreClose")) {
             VStack(alignment: .leading, spacing: 12) {
-                Text(plan.detail).font(.system(size: 16)).lineSpacing(7).foregroundStyle(theme.muted)
+                Text(plan.detail).askFont(size: 16).lineSpacing(7).foregroundStyle(theme.muted)
                 if isTriple {
                     // 自己选了「从今天开始」就报自己的起点与天数，别再说复活节历元
                     Text(store.tripleStartedFromToday
                          ? PlanText.f("epochTripleSelf", ["date": Self.dayLabel(store.triple.startedAt ?? ""), "n": "\(store.triplePlanDay())"])
                          : PlanText.f("epochTriple", ["date": Self.easterLabel, "n": "\(store.triplePlanDay())"]))
-                        .font(.system(size: 15)).lineSpacing(5).foregroundStyle(theme.faint)
+                        .askFont(size: 15).lineSpacing(5).foregroundStyle(theme.faint)
                 } else if isNt {
                     Text(PlanText.f("epochNt", ["n": "\(ReadingPlanRules.effectiveEpochDay(store.prefs))"]))
-                        .font(.system(size: 15)).lineSpacing(5).foregroundStyle(theme.faint)
+                        .askFont(size: 15).lineSpacing(5).foregroundStyle(theme.faint)
                 }
                 if (isTriple && store.hasUserTriple) || (isNt && store.hasUserNt) {
                     Button { if isTriple { store.resetTripleToDefault() } else { store.resetNt() } } label: {
-                        Text(PlanText.t("resetDefault")).font(.system(size: 15)).underline().foregroundStyle(theme.muted)
+                        Text(PlanText.t("resetDefault")).askFont(size: 15).underline().foregroundStyle(theme.muted)
                     }
                     .buttonStyle(.plain)
                 }

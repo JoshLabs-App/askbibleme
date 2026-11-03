@@ -135,7 +135,7 @@ fun MedalIcon(
     tier: Int = 0,
     tierCount: Int = 1,
     size: Dp = 64.dp,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -187,7 +187,7 @@ fun MedalIcon(
 fun XPBar(
     ach: AchievementStore,
     locale: AppLocale = AppLocale.current,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     compact: Boolean = false,
 ) {
     val progress by animateFloatAsState(ach.levelProgress, tween(420), label = "xp")
@@ -302,7 +302,7 @@ internal data class FloaterItem(val id: Int, val text: String, val big: Boolean)
 fun EarnedToast(
     ach: AchievementStore,
     locale: AppLocale = AppLocale.current,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     modifier: Modifier = Modifier,
 ) {
     val event = ach.pending.firstOrNull {

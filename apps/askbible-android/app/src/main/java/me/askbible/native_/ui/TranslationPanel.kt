@@ -69,7 +69,7 @@ fun TranslationPanel(
     onSelect: (ScriptureTranslation) -> Unit,
     onSelectSecondary: (ScriptureTranslation?) -> Unit,
     onClose: () -> Unit,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     /** 界面语言：标签与分组名按它 */
     locale: AppLocale = AppLocale.ZH_CN,
     downloader: TranslationDownloader? = null,

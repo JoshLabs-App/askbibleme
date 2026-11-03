@@ -7,6 +7,7 @@ struct AskBibleApp: App {
             // 不再锁浅色（2026-09-16 起支持深色模式）：主题跟随系统，由 ParchmentSchemeInjector 注入
             RootView()
                 .modifier(ParchmentSchemeInjector())
+                .modifier(AppTextSizeHost())
         }
     }
 }
@@ -34,6 +35,8 @@ struct RootView: View {
     @State private var usageTicks = 0
     /// 界面语言跟系统走；读经展示语言再跟主译本走（英文译本 → 英文面）
     // 界面语言：手动设置（探索页）优先，否则跟系统
+    @State private var showHomeMusic = false
+    @State private var panoramaLocate = 0
     @State private var deviceLocale = AppLocale.device
     @State private var localeOverride = AppLocale.storedOverride
     private var appLocale: AppLocale { localeOverride ?? deviceLocale }
@@ -239,12 +242,12 @@ struct RootView: View {
             VStack(spacing: 0) {
                 HStack(alignment: .top, spacing: 12) {
                     Text(SiteCopy.f("pages.read.verseSelectionPicked", ["count": "\(selectedVerses.count)"], appLocale))
-                        .font(.system(size: 17, weight: .semibold))
+                        .askFont(size: 17, weight: .semibold)
                         .foregroundStyle(theme.ink)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     Button { selectedVerses = [] } label: {
                         Text(SiteCopy.t("pages.read.verseSelectionClear", appLocale))
-                            .font(.system(size: 14))
+                            .askFont(size: 14)
                             .foregroundStyle(theme.muted)
                             .contentShape(Rectangle())
                     }
@@ -255,7 +258,7 @@ struct RootView: View {
                     HStack(spacing: 8) {
                         MaterialIcon(glyph: MI.contentCopy, size: 22, color: theme.ink)
                         Text(SiteCopy.t("pages.read.verseSelectionCopy", appLocale))
-                            .font(.system(size: 15, weight: .semibold))
+                            .askFont(size: 15, weight: .semibold)
                             .foregroundStyle(theme.ink)
                     }
                     .frame(maxWidth: .infinity)
@@ -672,6 +675,7 @@ struct RootView: View {
                     onRegister: { showMenu = false; authRoute = .register },
                     onLogout: { showMenu = false; Task { await sync.prepareSignOut(); auth.signOut() } },
                     onFeedback: { showMenu = false; openSupportMail() },
+                    onOpenMusic: { showMenu = false; showHomeMusic = true; homeChromeHidden = false; tab = .home },
                     reminderEnabled: reminder.enabled,
                     reminderTime: reminder.timeLabel,
                     onToggleReminder: {
@@ -784,7 +788,21 @@ struct RootView: View {
     @ViewBuilder
     private func screen(for which: ShellTab) -> some View {
         switch which {
+        case .panorama:
+            BiblePanoramaView(locale: appLocale, currentBook: openedChapter?.book.id, currentChapter: openedChapter?.chapter ?? 1, locateRequest: panoramaLocate, onResume: { tab = .read }, onRead: { bookId, chapter in
+                guard let b = BibleCatalog.book(id: bookId) else { return }
+                planFlowActive = false; listenChapter = nil; chapterFromPlan = false; openedBook = nil
+                showSearch = false; showFavorites = false; focusVerse = nil; focusKeyword = nil; searchReturnQuery = nil
+                if openedChapter?.book.id != bookId || openedChapter?.chapter != chapter { openedChapter = (b,chapter) }
+                tab = .read
+            })
         case .home:
+            if showHomeMusic {
+                VStack(spacing:0) {
+                    Button(AppLocale.pick("← 首页", "← Home", appLocale)) { showHomeMusic = false }.askFont(size:15).frame(maxWidth:.infinity,alignment:.leading).padding()
+                    MusicView(player: music, sleepActive: audio.sleepDeadline != nil || music.sleepDeadline != nil || home.sleepDeadline != nil || ambient.sleepDeadline != nil, onSleepTimer: { showSleepSheet = true })
+                }
+            } else {
             HomeView(
                 home: home, music: music, ambient: ambient, prefs: naturePrefs,
                 sleepTimerMinutes: sleepTimerMinutes,
@@ -810,6 +828,7 @@ struct RootView: View {
                 onOpenMenu: { showMenu = true },
                 onChromeHidden: { hidden in withAnimation(.easeInOut(duration: 0.3)) { homeChromeHidden = hidden } }
             )
+            }
         case .music:
             MusicView(player: music,
                       sleepActive: audio.sleepDeadline != nil || music.sleepDeadline != nil || home.sleepDeadline != nil || ambient.sleepDeadline != nil,
@@ -867,6 +886,7 @@ struct RootView: View {
                         }
                     },
                     onOpenSettings: { showTranslationPanel = true },
+                    onOpenPanorama: { panoramaLocate += 1; tab = .panorama },
                     audio: audio,
                     bookmarks: bookmarks,
                     focusVerse: focusVerse,

@@ -3,6 +3,7 @@ import SwiftUI
 /// 首页左上角的用户菜单，对齐 RN `ShellNavDrawer`：自左侧滑出、宽度 80%、羊皮卷底。
 /// 行样式来自 `shellNavDrawerMenuStyles`（圆角 10、内边 12 × 10、正文 16、右侧细节 12）。
 struct NavDrawerView: View {
+    @AppStorage("askbible.appearance") private var appearance = "system"
     let locale: AppLocale
     /// 界面语言手动设置（nil = 跟随系统）
     let localeOverride: AppLocale?
@@ -17,6 +18,7 @@ struct NavDrawerView: View {
     var onRegister: () -> Void = {}
     var onLogout: () -> Void = {}
     var onFeedback: () -> Void = {}
+    var onOpenMusic: () -> Void = {}
     /// 每日读经提醒：开关 + 当前时间（点一下开面板改时间）
     var reminderEnabled = false
     var reminderTime = "07:00"
@@ -43,7 +45,7 @@ struct NavDrawerView: View {
                     ScrollView(showsIndicators: false) { rows }
                     Text(SiteCopy.t("native.appVersion", locale).replacingOccurrences(of: "{{version}}", with: Self.versionLabel)
                          + AskGlassDiagnostics.badge)
-                        .font(.system(size: 11))
+                        .askFont(size: 11)
                         .foregroundStyle(theme.ink.opacity(0.42))
                         .frame(maxWidth: .infinity)
                         .padding(.top, 8)
@@ -67,7 +69,7 @@ struct NavDrawerView: View {
     private var header: some View {
         HStack {
             Text(SiteCopy.t("native.userMenu", locale))
-                .font(.system(size: 14, weight: .semibold))
+                .askFont(size: 14, weight: .semibold)
                 .kerning(0.5)
                 .foregroundStyle(theme.ink.opacity(0.55))
             Spacer()
@@ -83,7 +85,10 @@ struct NavDrawerView: View {
 
     @ViewBuilder
     private var rows: some View {
+        menuRow(AppLocale.pick("音乐", "Music", locale), action: onOpenMusic)
         localeRow
+        AppTextSizePicker(locale:locale)
+        appearanceRow
         menuRow(SiteCopy.t("native.bibleVersion", locale), detail: "\(translationLabel) \u{203A}", action: onOpenTranslations)
         if let userName {
             menuRow(SiteCopy.t("native.signedIn", locale), detail: userName, action: onClose)
@@ -101,7 +106,7 @@ struct NavDrawerView: View {
             // RN 抽屉底部的「删除账户」：quiet 样式，小一号、淡色
             Button(action: onDeleteAccount) {
                 Text(SiteCopy.t("native.deleteAccount", locale))
-                    .font(.system(size: 12))
+                    .askFont(size: 12)
                     .foregroundStyle(theme.ink.opacity(0.42))
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
@@ -113,17 +118,32 @@ struct NavDrawerView: View {
         }
     }
 
+    private var appearanceRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(SiteCopy.t("native.appearance", locale))
+                .font(.system(size: 16)).foregroundStyle(theme.ink)
+            Picker(SiteCopy.t("native.appearance", locale), selection: $appearance) {
+                Text(SiteCopy.t("native.followSystem", locale)).tag("system")
+                Text(SiteCopy.t("native.appearanceLight", locale)).tag("light")
+                Text(SiteCopy.t("native.appearanceDark", locale)).tag("dark")
+            }
+            .pickerStyle(.segmented)
+            .accessibilityIdentifier("appearancePicker")
+        }
+        .padding(.horizontal, 12).padding(.vertical, 10)
+    }
+
     /// 每日读经提醒：左边开关（点文字切换），右边时间（点时间改）
     private var reminderRow: some View {
         HStack(spacing: 8) {
             Button(action: onToggleReminder) {
                 HStack(spacing: 8) {
                     Text(SiteCopy.t("native.reminderTitle", locale))
-                        .font(.system(size: 16))
+                        .askFont(size: 16)
                         .foregroundStyle(theme.ink)
                         .lineLimit(1)
                     Text(SiteCopy.t(reminderEnabled ? "native.reminderOn" : "native.reminderOff", locale))
-                        .font(.system(size: 11, weight: .semibold))
+                        .askFont(size: 11, weight: .semibold)
                         .foregroundStyle(reminderEnabled ? Color(parchment: 0x784b1e) : theme.ink.opacity(0.5))
                         .padding(.horizontal, 8).padding(.vertical, 3)
                         .background(
@@ -136,7 +156,7 @@ struct NavDrawerView: View {
             Spacer(minLength: 8)
             Button(action: onPickReminderTime) {
                 Text(reminderTime)
-                    .font(.system(size: 13, weight: .semibold))
+                    .askFont(size: 13, weight: .semibold)
                     .foregroundStyle(theme.ink.opacity(0.7))
                     .contentShape(Rectangle())
             }
@@ -150,7 +170,7 @@ struct NavDrawerView: View {
     private var localeRow: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(SiteCopy.t("nav.language", locale))
-                .font(.system(size: 16))
+                .askFont(size: 16)
                 .foregroundStyle(theme.ink)
             HStack(spacing: 6) {
                 localeChip(nil, label: SiteCopy.t("native.followSystem", locale))
@@ -167,7 +187,7 @@ struct NavDrawerView: View {
         let on = localeOverride == value
         return Button { onSetLocale(value) } label: {
             Text(label)
-                .font(.system(size: 12, weight: .semibold))
+                .askFont(size: 12, weight: .semibold)
                 .foregroundStyle(on ? Color(parchment: 0x784b1e) : theme.ink.opacity(0.72))
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, minHeight: 32)
@@ -188,13 +208,13 @@ struct NavDrawerView: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Text(label)
-                    .font(.system(size: 16))
+                    .askFont(size: 16)
                     .foregroundStyle(theme.ink)
                     .lineLimit(1)
                 Spacer(minLength: 8)
                 if let detail {
                     Text(detail)
-                        .font(.system(size: 12))
+                        .askFont(size: 12)
                         .foregroundStyle(theme.ink.opacity(0.55))
                         .lineLimit(1)
                 }

@@ -16,32 +16,30 @@ struct FavoritesView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
                     Button(action: onBack) {
-                        Image(systemName: "chevron.left").font(.system(size: 22, weight: .semibold))
+                        Image(systemName: "chevron.left").askFont(size: 22, weight: .semibold)
                             .foregroundStyle(theme.ink).frame(width: 44, height: 44, alignment: .leading)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
 
-                    Text(SiteCopy.t("pages.read.favoritesTitle", locale)).font(.system(size: 22, weight: .semibold)).foregroundStyle(theme.ink)
+                    Text(SiteCopy.t("pages.read.favoritesTitle", locale)).askFont(size: 22, weight: .semibold).foregroundStyle(theme.ink)
                         .frame(maxWidth: .infinity).padding(.bottom, 8)
-                    Text(SiteCopy.t("pages.read.favoritesLead", locale)).font(.system(size: 13)).lineSpacing(7)
+                    Text(SiteCopy.t("pages.read.favoritesLead", locale)).askFont(size: 13).lineSpacing(7)
                         .foregroundStyle(theme.muted).multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(.bottom, 16)
 
                     let list = bookmarks.list
                     if list.isEmpty {
-                        Text(SiteCopy.t("pages.read.favoritesEmpty", locale)).font(.system(size: 14)).lineSpacing(8).foregroundStyle(theme.muted)
+                        Text(SiteCopy.t("pages.read.favoritesEmpty", locale)).askFont(size: 14).lineSpacing(8).foregroundStyle(theme.muted)
                             .frame(maxWidth: .infinity).padding(.top, 24)
                     }
                     ForEach(list) { item in
                         HStack(alignment: .top, spacing: 8) {
                             Button { onOpen(item) } label: {
                                 VStack(alignment: .leading, spacing: 6) {
-                                    (Text("\(BibleCatalog.book(id: item.bookId)?.name(locale) ?? item.bookName) \(item.chapter):\(item.verse)")
-                                        .font(.system(size: 14, weight: .semibold)).foregroundColor(theme.faint)
-                                     + Text(" · \((ScriptureTranslation.find(item.translationId)?.labelZh ?? item.translationId))")
-                                        .font(.system(size: 14)).foregroundColor(theme.faint))
+                                    Text("\(BibleCatalog.book(id: item.bookId)?.name(locale) ?? item.bookName) \(item.chapter):\(item.verse) · \((ScriptureTranslation.find(item.translationId)?.labelZh ?? item.translationId))")
+                                        .askFont(size:14,weight:.semibold).foregroundColor(theme.faint)
                                     Text(item.text)
-                                        .font(.system(size: size.metrics.verseFontSize, weight: .medium))
+                                        .askFont(size: size.metrics.verseFontSize, weight: .medium)
                                         .lineSpacing(size.metrics.verseLineSpacing)
                                         .foregroundStyle(theme.inkSoft).lineLimit(4)
                                 }

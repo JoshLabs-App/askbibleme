@@ -45,10 +45,10 @@ struct AchievementsView: View {
         )) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(SiteCopy.t("native.achievementSound"))
-                    .font(.system(size: 15, weight: .semibold))
+                    .askFont(size: 15, weight: .semibold)
                     .foregroundStyle(Color(parchment: 0x2B1D15))
                 Text(SiteCopy.t("native.achievementSoundHint"))
-                    .font(.system(size: 12))
+                    .askFont(size: 12)
                     .foregroundStyle(Color(parchment: 0x7A633A))
             }
         }
@@ -81,10 +81,10 @@ struct AchievementsView: View {
     private func stat(_ value: String, _ label: String) -> some View {
         VStack(spacing: 3) {
             Text(value)
-                .font(.system(size: 19, weight: .heavy, design: .rounded).monospacedDigit())
+                .askFont(size: 19, weight: .heavy, design: .rounded).monospacedDigit()
                 .foregroundStyle(Color(parchment: 0x2B1D15))
                 .contentTransition(.numericText())
-            Text(label).font(.system(size: 11)).foregroundStyle(Color(parchment: 0x7A633A))
+            Text(label).askFont(size: 11).foregroundStyle(Color(parchment: 0x7A633A))
         }
         .frame(maxWidth: .infinity)
     }
@@ -118,7 +118,7 @@ struct AchievementsView: View {
                     VStack(spacing: 4) {
                         MedalIcon(key: file, tier: ach.seals[book.id] != nil ? 1 : 0, size: 56)
                         Text(book.name(AppLocale.current))
-                            .font(.system(size: 10))
+                            .askFont(size: 10)
                             .foregroundStyle(Color(parchment: ach.seals[book.id] != nil ? 0x5C4030 : 0x7A633A))
                             .opacity(ach.seals[book.id] != nil ? 1 : 0.55)
                             .lineLimit(1).minimumScaleFactor(0.7)
@@ -152,9 +152,9 @@ struct AchievementsView: View {
 
     private func sectionTitle(_ title: String, _ sub: String) -> some View {
         HStack(alignment: .firstTextBaseline) {
-            Text(title).font(.system(size: 17, weight: .bold)).foregroundStyle(Color(parchment: 0x2B1D15))
+            Text(title).askFont(size: 17, weight: .bold).foregroundStyle(Color(parchment: 0x2B1D15))
             Spacer()
-            Text(sub).font(.system(size: 12, design: .rounded).monospacedDigit())
+            Text(sub).askFont(size: 12, design: .rounded).monospacedDigit()
                 .foregroundStyle(Color(parchment: 0x7A633A))
         }
     }
@@ -179,7 +179,7 @@ private struct MedalCell: View {
         VStack(spacing: 6) {
             MedalIcon(key: def.key, tier: tier, tierCount: def.tiers.count, size: 72)
             Text(def.localizedName())
-                .font(.system(size: 12, weight: tier > 0 ? .semibold : .regular))
+                .askFont(size: 12, weight: tier > 0 ? .semibold : .regular)
                 .foregroundStyle(Color(parchment: tier > 0 ? 0x2B1D15 : 0x7A633A))
                 .lineLimit(1).minimumScaleFactor(0.75)
             if let next {
@@ -193,12 +193,12 @@ private struct MedalCell: View {
                     }
                     .frame(height: 4)
                     Text("\(current) / \(next)")
-                        .font(.system(size: 10, design: .rounded).monospacedDigit())
+                        .askFont(size: 10, design: .rounded).monospacedDigit()
                         .foregroundStyle(Color(parchment: 0x7A633A))
                 }
             } else {
                 Text(def.localizedCondition(tier: tier))
-                    .font(.system(size: 10)).foregroundStyle(Color(parchment: 0x7A633A))
+                    .askFont(size: 10).foregroundStyle(Color(parchment: 0x7A633A))
                     .lineLimit(1).minimumScaleFactor(0.7)
             }
         }

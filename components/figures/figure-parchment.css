@@ -46,27 +46,27 @@
 
 .prayer-on-parchment .figure-parchment-page .explore-prose-subtitle {
   margin-top: 1rem;
-  font-size: 14px;
+  font-size: calc(14px * var(--app-text-scale, 1));
   line-height: 1.6;
   font-weight: 500;
 }
 
 .prayer-on-parchment .figure-parchment-page .explore-prose-verse {
   font-family: inherit;
-  font-size: 15px;
+  font-size: calc(15px * var(--app-text-scale, 1));
   line-height: 1.65;
   font-weight: 500;
 }
 
 .prayer-on-parchment .figure-parchment-page .explore-prose-ref {
   font-family: inherit;
-  font-size: 12px;
+  font-size: calc(12px * var(--app-text-scale, 1));
   font-weight: 600;
 }
 
 .prayer-on-parchment .figure-parchment-page .figure-parchment-period {
   margin: 0.5rem 0 0;
-  font-size: 11px;
+  font-size: calc(11px * var(--app-text-scale, 1));
   font-weight: 600;
   letter-spacing: 0.08em;
   color: #6e5240;
@@ -78,7 +78,7 @@
 
 .prayer-on-parchment .figure-parchment-page .figure-parchment-hint {
   margin-top: 0.65rem;
-  font-size: 12px;
+  font-size: calc(12px * var(--app-text-scale, 1));
   line-height: 1.5;
   font-weight: 500;
   color: #6e5240;
@@ -143,7 +143,7 @@
 
 .prayer-on-parchment .figure-parchment-note {
   margin: 0;
-  font-size: 13px;
+  font-size: calc(13px * var(--app-text-scale, 1));
   line-height: 1.45;
   font-weight: 500;
   color: #6e5240;
@@ -155,7 +155,7 @@
 
 .prayer-on-parchment .figure-parchment-explain {
   margin: 0;
-  font-size: 14px;
+  font-size: calc(14px * var(--app-text-scale, 1));
   line-height: 1.55;
   font-weight: 500;
   color: #5c4030;
@@ -171,7 +171,7 @@
   padding: 6px 2px;
   border: none;
   background: transparent;
-  font-size: 14px;
+  font-size: calc(14px * var(--app-text-scale, 1));
   line-height: 1.4;
   font-weight: 600;
   color: #1c1410;
@@ -191,7 +191,7 @@
 }
 
 .prayer-on-parchment .figure-parchment-toggle--sub {
-  font-size: 13px;
+  font-size: calc(13px * var(--app-text-scale, 1));
   color: #5c4030;
   padding: 4px 2px;
 }
@@ -235,7 +235,7 @@
 .prayer-on-parchment .figure-parchment-sub-title {
   margin: 0;
   font-family: inherit;
-  font-size: 15px;
+  font-size: calc(15px * var(--app-text-scale, 1));
   line-height: 1.45;
   font-weight: 600;
   color: #1c1410;
@@ -248,7 +248,7 @@
 .prayer-on-parchment .figure-parchment-chapter-link {
   display: inline-block;
   margin-top: 2px;
-  font-size: 14px;
+  font-size: calc(14px * var(--app-text-scale, 1));
   font-weight: 600;
   color: #1c1410;
   text-decoration: underline;
@@ -284,7 +284,7 @@
   position: relative;
   margin: 0;
   padding-left: 1.35rem;
-  font-size: 14px;
+  font-size: calc(14px * var(--app-text-scale, 1));
   line-height: 1.65;
   font-weight: 500;
   color: #5c4030;
@@ -295,7 +295,7 @@
   position: absolute;
   left: 0;
   top: 0;
-  font-size: 13px;
+  font-size: calc(13px * var(--app-text-scale, 1));
   font-weight: 600;
   color: #6e5240;
 }

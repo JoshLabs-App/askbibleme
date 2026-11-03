@@ -49,7 +49,7 @@ struct MedalDetailView: View {
         .overlay(alignment: .bottom) {
             if let toast {
                 Text(toast)
-                    .font(.system(size: 14))
+                    .askFont(size: 14)
                     .foregroundStyle(.white)
                     .padding(.horizontal, 18).padding(.vertical, 10)
                     .background(Color.black.opacity(0.75), in: Capsule())
@@ -79,14 +79,14 @@ struct MedalDetailView: View {
             .frame(width: 230, height: 230)
 
             Text(detail.name)
-                .font(.system(size: 24, weight: .semibold))
+                .askFont(size: 24, weight: .semibold)
                 .foregroundStyle(Color(parchment: 0x1C1410))
                 .multilineTextAlignment(.center)
             Text(detail.tier)
-                .font(.system(size: 15, weight: .semibold))
+                .askFont(size: 15, weight: .semibold)
                 .foregroundStyle(Color(rgb: detail.earned ? 0xD97707 : 0x5C4030))
             if !detail.caption.isEmpty {
-                Text(detail.caption).font(.system(size: 13)).foregroundStyle(Color(parchment: 0x5C4030))
+                Text(detail.caption).askFont(size: 13).foregroundStyle(Color(parchment: 0x5C4030))
             }
             if !detail.earned {
                 GeometryReader { geo in
@@ -102,7 +102,7 @@ struct MedalDetailView: View {
 
             if !name.isEmpty {
                 Text(name)
-                    .font(.system(size: 15))
+                    .askFont(size: 15)
                     .foregroundStyle(Color(parchment: 0x1C1410))
                     .padding(.horizontal, 16).padding(.vertical, 7)
                     .background(Color(parchment: 0x2A1810, opacity: 0.07), in: Capsule())
@@ -124,7 +124,7 @@ struct MedalDetailView: View {
                 .padding(.top, 14)
             } else {
                 Text(SiteCopy.t("native.medalLockedShareHint"))
-                    .font(.system(size: 13))
+                    .askFont(size: 13)
                     .foregroundStyle(Color(parchment: 0x5C4030))
                     .multilineTextAlignment(.center)
                     .padding(.top, 14)
@@ -157,7 +157,7 @@ struct MedalDetailView: View {
     private func actionButton(_ label: String, ghost: Bool = false, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(label)
-                .font(.system(size: 15, weight: .semibold))
+                .askFont(size: 15, weight: .semibold)
                 .foregroundStyle(ghost ? Color(parchment: 0x1C1410) : .white)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity)

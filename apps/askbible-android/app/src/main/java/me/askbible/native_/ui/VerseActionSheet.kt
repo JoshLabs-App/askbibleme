@@ -43,7 +43,7 @@ fun VerseActionSheet(
     /** 划重点：进入划字模式（RN runOpenHighlightEditor） */
     onHighlight: () -> Unit = {},
     onClose: () -> Unit,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
 ) {
     val fs = size.metrics.verseFontSize
     val iconSize = maxOf(22f, Math.round(fs * 1.15f).toFloat())
@@ -105,7 +105,7 @@ fun VerseSelectionSheet(
     locale: AppLocale,
     onCopy: () -> Unit,
     onClear: () -> Unit,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
 ) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
         Column(

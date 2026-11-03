@@ -29,7 +29,7 @@ struct TimePickerSheet: View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Text(title)
-                        .font(.system(size: 17, weight: .semibold))
+                        .askFont(size: 17, weight: .semibold)
                         .foregroundStyle(theme.ink)
                     Spacer()
                     Button(action: {
@@ -37,7 +37,7 @@ struct TimePickerSheet: View {
                         onDone(c.hour ?? 7, c.minute ?? 0)
                     }) {
                         Text(doneTitle)
-                            .font(.system(size: 15, weight: .semibold))
+                            .askFont(size: 15, weight: .semibold)
                             .foregroundStyle(theme.ink)
                             .contentShape(Rectangle())
                     }

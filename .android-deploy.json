@@ -1,22 +1,23 @@
 {
   "_note": "android_dir 相对于此文件所在目录（01AskBible/）",
-  "app_name": "AskBible",
-  "version": "1.0.51",
+  "app_name": "AskBible.me",
+  "version": "1.0.53",
   "apk_prefix": "AskBible",
   "bucket": "askbible-media",
   "android_dir": "apps/askbible-android",
-  "tagline": "AI 圣经问答，随时随地",
+  "tagline": "安静地，回到经文。",
   "icon_bg": "#FFB103",
   "accent": "#D97707",
   "arch": "arm64-v8a",
   "min_android": "Android 8.0+",
   "gradle_task": "assembleWeb",
   "apk_rel_path": "app/build/outputs/apk/web/app-web.apk",
-  "notes": "首页上下滑动就能换场景；探索页新增「更多 App」。",
+  "notes": "圣经全景地图、书卷简介和全局字号设置。",
   "changelog": [
-    "首页上下滑动就能换场景：上滑下一个，下滑上一个",
-    "探索页新增「更多 App」，可以找到同系列的听到、查到、诗歌"
+    "圣经全景：六个阶段就地展开，书卷简介直接可见",
+    "地图与经文章节双向跳转，定位当前阅读",
+    "全局字号可调大；音乐移至首页菜单"
   ],
-  "intro": "AskBible 是一本能问问题的圣经：读经、听读、按计划跟进度，遇到不懂的地方随时问。",
+  "intro": "安静地读经、听读，在圣经全景中认识书卷与经文脉络。",
   "icon_image": "apps/askbible-ios/AskBible/Assets.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png"
 }

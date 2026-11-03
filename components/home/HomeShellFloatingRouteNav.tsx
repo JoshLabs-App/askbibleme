@@ -42,10 +42,10 @@ const homeItem: NavItemDef = {
 };
 
 const musicItem: NavItemDef = {
-  href: "/music",
-  labelKey: "nav.music",
-  match: (p) => p === "/music" || p.startsWith("/music/"),
-  materialIcon: shellTabMaterialIcon("music"),
+  href: "/panorama",
+  labelKey: "nav.panorama",
+  match: (p) => p === "/panorama" || p.startsWith("/panorama/"),
+  materialIcon: shellTabMaterialIcon("panorama"),
 };
 
 const readItem: NavItemDef = {
@@ -78,12 +78,12 @@ function buildNavItems(shellRoot: string): { left: NavItemDef[]; right: NavItemD
     materialIcon: shellTabMaterialIcon("home"),
   };
   const music: NavItemDef = {
-    href: shellHref("/music", shellRoot),
-    labelKey: "nav.music",
+    href: shellHref("/panorama", shellRoot),
+    labelKey: "nav.panorama",
     match: shellRoot
-      ? (p) => p === `${shellRoot}/music` || p.startsWith(`${shellRoot}/music/`)
+      ? (p) => p === `${shellRoot}/panorama` || p.startsWith(`${shellRoot}/panorama/`)
       : musicItem.match,
-    materialIcon: shellTabMaterialIcon("music"),
+    materialIcon: shellTabMaterialIcon("panorama"),
   };
   const read: NavItemDef = {
     href: shellHref("/read", shellRoot),
@@ -131,7 +131,8 @@ type Props = { placement: Placement; /** 电视壳：`/tv` */ shellRoot?: string
 export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) {
   const pathname = usePathname() ?? "";
   const router = useRouter();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const navLabel = (key: string) => key === "nav.panorama" ? (locale === "en" ? "Bible panorama" : locale === "zh-TW" ? "聖經全景" : "圣经全景") : t(key);
   const { canPlayMusic, playing, effectiveSrc, togglePlayMusic, loading } = useMusicShellPlayback();
   const readChapterRoute = useMemo(() => parseReadChapterRoute(pathname), [pathname]);
   const isPlanPlay = isReadPlanPlayPath(pathname);
@@ -188,9 +189,9 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
         <button
           key={item.href}
           type="button"
-          title={t(item.labelKey)}
+          title={navLabel(item.labelKey)}
           aria-current={active ? "page" : undefined}
-          aria-label={t(item.labelKey)}
+          aria-label={navLabel(item.labelKey)}
           className={`appearance-none border-0 bg-transparent p-0 ${iconLinkClass(active)}`}
           onClick={() => {
             navTapTarget(item);
@@ -207,9 +208,9 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
         <Link
           key={item.href}
           href={item.href}
-          title={t(item.labelKey)}
+          title={navLabel(item.labelKey)}
           aria-current={active ? "page" : undefined}
-          aria-label={t(item.labelKey)}
+          aria-label={navLabel(item.labelKey)}
           className={iconLinkClass(active)}
           onClick={(event) => {
             navTapTarget(item);
@@ -229,9 +230,9 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
         <Link
           key={item.href}
           href={item.href}
-          title={t(item.labelKey)}
+          title={navLabel(item.labelKey)}
           aria-current={active ? "page" : undefined}
-          aria-label={t(item.labelKey)}
+          aria-label={navLabel(item.labelKey)}
           className={iconLinkClass(active)}
           onClick={(event) => {
             navTapTarget(item);
@@ -249,9 +250,9 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
       <Link
         key={item.href}
         href={item.href}
-        title={t(item.labelKey)}
+        title={navLabel(item.labelKey)}
         aria-current={active ? "page" : undefined}
-        aria-label={t(item.labelKey)}
+        aria-label={navLabel(item.labelKey)}
         className={iconLinkClass(active)}
         onClick={() => navTapTarget(item)}
       >

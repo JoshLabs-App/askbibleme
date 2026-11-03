@@ -11,6 +11,9 @@ import UIKit
 struct ChapterFlowParagraph: UIViewRepresentable {
     let verses: [LoadedVerse]
     let metrics: ReadTypographyMetrics
+    @Environment(\.appTextSize) private var appSize
+    @ScaledMetric(relativeTo: .body) private var systemScale = 1.0
+    private var textScale: CGFloat { appTextScale(appSize, system: systemScale) }
     let theme: Parchment
     let xrefVerses: Set<Int>
     let activeVerse: Int?
@@ -417,7 +420,7 @@ struct ChapterFlowParagraph: UIViewRepresentable {
             // 关键词再加粗压成正文最深色，和搜索结果列表一致
             let text = NSMutableAttributedString(attributedString: built.text)
             for r in matches {
-                text.addAttributes([.font: UIFont.systemFont(ofSize: metrics.verseFontSize, weight: .bold),
+                text.addAttributes([.font: UIFont.systemFont(ofSize: (metrics.verseFontSize * textScale), weight: .bold),
                                     .foregroundColor: UIColor(theme.ink)], range: r)
             }
             v.setText(text)
@@ -528,12 +531,12 @@ struct ChapterFlowParagraph: UIViewRepresentable {
         var numberRanges: [(Int, NSRange)] = []
         var textRanges: [(Int, NSRange)] = []
         let para = NSMutableParagraphStyle()
-        para.minimumLineHeight = metrics.verseLineHeight
-        para.maximumLineHeight = metrics.verseLineHeight
-        let bodyFont = UIFont.systemFont(ofSize: metrics.verseFontSize, weight: .medium)
-        let numFont = UIFont.systemFont(ofSize: metrics.verseNumFontSize, weight: .bold)
+        para.minimumLineHeight = (metrics.verseLineHeight * textScale)
+        para.maximumLineHeight = (metrics.verseLineHeight * textScale)
+        let bodyFont = UIFont.systemFont(ofSize: (metrics.verseFontSize * textScale), weight: .medium)
+        let numFont = UIFont.systemFont(ofSize: (metrics.verseNumFontSize * textScale), weight: .bold)
         // 行高固定后小字号的节号会沉到基线下面，抬一点
-        let numOffset = (metrics.verseFontSize - metrics.verseNumFontSize) * 0.35
+        let numOffset = ((metrics.verseFontSize * textScale) - (metrics.verseNumFontSize * textScale)) * 0.35
 
         for v in verses {
             let start = out.length

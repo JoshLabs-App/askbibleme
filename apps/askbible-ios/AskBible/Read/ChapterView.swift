@@ -20,6 +20,7 @@ struct ChapterView: View {
     @Binding var size: ReadSize
     var onBack: () -> Void = {}
     var onOpenSettings: () -> Void = {}
+    var onOpenPanorama: () -> Void = {}
     @ObservedObject var audio: ChapterAudioPlayer
     @ObservedObject var bookmarks: VerseBookmarkStore
     /// 从搜索 / 收藏跳进来要定位并标出的那节
@@ -99,13 +100,16 @@ struct ChapterView: View {
                         Color.clear.frame(height: 0).id("chapter-top")
                         // header：paddingTop 4 / paddingBottom 24 / 细线 / marginBottom 12（readChapterScreenLayoutStyles.header）
                         VStack(spacing: 0) {
+                            if let (i,s) = BiblePanorama.shared.location(bookId,chapter) {
+                                Button(AppLocale.pick(BiblePanorama.shared.acts[i].zh,BiblePanorama.shared.acts[i].en,uiLocale) + " › " + AppLocale.pick(s.zh,s.en,uiLocale)) { onOpenPanorama() }.askFont(size:12).foregroundStyle(theme.ink.opacity(0.7)).padding(.bottom,12)
+                            }
                             Text(ReadChrome.chapterTitle(bookName: bookName, chapter: chapter, locale: chromeLocale))
-                                .font(.system(size: m.chapterTitleSize, weight: .semibold))
+                                .askFont(size: m.chapterTitleSize, weight: .semibold)
                                 .foregroundStyle(theme.ink)
                                 .overlay {
                                     // 金色那层叠在上面淡入淡出，不用 Color.mix（那是 iOS 18 才有的）
                                     Text(ReadChrome.chapterTitle(bookName: bookName, chapter: chapter, locale: chromeLocale))
-                                        .font(.system(size: m.chapterTitleSize, weight: .semibold))
+                                        .askFont(size: m.chapterTitleSize, weight: .semibold)
                                         .foregroundStyle(Color(rgb: 0xFFB101))
                                         .multilineTextAlignment(.center)
                                         .opacity(chapterDoneGlow)
@@ -125,7 +129,7 @@ struct ChapterView: View {
 
                         if let message = store.lastError {
                             Text(message)
-                                .font(.system(size: 14))
+                                .askFont(size: 14)
                                 .foregroundStyle(Color(parchment: 0x994812))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
@@ -146,7 +150,7 @@ struct ChapterView: View {
                         // 在线译本的版权声明（YouVersion 条款要求展示；内置译本没有这一行）
                         if let copyright = RemoteTranslations.attribution(store.translation.id, chromeLocale) {
                             Text(copyright)
-                                .font(.system(size: 12)).lineSpacing(4)
+                                .askFont(size: 12).lineSpacing(4)
                                 .foregroundStyle(theme.faint)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal, 20).padding(.top, 18)
@@ -236,15 +240,15 @@ struct ChapterView: View {
             HStack(spacing: 10) {
                 ProgressView().tint(theme.muted)
                 Text(ScriptureTranslation.find(store.translation.id)?.delivery == .download ? SiteCopy.t("native.translationDownloading", locale) : SiteCopy.t("native.chapterFetching", locale))
-                    .font(.system(size: 15)).foregroundStyle(theme.muted)
+                    .askFont(size: 15).foregroundStyle(theme.muted)
             }
             .frame(maxWidth: .infinity).padding(.vertical, 40)
         } else if verses.isEmpty, loadState == .failed {
             VStack(spacing: 12) {
                 Text(SiteCopy.t("native.translationOfflineHint", locale))
-                    .font(.system(size: 15)).foregroundStyle(theme.muted).multilineTextAlignment(.center)
+                    .askFont(size: 15).foregroundStyle(theme.muted).multilineTextAlignment(.center)
                 Button { reloadToken += 1 } label: {
-                    Text(SiteCopy.t("pages.read.retry", locale)).font(.system(size: 15, weight: .semibold)).foregroundStyle(theme.ink)
+                    Text(SiteCopy.t("pages.read.retry", locale)).askFont(size: 15, weight: .semibold).foregroundStyle(theme.ink)
                         .padding(.horizontal, 18).padding(.vertical, 9)
                         .background(Capsule().fill(theme.surface))
                         .overlay(Capsule().strokeBorder(theme.border, lineWidth: 1))
@@ -323,7 +327,7 @@ struct ChapterView: View {
             ForEach(headings.indices, id: \.self) { i in
                 // segmentHeading：字号 +1、行高 +2、#70451F、600、字距 0.3、居中、上 18 下 16
                 Text(locale.zh(headings[i]))
-                    .font(.system(size: m.verseFontSize + 1, weight: .semibold))
+                    .askFont(size: m.verseFontSize + 1, weight: .semibold)
                     .tracking(0.3)
                     .foregroundStyle(Color(parchment: 0x70451F))
                     .opacity(0.92)
@@ -349,7 +353,7 @@ struct ChapterView: View {
         let lineHeight: CGFloat = max(m.verseLineHeight * 0.78, fontSize * 1.2)
         let body: String = contrast[v.number] ?? ""
         return Text("\(v.number)\u{2002}\(body)")
-            .font(.system(size: fontSize))
+            .askFont(size: fontSize)
             .foregroundStyle(theme.muted)
             .lineSpacing(max(0, lineHeight - fontSize))
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -367,7 +371,7 @@ struct ChapterView: View {
                             // RN：MaterialIcons chevron-left 16 + 13/500，颜色 breadcrumbColor = faint
                             HStack(spacing: 2) {
                                 MaterialIcon(glyph: MI.chevronLeft, size: 16, color: theme.faint)
-                                Text(ReadChrome.chapterLabel(p.chapter, locale: chromeLocale)).font(.system(size: 13, weight: .medium))
+                                Text(ReadChrome.chapterLabel(p.chapter, locale: chromeLocale)).askFont(size: 13, weight: .medium)
                             }
                             .foregroundStyle(theme.faint)
                         }
@@ -377,13 +381,13 @@ struct ChapterView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 Button(action: onOpenCatalog) {
                     Text(bookName)
-                        .font(.system(size: 16, weight: .semibold))
+                        .askFont(size: 16, weight: .semibold)
                         .foregroundStyle(theme.ink)
                         // 章末这块也跟着亮：完成是「滚到章末」触发的，那一刻标题早滚出屏幕了，
                         // 只亮标题的话用户根本看不见（2026-09-23 安卓模拟器实测发现，iOS 同构）
                         .overlay {
                             Text(bookName)
-                                .font(.system(size: 16, weight: .semibold))
+                                .askFont(size: 16, weight: .semibold)
                                 .foregroundStyle(Color(rgb: 0xFFB101))
                                 .lineLimit(1)
                                 .opacity(chapterDoneGlow)
@@ -398,7 +402,7 @@ struct ChapterView: View {
                     if let nx = n.next {
                         Button { onNavigate(nx.bookId, nx.chapter) } label: {
                             HStack(spacing: 2) {
-                                Text(ReadChrome.chapterLabel(nx.chapter, locale: chromeLocale)).font(.system(size: 13, weight: .medium))
+                                Text(ReadChrome.chapterLabel(nx.chapter, locale: chromeLocale)).askFont(size: 13, weight: .medium)
                                 MaterialIcon(glyph: MI.chevronRight, size: 16, color: theme.faint)
                             }
                             .foregroundStyle(theme.faint)
@@ -471,7 +475,7 @@ struct ChapterView: View {
     private func chromeButton(systemName: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(.system(size: ShellMetrics.topChromeIcon * 0.68, weight: .semibold))
+                .askFont(size: ShellMetrics.topChromeIcon * 0.68, weight: .semibold)
                 .foregroundStyle(theme.ink.opacity(0.78))
                 // SF Symbol 只有笔画本身可点：不补 contentShape，50×50 里只有细细的箭头能点中
                 // （Josh 2026-09-10 真机「今日读经进章后返回退不回去」）
@@ -499,7 +503,7 @@ struct ChapterView: View {
     private func chromeLabel(_ text: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(text)
-                .font(.system(size: ShellMetrics.topChromeSizeLabel * 0.84, weight: .medium))
+                .askFont(size: ShellMetrics.topChromeSizeLabel * 0.84, weight: .medium)
                 .foregroundStyle(theme.ink.opacity(0.78))
                 .frame(width: ShellMetrics.topChromeButton, height: ShellMetrics.topChromeButton)
                 .contentShape(Rectangle())

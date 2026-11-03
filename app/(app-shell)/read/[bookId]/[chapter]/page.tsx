@@ -1,3 +1,4 @@
+import { PanoramaChapterLink } from "@/components/panorama/BiblePanorama";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ReadChapterLastPositionSync } from "@/components/bible/ReadChapterLastPositionSync";
@@ -94,6 +95,7 @@ export default async function ReadChapterPage({ params, searchParams }: Props) {
       <Suspense fallback={null}>
         <ReadChapterPlanFlowSync />
       </Suspense>
+      <PanoramaChapterLink bookId={data.bookId} chapter={data.chapter} />
       <ReadChapterLastPositionSync bookId={data.bookId} chapter={data.chapter} bookName={displayBookName} />
       <article className="read-chapter-article">
         <div className="read-chapter-spread">

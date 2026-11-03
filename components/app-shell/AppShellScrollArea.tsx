@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useRef, type ReactNode } from "react";
+import { useCallback, useRef, useEffect, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { isNatureHomeShellPath } from "@/components/home/HomeDockChromeContext";
 import { WEB_APP_HOME_PATH } from "@/lib/web-app-home-path";
 
 /** 与 `HomeShellFloatingRouteNav` 左→右（不含中央播放；不含放松入口）一致 */
-const ROUTE_SWIPE_ORDER = [WEB_APP_HOME_PATH, "/scenes", "/read", "/explore"] as const;
+const ROUTE_SWIPE_ORDER = [WEB_APP_HOME_PATH, "/panorama", "/read", "/explore"] as const;
 
 const SWIPE_MIN_DX = 56;
 
@@ -14,7 +14,7 @@ function routeSwipeIndex(pathname: string): number | null {
   const p = pathname || "";
   if (p.startsWith("/admin")) return null;
   if (isNatureHomeShellPath(p)) return 0;
-  if (p === "/scenes" || p.startsWith("/scenes/")) return 1;
+  if (p === "/panorama" || p.startsWith("/panorama/")) return 1;
   if (p === "/read" || p.startsWith("/read/")) return 2;
   if (p === "/explore" || p.startsWith("/explore/")) return 3;
   return null;
@@ -29,6 +29,15 @@ type Props = { children: ReactNode };
 export function AppShellScrollArea({ children }: Props) {
   const pathname = usePathname() ?? "";
   const router = useRouter();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const element = scrollRef.current; if (!element) return;
+    const key = `askbible-scroll:${pathname}`;
+    let frame = requestAnimationFrame(() => { try { element.scrollTop = Number(sessionStorage.getItem(key) || 0); } catch {} });
+    const save = () => { try { sessionStorage.setItem(key, String(element.scrollTop)); } catch {} };
+    element.addEventListener("scroll", save, {passive:true});
+    return () => { cancelAnimationFrame(frame); element.removeEventListener("scroll", save); };
+  }, [pathname]);
   const startRef = useRef<{ x: number; y: number } | null>(null);
   const startedInExcludedRef = useRef(false);
 
@@ -71,6 +80,7 @@ export function AppShellScrollArea({ children }: Props) {
 
   return (
     <div
+      ref={scrollRef}
       data-app-shell-scroll
       className="relative z-0 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain border-0 border-b-0 shadow-none [-webkit-overflow-scrolling:touch]"
       onTouchStart={onTouchStart}

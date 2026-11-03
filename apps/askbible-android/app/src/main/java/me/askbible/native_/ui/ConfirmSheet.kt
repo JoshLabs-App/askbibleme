@@ -37,7 +37,7 @@ fun ConfirmSheet(
     cancelTitle: String,
     onConfirm: () -> Unit,
     onCancel: () -> Unit,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
 ) {
     Box(Modifier.fillMaxSize().background(Color(0x591C1410)).clickableNoRipple(onCancel),
         contentAlignment = Alignment.BottomCenter) {

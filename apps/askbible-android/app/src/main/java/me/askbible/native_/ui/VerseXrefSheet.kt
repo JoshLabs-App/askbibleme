@@ -47,7 +47,7 @@ fun VerseXrefSheet(
     snippet: (XrefTarget) -> String?,
     onOpen: (XrefTarget) -> Unit,
     onClose: () -> Unit,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     locale: AppLocale = AppLocale.ZH_CN,
 ) {
     val fs = size.metrics.verseFontSize
@@ -101,7 +101,7 @@ private fun XrefSection(
 /** 睡眠定时弹层：30 / 60 分钟 / 关闭。到期只暂停。 */
 @Composable
 /** 睡眠定时是壳层级的：朗读和音乐两个播放器一起设。这里只出 UI，谁来设由 RootScreen 决定。 */
-fun SleepTimerSheet(remainingLabel: String?, onPick: (Int?) -> Unit, onClose: () -> Unit, theme: Parchment = Parchment.light) {
+fun SleepTimerSheet(remainingLabel: String?, onPick: (Int?) -> Unit, onClose: () -> Unit, theme: Parchment = LocalParchment.current) {
     Box(Modifier.fillMaxSize().background(theme.modalBackdrop.toColor()).clickableNoRipple(onClose),
         contentAlignment = Alignment.BottomCenter) {
         Column(

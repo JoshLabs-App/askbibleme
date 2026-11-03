@@ -63,7 +63,7 @@ import me.askbible.native_.data.Parchment
  * Google 走 Supabase 浏览器 OAuth（RN 安卓默认分支：Custom Tab → askbible://auth/callback）；Apple 按钮 RN 在安卓不显示，这里也不放。
  */
 @Composable
-fun LoginScreen(auth: MemberAuthStore, locale: AppLocale, onBack: () -> Unit, onRegister: () -> Unit, onDone: () -> Unit, theme: Parchment = Parchment.light) {
+fun LoginScreen(auth: MemberAuthStore, locale: AppLocale, onBack: () -> Unit, onRegister: () -> Unit, onDone: () -> Unit, theme: Parchment = LocalParchment.current) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var pending by remember { mutableStateOf(false) }
@@ -89,7 +89,7 @@ fun LoginScreen(auth: MemberAuthStore, locale: AppLocale, onBack: () -> Unit, on
 }
 
 @Composable
-fun RegisterScreen(auth: MemberAuthStore, locale: AppLocale, onBack: () -> Unit, onLogin: () -> Unit, onDone: () -> Unit, theme: Parchment = Parchment.light) {
+fun RegisterScreen(auth: MemberAuthStore, locale: AppLocale, onBack: () -> Unit, onLogin: () -> Unit, onDone: () -> Unit, theme: Parchment = LocalParchment.current) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }

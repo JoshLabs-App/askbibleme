@@ -17,12 +17,12 @@ struct PlansListView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
                         Text(PlanCopy.t("pages.read.plansTitle"))
-                            .font(.system(size: 30, weight: .bold))
+                            .askFont(size: 30, weight: .bold)
                             .foregroundStyle(theme.ink)
                             .frame(maxWidth: .infinity)
                             .padding(.top, 64)
                         Text(PlanText.t("plansIntro"))
-                            .font(.system(size: 17))
+                            .askFont(size: 17)
                             .foregroundStyle(theme.muted)
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: .infinity)
@@ -71,11 +71,11 @@ struct FeaturedPlanCard: View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(spacing: 8) {
                     Text(plan.badge)
-                        .font(.system(size: 14, weight: .semibold)).kerning(0.8)
+                        .askFont(size: 14, weight: .semibold).kerning(0.8)
                         .foregroundStyle(Color(parchment: 0x4D3522, opacity: 0.8))
                     if isNtDeep {
                         Text(PlanCopy.t("pages.read.plansFeaturedNtDeepPromo"))
-                            .font(.system(size: 12, weight: .semibold))
+                            .askFont(size: 12, weight: .semibold)
                             .foregroundStyle(Color(parchment: 0x4D3522, opacity: 0.88))
                             .padding(.horizontal, 8).padding(.vertical, 3)
                             .background(Capsule().fill(Color(rgb: 0xFFB101, opacity: 0.28)))
@@ -83,20 +83,20 @@ struct FeaturedPlanCard: View {
                     Spacer(minLength: 0)
                     if isActive { PlanStatusPill(text: PlanText.t("activePill")) }
                 }
-                Text(plan.title).font(.system(size: 24, weight: .bold)).foregroundStyle(theme.ink).padding(.top, 8)
-                Text(plan.tagline).font(.system(size: 17)).lineSpacing(6)
+                Text(plan.title).askFont(size: 24, weight: .bold).foregroundStyle(theme.ink).padding(.top, 8)
+                Text(plan.tagline).askFont(size: 17).lineSpacing(6)
                     .foregroundStyle(Color(parchment: 0x2B1D15, opacity: 0.84)).padding(.top, 6)
                 PlanFactRow(facts: plan.facts).padding(.top, 14)
                 if isNtDeep {
                     Button { onOpenArticle(Self.ntDeepArticleSlug) } label: {
                         Text(PlanCopy.t("pages.read.plansMethodPath2Reference") + " " + PlanCopy.t("pages.read.plansMethodPath2ArticleLink") + " →")
-                            .font(.system(size: 14)).underline().foregroundStyle(Color(parchment: 0x4D3522, opacity: 0.72))
+                            .askFont(size: 14).underline().foregroundStyle(Color(parchment: 0x4D3522, opacity: 0.72))
                     }
                     .buttonStyle(.plain).padding(.top, 10)
                 }
                 HStack {
                     Spacer()
-                    Text(PlanText.t("open") + " ›").font(.system(size: 16, weight: .semibold)).foregroundStyle(theme.muted)
+                    Text(PlanText.t("open") + " ›").askFont(size: 16, weight: .semibold).foregroundStyle(theme.muted)
                 }
                 .padding(.top, 12)
             }
@@ -125,13 +125,13 @@ struct ClassicPlanCard: View {
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack(spacing: 8) {
-                        Text(plan.title).font(.system(size: 18, weight: .semibold)).foregroundStyle(theme.ink)
+                        Text(plan.title).askFont(size: 18, weight: .semibold).foregroundStyle(theme.ink)
                         if isActive { PlanStatusPill(text: PlanText.t("activePill")) }
                     }
                     if !plan.subtitle.isEmpty {
-                        Text(plan.subtitle).font(.system(size: 14)).foregroundStyle(theme.faint).padding(.top, 3)
+                        Text(plan.subtitle).askFont(size: 14).foregroundStyle(theme.faint).padding(.top, 3)
                     }
-                    Text(plan.tagline).font(.system(size: 16)).lineSpacing(5).foregroundStyle(theme.muted).lineLimit(2).padding(.top, 6)
+                    Text(plan.tagline).askFont(size: 16).lineSpacing(5).foregroundStyle(theme.muted).lineLimit(2).padding(.top, 6)
                     PlanFactRow(facts: plan.facts).padding(.top, 10)
                 }
                 Spacer(minLength: 0)

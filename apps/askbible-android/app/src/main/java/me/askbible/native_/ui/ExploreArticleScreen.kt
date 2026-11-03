@@ -54,7 +54,7 @@ fun ExploreArticleScreen(
     onBack: () -> Unit,
     onOpenChapter: (bookId: String, chapter: Int) -> Unit,
     onOpenArticle: (ExploreArticle) -> Unit,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
 ) {
     val context = LocalContext.current
     var expanded by remember(article.slug) { mutableStateOf(article.sections.firstOrNull()?.id) }

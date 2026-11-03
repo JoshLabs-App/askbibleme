@@ -1,5 +1,6 @@
 "use client";
 
+import { AppTextSizePicker } from "@/components/app-shell/AppTextSizeProvider";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useHomeVerseAdvanceGapSec, writeHomeVerseAdvanceGapSec } from "@/components/home/useHomeVerseAdvanceGap";
@@ -156,7 +157,9 @@ export function ShellNavDrawerContent({ onClose }: Props) {
   return (
     <>
     <div className="flex min-h-0 flex-1 flex-col gap-1 py-1 pr-0.5">
+      <ShellNavDrawerMenuRow label={zh ? "音乐" : "Music"} href="/music" onClick={onClose} />
       <ShellNavDrawerLocaleRow />
+      <AppTextSizePicker />
       <div className="h-1" aria-hidden />
       <ShellNavDrawerHomeTranslationSection
         onOpenBibleVersionPicker={() => {

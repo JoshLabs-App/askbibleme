@@ -58,7 +58,7 @@ fun AchievementsScreen(
     /** 成就大图的落款：登录用户的称呼；没登录为空，图上就不印 */
     userName: String = "",
     locale: AppLocale = AppLocale.current,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     onBack: () -> Unit = {},
 ) {
     val insets = WindowInsets.systemBars.asPaddingValues()

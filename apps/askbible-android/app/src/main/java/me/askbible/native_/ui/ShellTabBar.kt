@@ -16,6 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.askbible.native_.data.Brand
@@ -25,7 +27,7 @@ import me.askbible.native_.data.ShellMetrics
  * PLAN 是底栏中央键那页（读经计划播放页）：与首页平级的主页面，底栏照常；
  * Josh 2026-09-09「中间计划与旁边的圣经，要直接就切换过来」
  */
-enum class ShellTab { HOME, MUSIC, PLAN, READ, EXPLORE }
+enum class ShellTab { HOME, MAP, MUSIC, PLAN, READ, EXPLORE }
 
 /** RN `paddingBottom: Math.max(insets.bottom, 8)`：取最大值，不是「导航栏 + 8」叠加 */
 @Composable
@@ -42,6 +44,7 @@ fun shellTabBarBottomInset(): Dp {
 @Composable
 fun ShellTabBar(
     selected: ShellTab,
+    locale: me.askbible.native_.data.AppLocale = me.askbible.native_.data.AppLocale.current,
     onSelect: (ShellTab) -> Unit,
     modifier: Modifier = Modifier,
     /** 羊皮卷各页要铺不透明底挡住滚过的内容；整屏视觉的页面透出背景 */
@@ -58,8 +61,8 @@ fun ShellTabBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(Modifier.weight(2f), horizontalArrangement = Arrangement.SpaceBetween) {
-                TabButton(MI.HOME, selected == ShellTab.HOME, Modifier.weight(1f)) { onSelect(ShellTab.HOME) }
-                TabButton(MI.MUSIC_NOTE, selected == ShellTab.MUSIC, Modifier.weight(1f)) { onSelect(ShellTab.MUSIC) }
+                TabButton(MI.HOME, selected == ShellTab.HOME || selected == ShellTab.MUSIC, Modifier.weight(1f).semantics { contentDescription = me.askbible.native_.data.AppLocale.pick("首页", "Home", locale) }) { onSelect(ShellTab.HOME) }
+                TabButton("\ue55b", selected == ShellTab.MAP, Modifier.weight(1f).semantics { contentDescription = me.askbible.native_.data.AppLocale.pick("全景", "Panorama", locale) }) { onSelect(ShellTab.MAP) }
             }
 
             Box(
@@ -69,11 +72,10 @@ fun ShellTabBar(
                     .clickableNoRipple(onCenterTap),
                 contentAlignment = Alignment.Center,
             ) {
-                // RN ShellScripturePlayFab：MaterialCommunityIcons account-voice 30，白 .92
-                // 停在计划页时同其它 Tab 一样点亮 LOGO 黄
                 MaterialIcon(MCI.ACCOUNT_VOICE, ShellMetrics.fabIconSize,
                              if (selected == ShellTab.PLAN) Brand.logo.toColor() else Color.White.copy(alpha = 0.92f),
                              community = true, shadow = true)
+
             }
 
             Row(Modifier.weight(2f), horizontalArrangement = Arrangement.SpaceBetween) {

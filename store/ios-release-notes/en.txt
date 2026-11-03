@@ -1,3 +1,4 @@
-• Swipe up or down on the home screen to change the nature scene
-• New "More Apps" section on the Explore page with our other Bible apps
-• Stability improvements
+Version 1.1.6
+• Explore the Bible panorama, with six stages, book introductions, and direct chapter links.
+• Expand the map in place and locate your current reading.
+• Choose a comfortable app text size. Find music in the Home menu.

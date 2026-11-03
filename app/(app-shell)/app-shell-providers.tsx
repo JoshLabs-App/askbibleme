@@ -1,5 +1,6 @@
 "use client";
 
+import { AppTextSizeProvider } from "@/components/app-shell/AppTextSizeProvider";
 import { HomeDockChromeProvider } from "@/components/home/HomeDockChromeContext";
 import { HomePrayerVerseFeedProvider } from "@/components/home/HomePrayerVerseFeedContext";
 import { ShellTemplateDockPreviewProvider } from "@/components/shell/ShellTemplateDockPreviewContext";
@@ -17,7 +18,7 @@ type Props = {
 
 export function AppShellProviders({ children, verseFallbackByLocale }: Props) {
   return (
-    <ReadBibleTypographyProvider>
+    <AppTextSizeProvider><ReadBibleTypographyProvider>
       <AppShellFixedChrome>
         <ShellTemplateDockPreviewProvider>
           <HomeDockChromeProvider>
@@ -28,6 +29,6 @@ export function AppShellProviders({ children, verseFallbackByLocale }: Props) {
           </HomeDockChromeProvider>
         </ShellTemplateDockPreviewProvider>
       </AppShellFixedChrome>
-    </ReadBibleTypographyProvider>
+    </ReadBibleTypographyProvider></AppTextSizeProvider>
   );
 }

@@ -177,14 +177,14 @@ struct HomeView: View {
         let scale = prefs.textScale
         return VStack(spacing: 0) {
             Text(verse.text)
-                .font(.system(size: HomeVerseTypography.bodySize(scale: scale), weight: .bold))
+                .askFont(size: HomeVerseTypography.bodySize(scale: scale), weight: .bold)
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
                 .lineSpacing(HomeVerseTypography.bodyLineHeight(scale: scale) - HomeVerseTypography.bodySize(scale: scale))
                 .verseTextShadow()
 
             Text(verse.reference)
-                .font(.system(size: HomeVerseTypography.refSize(scale: scale), weight: .bold))
+                .askFont(size: HomeVerseTypography.refSize(scale: scale), weight: .bold)
                 .foregroundStyle(.white)
                 .kerning(0.1)
                 .padding(.top, HomeVerseTypography.refTopGap(scale: scale))
@@ -263,7 +263,7 @@ struct HomeView: View {
                         if timerOn {
                             // quickControlTimerBadge：右上角 -2/-6，黑 .55 圆角 8，黄字 10/700
                             Text("\(sleepTimerMinutes)")
-                                .font(.system(size: 10, weight: .bold))
+                                .askFont(size: 10, weight: .bold)
                                 .foregroundStyle(Brand.logo)
                                 .padding(.horizontal, 3)
                                 .padding(.vertical, 1)

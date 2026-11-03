@@ -102,7 +102,7 @@ struct MusicView: View {
                         let active = i == player.trackIndex
                         Button { player.select(index: i) } label: {
                             Text(MusicCatalog.tracks[i].localizedTitle)
-                                .font(.system(size: active ? 18 : 14, weight: active ? .semibold : .regular))
+                                .askFont(size: active ? 18 : 14, weight: active ? .semibold : .regular)
                                 .foregroundStyle(active ? Color.white : Color.white.opacity(0.48))
                                 .lineLimit(1)
                                 .frame(maxWidth: .infinity)
@@ -136,7 +136,7 @@ struct MusicView: View {
                         let g = MusicAlbumGlyph.glyph(album)
                         MaterialIcon(glyph: g.glyph, size: 24, color: on ? Brand.logo : .white, community: g.community)
                         Text(MusicAlbumRules.shortLabel(album))
-                            .font(.system(size: 12, weight: on ? .semibold : .regular))
+                            .askFont(size: 12, weight: on ? .semibold : .regular)
                     }
                     .foregroundStyle(on ? Brand.logo : .white)
                     .frame(maxWidth: .infinity)
@@ -153,7 +153,7 @@ struct MusicView: View {
         let total = player.displayDuration
         return HStack(spacing: 12) {
             Text(ChapterAudioPlayer.timeLabel(ratio * total))
-                .font(.system(size: ShellMetrics.timeFontSize))
+                .askFont(size: ShellMetrics.timeFontSize)
                 .foregroundStyle(.white.opacity(0.62))
                 .frame(minWidth: ShellMetrics.timeLabelMinWidth, alignment: .leading)
             GeometryReader { g in
@@ -176,7 +176,7 @@ struct MusicView: View {
             }
             .frame(height: 24)
             Text(ChapterAudioPlayer.timeLabel(total))
-                .font(.system(size: ShellMetrics.timeFontSize))
+                .askFont(size: ShellMetrics.timeFontSize)
                 .foregroundStyle(.white.opacity(0.62))
                 .frame(minWidth: ShellMetrics.timeLabelMinWidth, alignment: .trailing)
         }

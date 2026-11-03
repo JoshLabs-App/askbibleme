@@ -3,11 +3,11 @@
 }
 
 .read-plan-play-screen__scroll {
-  padding-bottom: 7.5rem;
+  padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
 }
 
 .read-plan-play-screen__dock {
-  padding-bottom: calc(max(0.25rem, env(safe-area-inset-bottom, 0px)) + 4.25rem);
+  margin: 1rem 0;
 }
 
 .read-plan-play-screen__row--active {

@@ -388,6 +388,32 @@ select,
   transition: opacity 0.4s ease;
 }
 
+/* Content pages need a legible navigation surface above scrolling content. */
+.home-bottom-nav--surface .home-bottom-nav__bar {
+  border: 1px solid rgba(92, 64, 48, 0.12);
+  border-radius: 1.5rem;
+  background: var(--bc-read-surface-solid, #f7efdf);
+  box-shadow: 0 3px 18px rgba(61, 46, 36, 0.12);
+}
+
+.home-bottom-nav--surface .home-bottom-nav__tab,
+.home-bottom-nav--surface .home-bottom-nav__tab:hover {
+  color: var(--bc-read-book, #3d2e24);
+}
+.home-bottom-nav--surface .home-bottom-nav__play { color: var(--bc-read-book, #3d2e24); }
+.home-bottom-nav--surface .home-bottom-nav__play--active { color: #a45c1d; }
+
+.home-bottom-nav--surface .home-bottom-nav__tab-icon,
+.home-bottom-nav--surface .home-bottom-nav__play-icon {
+  text-shadow: none;
+}
+
+.home-bottom-nav--surface .home-bottom-nav__tab--active::after {
+  background: #b66f2f;
+}
+
+
+
 html[data-nature-home-chrome-hidden] .nature-home-bottom-band,
 html[data-nature-home-chrome-hidden] .nature-home-tools-toggle {
   opacity: 0.55;
@@ -593,3 +619,16 @@ html[data-app-immersive] .app-pwa-install-prompt {
 .read-scripture-dock-seek:disabled::-moz-range-thumb {
   background: rgba(255, 255, 255, 0.35);
 }
+
+/* Text-size preferences must not enlarge the fixed navigation geometry. */
+.home-bottom-nav--surface .home-bottom-nav__bar { width: min(100%, 400px); gap: 10px; padding-inline: 12px; }
+.home-bottom-nav--surface .home-bottom-nav__side { gap: 10px; }
+.home-bottom-nav--surface .home-bottom-nav__side--left { padding-right: 6px; }
+.home-bottom-nav--surface .home-bottom-nav__side--right { padding-left: 6px; }
+.home-bottom-nav--surface .home-bottom-nav__tab { width: 58px; height: 58px; }
+.home-bottom-nav--surface .home-bottom-nav__play { width: 64px; height: 64px; margin-inline: 8px; }
+.home-bottom-nav--surface .home-bottom-nav__tab,
+.home-bottom-nav--surface .home-bottom-nav__play { flex-direction: column; gap: 2px; }
+.home-bottom-nav--surface .home-bottom-nav__tab-icon,
+.home-bottom-nav--surface .home-bottom-nav__play-icon { width: 26px; height: 26px; font-size: 26px; }
+.home-bottom-nav__label { font-size: 10px; line-height: 1; white-space: nowrap; }

@@ -11,7 +11,7 @@ import {
 } from "@/lib/home/nature-home-text-scale-prefs";
 import { cycleShellSleepTimerMinutes } from "@/lib/music/shell-sleep-timer";
 
-const IDLE = "rgba(255,255,255,0.78)";
+const IDLE = "currentColor";
 const LOGO_COLOR = "var(--brand-logo-background)";
 const ICON_SIZE = 26;
 

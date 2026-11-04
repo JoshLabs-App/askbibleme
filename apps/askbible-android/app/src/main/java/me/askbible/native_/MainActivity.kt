@@ -1,5 +1,10 @@
 package me.askbible.native_
 
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
+
 import me.askbible.native_.data.SiteCopy
 import me.askbible.native_.data.EndpointsStore
 import me.askbible.native_.data.TranslationDownloader
@@ -657,13 +662,17 @@ private fun RootScreen() {
                 voiceOn = home.voiceOn,
                 voiceAvailable = home.voiceAvailable,
                 playingAlbum = if (music.isPlaying) music.track?.album else null,
+                selectedAlbum = music.album,
+                ambientVolume = ambient.volume, onAmbientVolume = { ambient.volume = it },
+                onChooseAlbum = { music.selectAlbum(it) },
+                onOpenMusic = { homeChromeHidden = false; tab = ShellTab.MUSIC },
                 sleepTimerMinutes = sleepTimerMinutes,
                 // 点选场景：记次数、存档、跟场景默认环境音（RN selectScene source=user）
                 onSelectScene = { id ->
                     if (id != naturePrefs.sceneId) {
                         naturePrefs.bumpUsage(id)
                         naturePrefs.selectScene(id)
-                        NatureScenes.scene(id)?.defaultAmbient?.let { ambient.start(it) }
+                        if (ambient.isOn) NatureScenes.scene(id)?.defaultAmbient?.let { ambient.start(it) }
                     }
                 },
                 // 上下滑换场景：按固定顺序循环，不记点选次数（免得场景条跟着乱跳）；
@@ -691,9 +700,15 @@ private fun RootScreen() {
                 chromeHidden = homeChromeHidden,
                 onChromeHidden = { homeChromeHidden = it },
             )
-            ShellTab.MUSIC -> MusicScreen(player = music, onChromeHidden = { musicChromeHidden = it },
+            ShellTab.MUSIC -> Box(Modifier.fillMaxSize()) {
+                MusicScreen(player = music, onChromeHidden = { musicChromeHidden = it },
                 sleepActive = audio.sleepDeadlineMs != null || music.sleepDeadlineMs != null || home.sleepDeadlineMs != null || ambient.sleepDeadlineMs != null,
                 onSleepTimer = { showSleepSheet = true })
+                androidx.compose.material3.TextButton(
+                    onClick = { musicChromeHidden = false; tab = ShellTab.HOME },
+                    modifier = Modifier.align(Alignment.TopStart).statusBarsPadding().padding(top = 12.dp).width(136.dp).height(56.dp),
+                ) { Text(AppLocale.pick("‹ 首页", "‹ Home", appLocale), color = Color.White, fontSize = 17.sp) }
+            }
             ShellTab.EXPLORE -> ExploreScreen(
                 size = size, article = exploreArticle, onOpenArticle = { exploreArticle = it },
                 auth = auth, locale = appLocale, onOpenLogin = { authRoute = "login" },

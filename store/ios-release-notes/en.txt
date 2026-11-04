@@ -1,4 +1,1 @@
-Version 1.1.6
-• Explore the Bible panorama, with six stages, book introductions, and direct chapter links.
-• Expand the map in place and locate your current reading.
-• Choose a comfortable app text size. Find music in the Home menu.
+Swipe sideways on Home to change scenery, swipe up for adjustments, and swipe down for music. Hold the music button to choose an album. Ambient sound follows scenery only when enabled. Improved music navigation, Bible catalog spacing, and Explore.

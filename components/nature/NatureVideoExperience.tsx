@@ -4,7 +4,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
-import { NatureHomeToolsToggle } from "@/components/nature/NatureHomeToolsToggle";
+import { useRouter } from "next/navigation";
+import { SCENE_DEFAULT_AMBIENT } from "@/lib/nature/ambient-scene-slots";
 import { useHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
 import type { NatureSettingsV2 } from "@/lib/nature/types";
@@ -120,6 +121,10 @@ const HOME_CHROME_AUTO_HIDE_MS = 7000;
  */
 export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "" }: Props) {
   const { t } = useLocale();
+  const router = useRouter();
+  const [ambientVolume, setAmbientVolume] = useState(1);
+  const gestureStart = useRef<{ x: number; y: number; height: number; top: number } | null>(null);
+  const dragged = useRef(false);
   const {
     activeIndex,
     bilingual,
@@ -136,6 +141,7 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
   const [textScaleStepIndex, setTextScaleStepIndex] = useState(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX);
   /** 底部「字号与定时 · 环境音 · 场景」三排是否展开；开关在右上角齿轮（对齐安卓 `HomeScreen.toolsOpen`） */
   const [sceneToolsOpen, setSceneToolsOpen] = useState(false);
+  const [albumOptionsOpen, setAlbumOptionsOpen] = useState(false);
   /**
    * 暗度 / 模糊 / 金句特效这几项网页专有设置已撤（DECISIONS D-13，安卓首页没有）：
    * 浏览器里存着或从云端同步来的旧值不再生效，一律按默认显示。
@@ -282,6 +288,11 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
         setLoopAllScenesEnabled(false);
         writeNatureHomeLoopAllScenesEnabled(false);
       }
+      setActiveAmbientSlotId((prev) => {
+        const nextSlot = prev ? (SCENE_DEFAULT_AMBIENT[next] ?? prev) : "";
+        writeNatureHomeAmbientSceneSlotId(nextSlot);
+        return nextSlot;
+      });
       setActiveVideoId((prev) => {
         if (prev === next) return prev;
         writeNatureHomeActiveSceneId(next);
@@ -823,6 +834,7 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
 
   /** 与 iOS 一致（D-28）：点主画面空白处，收起的界面叫回来；已显示时再点就立即收起。 */
   const onNatureVideoBlankClick = useCallback(() => {
+    if (dragged.current) { dragged.current = false; return; }
     setSceneToolsOpen(false);
     setHomeChromeHidden((hidden) => !hidden);
     setHomeIdleEpoch((n) => n + 1);
@@ -830,10 +842,10 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
 
   /** 闲置 7 秒：先收设置簇（NatureHomeBottomBand 自己计时），再过 7 秒收起整层界面；任何一次操作都重新计时 */
   useEffect(() => {
-    if (homeChromeHidden || sceneToolsOpen) return;
+    if (homeChromeHidden || sceneToolsOpen || albumOptionsOpen) return;
     const id = window.setTimeout(() => setHomeChromeHidden(true), HOME_CHROME_AUTO_HIDE_MS);
     return () => window.clearTimeout(id);
-  }, [homeChromeHidden, sceneToolsOpen, homeIdleEpoch]);
+  }, [homeChromeHidden, sceneToolsOpen, albumOptionsOpen, homeIdleEpoch]);
 
   /** 点到任何按键都算一次操作：重新计时，收起状态下顺便叫回界面（空白处由 onNatureVideoBlankClick 处理） */
   useEffect(() => {
@@ -864,6 +876,9 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
     if (sceneEntries.length === 0) return null;
     return (
       <NatureHomeBottomBand
+        onAlbumOptionsOpenChange={setAlbumOptionsOpen}
+        ambientVolume={ambientVolume}
+        onAmbientVolumeChange={setAmbientVolume}
         settings={natureSettings}
         scenes={sceneEntries}
         activeVideoId={activeVideoId}
@@ -939,19 +954,13 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
   ]);
 
   return (
-    <div className="relative flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-hidden bg-canvas text-white [color-scheme:dark]">
+    <div data-shell-swipe-nav-exclude className="relative flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-hidden bg-canvas text-white [color-scheme:dark]">
       <AppShellTopBar
         tone="onDark"
         landscapeImmersive={false}
         showTopInsetTime={false}
         hideTopShellInsetTime={!landscapeImmersive}
-        rightAccessory={
-          <NatureHomeToolsToggle
-            open={sceneToolsOpen}
-            ambientActive={Boolean(activeAmbientSlotId)}
-            onToggle={() => setSceneToolsOpen((open) => !open)}
-          />
-        }
+
       />
 
       {hasNatureVisual ? (
@@ -1057,10 +1066,31 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
           ) : null}
           <button
             type="button"
-            className="absolute inset-0 z-[7] cursor-default touch-pan-y border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
+            className="absolute inset-0 z-[7] cursor-default touch-none border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
             aria-label={t("nature.homeBackdropTapAria")}
             data-nature-blank
             onClick={onNatureVideoBlankClick}
+            onPointerDown={(e) => {
+              const box = e.currentTarget.getBoundingClientRect();
+              dragged.current = false;
+              gestureStart.current = { x: e.clientX, y: e.clientY, height: box.height, top: box.top };
+              e.currentTarget.setPointerCapture(e.pointerId);
+            }}
+            onPointerCancel={() => { gestureStart.current = null; }}
+            onPointerUp={(e) => {
+              const start = gestureStart.current; gestureStart.current = null;
+              if (!start || sceneToolsOpen) return;
+              const dx = e.clientX - start.x, dy = e.clientY - start.y;
+              if (Math.max(Math.abs(dx), Math.abs(dy)) < 50) return;
+              dragged.current = true;
+              setHomeChromeHidden(false); setHomeIdleEpoch(n => n + 1);
+              if (Math.abs(dx) > Math.abs(dy) * 1.5 && sceneEntries.length) {
+                const index = Math.max(0, sceneEntries.findIndex(v => v.id === activeVideoId));
+                selectScene(sceneEntries[(index + (dx < 0 ? 1 : -1) + sceneEntries.length) % sceneEntries.length].id);
+              } else if (dy < -50 && start.y - start.top > start.height * .55) setSceneToolsOpen(true);
+              else if (dy > 60) router.push(`${shellRoot}/music`);
+            }}
+            onKeyDown={(e) => { if (e.key === "ArrowUp") { e.preventDefault(); setSceneToolsOpen(true); } else if (e.key === "ArrowDown") { e.preventDefault(); router.push(`${shellRoot}/music`); } }}
           />
           <p className="sr-only">{t("nature.videoBgAnnounced")}</p>
           <div
@@ -1104,6 +1134,7 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
           {renderBottomBand()}
           <HomeShellFloatingRouteNav placement="videoStage" shellRoot={shellRoot} />
           <NatureHomeAmbientSlotAudio
+            volume={ambientVolume}
             slotId={activeAmbientSlotId}
             src={activeAmbientSrc}
             playbackRate={rate}
@@ -1118,10 +1149,31 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
           <div className="relative flex min-h-0 flex-1 flex-col">
             <button
               type="button"
-              className="absolute inset-0 z-0 cursor-default touch-pan-y border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
+              className="absolute inset-0 z-0 cursor-default touch-none border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
               aria-label={t("nature.homeBackdropTapAria")}
               data-nature-blank
               onClick={onNatureVideoBlankClick}
+            onPointerDown={(e) => {
+              const box = e.currentTarget.getBoundingClientRect();
+              dragged.current = false;
+              gestureStart.current = { x: e.clientX, y: e.clientY, height: box.height, top: box.top };
+              e.currentTarget.setPointerCapture(e.pointerId);
+            }}
+            onPointerCancel={() => { gestureStart.current = null; }}
+            onPointerUp={(e) => {
+              const start = gestureStart.current; gestureStart.current = null;
+              if (!start || sceneToolsOpen) return;
+              const dx = e.clientX - start.x, dy = e.clientY - start.y;
+              if (Math.max(Math.abs(dx), Math.abs(dy)) < 50) return;
+              dragged.current = true;
+              setHomeChromeHidden(false); setHomeIdleEpoch(n => n + 1);
+              if (Math.abs(dx) > Math.abs(dy) * 1.5 && sceneEntries.length) {
+                const index = Math.max(0, sceneEntries.findIndex(v => v.id === activeVideoId));
+                selectScene(sceneEntries[(index + (dx < 0 ? 1 : -1) + sceneEntries.length) % sceneEntries.length].id);
+              } else if (dy < -50 && start.y - start.top > start.height * .55) setSceneToolsOpen(true);
+              else if (dy > 60) router.push(`${shellRoot}/music`);
+            }}
+            onKeyDown={(e) => { if (e.key === "ArrowUp") { e.preventDefault(); setSceneToolsOpen(true); } else if (e.key === "ArrowDown") { e.preventDefault(); router.push(`${shellRoot}/music`); } }}
             />
             <div className="relative z-10 flex min-h-0 flex-1 flex-col pointer-events-none">
               <div className="mx-auto mt-6 max-w-sm rounded-3xl bg-white/[0.14] px-5 py-6 text-center ring-1 ring-white/[0.22] backdrop-blur-2xl sm:mt-8">
@@ -1133,6 +1185,7 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
           {renderBottomBand()}
           <HomeShellFloatingRouteNav placement="videoStage" shellRoot={shellRoot} />
           <NatureHomeAmbientSlotAudio
+            volume={ambientVolume}
             slotId={activeAmbientSlotId}
             src={activeAmbientSrc}
             playbackRate={rate}

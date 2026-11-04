@@ -9,6 +9,9 @@ final class AmbientPlayer: ObservableObject {
     @Published private(set) var slotId: String?
     @Published private(set) var sleepDeadline: Date?
     var isOn: Bool { slotId != nil }
+    @Published var volume: Double = 1 {
+        didSet { setDucked(ducked) }
+    }
 
     /// 开环境音前的互斥（人声 + 音乐都在时要停音乐），由 RootView 接线
     var onWillPlay: (() -> Void)?
@@ -45,7 +48,7 @@ final class AmbientPlayer: ObservableObject {
         let item = AVPlayerItem(url: url)
         let q = AVQueuePlayer()
         looper = AVPlayerLooper(player: q, templateItem: item)
-        q.volume = slot.gain * (ducked ? Self.duckGain : 1)
+        q.volume = slot.gain * Float(volume) * (ducked ? Self.duckGain : 1)
         queue = q
         AudioSessionPolicy.playback()
         q.play()
@@ -61,7 +64,7 @@ final class AmbientPlayer: ObservableObject {
     func setDucked(_ on: Bool) {
         ducked = on
         if let id = slotId, let slot = AmbientScenes.slot(id: id) {
-            queue?.volume = slot.gain * (on ? Self.duckGain : 1)
+            queue?.volume = slot.gain * Float(volume) * (on ? Self.duckGain : 1)
         }
     }
 

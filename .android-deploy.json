@@ -1,7 +1,7 @@
 {
   "_note": "android_dir 相对于此文件所在目录（01AskBible/）",
   "app_name": "AskBible.me",
-  "version": "1.0.53",
+  "version": "1.0.54",
   "apk_prefix": "AskBible",
   "bucket": "askbible-media",
   "android_dir": "apps/askbible-android",
@@ -12,11 +12,11 @@
   "min_android": "Android 8.0+",
   "gradle_task": "assembleWeb",
   "apk_rel_path": "app/build/outputs/apk/web/app-web.apk",
-  "notes": "圣经全景地图、书卷简介和全局字号设置。",
+  "notes": "首页左右滑动切换场景，上拉调整声音与显示，下拉进入音乐。长按音乐可选择专辑；环境音开启后随场景切换。优化音乐返回按钮、圣经目录间距与探索页。",
   "changelog": [
-    "圣经全景：六个阶段就地展开，书卷简介直接可见",
-    "地图与经文章节双向跳转，定位当前阅读",
-    "全局字号可调大；音乐移至首页菜单"
+    "首页左右换景，上拉调整，下拉进入音乐",
+    "长按音乐图标选择专辑；环境音开启后随景切换",
+    "优化返回按钮、目录间距和探索页"
   ],
   "intro": "安静地读经、听读，在圣经全景中认识书卷与经文脉络。",
   "icon_image": "apps/askbible-ios/AskBible/Assets.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png"

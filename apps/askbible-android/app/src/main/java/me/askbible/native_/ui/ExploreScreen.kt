@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.offset
 import me.askbible.native_.data.MemberReadingSyncRules
 import me.askbible.native_.data.ReadingActivityStore
 import me.askbible.native_.data.ReadSize
-import me.askbible.native_.data.ExploreArticles
 import me.askbible.native_.data.ExploreArticle
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.remember
@@ -113,7 +112,6 @@ fun ExploreScreen(
     val usageLine = "${SiteCopy.t("native.usageTime", locale)}  ${MemberReadingSyncRules.formatUsageDuration((activity?.usageTotalSec ?: 0.0).toInt(), isEn)}"
     val listenDuration = MemberReadingSyncRules.formatListenDuration((activity?.listenTotalSec ?: 0.0).toInt(), isEn)
     val listenLine = SiteCopy.f("native.listenTotal", mapOf("duration" to listenDuration), locale)
-    val articles = remember(locale) { ExploreArticles.grid(context) }
 
     // RN ExploreGreetingNameModal：改称呼（最多 24 字）
     if (nameEditorOpen && auth != null) {
@@ -259,35 +257,8 @@ fun ExploreScreen(
                 // 同系列圣经软件（D-42）：直接列在收藏下面，不进菜单
                 SiblingAppsSection(locale, theme)
 
-                // 九宫格功能块（欢迎 / 读经计划 / 圣经人物…）按 Josh 的决定只留网站，App 暂不放（2026-09-09）
-                // 查经资料：RN 探索格子里的精选文章（section 上 36 + 8，格子上 16 + 8，3 列 gap 10）
-                Spacer(Modifier.height((36 + 8 + 16 + 8).dp))
-                BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = 22.dp)) {
-                    val cols = 3
-                    val gap = 10.dp
-                    val gridWidth = minOf(maxWidth + 44.dp, 448.dp) - 44.dp
-                    val tileW = (gridWidth - gap * (cols - 1)) / cols
-                    Column(verticalArrangement = Arrangement.spacedBy(gap)) {
-                        for (row in articles.chunked(cols)) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(gap), verticalAlignment = Alignment.Top) {
-                                for (a in row) {
-                                    // RN renderArticleTile：64 圆角 18 的浅底圈 + MaterialCommunityIcons 28 ink + 12/600 两行标签
-                                    Column(Modifier.width(tileW).clickableNoRipple { onOpenArticle(a) },
-                                           horizontalAlignment = Alignment.CenterHorizontally,
-                                           verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                        Box(Modifier.size(64.dp).clip(RoundedCornerShape(18.dp)).background(Color(0x8CFFFCF5))
-                                                .border(0.5.dp, theme.border.toColor(), RoundedCornerShape(18.dp)),
-                                            contentAlignment = Alignment.Center) {
-                                            MaterialIcon(a.icon, 28f, theme.ink.toColor(), community = true)
-                                        }
-                                        Text(a.exploreLabel, Modifier.fillMaxWidth(), color = theme.ink.toColor(), fontSize = 12.sp,
-                                             lineHeight = 15.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, maxLines = 2)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                // 与 iOS 一致，不再展示三个文档入口。
+
             }
         }
     }

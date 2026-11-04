@@ -16,7 +16,6 @@ struct BiblePanoramaView: View {
     private var current: (Int, PanoramaSection)? { currentBook.flatMap { data.location($0,currentChapter) } }
     var body: some View {
         ZStack {
-            ParchmentBackground(theme: theme).ignoresSafeArea()
             ScrollViewReader { proxy in
                 VStack(spacing: 0) {
                     if let book = currentBook, let ref = BibleCatalog.book(id: book) {
@@ -34,13 +33,16 @@ struct BiblePanoramaView: View {
                                 actView(index).id(index)
                             }
                             Text(t("六幕是阅读导览，不是圣经原有的分卷。书卷可跨越多个阶段；诗歌、智慧与先知书按处境和主题连接。", "The six acts are a reading guide, not the Bible's own divisions. Books can span stages; poetry, wisdom, and prophecy connect through context and themes.")).askFont(size:12).foregroundStyle(theme.ink.opacity(0.65))
-                        }.padding(24)
+                        }.padding(24).padding(.bottom, 120)
                     }
                 }
                 .onChange(of: locateRequest) { _,_ in locate(proxy) }
                 .onAppear { if locateRequest > 0 { locate(proxy) } }
             }
-        }.foregroundStyle(theme.ink).buttonStyle(.plain)
+        }.frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(ParchmentBackground(theme: theme).ignoresSafeArea())
+        .parchmentFade(.tabbar)
+        .foregroundStyle(theme.ink).buttonStyle(.plain)
     }
     private func locate(_ proxy: ScrollViewProxy) {
         if let (i,s) = current { expandedActs.insert(i);expandedSections.insert(s.id);proxy.scrollTo(i,anchor:.top) }

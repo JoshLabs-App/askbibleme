@@ -155,7 +155,7 @@ private fun CatalogColumn(
     railBottomPx: Float = 0f,
 ) {
     // RN 的 catalogBookLine：行高跟着字号档走，放大字号时行距也跟着开，手指更好点
-    val rowHeight = maxOf(48f, size.metrics.catalogBookLine.toFloat()).dp
+    val rowHeight = maxOf(40f, size.metrics.catalogBookLine.toFloat()).dp
     Column(modifier) {
         for (group in groups) {
             Text(

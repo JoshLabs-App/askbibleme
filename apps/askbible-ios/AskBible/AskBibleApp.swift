@@ -798,20 +798,34 @@ struct RootView: View {
             })
         case .home:
             if showHomeMusic {
-                VStack(spacing:0) {
-                    Button(AppLocale.pick("← 首页", "← Home", appLocale)) { showHomeMusic = false }.askFont(size:15).frame(maxWidth:.infinity,alignment:.leading).padding()
-                    MusicView(player: music, sleepActive: audio.sleepDeadline != nil || music.sleepDeadline != nil || home.sleepDeadline != nil || ambient.sleepDeadline != nil, onSleepTimer: { showSleepSheet = true })
-                }
+                MusicView(player: music, sleepActive: audio.sleepDeadline != nil || music.sleepDeadline != nil || home.sleepDeadline != nil || ambient.sleepDeadline != nil, onSleepTimer: { showSleepSheet = true })
+                    .overlay(alignment: .topLeading) {
+                        Button {
+                            showHomeMusic = false; homeChromeHidden = false
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "chevron.left")
+                                Text(AppLocale.pick("首页", "Home", appLocale))
+                            }
+                            .askFont(size: 17, weight: .semibold)
+                            .foregroundStyle(.white).shellIconShadow()
+                            .frame(width: 120, height: 56, alignment: .leading)
+                            .padding(.leading, 16)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain).padding(.top, 12)
+                        .accessibilityIdentifier("home.music.back")
+                    }
             } else {
             HomeView(
                 home: home, music: music, ambient: ambient, prefs: naturePrefs,
                 sleepTimerMinutes: sleepTimerMinutes,
-                // 点选场景：记次数、存档、跟场景默认环境音（RN selectScene source=user）
+                // 环境音关闭时换景保持静音；用户开启后才跟随场景。
                 onSelectScene: { id in
                     guard id != naturePrefs.sceneId else { return }
                     naturePrefs.bumpUsage(id)
                     naturePrefs.selectScene(id)
-                    if let slot = NatureScenes.scene(id: id)?.defaultAmbient { ambient.start(slotId: slot) }
+                    if ambient.isOn, let slot = NatureScenes.scene(id: id)?.defaultAmbient { ambient.start(slotId: slot) }
                 },
                 onToggleAmbient: { id in ambient.slotId == id ? ambient.stop() : ambient.start(slotId: id) },
                 onCycleSleepTimer: { setSleepTimerAll(NatureScenes.cycleSleepTimer(sleepTimerMinutes)) },
@@ -826,6 +840,7 @@ struct RootView: View {
                     }
                 },
                 onOpenMenu: { showMenu = true },
+                onOpenMusic: { homeChromeHidden = false; showHomeMusic = true },
                 onChromeHidden: { hidden in withAnimation(.easeInOut(duration: 0.3)) { homeChromeHidden = hidden } }
             )
             }

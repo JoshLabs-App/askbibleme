@@ -21,3 +21,16 @@ export type NatureAmbientSceneSlotId = (typeof NATURE_AMBIENT_SCENE_SLOTS)[numbe
 export function natureAmbientSceneSlotLabel(id: string): string {
   return NATURE_AMBIENT_SCENE_SLOTS.find((slot) => slot.id === id)?.label ?? id;
 }
+
+/** 与原生场景一致；只有用户已开启环境音时才跟随。 */
+export const SCENE_DEFAULT_AMBIENT: Record<string, NatureAmbientSceneSlotId> = {
+  "9cc949f2-3c1d-49c0-8357-2dc1d32bd954": "scene-water",
+  "3c8150de-7baa-4334-9c89-4042781ced66": "scene-rain",
+  "7536456b-50fe-42c0-ad70-e78c9710e762": "scene-wind",
+  "d721567f-395f-41d0-b022-7f78a4ef456e": "scene-wind",
+  "d86754f9-2c16-4896-a00f-31a29858b547": "scene-white-noise",
+  "3ebc424b-5a1b-48dd-accb-0906186dfda0": "scene-birds",
+  "c6eed3e9-7b57-4fd8-9843-4af6fb321b0c": "scene-rain",
+  "260b958e-f95a-4900-80b5-3ae9e7b2d720": "scene-white-noise",
+  "8132b70e-f9dc-44a3-9cb0-35f43a46ef33": "scene-water",
+};

@@ -322,3 +322,40 @@
 .nature-home-album-strip__btn:disabled {
   cursor: not-allowed;
 }
+
+/* 与原生首页相同的两个固定声音按钮与上拉调整面板。 */
+.nature-home-bottom-band { padding-bottom: calc(var(--nature-home-tab-bar-clearance, 4.5rem) + max(0.375rem, env(safe-area-inset-bottom, 0px)) + 2rem); }
+.nature-home-sound-controls { position: relative; pointer-events: auto; }
+.nature-home-album-strip { gap: 32px; height: 72px; }
+.nature-home-album-strip__btn { width: 72px; height: 72px; flex-direction: column; gap: 8px; color: white; font-size: 12px; user-select: none; -webkit-touch-callout: none; }
+.nature-home-album-popup, .nature-home-adjustment { background: #f7f0e4; color: #493b2c; border-radius: 22px; box-shadow: 0 4px 24px #0003; pointer-events: auto; }
+.nature-home-album-popup { position: absolute; bottom: calc(100% + 14px); left: 50%; transform: translateX(-50%); width: min(340px, 90vw); padding: 14px; text-align: center; }
+.nature-home-album-popup > button { min-height: 40px; background: none; border: 0; color: inherit; }
+.nature-home-album-options { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+.nature-home-album-options button { min-height: 72px; border: 0; border-radius: 12px; background: transparent; color: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; font-size: 12px; }
+.nature-home-album-options button[aria-pressed=true] { background: #bc842b20; }
+.nature-home-adjustment { width: min(100%, 520px); max-height: 64dvh; display: flex; flex-direction: column; overflow: hidden; }
+.nature-home-adjustment header { display: flex; justify-content: space-between; align-items: center; padding: 6px 20px; touch-action: none; flex-shrink: 0; }
+.nature-home-adjustment header button { width: 48px; height: 48px; color: inherit; background: none; border: 0; font-size: 26px; }
+.nature-home-adjustment-scroll { overflow-y: auto; overscroll-behavior: contain; padding: 0 20px 24px; display: flex; flex-direction: column; gap: 18px; }
+.nature-home-adjustment h3 { font-size: 14px; margin: 0; }
+.nature-home-adjustment-switch, .nature-home-volume { display: flex; align-items: center; justify-content: space-between; gap: 20px; font-size: 14px; }
+.nature-home-adjustment-switch input { width: 24px; height: 24px; accent-color: #b77e20; }
+.nature-home-volume input { flex: 1; accent-color: #b77e20; min-width: 0; }
+.nature-home-adjustment .nature-home-ambient-scroll-wrap { overflow-x: auto; }
+.nature-home-adjustment .nature-home-ambient-row { justify-content: flex-start; padding-inline: 0; gap: 8px; }
+.nature-home-adjustment .nature-home-ambient-chip { width: 44px; height: 44px; }
+.nature-home-adjustment .nature-home-ambient-chip:not([aria-pressed=true]) { color: #796b59 !important; }
+.nature-home-adjustment .nature-home-scale-timer-row { padding-block: 8px; }
+.nature-home-adjustment .nature-home-scale-timer-row svg { color: #796b59; }
+.nature-home-adjustment .nature-home-scale-timer-btn { width: 44px; height: 44px; }
+.nature-home-adjustment .nature-home-scale-timer-badge { color: #493b2c; background: #d8c8ae; }
+@media (prefers-color-scheme: dark) {
+  .nature-home-album-popup, .nature-home-adjustment { background: #28251f; color: #eee3d1; }
+  .nature-home-adjustment .nature-home-ambient-chip:not([aria-pressed=true]) { color: #c7bba9 !important; }
+}
+.nature-home-adjustment { color-scheme: light; }
+.nature-home-adjustment-scroll > * { flex-shrink: 0; }
+.nature-home-adjustment .nature-home-ambient-scroll-wrap { min-height: 44px; }
+.nature-home-adjustment .nature-home-ambient-chip span { color: inherit !important; }
+@media (prefers-color-scheme: dark) { .nature-home-adjustment { color-scheme: dark; } }

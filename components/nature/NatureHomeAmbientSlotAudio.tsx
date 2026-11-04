@@ -8,13 +8,14 @@ import type { NatureAmbientSceneSlotId } from "@/lib/nature/ambient-scene-slots"
 const AMBIENT_GAIN_WHEN_SHELL_MUSIC_PLAYING = 0.2;
 
 type Props = {
+  volume?: number;
   slotId: NatureAmbientSceneSlotId | "";
   src: string;
   playbackRate: number;
 };
 
 /** 首页底部环境音槽：单轨循环 MP3（来自 `nature-settings.json` `ambientClips`） */
-export function NatureHomeAmbientSlotAudio({ slotId, src, playbackRate }: Props) {
+export function NatureHomeAmbientSlotAudio({ slotId, src, playbackRate, volume = 1 }: Props) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { playing: shellMusicPlaying } = useMusicShellPlayback();
   const normalizedSrc = src.trim();
@@ -28,14 +29,14 @@ export function NatureHomeAmbientSlotAudio({ slotId, src, playbackRate }: Props)
 
     const gain = shellMusicPlaying ? AMBIENT_GAIN_WHEN_SHELL_MUSIC_PLAYING : 1;
     a.loop = true;
-    a.volume = Math.min(1, Math.max(0, gain));
+    a.volume = Math.min(1, Math.max(0, gain * volume));
     try {
       a.playbackRate = Math.min(2, Math.max(0.5, playbackRate));
     } catch {
       /* ignore */
     }
     void a.play().catch(() => {});
-  }, [slotId, normalizedSrc, shellMusicPlaying, playbackRate]);
+  }, [slotId, normalizedSrc, shellMusicPlaying, playbackRate, volume]);
 
   useEffect(() => {
     return () => {

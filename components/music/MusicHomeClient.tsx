@@ -1,5 +1,8 @@
 "use client";
 
+import Link from "next/link";
+import { WEB_APP_HOME_PATH } from "@/lib/web-app-home-path";
+
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -673,6 +676,7 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
 
       {!inTemplateChrome ? <AppShellTopBar tone="onDark" landscapeImmersive={landscapeNarrow} /> : null}
 
+      {<Link href={WEB_APP_HOME_PATH} aria-label={locale === "en" ? "Home" : "首页"} style={{position:"fixed",top:"calc(env(safe-area-inset-top, 0px) + 12px)",left:0,zIndex:55,width:136,height:56,display:"flex",alignItems:"center",paddingLeft:16,color:"white",fontSize:17,textShadow:"0 1px 6px #0008"}}>‹ {locale === "en" ? "Home" : "首页"}</Link>}
       <div
         className={[
           `music-home-backdrop music-home-backdrop--${albumCssKey}`,

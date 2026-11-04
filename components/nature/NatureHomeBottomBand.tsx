@@ -1,7 +1,9 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { useEffect, useState } from "react";
+import { useRef } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { SCENE_DEFAULT_AMBIENT } from "@/lib/nature/ambient-scene-slots";
 import { NatureHomeAmbientIconStrip } from "@/components/nature/NatureHomeAmbientIconStrip";
 import { NatureHomeAlbumStrip } from "@/components/nature/NatureHomeAlbumStrip";
 import { NatureHomeSceneStrip } from "@/components/nature/NatureHomeSceneStrip";
@@ -13,6 +15,9 @@ import type { NatureAmbientSceneSlotId } from "@/lib/nature/ambient-scene-slots"
 import type { NatureSettingsV2, NatureVideoEntry } from "@/lib/nature/types";
 
 type Props = {
+  onAlbumOptionsOpenChange: (open: boolean) => void;
+  ambientVolume: number;
+  onAmbientVolumeChange: (value: number) => void;
   settings: NatureSettingsV2;
   scenes: NatureVideoEntry[];
   activeVideoId: string;
@@ -34,6 +39,7 @@ const SCENE_TOOLS_AUTO_CLOSE_MS = 7000;
 
 /** 自然首页底区：专辑 transport + 可折叠场景/环境音/字号定时（对齐 App `HomeNatureScreenBottomBand`） */
 export function NatureHomeBottomBand({
+  ambientVolume, onAmbientVolumeChange, onAlbumOptionsOpenChange,
   settings,
   scenes,
   activeVideoId,
@@ -48,13 +54,9 @@ export function NatureHomeBottomBand({
   sceneToolsOpen,
   onSceneToolsOpenChange,
 }: Props) {
-  /** 每碰一下底部带就重新计 7 秒 */
-  const [idleEpoch, setIdleEpoch] = useState(0);
-  useEffect(() => {
-    if (!sceneToolsOpen) return;
-    const id = window.setTimeout(() => onSceneToolsOpenChange(false), SCENE_TOOLS_AUTO_CLOSE_MS);
-    return () => window.clearTimeout(id);
-  }, [sceneToolsOpen, idleEpoch, onSceneToolsOpenChange]);
+  const { locale } = useLocale();
+  const text = (zh: string, en: string) => locale === "en" ? en : zh;
+  const headerY = useRef(0);
   const verse = useNatureGoldenVerseTransport(activeVerseKey);
 
   if (!scenes.length) return null;
@@ -62,7 +64,7 @@ export function NatureHomeBottomBand({
   return (
     <div
       className="nature-home-bottom-band"
-      onPointerDownCapture={() => setIdleEpoch((n) => n + 1)}
+
       style={
         {
           "--nature-home-tab-bar-clearance": `${NATURE_HOME_TAB_BAR_CLEARANCE_PX}px`,
@@ -70,13 +72,21 @@ export function NatureHomeBottomBand({
       }
     >
       {sceneToolsOpen ? (
-        <>
-          <NatureHomeVerseScaleTimerControl prefsVersion={prefsVersion} onPrefsChanged={onPrefsChanged} />
+        <section className="nature-home-adjustment" role="dialog" aria-label={text("调整", "Adjust")} aria-modal="false" data-shell-swipe-nav-exclude>
+          <header onPointerDown={e => { if ((e.target as Element).closest("button")) return; headerY.current = e.clientY; e.currentTarget.setPointerCapture(e.pointerId); }} onPointerUp={e => { if ((e.target as Element).closest("button")) return; if (e.clientY - headerY.current > 40) onSceneToolsOpenChange(false); }}>
+            <strong>{text("调整", "Adjust")}</strong><button type="button" aria-label={text("关闭调整", "Close adjustments")} onClick={() => onSceneToolsOpenChange(false)}>×</button>
+          </header>
+          <div className="nature-home-adjustment-scroll">
+          <label className="nature-home-adjustment-switch">{text("环境音", "Ambient sound")}<input type="checkbox" checked={!!activeAmbientSlotId} onChange={() => onToggleAmbientSlot(activeAmbientSlotId || SCENE_DEFAULT_AMBIENT[activeVideoId] || "scene-water")} /></label>
           <NatureHomeAmbientIconStrip
             settings={settings}
             activeSlotId={activeAmbientSlotId}
             onToggleSlot={onToggleAmbientSlot}
           />
+          <label className="nature-home-volume">{text("音量", "Volume")}<input type="range" min="0" max="1" step="0.05" value={ambientVolume} onChange={e => onAmbientVolumeChange(Number(e.target.value))} /></label>
+          <h3>{text("音乐专辑", "Music albums")}</h3>
+          <NatureHomeAlbumStrip optionsOnly goldenVersePlaying={verse.active} onToggleGoldenVerse={() => void verse.toggle()} onResumeVerseTransport={() => void verse.resumeVerseTransport()} />
+          <h3>{text("场景", "Scenes")}</h3>
           <NatureHomeSceneStrip
             scenes={scenes}
             activeVideoId={activeVideoId}
@@ -84,16 +94,19 @@ export function NatureHomeBottomBand({
             onToggleLiveVideo={onToggleLiveVideo}
             onSelectScene={onSelectScene}
           />
-        </>
+          <NatureHomeVerseScaleTimerControl prefsVersion={prefsVersion} onPrefsChanged={onPrefsChanged} />
+          </div>
+        </section>
       ) : null}
-      <NatureHomeAlbumStrip
+      <div hidden={sceneToolsOpen}><NatureHomeAlbumStrip
+        onOptionsOpenChange={onAlbumOptionsOpenChange}
         goldenVersePlaying={verse.active}
         goldenVerseAudible={verse.audible}
         goldenVersePreparing={verse.preparing}
         onToggleGoldenVerse={() => void verse.toggle()}
         onPauseVerseTransport={verse.pauseVerseTransport}
         onResumeVerseTransport={() => void verse.resumeVerseTransport()}
-      />
+      /></div>
       <audio
         ref={verse.audioRef}
         src={verse.src ?? undefined}

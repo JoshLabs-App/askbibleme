@@ -15,7 +15,7 @@ import { shellPlaybackUrlsEqual } from "@/lib/music-companion/shell-playback-sto
 export function startHomeAlbumPlaybackWeb(
   playback: MusicShellPlaybackValue,
   album: string,
-  opts: { duckForVerse: boolean },
+  opts: { duckForVerse: boolean; autoPlay?: boolean },
 ): boolean {
   const store = playback.musicStore;
   if (!store) return false;
@@ -51,7 +51,7 @@ export function startHomeAlbumPlaybackWeb(
   const src = picked.src.trim();
   const def = getShellDefaultAudioSrc(store)?.trim() ?? "";
   const nextSrc = def && shellPlaybackUrlsEqual(src, def) ? null : src;
-  playback.setPlaybackSrc(nextSrc, { autoPlay: true });
+  playback.setPlaybackSrc(nextSrc, { autoPlay: opts.autoPlay ?? true });
   return true;
 }
 

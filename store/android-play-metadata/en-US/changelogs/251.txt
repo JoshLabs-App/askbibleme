@@ -1,0 +1,1 @@
+Swipe sideways on Home to change scenery, swipe up for adjustments, and swipe down for music. Hold the music button to choose an album. Ambient sound follows scenery only when enabled. Improved music navigation, Bible catalog spacing, and Explore.

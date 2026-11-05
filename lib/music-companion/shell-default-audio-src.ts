@@ -1,4 +1,5 @@
 import { shellPlaybackUrlsEqual } from "@/lib/music-companion/shell-playback-storage";
+import { DEFAULT_MUSIC_ALBUM, inferTrackAlbumFromCompanionTrack } from "@/lib/music/album-playback";
 import type { MusicCompanionStore, Scene } from "./types";
 
 function pickScene(store: MusicCompanionStore): Scene | null {
@@ -26,15 +27,13 @@ export function getShellSceneBoundAudioSrc(store: MusicCompanionStore): string |
 }
 
 /**
- * 壳层「默认播放」URL：多曲时在池内随机；单曲则唯一一条。
- * 每次 `store` 更新或 `togglePlay` 在曲首/曲尾起播时会重新随机（见 `MusicShellPlaybackContext`）。
+ * Stable quiet-album default. A catalog refresh must not change an un-overridden song.
+ * Other albums are reached through the user's selection, including a saved selection.
  */
 export function getShellDefaultAudioSrc(store: MusicCompanionStore): string | null {
-  const tracksWithSrc = store.audioTracks.filter((t) => t.src?.trim());
+  const tracksWithSrc = store.audioTracks.filter((t) => t.src?.trim() && inferTrackAlbumFromCompanionTrack(t) === DEFAULT_MUSIC_ALBUM);
   if (tracksWithSrc.length === 0) return null;
-  if (tracksWithSrc.length === 1) return tracksWithSrc[0].src?.trim() ?? null;
-  const i = Math.floor(Math.random() * tracksWithSrc.length);
-  return tracksWithSrc[i]?.src?.trim() ?? null;
+  return tracksWithSrc[0].src?.trim() ?? null;
 }
 
 /**

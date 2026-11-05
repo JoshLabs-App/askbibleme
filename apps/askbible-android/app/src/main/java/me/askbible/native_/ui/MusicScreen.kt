@@ -3,6 +3,7 @@ package me.askbible.native_.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,8 +18,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,6 +33,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -43,6 +52,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.BlendMode
@@ -66,6 +76,7 @@ import me.askbible.native_.audio.ChapterAudioPlayer
 import me.askbible.native_.audio.MusicPlayer
 import me.askbible.native_.data.MusicAlbumRules
 import me.askbible.native_.data.MusicCatalog
+import me.askbible.native_.data.AppLocale
 import me.askbible.native_.data.MusicRepeatMode
 import me.askbible.native_.data.Brand
 import me.askbible.native_.data.ShellMetrics
@@ -81,7 +92,8 @@ import kotlin.random.Random
  * 播放状态全部来自 MusicPlayer；心境条 = MusicCatalog.albums（与 RN KNOWN_MUSIC_ALBUMS 同序）。
  */
 @Composable
-fun MusicScreen(player: MusicPlayer, sleepActive: Boolean = false, onSleepTimer: () -> Unit = {},
+fun MusicScreen(player: MusicPlayer, onBackHome: () -> Unit,
+                sleepActive: Boolean = false, onSleepTimer: () -> Unit = {},
                 /** 睡眠专辑自动隐藏了按钮时通知壳把底栏也藏起来（RN setMusicAutoHideChrome → ShellTabBar） */
                 onChromeHidden: (Boolean) -> Unit = {}) {
     /** 拖进度条时的预览比例；null = 没在拖 */
@@ -105,13 +117,25 @@ fun MusicScreen(player: MusicPlayer, sleepActive: Boolean = false, onSleepTimer:
         // 只盖舞台上半段（曲目列表以上），列表 / 按钮藏起来后点下半段只算「碰一下回来」
         Box(Modifier.fillMaxWidth().fillMaxHeight(0.42f).clickableNoRipple { if (player.track != null) player.toggle() })
 
-        // 睡眠定时器
-        AnimatedVisibility(uiVisible, Modifier.align(Alignment.TopEnd), enter = fadeIn(), exit = fadeOut()) {
-        Box(Modifier.statusBarsPadding().padding(top = 6.dp, end = ShellMetrics.topChromeSideInset.dp)
-            .size(50.dp).clickableNoRipple(onSleepTimer), contentAlignment = Alignment.Center) {
-            // RN MusicHomeSleepTimerButton：timer 26，开着 LOGO 黄，否则白
-            MaterialIcon(MI.TIMER, 26f, if (sleepActive) Brand.logo.toColor() else Color.White, shadow = true)
-        }
+        // 两端控件共用安全区与同一行，避免返回文字和定时器各自偏移。
+        AnimatedVisibility(uiVisible, Modifier.align(Alignment.TopCenter), enter = fadeIn(), exit = fadeOut()) {
+            Row(Modifier.fillMaxWidth().statusBarsPadding()
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
+                .padding(top = 6.dp, start = ShellMetrics.topChromeSideInset.dp, end = ShellMetrics.topChromeSideInset.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween) {
+                TextButton(onClick = onBackHome,
+                    modifier = Modifier.height(50.dp).testTag("music.home")
+                        .semantics { contentDescription = AppLocale.pick("返回首页", "Back to Home") },
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)) {
+                    Text(AppLocale.pick("‹ 首页", "‹ Home"), color = Color.White, fontSize = 17.sp)
+                }
+                Box(Modifier.size(50.dp).testTag("music.sleep-timer")
+                    .semantics { contentDescription = AppLocale.pick("定时停止音乐", "Sleep timer") }
+                    .clickableNoRipple(onSleepTimer), contentAlignment = Alignment.Center) {
+                    MaterialIcon(MI.TIMER, 26f, if (sleepActive) Brand.logo.toColor() else Color.White, shadow = true)
+                }
+            }
         }
 
         AnimatedVisibility(uiVisible, enter = fadeIn(), exit = fadeOut()) {
@@ -201,10 +225,13 @@ fun MusicScreen(player: MusicPlayer, sleepActive: Boolean = false, onSleepTimer:
                 // 单曲循环（左）/ 整专辑循环（右）：开着的带圆底，与 RN loopBtnOn 一致
                 // RN MusicHomeTransportButtonRow：skip 36 白、播放 64 白底 #1C1410 图标 34、循环自绘 24（开 白 / 关 白 .48）
                 LoopButton(one = true, on = player.repeatMode == MusicRepeatMode.ONE) { player.toggleRepeatOne() }
-                Box(Modifier.size(48.dp).clickableNoRipple { player.previous() }, contentAlignment = Alignment.Center) {
+                Box(Modifier.size(48.dp).semantics { contentDescription = AppLocale.pick("上一首", "Previous track") }
+                    .clickableNoRipple { player.previous() }, contentAlignment = Alignment.Center) {
                     MaterialIcon(MI.SKIP_PREVIOUS, ShellMetrics.skipIconSize, Color.White)
                 }
-                Box(Modifier.size(ShellMetrics.playButtonSize.dp).clip(CircleShape).background(Color.White).clickableNoRipple { player.toggle() },
+                Box(Modifier.size(ShellMetrics.playButtonSize.dp).clip(CircleShape).background(Color.White)
+                    .semantics { contentDescription = if (player.isPlaying) AppLocale.pick("暂停音乐", "Pause music") else AppLocale.pick("播放音乐", "Play music") }
+                    .clickableNoRipple { player.toggle() },
                     contentAlignment = Alignment.Center) {
                     if (player.isLoading) {
                         CircularProgressIndicator(color = Color(0xFF1C1410), strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
@@ -213,7 +240,8 @@ fun MusicScreen(player: MusicPlayer, sleepActive: Boolean = false, onSleepTimer:
                                      modifier = Modifier.offset(x = if (player.isPlaying) 0.dp else ShellMetrics.playIconNudge.dp))
                     }
                 }
-                Box(Modifier.size(48.dp).clickableNoRipple { player.next() }, contentAlignment = Alignment.Center) {
+                Box(Modifier.size(48.dp).semantics { contentDescription = AppLocale.pick("下一首", "Next track") }
+                    .clickableNoRipple { player.next() }, contentAlignment = Alignment.Center) {
                     MaterialIcon(MI.SKIP_NEXT, ShellMetrics.skipIconSize, Color.White)
                 }
                 LoopButton(one = false, on = player.repeatMode == MusicRepeatMode.ALL) { player.toggleRepeatAll() }

@@ -1,1 +1,4 @@
-Swipe sideways on Home to change scenery, swipe up for adjustments, and swipe down for music. Hold the music button to choose an album. Ambient sound follows scenery only when enabled. Improved music navigation, Bible catalog spacing, and Explore.
+Version 1.1.8
+• Continue background music from your last song and listening position.
+• Skip to the next track or choose music directly from Home.
+• Keep your paused state and sleep timer when reopening the app.

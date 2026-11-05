@@ -126,11 +126,13 @@ function MusicHomeTrackFromQuery({
   setTrackPoolIdx: (n: number) => void;
 }) {
   const sp = useSearchParams();
+  const appliedTrackRef = useRef<string | null>(null);
   useEffect(() => {
     const tid = sp.get("track")?.trim();
-    if (!tid) return;
+    if (!tid || appliedTrackRef.current === tid) return;
     const idx = tracksWithSrc.findIndex((t) => t.id === tid);
     if (idx < 0) return;
+    appliedTrackRef.current = tid;
     bumpUserSkip();
     setTrackPoolIdx(idx);
   }, [sp, tracksWithSrc, bumpUserSkip, setTrackPoolIdx]);
@@ -157,7 +159,6 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
     musicStore,
     deviceLibraryPlayback,
     clearDeviceLibraryPlayback,
-    pausePlayback,
     playing,
     canPlay,
     sleepTimerMinutes,
@@ -179,22 +180,24 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
   const initialSi = initialSceneIndex(initialStore);
   const [sceneIndex, setSceneIndex] = useState(() => initialSi);
   const [album, setAlbum] = useState<string>(DEFAULT_ALBUM);
-  const [trackPoolIdx, setTrackPoolIdx] = useState(() => computeRandomTrackPoolIdx(initialStore));
-  const fullMusicSrcGateDone = useRef(false);
+  const [trackPoolIdx, setTrackPoolIdx] = useState(0);
   /** 用户刚点上一首/下一首/随机：短时间内优先信任 trackPoolIdx，避免壳层 ended 已切歌而此处仍用旧 URL 把播放源推回去导致更新风暴 */
   const userSkipAtRef = useRef(0);
   const bumpUserSkip = useCallback(() => {
     userSkipAtRef.current = typeof performance !== "undefined" ? performance.now() : 0;
   }, []);
-  const setPlaybackSrcRef = useRef(setPlaybackSrc);
-  setPlaybackSrcRef.current = setPlaybackSrc;
 
   useEffect(() => {
     const es = effectiveSrc.trim();
     if (!es) return;
     const list = store.audioTracks.filter((t) => Boolean(t.src?.trim()));
     const j = list.findIndex((t) => urlsEqual((t.src ?? "").trim(), es));
-    if (j >= 0) setTrackPoolIdx(j);
+    if (j >= 0) {
+      const activeAlbum = inferTrackAlbumFromCompanionTrack(list[j]!);
+      setAlbum(activeAlbum);
+      const albumTracks = list.filter((track) => inferTrackAlbumFromCompanionTrack(track) === activeAlbum);
+      setTrackPoolIdx(albumTracks.findIndex((track) => urlsEqual(track.src ?? "", es)));
+    }
   }, [effectiveSrc, store.audioTracks]);
 
   const orderedScenes = useMemo(
@@ -249,10 +252,6 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
     const next = albumNames.find((name) => (albumCounts[name] ?? 0) > 0) ?? DEFAULT_ALBUM;
     if (next !== album) setAlbum(next);
   }, [album, albumCounts, albumNames]);
-
-  useEffect(() => {
-    setTrackPoolIdx(0);
-  }, [album]);
 
   const resolvedTrackIdx = useMemo(() => {
     const tracks = tracksWithSrc;
@@ -359,31 +358,16 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
   const chromeVisible = landscapeNarrow ? landscapeMenuVisible : uiVisible;
   const nowClockText = useMemo(() => formatNowClock(new Date(nowMs)), [nowMs]);
 
-  useEffect(() => {
-    if (deviceLibraryPlayback) return;
-    const want = audioSrc.trim();
-    if (!want) {
-      setPlaybackSrcRef.current(null);
-      return;
-    }
-    const cur = effectiveSrc.trim();
-    if (urlsEqual(want, cur)) return;
-
-    if (!fullMusicSrcGateDone.current) {
-      fullMusicSrcGateDone.current = true;
-      if (cur) return;
-    }
-
-    setPlaybackSrcRef.current(want);
-  }, [audioSrc, effectiveSrc, deviceLibraryPlayback]);
-
   const selectTrack = useCallback(
-    (idx: number) => {
+    (idx: number, autoPlay = true) => {
+      const selected = tracksWithSrc[idx];
+      if (!selected?.src) return;
       clearDeviceLibraryPlayback();
       bumpUserSkip();
       setTrackPoolIdx(idx);
+      setPlaybackSrc(selected.src, { autoPlay });
     },
-    [clearDeviceLibraryPlayback, bumpUserSkip],
+    [tracksWithSrc, clearDeviceLibraryPlayback, bumpUserSkip, setPlaybackSrc],
   );
 
   const selectAlbum = useCallback(
@@ -403,9 +387,8 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
       if (track && inferTrackAlbumFromCompanionTrack(track) === nextAlbum) return;
       const nextTracks = allTracksWithSrc.filter((tr) => inferTrackAlbumFromCompanionTrack(tr) === nextAlbum);
       if (nextTracks.length === 0) return;
-      const pickIndex = Math.floor(Math.random() * nextTracks.length);
+      const pickIndex = 0;
       const pick = nextTracks[pickIndex]!;
-      pausePlayback();
       clearDeviceLibraryPlayback();
       bumpUserSkip();
       const src = (pick.src ?? "").trim();
@@ -415,7 +398,8 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
         if (nextPick && nextPick.id !== pick.id) {
           prefetchMusicTrackBundle({ src: nextPick.src, analysisSrc: nextPick.analysisSrc });
         }
-        setPlaybackSrc(src);
+        setTrackPoolIdx(pickIndex);
+        setPlaybackSrc(src, { autoPlay: playing });
       }
     },
     [
@@ -423,7 +407,7 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
       allTracksWithSrc,
       bumpUserSkip,
       clearDeviceLibraryPlayback,
-      pausePlayback,
+      playing,
       setPlaybackSrc,
       setSleepTimerMinutes,
       sleepTimerMinutes,
@@ -575,14 +559,14 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
     }
     if (tracksWithSrc.length <= 1) return;
     const prevIdx = resolvedTrackIdx <= 0 ? tracksWithSrc.length - 1 : resolvedTrackIdx - 1;
-    selectTrack(prevIdx);
-  }, [currentSec, musicActive, resolvedTrackIdx, seekRatio, selectTrack, tracksWithSrc.length]);
+    selectTrack(prevIdx, playing);
+  }, [currentSec, musicActive, resolvedTrackIdx, seekRatio, selectTrack, tracksWithSrc.length, playing]);
 
   const onNext = useCallback(() => {
     if (tracksWithSrc.length <= 1) return;
     const nextIdx = (resolvedTrackIdx + 1) % tracksWithSrc.length;
-    selectTrack(nextIdx);
-  }, [resolvedTrackIdx, selectTrack, tracksWithSrc.length]);
+    selectTrack(nextIdx, playing);
+  }, [resolvedTrackIdx, selectTrack, tracksWithSrc.length, playing]);
 
   const onMusicSwipe = useCallback(
     (direction: "left" | "right") => {
@@ -670,7 +654,7 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
         <MusicHomeTrackFromQuery
           tracksWithSrc={tracksWithSrc}
           bumpUserSkip={bumpUserSkip}
-          setTrackPoolIdx={setTrackPoolIdx}
+          setTrackPoolIdx={selectTrack}
         />
       </Suspense>
 

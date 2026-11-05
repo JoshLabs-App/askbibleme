@@ -470,6 +470,7 @@ struct RootView: View {
                     activity.noteForeground(); activity.touchHabitDay(); naturePrefs.rotateIfNewDay()
                     Task { await Endpoints.refresh(); await sync.flushNow(reason: "foreground") }
                 } else {
+                    music.saveResume()
                     activity.noteBackground()
                 }
             }
@@ -528,6 +529,7 @@ struct RootView: View {
                     let voice = (home?.voiceOn ?? false) || (audio?.isPlaying ?? false)
                     if voice, music?.isPlaying == true { music?.pause() }
                 }
+                music.restorePlaybackIfNeeded()
             }
     }
 

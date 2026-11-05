@@ -37,7 +37,7 @@ type AlbumPickTrack = {
   localReady?: boolean;
 };
 
-/** 只从点中的专辑里选曲，绝不落到安静或其它目录。 */
+/** Reopening an album resumes its current song; only explicit next/selection changes songs. */
 export function resolveHomeAlbumPlayIndex(
   tracks: readonly AlbumPickTrack[],
   albumName: string,
@@ -58,8 +58,6 @@ export function resolveHomeAlbumPlayIndex(
   }
   const pool = local.length > 0 ? local : playable.length > 0 ? playable : any;
   if (pool.length === 0) return null;
-  if (pool.length === 1) return pool[0]!;
-  const rest = pool.filter((idx) => idx !== currentIndex);
-  const pick = rest.length > 0 ? rest : pool;
-  return pick[Math.floor(Math.random() * pick.length)]!;
+  if (pool.includes(currentIndex)) return currentIndex;
+  return pool[0]!;
 }

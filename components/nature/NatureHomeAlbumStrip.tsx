@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { shellPlaybackUrlsEqual } from "@/lib/music-companion/shell-playback-storage";
+import { inferTrackAlbumFromCompanionTrack } from "@/lib/music/album-playback";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { MusicAlbumGlyph } from "@/components/music/MusicAlbumGlyph";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
@@ -76,6 +79,22 @@ export function NatureHomeAlbumStrip({ goldenVersePlaying, goldenVersePreparing,
         {goldenVersePreparing ? <span className="nature-home-verse-spinner" /> : <ShellMaterialIcon name="volume-up" size={28} color={goldenVersePlaying ? "var(--brand-logo-background)" : "white"} legibilityShadow />}
         <span>{text("朗读", "Read aloud")}</span>
       </button>
+    </div>
+    <div className="flex items-center justify-center gap-6 text-[13px] text-white/85">
+      <button type="button" className="inline-flex min-h-11 items-center gap-1.5"
+        onClick={() => {
+          const queue = (playback.musicStore?.audioTracks ?? []).filter(track => track.src?.trim() && inferTrackAlbumFromCompanionTrack(track) === (currentAlbum || selected));
+          const index = queue.findIndex(track => shellPlaybackUrlsEqual(track.src ?? "", playback.effectiveSrc));
+          const next = queue[(index + 1) % queue.length];
+          if (next?.src) playback.setPlaybackSrc(next.src, {autoPlay: playing});
+        }}>
+        <ShellMaterialIcon name="skip-next" size={20} color="white" legibilityShadow />
+        {text("下一首", "Next track")}
+      </button>
+      <Link href="/music" className="inline-flex min-h-11 items-center gap-1.5">
+        <ShellMaterialIcon name="queue-music" size={20} color="white" legibilityShadow />
+        {text("选音乐", "Choose music")}
+      </Link>
     </div>
   </div>;
 }

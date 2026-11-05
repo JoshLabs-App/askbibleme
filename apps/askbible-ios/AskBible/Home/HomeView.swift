@@ -87,7 +87,21 @@ struct HomeView: View {
                                 }
                                 .disabled(!home.voiceAvailable).opacity(home.voiceAvailable ? 1 : 0.35)
                             }
-
+                            HStack(spacing: 24) {
+                                Button { touch(); music.next() } label: {
+                                    Label(copy("下一首", "Next track"), systemImage: "forward.end")
+                                        .frame(minHeight: 44)
+                                }
+                                .disabled(music.nextTrack == nil)
+                                .accessibilityIdentifier("home.music.next")
+                                Button { touch(); onOpenMusic() } label: {
+                                    Label(copy("选音乐", "Choose music"), systemImage: "music.note.list")
+                                        .frame(minHeight: 44)
+                                }
+                                .accessibilityIdentifier("home.music.choose")
+                            }
+                            .buttonStyle(.plain).askFont(size: 13)
+                            .foregroundStyle(.white.opacity(0.85)).verseTextShadow()
                         }
                         .gesture(DragGesture(minimumDistance: 20).onEnded { g in
                             if g.translation.height < -35 && abs(g.translation.height) > abs(g.translation.width) { setTools(true) }

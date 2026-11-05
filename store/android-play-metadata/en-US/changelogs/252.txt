@@ -1,0 +1,1 @@
+Continue background music from your last song and listening position. Skip to the next track or choose music directly from Home. Reopening respects pause and sleep timer choices. The music screen’s Home and timer controls now align with closer left spacing.

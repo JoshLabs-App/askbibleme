@@ -191,6 +191,7 @@ struct MusicView: View {
             // RN MusicHomeTransportButtonRow：skip 36 白、播放 64 白底 #1C1410 图标 34、循环自绘 24（开 白 / 关 白 .48）
             Button { player.previous() } label: { icon(MI.skipPrevious, size: ShellMetrics.skipIconSize, color: .white) }
                 .buttonStyle(.plain)
+                .accessibilityLabel(AppLocale.pick("上一首", "Previous track"))
             Spacer()
             Button { player.toggle() } label: {
                 ZStack {
@@ -206,9 +207,13 @@ struct MusicView: View {
                 .frame(width: ShellMetrics.playButtonSize, height: ShellMetrics.playButtonSize)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(player.isPlaying ? AppLocale.pick("暂停音乐", "Pause music") : AppLocale.pick("播放音乐", "Play music"))
+            .accessibilityIdentifier("music.toggle")
             Spacer()
             Button { player.next() } label: { icon(MI.skipNext, size: ShellMetrics.skipIconSize, color: .white) }
                 .buttonStyle(.plain)
+                .accessibilityLabel(AppLocale.pick("下一首", "Next track"))
+                .accessibilityIdentifier("music.next")
             Spacer()
             loopButton(one: false, on: player.repeatMode == .all) { player.toggleRepeatAll() }
         }

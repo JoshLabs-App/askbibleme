@@ -25,6 +25,7 @@ import me.askbible.native_.data.MusicAudioSource
 import me.askbible.native_.data.MusicCatalog
 import me.askbible.native_.data.MusicRepeatMode
 import me.askbible.native_.data.MusicTrack
+import me.askbible.native_.data.MusicResumeState
 
 /**
  * 音乐页播放器（ExoPlayer）。与 iOS 的 MusicPlayer 对等：曲库 MusicCatalog（内置 5 首 + R2 点播），
@@ -35,6 +36,9 @@ import me.askbible.native_.data.MusicTrack
  */
 class MusicPlayer(context: Context, private val scope: CoroutineScope) {
     private val appContext = context.applicationContext
+    private val prefs = appContext.getSharedPreferences("music-playback", Context.MODE_PRIVATE)
+    private var restoreOnOpen = false
+    private var lastSaveAt = 0L
 
     var album by mutableStateOf(MusicCatalog.DEFAULT_ALBUM); private set
     /** 当前曲在 MusicCatalog.tracks 里的下标 */
@@ -88,10 +92,19 @@ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
         .also { PlaybackSessions.register(it) { wantsPlayback } }
 
     init {
-        val a = MusicCatalog.DEFAULT_ALBUM
-        trackIndex = MusicAlbumRules.startIndex(MusicCatalog.tracks, a, -1) ?: 0
-        repeatMode = MusicAlbumRules.defaultRepeatMode(a) ?: MusicRepeatMode.ALL
+        val saved = MusicResumeState.decode(prefs.getString(MusicResumeState.STORAGE_KEY, null))
+        val savedIndex = saved?.trackIndex(MusicCatalog.tracks)
+        val a = savedIndex?.let { MusicCatalog.tracks[it].album } ?: MusicCatalog.DEFAULT_ALBUM
+        album = a
+        trackIndex = savedIndex ?: MusicAlbumRules.startIndex(MusicCatalog.tracks, a, -1) ?: 0
+        repeatMode = if (savedIndex != null) MusicRepeatMode.entries.find { it.raw == saved?.repeatMode } ?: MusicRepeatMode.ALL
+            else MusicAlbumRules.defaultRepeatMode(a) ?: MusicRepeatMode.ALL
         gain = MusicAlbumRules.defaultGain(a)
+        if (saved != null && savedIndex != null) {
+            currentTime = MusicResumeState.position(saved.timeSec, 0.0)
+            restoreOnOpen = saved.shouldResume(System.currentTimeMillis() / 1000.0)
+            saved.sleepDeadline?.let { if (it * 1000 > System.currentTimeMillis()) scheduleSleepTimer((it * 1000).toLong()) }
+        }
         player.setAudioAttributes(
             AudioAttributes.Builder()
                 .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
@@ -107,6 +120,12 @@ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
             override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
                 if (playWhenReady) focusLost = false
                 else if (reason == Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_FOCUS_LOSS && wantsPlayback) focusLost = true
+                // Lock-screen controls go directly through MediaSession/ExoPlayer.
+                if (reason == Player.PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST ||
+                    reason == Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_BECOMING_NOISY) {
+                    wantsPlayback = playWhenReady
+                    saveResume()
+                }
             }
 
             override fun onPlaybackStateChanged(state: Int) {
@@ -114,6 +133,7 @@ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
                 if (state == Player.STATE_READY && this@MusicPlayer.duration <= 0) {
                     val d = player.duration
                     if (d > 0) this@MusicPlayer.duration = d / 1000.0
+                    if (duration > 0 && currentTime >= duration) seekTo(0.0)
                 }
                 if (state == Player.STATE_ENDED) onEnded()
             }
@@ -177,7 +197,7 @@ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
      */
     fun toggle() {
         val t = track
-        if (isPlaying && t?.album == album) { pause(); return }
+        if ((isPlaying || wantsPlayback) && t?.album == album) { pause(); return }
         if (t != null && t.album == album) {
             if (loadedId == t.id) resume() else play(trackIndex, true)
             return
@@ -202,21 +222,23 @@ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
         play(index, true)
     }
 
-    fun toggleRepeatOne() { repeatMode = if (repeatMode == MusicRepeatMode.ONE) MusicRepeatMode.OFF else MusicRepeatMode.ONE }
-    fun toggleRepeatAll() { repeatMode = if (repeatMode == MusicRepeatMode.ALL) MusicRepeatMode.OFF else MusicRepeatMode.ALL }
+    fun toggleRepeatOne() { repeatMode = if (repeatMode == MusicRepeatMode.ONE) MusicRepeatMode.OFF else MusicRepeatMode.ONE; saveResume() }
+    fun toggleRepeatAll() { repeatMode = if (repeatMode == MusicRepeatMode.ALL) MusicRepeatMode.OFF else MusicRepeatMode.ALL; saveResume() }
 
     /** 装载并（可选）起播某一首 */
     fun play(index: Int, autoPlay: Boolean) {
         val t = MusicCatalog.tracks.getOrNull(index) ?: return
+        val position = if (index == trackIndex) currentTime else 0.0
         trackIndex = index
-        if (loadedId != t.id) load(t)
+        if (loadedId != t.id) load(t, position)
         if (autoPlay) resume()
+        else { wantsPlayback = false; player.playWhenReady = false; saveResume() }
     }
 
-    private fun load(t: MusicTrack) {
+    private fun load(t: MusicTrack, position: Double = currentTime) {
         loadedId = t.id
         errorMessage = null
-        currentTime = 0.0
+        currentTime = MusicResumeState.position(position, 0.0)
         duration = 0.0
         val uri = MusicAudioSource.uri(t)
         if (uri == null) {
@@ -233,7 +255,8 @@ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
                         .setArtist(t.artist.ifEmpty { "AskBible" })
                         .setAlbumTitle(t.album)
                         .build())
-                .build()
+                .build(),
+            (currentTime * 1000).toLong()
         )
         player.volume = effectiveGain
         player.prepare()
@@ -249,7 +272,7 @@ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
                 val q = queue
                 val pos = q.indexOf(trackIndex)
                 if (pos >= 0 && pos + 1 < q.size) play(q[pos + 1], true)
-                else { wantsPlayback = false; currentTime = duration }
+                else { wantsPlayback = false; currentTime = duration; saveResume() }
             }
         }
     }
@@ -261,12 +284,28 @@ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
         PlaybackSessions.ensureStarted(appContext)
         player.volume = effectiveGain
         player.playWhenReady = true
+        saveResume()
+    }
+
+    fun restorePlaybackIfNeeded() {
+        if (!restoreOnOpen) return
+        restoreOnOpen = false
+        resume()
+    }
+
+    fun saveResume() {
+        val t = track ?: return
+        val saved = MusicResumeState(t.id, currentTime, repeatMode.raw, wantsPlayback, sleepDeadlineMs?.div(1000.0))
+        prefs.edit().putString(MusicResumeState.STORAGE_KEY, saved.encode()).apply()
+        lastSaveAt = android.os.SystemClock.elapsedRealtime()
     }
 
     fun pause() {
         wantsPlayback = false
         focusLost = false
         player.playWhenReady = false
+        if (loadedId != null) currentTime = player.currentPosition / 1000.0
+        saveResume()
     }
 
     /** 外部声音停了 / 回到前台：永久失焦停掉的、还想播的，叫回来（RN recoverMusicPlaybackAfterBackground） */
@@ -284,19 +323,25 @@ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
     }
 
     fun seekTo(seconds: Double) {
+        if (!seconds.isFinite()) return
         val d = displayDuration
         val clamped = if (d > 0) seconds.coerceIn(0.0, d) else maxOf(0.0, seconds)
         player.seekTo((clamped * 1000).toLong())
         currentTime = clamped
+        saveResume()
     }
 
     // ---- 睡眠定时（与 ChapterAudioPlayer 同一套：到期只暂停） ----
 
     fun setSleepTimer(minutes: Int?) {
         sleepJob?.cancel(); sleepJob = null
-        if (minutes == null || minutes <= 0) { sleepMinutes = 0; sleepDeadlineMs = null; return }
-        sleepMinutes = minutes
-        val deadline = System.currentTimeMillis() + minutes * 60_000L
+        if (minutes == null || minutes <= 0) { sleepMinutes = 0; sleepDeadlineMs = null; saveResume(); return }
+        scheduleSleepTimer(System.currentTimeMillis() + minutes * 60_000L)
+        saveResume()
+    }
+
+    private fun scheduleSleepTimer(deadline: Long) {
+        sleepMinutes = maxOf(1, kotlin.math.ceil((deadline - System.currentTimeMillis()) / 60_000.0).toInt())
         sleepDeadlineMs = deadline
         sleepJob = scope.launch(Dispatchers.Main) {
             delay(deadline - System.currentTimeMillis())
@@ -320,12 +365,14 @@ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
             while (true) {
                 currentTime = player.currentPosition / 1000.0
                 if (duration <= 0 && player.duration > 0) duration = player.duration / 1000.0
+                if (android.os.SystemClock.elapsedRealtime() - lastSaveAt >= 2000) saveResume()
                 delay(250)
             }
         }
     }
 
     fun release() {
+        saveResume()
         sleepJob?.cancel()
         ticker?.cancel()
         PlaybackSessions.unregister(mediaSession)

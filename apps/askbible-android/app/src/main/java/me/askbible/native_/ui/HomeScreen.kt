@@ -43,6 +43,7 @@ fun HomeScreen(
     onBumpTextScale: (Int) -> Unit, onCycleSleepTimer: () -> Unit,
     onToggleVoice: () -> Unit, onPressAlbum: (String) -> Unit,
     onChooseAlbum: (String) -> Unit, onOpenMusic: () -> Unit, onOpenMenu: () -> Unit,
+    onNextMusic: () -> Unit,
     chromeHidden: Boolean = false, onChromeHidden: (Boolean) -> Unit = {},
 ) {
     var toolsOpen by remember { mutableStateOf(false) }
@@ -125,6 +126,18 @@ fun HomeScreen(
                     horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                     MaterialIcon(MI.VOLUME_UP, 28f, if (voiceOn) Brand.logo.toColor() else Color.White, shadow = true)
                     Text(t("朗读", "Read aloud"), color = Color.White, fontSize = 12.sp)
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                TextButton(onClick = { touch(); onNextMusic() }) {
+                    MaterialIcon(MI.SKIP_NEXT, 20f, Color.White, shadow = true)
+                    Spacer(Modifier.width(6.dp))
+                    Text(t("下一首", "Next track"), color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
+                }
+                TextButton(onClick = { touch(); onOpenMusic() }) {
+                    MaterialIcon(MI.MUSIC_NOTE, 20f, Color.White, shadow = true)
+                    Spacer(Modifier.width(6.dp))
+                    Text(t("选音乐", "Choose music"), color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
                 }
             }
         }

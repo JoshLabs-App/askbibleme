@@ -438,6 +438,13 @@ private fun RootScreen() {
         }
     }
     val music = remember { MusicPlayer(context, scope) }
+    DisposableEffect(lifecycle, music) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_PAUSE) music.saveResume()
+        }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer) }
+    }
     val home = remember { HomeVerseController(context, scope) }
     // 首页金句跟当前读经版本走：内置译本读本机库，在线译本（含法语等）取该版本的正文
     LaunchedEffect(translation.id) { home.setSource(translation) }
@@ -486,6 +493,7 @@ private fun RootScreen() {
         devotional.onWillPlay = { audio.pause(); home.stopVoice(); music.setDucked(true) }
         devotional.onStopped = { music.setDucked(audio.isPlaying) }
         ambient.onWillPlay = { if ((home.voiceOn || audio.isPlaying) && music.isPlaying) music.pause() }
+        music.restorePlaybackIfNeeded()
         onDispose { audio.release(); music.release(); home.release(); ambient.release(); devotional.release() }
     }
     // 整章朗读时环境音压半，停了恢复（「读经混播时继续播并压音量」）
@@ -666,6 +674,7 @@ private fun RootScreen() {
                 ambientVolume = ambient.volume, onAmbientVolume = { ambient.volume = it },
                 onChooseAlbum = { music.selectAlbum(it) },
                 onOpenMusic = { homeChromeHidden = false; tab = ShellTab.MUSIC },
+                onNextMusic = { music.next() },
                 sleepTimerMinutes = sleepTimerMinutes,
                 // 点选场景：记次数、存档、跟场景默认环境音（RN selectScene source=user）
                 onSelectScene = { id ->
@@ -700,15 +709,10 @@ private fun RootScreen() {
                 chromeHidden = homeChromeHidden,
                 onChromeHidden = { homeChromeHidden = it },
             )
-            ShellTab.MUSIC -> Box(Modifier.fillMaxSize()) {
-                MusicScreen(player = music, onChromeHidden = { musicChromeHidden = it },
+            ShellTab.MUSIC -> MusicScreen(player = music, onChromeHidden = { musicChromeHidden = it },
+                onBackHome = { musicChromeHidden = false; tab = ShellTab.HOME },
                 sleepActive = audio.sleepDeadlineMs != null || music.sleepDeadlineMs != null || home.sleepDeadlineMs != null || ambient.sleepDeadlineMs != null,
                 onSleepTimer = { showSleepSheet = true })
-                androidx.compose.material3.TextButton(
-                    onClick = { musicChromeHidden = false; tab = ShellTab.HOME },
-                    modifier = Modifier.align(Alignment.TopStart).statusBarsPadding().padding(top = 12.dp).width(136.dp).height(56.dp),
-                ) { Text(AppLocale.pick("‹ 首页", "‹ Home", appLocale), color = Color.White, fontSize = 17.sp) }
-            }
             ShellTab.EXPLORE -> ExploreScreen(
                 size = size, article = exploreArticle, onOpenArticle = { exploreArticle = it },
                 auth = auth, locale = appLocale, onOpenLogin = { authRoute = "login" },

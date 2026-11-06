@@ -63,7 +63,7 @@ object AchievementFeedback {
     fun play(context: Context, cue: Cue) = play(context, cue, silent = false)
 
     private fun play(context: Context, cue: Cue, silent: Boolean) {
-        haptic(context, cue)
+        // 不再振动（Josh 2026-10-17「读经时的 + 分 振动是一个干扰」）；haptic() 留着备用
         // 全 App 只有「读完一章」出声；升级 / 勋章 / 计划完成只给触感（D-4，Josh 2026-09-27
         // 「一打开就有升级声音，有点吵，太像游戏」）。earn / levelup 音档留着备用，不再播。
         if (silent || !soundEnabled(context)) return

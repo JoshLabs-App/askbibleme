@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// 连排段落：一段里的各节接排成一个文本块（RN 默认 verseParagraphFlow = true）。
+/// 绘制模式的连排段落；普通阅读使用 NativeChapterText 的整章系统选区。
 ///
 /// 用 TextKit 自绘（NSLayoutManager 直接画进一个普通 UIView），不用 UITextView：
 /// UITextView 是 UIScrollView 的子类，套在 SwiftUI ScrollView 里多一层滚动视图和一堆文本交互手势，
@@ -525,7 +525,8 @@ struct ChapterFlowParagraph: UIViewRepresentable {
     }
 
     /// 对应 displayedParagraphVerseChunk：`${节号}${gap}${正文} `，节号加粗按有无串珠分色，正文按神言 / 人言着色
-    private func build() -> (text: NSAttributedString, ranges: [(verse: Int, range: NSRange)], numberRanges: [(verse: Int, range: NSRange)], textRanges: [(verse: Int, range: NSRange)]) {
+    func build(scale: CGFloat? = nil) -> (text: NSAttributedString, ranges: [(verse: Int, range: NSRange)], numberRanges: [(verse: Int, range: NSRange)], textRanges: [(verse: Int, range: NSRange)]) {
+        let textScale = scale ?? self.textScale
         let out = NSMutableAttributedString()
         var ranges: [(Int, NSRange)] = []
         var numberRanges: [(Int, NSRange)] = []

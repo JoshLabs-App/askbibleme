@@ -1,0 +1,22 @@
+name: SelectionAcceptance
+options:
+  bundleIdPrefix: me.askbible.acceptance
+settings:
+  base:
+    IPHONEOS_DEPLOYMENT_TARGET: '17.0'
+targets:
+  SelectionTests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [SelectionTests.swift]
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: ''
+schemes:
+  SelectionTests:
+    build:
+      targets:
+        SelectionTests: all
+    test:
+      targets: [SelectionTests]

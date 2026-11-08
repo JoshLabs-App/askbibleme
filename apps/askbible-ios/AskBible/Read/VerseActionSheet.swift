@@ -3,7 +3,7 @@ import UIKit
 
 /// 长按某节弹出的操作单。对应 RN ReadChapterScreenVerseActionModal（ReadChapterBottomSheet 外壳）：
 /// 标题「第 N 节」+ 右上「关闭」，三列格子：本节复制 / 双击收藏（已收藏则不出）/ 分享。
-/// RN 的「划重点」还没接；「多选复制」2026-09-11 补上了。
+/// 阅读正文使用原生选区菜单；此面板保留给绘制模式的既有操作。
 struct VerseActionSheet: View {
     let verse: Int
     let bookmarked: Bool
@@ -11,8 +11,6 @@ struct VerseActionSheet: View {
     var onCopy: () -> Void
     var onBookmark: () -> Void
     var onShare: () -> Void
-    /// 多选复制：以这一节为起点进入选择态（RN runStartMultiCopy）
-    var onMultiCopy: () -> Void = {}
     /// 划重点：进入划字模式（RN runOpenHighlightEditor）
     var onHighlight: () -> Void = {}
     var onClose: () -> Void
@@ -39,7 +37,6 @@ struct VerseActionSheet: View {
                     cell(MI.contentCopy, SiteCopy.t("pages.read.verseActionCopy"), iconSize, labelSize, onCopy)
                     if !bookmarked { cell(MI.bookmarkBorder, SiteCopy.t("pages.read.verseActionBookmark"), iconSize, labelSize, onBookmark) }
                     cell(MI.iosShare, SiteCopy.t("pages.read.verseActionShare"), iconSize, labelSize, onShare)
-                    cell(MI.libraryAddCheck, SiteCopy.t("native.verseMultiCopy"), iconSize, labelSize, onMultiCopy)
                     cell(MI.brush, SiteCopy.t("native.highlight"), iconSize, labelSize, onHighlight)
                 }
                 .padding(.top, 4).padding(.bottom, 8)

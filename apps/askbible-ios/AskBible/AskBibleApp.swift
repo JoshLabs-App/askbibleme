@@ -131,8 +131,6 @@ struct RootView: View {
     @State private var focusKeyword: String?
     /// 长按弹出操作单的那节；收藏 / 复制后的轻提示
     @State private var actionVerse: LoadedVerse?
-    /// 多节选择（章页底部条），空集合 = 不在选择态
-    @State private var selectedVerses: Set<Int> = []
     /// 划重点：开关 + 当前颜色 + 擦除态
     @StateObject private var highlights = VerseHighlightStore()
     /// 成就 / XP（DECISIONS「成就系统」「XP 要一直在涨」）
@@ -233,59 +231,6 @@ struct RootView: View {
             if let verse = Int(key.dropFirst(prefix.count)), !byIndex.isEmpty { out[verse] = byIndex }
         }
         return out
-    }
-
-    /// 多节选择底部条：渲染在顶层 ZStack，浮在底栏之上（ChapterView 内渲染会被底栏盖住）
-    @ViewBuilder private var verseSelectionBar: some View {
-        if let opened = openedChapter {
-            let theme = parchmentTheme
-            VStack(spacing: 0) {
-                HStack(alignment: .top, spacing: 12) {
-                    Text(SiteCopy.f("pages.read.verseSelectionPicked", ["count": "\(selectedVerses.count)"], appLocale))
-                        .askFont(size: 17, weight: .semibold)
-                        .foregroundStyle(theme.ink)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Button { selectedVerses = [] } label: {
-                        Text(SiteCopy.t("pages.read.verseSelectionClear", appLocale))
-                            .askFont(size: 14)
-                            .foregroundStyle(theme.muted)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(.bottom, 10)
-                Button { copySelectedVerses(in: opened) } label: {
-                    HStack(spacing: 8) {
-                        MaterialIcon(glyph: MI.contentCopy, size: 22, color: theme.ink)
-                        Text(SiteCopy.t("pages.read.verseSelectionCopy", appLocale))
-                            .askFont(size: 15, weight: .semibold)
-                            .foregroundStyle(theme.ink)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.horizontal, 18).padding(.top, 14).padding(.bottom, 28)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .parchmentCard(cornerRadius: AskCorner.card)
-            .ignoresSafeArea(edges: .bottom)
-        }
-    }
-
-    /// 多节复制：按节号顺序，每节一行「书名 章:节 正文」（RN copySelectedVerses）
-    private func copySelectedVerses(in opened: (book: BookRef, chapter: Int)) {
-        guard !selectedVerses.isEmpty else { return }
-        let name = bookLabel(opened.book)
-        let lines = selectedVerses.sorted().compactMap { v -> String? in
-            guard let text = store.verseText(translationId: store.translation.id, bookId: opened.book.id,
-                                             chapter: opened.chapter, verse: v) else { return nil }
-            return "\(name) \(opened.chapter):\(v) \(displayLocale.zh(text))"
-        }
-        UIPasteboard.general.string = lines.joined(separator: "\n")
-        showToast(SiteCopy.f("pages.read.verseSelectionCopied", ["count": "\(selectedVerses.count)"], appLocale))
-        selectedVerses = []
     }
 
     private func shareVerse(_ v: LoadedVerse, in opened: (book: BookRef, chapter: Int)) {
@@ -650,7 +595,6 @@ struct RootView: View {
                     onCopy: { copyVerse(v, in: opened); actionVerse = nil },
                     onBookmark: { toggleBookmark(v, in: opened); actionVerse = nil },
                     onShare: { shareVerse(v, in: opened); actionVerse = nil },
-                    onMultiCopy: { selectedVerses = [v.number]; actionVerse = nil },
                     onHighlight: { highlighting = true; erasing = false; actionVerse = nil },
                     onClose: { actionVerse = nil }
                 )
@@ -761,10 +705,6 @@ struct RootView: View {
                     onPick: { m in setSleepTimerAll(m ?? 0) },
                     onClose: { showSleepSheet = false })
             }
-        }
-        // 多选条浮在底栏之上：用 overlay 不用全屏 frame，避免透明区域拦截点击
-        .overlay(alignment: .bottom) {
-            if !selectedVerses.isEmpty { verseSelectionBar }
         }
         // +XP 飘字：读 / 听的时候几秒跳一次（Josh 2026-09-18「要感觉到 XP 一直在增加」）
         .overlay(alignment: .top) {
@@ -885,7 +825,6 @@ struct RootView: View {
                     chapter: opened.chapter,
                     size: $readSize,
                     onBack: {
-                        selectedVerses = []
                         highlighting = false
                         openedChapter = nil
                         // 从计划页进来的章页：回计划 Tab、不停播（RN 返回上一页仍在放）
@@ -913,7 +852,7 @@ struct RootView: View {
                     onOpenFavorites: { showFavorites = true },
                     onDoubleTapVerse: { v in toggleBookmark(v, in: opened) },
                     onLongPressVerse: { v in actionVerse = v },
-                    selectedVerses: $selectedVerses,
+                    onStartHighlight: { highlighting = true; erasing = false },
                     highlights: chapterHighlights(opened),
                     paintColor: highlighting && !erasing ? highlightColor : nil,
                     eraseMode: highlighting && erasing,
@@ -922,11 +861,6 @@ struct RootView: View {
                                          chapter: opened.chapter, verse: verse, range: range,
                                          color: erasing ? nil : highlightColor)
                     },
-                    onToggleSelection: { v in
-                        if selectedVerses.contains(v) { selectedVerses.remove(v) } else { selectedVerses.insert(v) }
-                    },
-                    onCopySelection: { copySelectedVerses(in: opened) },
-                    onClearSelection: { selectedVerses = [] },
                     onOpenCatalog: { searchReturnQuery = nil; openedChapter = nil; openedBook = nil; planFlowActive = false; listenChapter = nil; chapterFromPlan = false },
                     onNavigate: { id, ch in
                         // 结尾的上一章 / 下一章：手动翻页就退出计划流

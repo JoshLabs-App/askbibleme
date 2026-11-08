@@ -34,19 +34,13 @@ struct ChapterView: View {
     /// 双击正文 → 收藏 / 取消收藏；长按 → 操作单。弹层与轻提示由 RootView 出（章页里出会被坞 + 底栏宿主盖住）
     var onDoubleTapVerse: (LoadedVerse) -> Void = { _ in }
     var onLongPressVerse: (LoadedVerse) -> Void = { _ in }
-    /// 多节选择（Josh 2026-09-11「长按要能选多节一起复制」）：非空即进入选择态
-    @Binding var selectedVerses: Set<Int>
+    var onStartHighlight: () -> Void = {}
     /// 划重点：节号 → （节内字符下标 → 颜色）
     var highlights: [Int: [Int: String]] = [:]
     /// 划重点模式下的颜色；nil 且 eraseMode 为假 = 不在划重点
     var paintColor: String?
     var eraseMode = false
     var onPaint: (Int, ClosedRange<Int>) -> Void = { _, _ in }
-    /// 选择态：点一节切换选中
-    var onToggleSelection: (Int) -> Void = { _ in }
-    /// 选择态底部条：复制所选 / 清空
-    var onCopySelection: () -> Void = {}
-    var onClearSelection: () -> Void = {}
     /// 结尾中间的书名 → 回目录
     var onOpenCatalog: () -> Void = {}
     /// 结尾左右的上一章 / 下一章（可跨卷）
@@ -76,23 +70,98 @@ struct ChapterView: View {
     @State private var searchFocus: Int?
     /// 进来后还没滚到那节：由含那节的段落排好版后直接滚外层 ScrollView，滚完清掉
     @State private var pendingFocusScroll = false
-    /// 在线 / 下载型译本要等网络：loading 时给转圈，抓不到给「重试」
-    enum LoadState { case idle, loading, failed }
-    @State private var loadState: LoadState = .idle
-    @State private var reloadToken = 0
-    /// 右栏工具簇是否展开（收起时只留一颗钮，不挡经文）
-    @State private var railOpen = false
-    @Namespace private var railNamespace
+    @State private var scrollToTopToken = 0
 
-    private var bookmarkedVerses: Set<Int> { bookmarks.bookmarkedVerses(translationId: store.translation.id, bookId: bookId, chapter: chapter) }
+    private var nativeReader: some View {
+        NativeChapterText(
+            identity: "\(store.translation.id).\(store.secondary?.id ?? "-").\(bookId).\(chapter)",
+            groups: groups, meta: meta, contrast: contrast, metrics: size.metrics,
+            theme: theme, locale: chromeLocale, bookName: bookName, chapter: chapter,
+            xrefs: xrefVerses, bookmarked: bookmarkedVerses, highlights: highlights,
+            activeVerse: audio.isPlaying ? audio.activeVerse : nil,
+            activeProgress: audio.activeVerseProgress, focusVerse: searchFocus,
+            focusKeyword: focusKeyword, scrollToTopToken: scrollToTopToken,
+            header: AnyView(chapterHeader), footer: AnyView(chapterFooter),
+            onTapNumber: onTapVerse,
+            onBookmark: { numbers in
+                let remove = numbers.allSatisfy { bookmarkedVerses.contains($0) }
+                for verse in verses where numbers.contains(verse.number) {
+                    if remove || !bookmarkedVerses.contains(verse.number) { onDoubleTapVerse(verse) }
+                }
+            },
+            onHighlight: { number in
+                searchFocus = number; pendingFocusScroll = true; onStartHighlight()
+            },
+            onReadVerses: { numbers in
+                for (index, group) in groups.enumerated() where group.contains(where: { numbers.contains($0.number) }) {
+                    let tag = "\(bookId):\(chapter):\(index)"
+                    if reportedGroups.insert(tag).inserted { onVersesRead(group.count) }
+                }
+            },
+            onReachedEnd: {
+                let tag = "\(bookId):\(chapter)"
+                if reportedEnd != tag { reportedEnd = tag; onReachedEnd() }
+            }
+        )
+        .padding(.bottom, ShellMetrics.glassDockHeight)
+        .askNoScrollEdgeBlur()
+        .parchmentFade(.chapter)
+    }
 
-    private var groups: [[LoadedVerse]] { ChapterSegments.paragraphGroups(verses, meta: meta) }
-    private var neighbors: (prev: ChapterNeighbor?, next: ChapterNeighbor?) { ChapterNeighbor.resolve(bookId: bookId, chapter: chapter) }
+    private var chapterHeader: some View {
+        VStack(spacing: 0) {
+            if let (i, s) = BiblePanorama.shared.location(bookId, chapter) {
+                Button(AppLocale.pick(BiblePanorama.shared.acts[i].zh, BiblePanorama.shared.acts[i].en, uiLocale) + " › " + AppLocale.pick(s.zh, s.en, uiLocale)) { onOpenPanorama() }
+                    .askFont(size: 12).foregroundStyle(theme.ink.opacity(0.7)).padding(.bottom, 12)
+            }
+            Text(ReadChrome.chapterTitle(bookName: bookName, chapter: chapter, locale: chromeLocale))
+                .askFont(size: size.metrics.chapterTitleSize, weight: .semibold)
+                .foregroundStyle(theme.ink).multilineTextAlignment(.center)
+                .overlay {
+                    Text(ReadChrome.chapterTitle(bookName: bookName, chapter: chapter, locale: chromeLocale))
+                        .askFont(size: size.metrics.chapterTitleSize, weight: .semibold)
+                        .foregroundStyle(Color(rgb: 0xFFB101)).opacity(chapterDoneGlow)
+                        .allowsHitTesting(false)
+                }
+                .padding(.horizontal, 42).padding(.top, 4).padding(.bottom, 24)
+            Rectangle().fill(theme.border).frame(height: 1 / UIScreen.main.scale)
+                .overlay(Color(rgb: 0xFFB101).opacity(chapterDoneGlow))
+            if let message = store.lastError {
+                Text(message).askFont(size: 14).foregroundStyle(theme.muted).padding(.vertical, 12)
+            }
+            chapterStatus
+        }
+        .padding(.top, 59).padding(.bottom, 12)
+    }
 
-    var body: some View {
+    private var chapterFooter: some View {
+        VStack(spacing: 0) {
+            if let copyright = RemoteTranslations.attribution(store.translation.id, chromeLocale) {
+                Text(copyright).askFont(size: 12).lineSpacing(4).foregroundStyle(theme.faint)
+                    .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 18)
+            }
+            endingSection()
+            if !foreignText {
+                let n = neighbors
+                PostReadingEditions(
+                    bookId: bookId, chapter: chapter, size: size, theme: theme,
+                    prev: n.prev, next: n.next, onNavigate: onNavigate,
+                    onBackToTop: { scrollToTopToken += 1 }, active: $activeEdition,
+                    english: locale == .en || uiLocale == .en
+                )
+                .environment(\.openURL, OpenURLAction { url in
+                    if case .chapter(let b, let c, _) = ArticleLink.resolve(url) { onNavigate(b, c); return .handled }
+                    return .systemAction
+                })
+            }
+        }
+        .environment(\.parchment, theme)
+    }
+
+    private var paintReader: some View {
         let m = size.metrics
         let groups = self.groups
-        ZStack(alignment: .topLeading) {
+        return
             ScrollViewReader { proxy in
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 0) {
@@ -192,7 +261,6 @@ struct ChapterView: View {
                 // 浮层时在 shellBottomInset 之外再留出空间，防止底部文字被遮住
                 .safeAreaInset(edge: .bottom) {
                     if paintColor != nil || eraseMode { Color.clear.frame(height: 140) }
-                    else if selecting { Color.clear.frame(height: 90) }
                 }
                 .parchmentFade(.chapter)
                 // 换章回到顶部：ScrollView 身份没变，不主动滚回去会停在上一章的滚动位置（计划流顺章时标题在屏外）
@@ -207,10 +275,34 @@ struct ChapterView: View {
                     withAnimation(.easeInOut(duration: 0.35)) { proxy.scrollTo(gi, anchor: .center) }
                 }
             }
+    }
+
+    /// 在线 / 下载型译本要等网络：loading 时给转圈，抓不到给「重试」
+    enum LoadState { case idle, loading, failed }
+    @State private var loadState: LoadState = .idle
+    @State private var reloadToken = 0
+    /// 右栏工具簇是否展开（收起时只留一颗钮，不挡经文）
+    @State private var railOpen = false
+    @Namespace private var railNamespace
+
+    private var bookmarkedVerses: Set<Int> { bookmarks.bookmarkedVerses(translationId: store.translation.id, bookId: bookId, chapter: chapter) }
+
+    private var groups: [[LoadedVerse]] { ChapterSegments.paragraphGroups(verses, meta: meta) }
+    private var neighbors: (prev: ChapterNeighbor?, next: ChapterNeighbor?) { ChapterNeighbor.resolve(bookId: bookId, chapter: chapter) }
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            if paintColor != nil || eraseMode {
+                paintReader
+            } else {
+                nativeReader
+            }
 
             topChrome()
         }
         .background(ParchmentBackground(theme: theme).ignoresSafeArea())
+        .onChange(of: ach.pending.count) { _, _ in pumpChapterDoneGlow() }
+        .onAppear { pumpChapterDoneGlow() }
         .task(id: "\(store.translation.id).\(store.secondary?.id ?? "-").\(bookId).\(chapter).\(reloadToken)") {
             activeEdition = nil
             searchFocus = focusVerse
@@ -276,7 +368,7 @@ struct ChapterView: View {
     }
 
     private func flowParagraph(_ group: [LoadedVerse], metrics m: ReadTypographyMetrics) -> some View {
-        let marks: Set<Int> = selecting ? selectedVerses : bookmarkedVerses
+        let marks = bookmarkedVerses
         return ChapterFlowParagraph(
             verses: group, metrics: m, theme: theme, xrefVerses: xrefVerses,
             activeVerse: audio.activeVerse,
@@ -287,23 +379,20 @@ struct ChapterView: View {
             searchKeyword: focusKeyword,
             scrollToFocus: pendingFocusScroll,
             onFocusScrolled: { pendingFocusScroll = false },
-            tapWholeVerse: selecting,
             highlights: highlights,
             paintColor: paintColor,
             eraseMode: eraseMode,
             onPaint: onPaint,
             onTapVerseNumber: { v in
                 searchFocus = nil
-                if selecting { onToggleSelection(v) } else if xrefVerses.contains(v) { onTapVerse(v) }
+                if xrefVerses.contains(v) { onTapVerse(v) }
             },
             onDoubleTapVerse: { v in
                 searchFocus = nil
-                if selecting { onToggleSelection(v); return }
                 if let lv = group.first(where: { $0.number == v }) { onDoubleTapVerse(lv) }
             },
             onLongPressVerse: { v in
                 searchFocus = nil
-                if selecting { onToggleSelection(v); return }
                 if let lv = group.first(where: { $0.number == v }) { onLongPressVerse(lv) }
             }
         )
@@ -434,7 +523,6 @@ struct ChapterView: View {
         .padding(.bottom, 30)
     }
 
-    private var selecting: Bool { !selectedVerses.isEmpty }
 
     /// 左上返回 + 右上竖排。位置来自 `readTopChrome.ts`：
     /// 第 index 个按钮顶边 = safeTop + 6 + index × (50 + 5)，右边距 8，图标 32，白色带阴影。

@@ -1027,3 +1027,13 @@ Josh 2026-09-11：「需要我注意、你还没做的，要单独拿出来，�
 - `docs/mobile-feature-map.md` — 功能地图（重写时的对照清单）
 - `docs/mobile-release-checklist.md` — 发版流程（每阶段沿用）
 - `apps/askbible-mobile/ARCHITECTURE.md` — 现有架构
+
+### 2026-11-07：iOS 经文长按与系统选区
+
+原生 iOS 章页改为一个连续的 `NativeChapterText`（`UITextView`），避免按段自绘视图截断跨段选区。长按直接选中当前整节，菜单提供复制、收藏、划重点、分享；拖动系统选择手柄可在本章内继续选择，靠近底缘自动滚动。删除旧的“多选复制”入口、逐节勾选状态与底部复制条，不增加选择页面。选区由 UIKit 管理；跟读、收藏、搜索与划重点的现有着色保留，绘制模式继续使用 `ChapterFlowParagraph`。
+
+复制按真实 UTF-16 选区与经文区间求交，保留首尾的部分文字，加书名与节号范围，不将段落小标题混入经文。收藏覆盖选区涉及的经节，已有和未有收藏混选时只补齐缺少的收藏。标题和章末的 SwiftUI 内容仍在同一滚动文档中；选择时章末手柄不会滚入读后资料。
+
+验收：`scripts/verify-ios-text-selection.sh` 使用独立的“AskBible 选择验收”模拟器，运行 XCUITest 并在进程外核对剪贴板（避免测试 Runner 的粘贴许可弹窗）。已通过整节长按/复制、跨段跨屏拖到第 31 节/松手后菜单/复制，以及收藏后重启再打开。截图已人工检查；Debug 模拟器、Release iPhoneOS 构建与完整 `tsc --noEmit` 通过。测试允许用参数单跑某项，例如 `scripts/verify-ios-text-selection.sh testSingleVerseCopy`。
+
+真机安装另验：本次 iPhone 的 CoreDevice tunnel 连接中断，iPad 安装命令超时，不能将模拟器结果写成真机通过。未进行 App Store 提审，也未因原生改动发布网页。

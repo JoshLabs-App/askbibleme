@@ -12,6 +12,8 @@ import {
   type ReactNode,
 } from "react";
 import { flushSync } from "react-dom";
+import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
+import { devotionalAvailable, loadDevotional, loadDevotionalDays, readDevotionalAuto, devotionalPlanIsToday, shouldHandoffDevotional, devotionalAudioUrl, isDevotionalAudio } from "@/lib/devotional/solid-joys";
 import { usePathname, useRouter } from "next/navigation";
 import type { MusicCompanionStore } from "@/lib/music-companion/types";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
@@ -248,6 +250,10 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   const pathname = usePathname() ?? "";
   const router = useRouter();
   const { t, locale } = useLocale();
+  const { isAdmin } = useAskbibleUser();
+  const devotionalAccessRef = useRef({ locale, isAdmin });
+  devotionalAccessRef.current = { locale, isAdmin };
+  useEffect(() => { if (devotionalAvailable(locale, isAdmin)) void loadDevotionalDays(locale).catch(() => {}); }, [locale, isAdmin]);
   const { voiceId: chapterAudioVoiceId, effectiveVoiceId } = useCuvChapterAudioVoice();
   const chapterAudioVoiceRef = useRef(chapterAudioVoiceId);
   useEffect(() => {
@@ -1015,9 +1021,24 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
         return;
       }
       const cur = effectiveSrcRef.current.trim();
+      if (isDevotionalAudio(cur)) { setPlaying(false); return; }
       const parsedEarly = cur ? tryParseCuvChapterAudioEffectiveSrc(cur) : null;
       if (parsedEarly && readPlanFlowActive()) {
         void (async () => {
+          const access = devotionalAccessRef.current;
+          const session = readReadingPlanAudioSession();
+          if (readDevotionalAuto() && devotionalPlanIsToday() && devotionalAvailable(access.locale, access.isAdmin) && session && shouldHandoffDevotional(session.queue, parsedEarly)) {
+            try {
+              const day = await loadDevotional(access.locale);
+              const src = day && devotionalAudioUrl(day);
+              const currentAccess = devotionalAccessRef.current;
+              if (src && effectiveSrcRef.current.trim() === cur && readDevotionalAuto() && devotionalPlanIsToday() && devotionalAvailable(currentAccess.locale, currentAccess.isAdmin)) {
+                setPlanFlowActive(false); writeReadingPlanAudioSession(null);
+                setPlaybackSrc(src, { autoPlay: true }); return;
+              }
+            } catch { /* Keep existing plan playback available if devotional cannot load. */ }
+          }
+          if (effectiveSrcRef.current.trim() !== cur) return;
           const next = await resolveTodayPlanLoopNextTarget(parsedEarly.bookId, parsedEarly.chapter);
           if (next) {
             await advanceScriptureChapter(parsedEarly, next, { planFlow: true });

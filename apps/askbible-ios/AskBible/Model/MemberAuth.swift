@@ -133,6 +133,14 @@ enum MemberAuthResult {
 
 /// GoTrue（/auth/v1）+ PostgREST（/rest/v1/askbible_profiles）请求；全部 async，失败给 RN 同款文案
 enum SupabaseAuthClient {
+    /// 与安卓相同的受 RLS 保护查询，仅用于尚未公开的灵修入口。
+    static func fetchIsAdmin(token: String, userId: String) async -> Bool? {
+        guard let id = userId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let result = try? await request("/rest/v1/askbible_profiles?select=is_admin&user_id=eq.\(id)", method: "GET", token: token),
+              result.status == 200, let rows = result.json as? [[String: Any]] else { return nil }
+        return rows.first?["is_admin"] as? Bool ?? false
+    }
+
     private static func request(_ path: String, method: String, token: String? = nil, body: [String: Any]? = nil,
                                 extraHeaders: [String: String] = [:], timeout: TimeInterval = 15) async throws -> (status: Int, json: Any?) {
         var req = URLRequest(url: URL(string: SupabaseAuthConfig.url + path)!)

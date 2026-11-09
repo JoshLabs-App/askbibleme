@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { ReadPlanDevotional } from "@/components/bible/ReadPlanDevotional";
+import { captureDevotionalPlanDay } from "@/lib/devotional/solid-joys";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { ReadNtDeepRepeatStagesBelowToday } from "@/components/bible/ReadNtDeepRepeatStagesBelowToday";
@@ -237,6 +239,7 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
     const viewDate = new Date();
     viewDate.setDate(viewDate.getDate() + viewAhead);
     markPlanPlayListenedDate(toLocalDateString(viewDate));
+    captureDevotionalPlanDay(viewDate);
   }, [viewAhead]);
 
   const syncPlanPlayAudioSession = useCallback(() => {
@@ -270,6 +273,8 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
         markViewDateListened();
         const startAtSec = resumeStartSecRef.current > 0 ? resumeStartSecRef.current : undefined;
         resumeStartSecRef.current = 0;
+        // Establish plan intent before playback can navigate to the chapter route.
+        setPlanFlowActive(true);
         await playScriptureChapter({
           bookId: target.bookId,
           chapter: target.chapter,
@@ -566,6 +571,8 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
             </ul>
           </div>
         )}
+
+        <ReadPlanDevotional viewAhead={viewAhead} />
 
         {isNtDeepRepeat ? (
           <ReadNtDeepRepeatStagesBelowToday

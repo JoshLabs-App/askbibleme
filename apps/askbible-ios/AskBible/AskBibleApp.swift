@@ -15,6 +15,9 @@ struct AskBibleApp: App {
 struct RootView: View {
     @Environment(\.parchment) private var parchmentTheme
     @StateObject private var store = ScriptureStore()
+    @StateObject private var devotionals = SolidJoys()
+    @StateObject private var devotional = DevotionalPlayer()
+    @State private var planListeningDate: String?
     @StateObject private var audio = ChapterAudioPlayer()
     @StateObject private var music = MusicPlayer()
     @StateObject private var home = HomeVerseController()
@@ -207,6 +210,7 @@ struct RootView: View {
         music.setSleepTimer(minutes: m)
         home.setSleepTimer(minutes: m)
         ambient.setSleepTimer(minutes: m)
+        devotional.setSleepTimer(minutes: m)
     }
 
     /// 双击 / 操作单收藏：新加时顺手复制（RN「已收藏，经文已复制」）
@@ -313,7 +317,11 @@ struct RootView: View {
     private var planDockActive: Bool { tab == .plan && planRoute == .play && !showSearch && !planPageQueue.isEmpty }
 
     /// 日历上看的那天算「听过」（月历标黄）
-    private func markPlanListened() { plans.markListened(PlanPlay.isoDate(PlanDates.addDays(Date(), planViewAhead))) }
+    private func markPlanListened() {
+        let date = PlanDates.addDays(Date(), planViewAhead)
+        plans.markListened(PlanPlay.isoDate(date))
+        planListeningDate = PlanDates.localDateString(date)
+    }
 
     /// 行点播 / 行尾「声音」：建池（或复用）从第 index 章起播
     private func planPlay(at index: Int) {
@@ -400,7 +408,12 @@ struct RootView: View {
                 }
             }
             // 整章朗读时环境音压半音量继续放，停了恢复
-            .onChange(of: audio.isPlaying) { _, playing in ambient.setDucked(playing) }
+            .onChange(of: audio.isPlaying) { _, playing in ambient.setDucked(playing || devotional.isPlaying) }
+            .onChange(of: devotional.isPlaying) { _, playing in ambient.setDucked(playing || audio.isPlaying) }
+            .task(id: "\(appLocale.rawValue).\(auth.user?.id ?? "").\(auth.isAdmin)") {
+                await auth.refreshAdminFlag()
+                if SolidJoys.available(locale: appLocale, isAdmin: auth.isAdmin) { await devotionals.load(locale: appLocale) }
+            }
             .task {
                 // 防封换线：先挑线路，后面的登录校验 / 同步才不会打到已经不通的域
                 await Endpoints.refresh()
@@ -454,24 +467,35 @@ struct RootView: View {
                     if t < lastListenTickAt { lastListenTickAt = t }   // 拖回去了重新起算
                 }
                 audio.onSkipNext = skipToNextChapter
-                audio.onFinished = { if planFlowActive { skipToNextChapter() } }
+                audio.onFinished = {
+                    let handoff = PlanDevotionalHandoff.shouldPlay(naturalEnd: true, active: planFlowActive,
+                        count: planQueue.count, index: planQueueIndex, listeningDay: planListeningDate,
+                        today: PlanDates.localDateString(Date()), enabled: UserDefaults.standard.bool(forKey: "devotional.after-reading"),
+                        available: SolidJoys.available(locale: appLocale, isAdmin: auth.isAdmin))
+                    skipToNextChapter()
+                    if handoff, let day = devotionals.day(Date()) {
+                        devotional.play(day)
+                    }
+                }
+                devotional.onWillPlay = { audio.pause(); home.stopVoice(); music.setDucked(true) }
+                devotional.onStopped = { music.setDucked(audio.isPlaying) }
                 // 互斥：整章朗读 ↔ 音乐（RN shell 单一 playbackMode）；整章朗读 ↔ 金句（都是人声）。
                 // 首页最多两路同时出声（RN homeGoldenVerseTwoSourceMutex）：
                 // 开音乐 / 开金句时另外两路都在 → 关环境音；开环境音时人声与音乐都在 → 停音乐。
                 // 读经朗读与音乐可以同时放：音乐压到 30%，不再直接暂停（Josh 2026-09-11）；金句人声仍然互斥
-                audio.onWillPlay = { [weak music, weak home] in music?.setDucked(true); home?.stopVoice() }
+                audio.onWillPlay = { [weak music, weak home] in devotional.stop(); music?.setDucked(true); home?.stopVoice() }
                 audio.onStopped = { [weak music] in music?.setDucked(false) }
                 music.onWillPlay = { [weak audio, weak home, weak ambient] in
                     // 音乐起播时朗读在放 → 保持两路，音乐压低
-                    music.setDucked(audio?.isPlaying ?? false)
+                    music.setDucked((audio?.isPlaying ?? false) || devotional.isPlaying)
                     if home?.voiceOn == true, ambient?.isOn == true { ambient?.stop() }
                 }
                 home.player.onWillPlay = { [weak audio, weak music, weak ambient] in
-                    audio?.pause()
+                    audio?.pause(); devotional.stop()
                     if music?.isPlaying == true, ambient?.isOn == true { ambient?.stop() }
                 }
                 ambient.onWillPlay = { [weak audio, weak home, weak music] in
-                    let voice = (home?.voiceOn ?? false) || (audio?.isPlaying ?? false)
+                    let voice = (home?.voiceOn ?? false) || (audio?.isPlaying ?? false) || devotional.isPlaying
                     if voice, music?.isPlaying == true { music?.pause() }
                 }
                 music.restorePlaybackIfNeeded()
@@ -512,7 +536,9 @@ struct RootView: View {
                 screen(for: which)
             } dock: {
                 // 搜索 / 收藏页盖在上面时藏坞（RN 非章页只在播放中才出坞）
-                if readDockActive {
+                if (tab == .plan || tab == .read), let key = devotional.currentKey, let day = devotionals.days[key] {
+                    DevotionalControls(day: day, player: devotional, locale: appLocale).padding(.horizontal, 20)
+                } else if readDockActive {
                     // 读经 / 圣经 / 计划播放三处共用同一个坞：同骨架、同占位、同间距，
                     // 只有底色跟页面走（Josh 2026-09-23）
                     compactDock(PlaybackDock(
@@ -920,7 +946,8 @@ struct RootView: View {
             } else {
                 switch planRoute {
                 case .play:
-                    PlanPlayView(store: plans, audio: audio, locale: appLocale, queue: planPageQueue,
+                    PlanPlayView(store: plans, devotionals: devotionals, devotionalPlayer: devotional,
+                                 showDevotional: SolidJoys.available(locale: appLocale, isAdmin: auth.isAdmin), audio: audio, locale: appLocale, queue: planPageQueue,
                                  activeIndex: planActiveIndex, activePlaying: planActivePlaying,
                                  viewAhead: $planViewAhead, cursor: $planCursor,
                                  onPlayChapter: { planPlay(at: $0) }, onReadChapter: { planRead(at: $0) },

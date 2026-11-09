@@ -268,7 +268,7 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
         when (loopMode) {
             LoopMode.CHAPTER -> { seekTo(0.0); resume() }
             // 往下走由壳决定：计划流跟计划池，否则下一章；本书循环读到末章回本书第 1 章
-            LoopMode.BOOK, LoopMode.FORWARD -> { currentTime = duration; onSkipNext?.invoke() }
+            LoopMode.BOOK, LoopMode.FORWARD -> { currentTime = duration; (onFinished ?: onSkipNext)?.invoke() }
         }
     }
 

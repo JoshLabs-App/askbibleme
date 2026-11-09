@@ -5,6 +5,7 @@ import Foundation
 @MainActor
 final class MemberAuthStore: ObservableObject {
     @Published private(set) var user: MemberUser?
+    @Published private(set) var isAdmin = false
     @Published private(set) var bootstrapped = false
     private var session: MemberSession?
     private let defaults = UserDefaults.standard
@@ -16,10 +17,18 @@ final class MemberAuthStore: ObservableObject {
         if let data = defaults.data(forKey: MemberAuthRules.sessionKey), let s = MemberAuthRules.parseSession(data, allowExpired: true) {
             session = s
             user = s.user
+            isAdmin = defaults.bool(forKey: "is-admin.\(s.user.id)")
         } else {
             defaults.removeObject(forKey: MemberAuthRules.sessionKey)
         }
         bootstrapped = true
+    }
+
+    func refreshAdminFlag() async {
+        guard let id = user?.id, let token = await ensureFreshToken(),
+              let remote = await SupabaseAuthClient.fetchIsAdmin(token: token, userId: id), user?.id == id else { return }
+        isAdmin = remote
+        defaults.set(remote, forKey: "is-admin.\(id)")
     }
 
     /// 拿一个还能用的 access token：快到期（2 分钟内）就先用 refresh_token 续；续期被拒（已作废）→ 登出；断网 → 先用旧的
@@ -46,6 +55,7 @@ final class MemberAuthStore: ObservableObject {
     private func persist(_ s: MemberSession?) {
         session = s
         user = s?.user
+        isAdmin = s.map { defaults.bool(forKey: "is-admin.\($0.user.id)") } ?? false
         if let s, let data = try? JSONEncoder().encode(s) { defaults.set(data, forKey: MemberAuthRules.sessionKey) }
         else { defaults.removeObject(forKey: MemberAuthRules.sessionKey) }
     }

@@ -49,6 +49,7 @@ class DevotionalPlayer(context: Context, private val scope: CoroutineScope) {
     private val mediaSession = MediaSession.Builder(context, player).setId("devotional").build()
         .also { PlaybackSessions.register(it) { player.playWhenReady } }
     private var ticker: Job? = null
+    private var sleepJob: Job? = null
 
     init {
         player.setAudioAttributes(
@@ -112,7 +113,16 @@ class DevotionalPlayer(context: Context, private val scope: CoroutineScope) {
         ticker = scope.launch { while (isActive && player.isPlaying) { tick(); delay(500) } }
     }
 
+    fun setSleepTimer(minutes: Int?) {
+        sleepJob?.cancel(); sleepJob = null
+        if (minutes != null && minutes > 0) sleepJob = scope.launch {
+            delay(minutes * 60_000L)
+            pause()
+        }
+    }
+
     fun release() {
+        sleepJob?.cancel()
         ticker?.cancel()
         PlaybackSessions.unregister(mediaSession)
         mediaSession.release()

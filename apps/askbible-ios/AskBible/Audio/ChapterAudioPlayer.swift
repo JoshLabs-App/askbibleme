@@ -259,7 +259,7 @@ final class ChapterAudioPlayer: ObservableObject {
                 case .book, .forward:
                     // 往下走由壳决定：计划流跟计划池，否则下一章；本书循环读到末章回本书第 1 章
                     self.currentTime = self.duration
-                    self.onSkipNext?()
+                    (self.onFinished ?? self.onSkipNext)?()
                 }
             }
         }

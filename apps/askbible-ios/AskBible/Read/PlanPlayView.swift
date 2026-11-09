@@ -6,6 +6,9 @@ import SwiftUI
 /// 队列 / 正在播的下标由 shell 算好传进来：本页只管「看哪天」（viewAhead）和「选中哪章」（cursor）。
 struct PlanPlayView: View {
     @ObservedObject var store: ReadingPlanStore
+    @ObservedObject var devotionals: SolidJoys
+    @ObservedObject var devotionalPlayer: DevotionalPlayer
+    var showDevotional: Bool
     @ObservedObject var audio: ChapterAudioPlayer
     let locale: AppLocale
     /// 正在看的那天的逐章队列（shell 按 viewAhead 算）
@@ -81,6 +84,10 @@ struct PlanPlayView: View {
                             }
                             .padding(.top, 8)
                         }
+                    }
+                    if showDevotional {
+                        DevotionalCard(content: devotionals, player: devotionalPlayer,
+                                       date: PlanDates.addDays(Date(), viewAhead), locale: locale).padding(.top, 24)
                     }
                     if prefs.isNtDeepRepeat {
                         ntStages.padding(.top, 30)

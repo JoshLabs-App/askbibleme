@@ -291,6 +291,11 @@ private fun RootScreen() {
     // 计划 Tab（底栏中央键）里的子页：play / plans / detail
     var planRoute by remember { mutableStateOf("play") }
     // 每日灵修页正在看的那天（计划页卡片点进来时带入）
+    val devotionalPrefs = remember { context.getSharedPreferences("devotional", android.content.Context.MODE_PRIVATE) }
+    var autoReadDevotional by remember { mutableStateOf(devotionalPrefs.getBoolean("after-reading", false)) }
+    var planListeningDate by remember { mutableStateOf<LocalDate?>(null) }
+    val currentDevotionalAccess = androidx.compose.runtime.rememberUpdatedState(
+        me.askbible.native_.data.SolidJoys.availableFor(appLocale, auth.isAdmin))
     var devotionalDate by remember { mutableStateOf(java.time.LocalDate.now()) }
     var planDetailId by remember { mutableStateOf("") }
     // 播放页状态：日历上看的那天（相对系统今天）与选中的章
@@ -477,28 +482,38 @@ private fun RootScreen() {
     val setSleepTimerAll: (Int) -> Unit = { m ->
         sleepTimerMinutes = m
         val v = if (m > 0) m else null
-        audio.setSleepTimer(v); music.setSleepTimer(v); home.setSleepTimer(v); ambient.setSleepTimer(v)
+        audio.setSleepTimer(v); music.setSleepTimer(v); home.setSleepTimer(v); ambient.setSleepTimer(v); devotional.setSleepTimer(v)
     }
     DisposableEffect(Unit) {
         // 互斥：整章朗读 ↔ 音乐（RN shell 单一 playbackMode）；整章朗读 ↔ 金句（都是人声）。
         // 首页最多两路有声（homeGoldenVerseTwoSourceMutex）：开音乐时金句+环境音都在 → 关环境音；
         // 开金句时音乐+环境音都在 → 关环境音；开环境音时人声+音乐都在 → 停音乐。
         // 读经朗读与音乐可以同时放：音乐压到 30%，不再直接暂停（Josh 2026-09-11）；金句人声仍然互斥
-        audio.onWillPlay = { music.setDucked(true); home.stopVoice(); devotional.stop() }
+        audio.onWillPlay = { devotional.stop(); music.setDucked(true); home.stopVoice() }
         audio.onStopped = { music.setDucked(false) }
-        audio.onFinished = { if (planFlowActive) skipNext() }
-        music.onWillPlay = { music.setDucked(audio.isPlaying); if (home.voiceOn && ambient.isOn) ambient.stop() }
+        audio.onFinished = {
+            val handoff = me.askbible.native_.data.PlanDevotionalHandoff.shouldPlay(
+                naturalEnd = true, active = planFlowActive, count = planQueue.size, index = planQueueIndex,
+                listeningDay = planListeningDate?.toString(), today = LocalDate.now().toString(),
+                enabled = devotionalPrefs.getBoolean("after-reading", false), available = currentDevotionalAccess.value)
+            skipNext()
+            if (handoff) {
+                val day = me.askbible.native_.data.SolidJoys.day(LocalDate.now())
+                if (day?.audio != null) devotional.play(day.md, day.audio, "${day.dateLabel} ${day.title}")
+            }
+        }
+        music.onWillPlay = { music.setDucked(audio.isPlaying || devotional.isPlaying); if (home.voiceOn && ambient.isOn) ambient.stop() }
         home.player.onWillPlay = { audio.pause(); devotional.stop(); if (music.isPlaying && ambient.isOn) ambient.stop() }
         // 灵修朗读也是人声：和整章朗读 / 金句互斥，音乐压低
         devotional.onWillPlay = { audio.pause(); home.stopVoice(); music.setDucked(true) }
         devotional.onStopped = { music.setDucked(audio.isPlaying) }
-        ambient.onWillPlay = { if ((home.voiceOn || audio.isPlaying) && music.isPlaying) music.pause() }
+        ambient.onWillPlay = { if ((home.voiceOn || audio.isPlaying || devotional.isPlaying) && music.isPlaying) music.pause() }
         music.restorePlaybackIfNeeded()
         onDispose { audio.release(); music.release(); home.release(); ambient.release(); devotional.release() }
     }
     // 整章朗读时环境音压半，停了恢复（「读经混播时继续播并压音量」）
     // 人声（整章 / 金句）或音乐在放时环境音压到 30%（AMBIENT_WHILE_VOICE_GAIN / AMBIENT_WHILE_MUSIC_GAIN）
-    LaunchedEffect(audio.isPlaying, music.isPlaying, home.voiceOn) { ambient.setDucked(audio.isPlaying || music.isPlaying || home.voiceOn) }
+    LaunchedEffect(audio.isPlaying, music.isPlaying, home.voiceOn, devotional.isPlaying) { ambient.setDucked(audio.isPlaying || music.isPlaying || home.voiceOn || devotional.isPlaying) }
 
     val book = openedBook
     // 音源目标：章页开着就是那一章；否则是播放页在听的章
@@ -612,7 +627,11 @@ private fun RootScreen() {
         BibleCatalog.book(p.bookId)?.let { b -> ChapterAudioSource.resolve(translation.id, b.id, b.number, b.nameEn, p.chapter) != null }
     } ?: false
     // 日历上看的那天算「听过」（月历标黄）
-    fun markPlanListened() = plans.markListened(PlanPlay.isoDate(LocalDate.now().plusDays(planViewAhead.toLong())))
+    fun markPlanListened() {
+        val date = LocalDate.now().plusDays(planViewAhead.toLong())
+        plans.markListened(PlanPlay.isoDate(date))
+        planListeningDate = date
+    }
     // 行点播 / 行尾「声音」：建池（或复用）从第 index 章起播
     fun planPlay(index: Int) {
         val q = planPageQueue
@@ -769,6 +788,8 @@ private fun RootScreen() {
                     bookLabel = bookLabel,
                     onConfirmDay = { plans.setAheadDays(planContentAhead); planViewAhead = 0 },
                     onStageSet = { planViewAhead = 0; planCursor = 0 }, habitDates = activity.completedDateSet,
+                    autoReadDevotional = autoReadDevotional,
+                    onAutoReadDevotional = { autoReadDevotional = it; devotionalPrefs.edit().putBoolean("after-reading", it).apply() },
                     showDevotional = me.askbible.native_.data.SolidJoys.availableFor(appLocale, auth.isAdmin), devotionalPlayer = devotional,
                     onOpenDevotional = { devotionalDate = it; planRoute = "devotional" },
                     onRetryDevotional = { me.askbible.native_.data.SolidJoys.ensureLoaded(context, appLocale) })

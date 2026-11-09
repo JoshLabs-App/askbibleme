@@ -20,8 +20,9 @@ project={
  'settings':{'base':{'IPHONEOS_DEPLOYMENT_TARGET':'17.0','SWIFT_VERSION':'5.0'}},
  'targets':{
   'Harness':{'type':'application','platform':'iOS',
+   'info':{'path':'Harness-Info.plist','properties':{'UIBackgroundModes':['audio'],'UILaunchScreen':{}}},
    'sources':[{'path':str(root/'apps/askbible-ios/AskBible'),'excludes':['AskBibleApp.swift','Resources','Assets.xcassets']},'Harness.swift',{'path':'chapter.wav','buildPhase':'resources'}],
-   'settings':{'base':{'PRODUCT_BUNDLE_IDENTIFIER':'me.askbible.devotional.acceptance','GENERATE_INFOPLIST_FILE':'YES','INFOPLIST_KEY_UIBackgroundModes':['audio'],'INFOPLIST_KEY_UILaunchScreen_Generation':'YES'}}},
+   'settings':{'base':{'PRODUCT_BUNDLE_IDENTIFIER':'me.askbible.devotional.acceptance','GENERATE_INFOPLIST_FILE':'YES'}}},
   'AcceptanceTests':{'type':'bundle.ui-testing','platform':'iOS','sources':['AcceptanceTests.swift'],
    'settings':{'base':{'PRODUCT_BUNDLE_IDENTIFIER':'me.askbible.devotional.acceptance.tests','GENERATE_INFOPLIST_FILE':'YES','TEST_TARGET_NAME':'Harness'}}}},
  'schemes':{'Harness':{'build':{'targets':{'Harness':'all','AcceptanceTests':['test']}},'test':{'targets':['AcceptanceTests']}}}}
@@ -30,4 +31,9 @@ PY
 xcodegen generate --spec "$TASK_DIR/project.json" --project "$TASK_DIR"
 xcodebuild -project "$TASK_DIR/DevotionalAcceptance.xcodeproj" -scheme Harness \
   -destination "id=$SIM_ID" -derivedDataPath "$TASK_DIR/build" CODE_SIGNING_ALLOWED=NO test > "$TASK_DIR/test.log" 2>&1
+python3 - "$TASK_DIR/build/Build/Products/Debug-iphonesimulator/Harness.app/Info.plist" <<'PYINFO'
+import plistlib,sys
+with open(sys.argv[1], 'rb') as f: info=plistlib.load(f)
+assert 'audio' in info.get('UIBackgroundModes', []), 'Harness must have the same background audio entitlement as the app'
+PYINFO
 printf 'PASS: devotional playback acceptance. Evidence: %s\n' "$TASK_DIR/test.log"

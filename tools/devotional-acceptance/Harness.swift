@@ -32,12 +32,25 @@ struct Harness: View {
             }
             chapter.onFinished = {
                 naturalEnds += 1
+                print("DEVOTIONAL_CHECK natural-end \(naturalEnds)"); fflush(stdout)
                 let handoff = PlanDevotionalHandoff.shouldPlay(naturalEnd: true, active: active, count: 2, index: index, listeningDay: today, today: today, enabled: enabled, available: true)
                 if index == 0 { index = 1; playChapter() } else { active = false }
                 if handoff, let day = content.day(Date()) { player.play(day) }
             }
             player.onWillPlay = { chapter.pause() }
             chapter.onWillPlay = { player.stop() }
+            if ProcessInfo.processInfo.arguments.contains("--auto-plan") {
+                enabled = true; index = 0; active = true; playChapter()
+                print("DEVOTIONAL_CHECK READY"); fflush(stdout)
+                for _ in 0..<80 {
+                    try? await Task.sleep(for: .milliseconds(500))
+                    if naturalEnds == 2 && player.isPlaying && player.duration > 0 {
+                        print("DEVOTIONAL_CHECK PASS natural=2 actualPlaying=true duration=\(player.duration) state=\(UIApplication.shared.applicationState.rawValue)"); fflush(stdout)
+                        return
+                    }
+                }
+                print("DEVOTIONAL_CHECK FAIL natural=\(naturalEnds) playing=\(player.isPlaying) failed=\(player.failed)"); fflush(stdout)
+            }
         }
     }
     func playChapter() {

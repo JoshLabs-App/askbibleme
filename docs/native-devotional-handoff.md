@@ -35,5 +35,5 @@ cd apps/askbible-android
 - iOS 11 条衔接规则、默认关闭和偏好重读通过；XCTest 的真实 AVPlayer 前台/后台衔接、关闭后不接播、手动跳章不接播、手动播放通过。深色和最大辅助字号的卡片已截图检查。
 - Android 模拟器实际计划页：默认关闭、点开不误入正文、本机保存、末章自然结束后播放当天灵修、关闭后不接播、手动跳过末章不接播均通过。关屏时末章转到灵修，`dumpsys media_session` 显示 devotional 为 PLAYING，屏幕保持 Asleep。
 - 原生 iOS Release 构建、Android Debug/Release 构建通过；会员登录规则 92 条、读经计划 99 条三端对拍通过。
-- iOS UI 播放测试使用独立 Harness，不等于正式 App 管理员登录端到端验收。实体 iPhone「home」已解锁，签名 Release 测试版 1.1.8 (141) 已安装并通过进程启动验证。实体 Android 和实体 iPhone 的锁屏衔接尚未验收；商店分发尚未完成。
+- iOS UI 播放测试使用独立 Harness，产物已核对 `UIBackgroundModes` 包含 `audio`，不等于正式 App 管理员登录端到端验收。实体 iPhone「home」已解锁，签名 Release 测试版 1.1.8 (141) 已安装并通过进程启动验证。真机 XCTest 驱动连续三次在建立连接前退出（code 74）；改用 devicectl 直接运行同一播放夹具，已验证两个本地经文段自然完成后，当天真实灵修音频在后台开始播放：`natural=2 actualPlaying=true duration=145.188571 state=2`（UIKit background）。实体设备锁屏衔接和正式 App 管理员登录路径仍未覆盖；商店分发尚未完成。
 - 本次是原生功能，没有 Web 部署。商店提审仍须遵循 AGENTS.md 的独立授权要求。

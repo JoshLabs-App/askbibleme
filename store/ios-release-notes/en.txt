@@ -1,4 +1,1 @@
-Version 1.1.8
-• Continue background music from your last song and listening position.
-• Skip to the next track or choose music directly from Home.
-• Keep your paused state and sleep timer when reopening the app.
+Adds an option to continue with today’s devotional after daily reading, with improved playback handoff.

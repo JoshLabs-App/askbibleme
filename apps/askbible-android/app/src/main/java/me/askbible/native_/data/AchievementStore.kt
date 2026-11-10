@@ -105,8 +105,9 @@ class AchievementStore(context: Context) {
      * 首页静默（Josh 2026-10-02「不要在首页增加那些奖励，+分，之类的，保持首页不打扰」）：
      * 停在首页时 +XP / 连续天数 / 今日计划完成 / 读完一章这类飘字不进队列（分照记），已排着的也清掉；
      * 勋章 / 印章 / 升级照常排队，由壳层在首页不弹、离开首页再补。
+     * 读经时也一样（Josh 2026-10-17「读经时的 + 分 振动是一个干扰……这些噪音去掉」）：飘字全 App 都不出，所以默认就开着。
      */
-    var quiet = false
+    var quiet = true
         set(v) { field = v; if (v) pending = pending.filterNot(::isFloater) }
 
     private fun isFloater(e: Event) =

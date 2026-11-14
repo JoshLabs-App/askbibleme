@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import { loadedChapterVerseFromRow, type LoadedChapterVerse } from "@/lib/bible/loaded-chapter-verse";
 import { loadStaticScriptureChapterVerses } from "@/lib/bible/load-static-scripture-chapter";
+import { LOCAL_SUBSTITUTE_TRANSLATION_IDS } from "@/lib/bible/local-substitute-translation-ids";
 import type { ChapterSegment } from "@/lib/bible/load-chapter-segments";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
 import { getScriptureDatabase, scriptureSqlitePath } from "@/lib/bible/scripture-sqlite-db";
@@ -48,11 +49,7 @@ const BOOK_RE = /^[A-Z0-9]{2,8}$/;
  * 不要用「神→上帝」全文替换去凑——经文里「假神」「别神」「事奉别神」这些不能换，
  * 替换会改错。它维持原样，处理方式见 `docs/OPEN-ITEMS.md`。
  */
-const LOCAL_SUBSTITUTE_TRANSLATION_IDS: Record<string, string> = {
-  "cunpss-zh-hans": "cuv-simp",
-  "cunpss-zh-hant": "cuv-trad",
-  "cunp-zh-hant": "cuv-trad",
-};
+// 表本体在 local-substitute-translation-ids.ts（网页客户端读经页共用）。
 
 /**
  * 同一张表，但按 **YouVersion 的数字版本号**查。

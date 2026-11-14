@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 /** 一小时新鲜期：发版后最多一小时页面上的版本号就跟上了 */
-export const revalidate = 3600;
+// trial: ISR off (cache none)
 
 /** 版本信息和安装包都在 R2 桶里，域名走 `media` 角色（防封换线，lib/endpoints）——不再单独写死一个域 */
 const APK_URL = DEFAULT_APP_INSTALL_ANDROID_APK_URL;

@@ -10,13 +10,14 @@ import {
   subscribeMemberRegisterEnabled,
 } from "./member-register-enabled";
 import { resolveMemberOAuthError } from "./resolveMemberOAuthError";
+import { parchmentSans } from "../fonts/parchmentType";
 import { useLocale } from "../i18n/LocaleProvider";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
 
 export function MemberLoginScreen() {
   const router = useRouter();
   const { t } = useLocale();
-  const { signIn, signInWithGoogle, signInWithApple } = useMemberAuth();
+  const { signIn, signInWithOtp, verifyOtp, signInWithGoogle, signInWithApple } = useMemberAuth();
 
   const authOpen = useSyncExternalStore(
     subscribeMemberRegisterEnabled,
@@ -24,8 +25,11 @@ export function MemberLoginScreen() {
     getMemberRegisterEnabled,
   );
 
+  const [mode, setMode] = useState<"otp" | "password">("otp");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [sentEmail, setSentEmail] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [googlePending, setGooglePending] = useState(false);
   const [applePending, setApplePending] = useState(false);
@@ -34,6 +38,7 @@ export function MemberLoginScreen() {
   const [appleError, setAppleError] = useState<string | null>(null);
 
   const oauthBusy = googlePending || applePending;
+  const validCode = /^\d{6,10}$/.test(code.trim());
 
   async function onGoogleSignIn() {
     if (pending || oauthBusy) return;
@@ -88,7 +93,69 @@ export function MemberLoginScreen() {
     }
   }
 
-  async function onSubmit() {
+  async function onSendOtp(targetEmail?: string) {
+    if (pending || oauthBusy) return;
+    if (!authOpen) {
+      setError(t("auth.registerClosed"));
+      return;
+    }
+    const address = (targetEmail ?? email).trim();
+    if (!address) return;
+    setPending(true);
+    setError(null);
+    setGoogleError(null);
+    setAppleError(null);
+    try {
+      const result = await signInWithOtp(address);
+      if (!result.ok) {
+        if (result.status === 429) {
+          setError(t("auth.errorOtpRateLimit"));
+        } else if (result.code === "invalid_email") {
+          setError(t("auth.errorInvalidEmail"));
+        } else {
+          setError(result.error || t("auth.errorNetwork"));
+        }
+        return;
+      }
+      setSentEmail(address);
+      setCode("");
+    } catch {
+      setError(t("auth.errorNetwork"));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function onVerifyOtp() {
+    if (pending || oauthBusy) return;
+    if (!authOpen) {
+      setError(t("auth.registerClosed"));
+      return;
+    }
+    if (!sentEmail || !validCode) return;
+    setPending(true);
+    setError(null);
+    setGoogleError(null);
+    setAppleError(null);
+    try {
+      const result = await verifyOtp({ email: sentEmail, token: code.trim() });
+      if (!result.ok) {
+        if (result.code === "rate_limit_exceeded") {
+          setError(t("auth.errorVerifyRateLimit"));
+        } else {
+          setError(t("auth.errorOtpInvalid"));
+        }
+        return;
+      }
+      router.replace("/");
+    } catch {
+      setError(t("auth.errorNetwork"));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function onPasswordSubmit() {
     if (pending || oauthBusy) return;
     if (!authOpen) {
       setError(t("auth.registerClosed"));
@@ -126,36 +193,172 @@ export function MemberLoginScreen() {
           <MemberGoogleSignInButton pending={googlePending} disabled={oauthBusy} errorMessage={googleError} onPress={onGoogleSignIn} />
           <MemberAppleSignInButton pending={applePending} disabled={oauthBusy} errorMessage={appleError} onPress={onAppleSignIn} />
           <MemberAuthMethodDivider />
-          <Text style={s.label}>{t("auth.email")}</Text>
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            textContentType="emailAddress"
-            style={s.input}
-          />
-          <Text style={s.label}>{t("auth.password")}</Text>
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            textContentType="password"
-            style={s.input}
-          />
-          {error ? <Text style={s.error}>{error}</Text> : null}
-          <Pressable
-            onPress={() => void onSubmit()}
-            disabled={pending}
-            style={({ pressed }) => [s.submit, pressed && s.submitPressed, pending && s.submitDisabled]}
-          >
-            {pending ? (
-              <ActivityIndicator color={c.ink} />
+
+          <View style={{ flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "rgba(43,29,21,0.1)", marginBottom: 6 }}>
+            <Pressable
+              onPress={() => {
+                setMode("otp");
+                setError(null);
+              }}
+              style={{
+                flex: 1,
+                paddingBottom: 10,
+                borderBottomWidth: mode === "otp" ? 2 : 0,
+                borderBottomColor: c.ink,
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: mode === "otp" ? c.ink : c.muted,
+                  ...parchmentSans(mode === "otp" ? 600 : 400),
+                }}
+              >
+                {t("auth.otpMode")}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                setMode("password");
+                setError(null);
+              }}
+              style={{
+                flex: 1,
+                paddingBottom: 10,
+                borderBottomWidth: mode === "password" ? 2 : 0,
+                borderBottomColor: c.ink,
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: mode === "password" ? c.ink : c.muted,
+                  ...parchmentSans(mode === "password" ? 600 : 400),
+                }}
+              >
+                {t("auth.passwordMode")}
+              </Text>
+            </Pressable>
+          </View>
+
+          {mode === "otp" ? (
+            sentEmail ? (
+              <>
+                <View style={{ backgroundColor: "rgba(43,29,21,0.04)", borderRadius: 8, padding: 12, alignItems: "center" }}>
+                  <Text style={{ fontSize: 13, color: c.ink, textAlign: "center", ...parchmentSans(400) }}>
+                    {t("auth.otpSent", { email: sentEmail })}
+                  </Text>
+                </View>
+                <Text style={s.label}>{t("auth.otpInputLabel")}</Text>
+                <TextInput
+                  value={code}
+                  onChangeText={(val) => setCode(val.replace(/[^0-9]/g, "").slice(0, 10))}
+                  keyboardType="number-pad"
+                  autoFocus
+                  placeholder={t("auth.otpInputPlaceholder")}
+                  placeholderTextColor={c.faint}
+                  style={s.input}
+                />
+                {error ? <Text style={s.error}>{error}</Text> : null}
+                <Pressable
+                  onPress={() => void onVerifyOtp()}
+                  disabled={pending || !validCode}
+                  style={({ pressed }) => [
+                    s.submit,
+                    pressed && s.submitPressed,
+                    (pending || !validCode) && s.submitDisabled,
+                  ]}
+                >
+                  {pending ? (
+                    <ActivityIndicator color={c.ink} />
+                  ) : (
+                    <Text style={s.submitText}>{t("auth.verifyAndLogin")}</Text>
+                  )}
+                </Pressable>
+                <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 16, marginTop: 12 }}>
+                  <Pressable onPress={() => void onSendOtp(sentEmail)} disabled={pending}>
+                    <Text style={s.linkText}>{t("auth.resendOtp")}</Text>
+                  </Pressable>
+                  <Text style={{ color: c.faint }}>·</Text>
+                  <Pressable
+                    onPress={() => {
+                      setSentEmail(null);
+                      setCode("");
+                      setError(null);
+                    }}
+                    disabled={pending}
+                  >
+                    <Text style={s.linkText}>{t("auth.changeEmail")}</Text>
+                  </Pressable>
+                </View>
+              </>
             ) : (
-              <Text style={s.submitText}>{t("auth.submit")}</Text>
-            )}
-          </Pressable>
+              <>
+                <Text style={s.label}>{t("auth.email")}</Text>
+                <TextInput
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="email-address"
+                  textContentType="emailAddress"
+                  style={s.input}
+                />
+                {error ? <Text style={s.error}>{error}</Text> : null}
+                <Pressable
+                  onPress={() => void onSendOtp()}
+                  disabled={pending || !email.trim()}
+                  style={({ pressed }) => [
+                    s.submit,
+                    pressed && s.submitPressed,
+                    (pending || !email.trim()) && s.submitDisabled,
+                  ]}
+                >
+                  {pending ? (
+                    <ActivityIndicator color={c.ink} />
+                  ) : (
+                    <Text style={s.submitText}>{t("auth.sendOtp")}</Text>
+                  )}
+                </Pressable>
+              </>
+            )
+          ) : (
+            <>
+              <Text style={s.label}>{t("auth.email")}</Text>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                textContentType="emailAddress"
+                style={s.input}
+              />
+              <Text style={s.label}>{t("auth.password")}</Text>
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                textContentType="password"
+                style={s.input}
+              />
+              {error ? <Text style={s.error}>{error}</Text> : null}
+              <Pressable
+                onPress={() => void onPasswordSubmit()}
+                disabled={pending}
+                style={({ pressed }) => [s.submit, pressed && s.submitPressed, pending && s.submitDisabled]}
+              >
+                {pending ? (
+                  <ActivityIndicator color={c.ink} />
+                ) : (
+                  <Text style={s.submitText}>{t("auth.submit")}</Text>
+                )}
+              </Pressable>
+            </>
+          )}
+
           <Pressable onPress={() => router.replace("/register")} style={s.linkBtn}>
             <Text style={s.linkText}>{t("auth.loginFooterRegister")}</Text>
           </Pressable>

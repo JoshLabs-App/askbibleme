@@ -104,6 +104,58 @@ export async function signInAskbibleWebWithPassword(input: {
   return { ok: true };
 }
 
+export async function signInAskbibleWebWithOtp(email: string): Promise<
+  { ok: true } | { ok: false; error: string; status?: number }
+> {
+  const supabase = createSupabaseBrowserClient();
+  if (!supabase) return { ok: false, error: "auth_not_configured" };
+  const trimmed = email.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+    return { ok: false, error: "invalid_email" };
+  }
+  const { error } = await supabase.auth.signInWithOtp({
+    email: trimmed,
+  });
+  if (error) {
+    return {
+      ok: false,
+      error: error.message,
+      status: error.status,
+    };
+  }
+  return { ok: true };
+}
+
+export async function verifyAskbibleWebOtp(input: {
+  email: string;
+  token: string;
+}): Promise<{ ok: true } | { ok: false; error: string; status?: number }> {
+  const supabase = createSupabaseBrowserClient();
+  if (!supabase) return { ok: false, error: "auth_not_configured" };
+  const email = input.email.trim();
+  const token = input.token.trim();
+  if (!email || !token) {
+    return { ok: false, error: "invalid_params" };
+  }
+  const { data, error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: "email",
+  });
+  if (error) {
+    return {
+      ok: false,
+      error: error.message,
+      status: error.status,
+    };
+  }
+  if (!data.user) {
+    return { ok: false, error: "no_user" };
+  }
+  await ensureOwnProfile({ supabase, user: data.user });
+  return { ok: true };
+}
+
 export async function signUpAskbibleWebWithPassword(input: {
   email: string;
   password: string;

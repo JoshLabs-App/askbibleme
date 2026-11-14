@@ -1,10 +1,10 @@
-import { loadedChapterVerseFromRow, type LoadedChapterVerse } from "@/lib/bible/loaded-chapter-verse";
+import type { LoadedChapterVerse } from "@/lib/bible/loaded-chapter-verse";
+import { staticScriptureEntriesToLoadedVerses } from "@/lib/bible/static-scripture-verses";
 import {
   isSafeStaticScriptureIds,
   staticScriptureBookRelPath,
   staticScriptureBookUrlPath,
   type StaticScriptureBookFile,
-  type StaticScriptureVerse,
 } from "@/lib/bible/static-scripture-shape";
 
 /**
@@ -98,19 +98,6 @@ async function loadBookFile(
   return parsed;
 }
 
-function toLoadedVerse(entry: StaticScriptureVerse, index: number): LoadedChapterVerse | null {
-  const row =
-    typeof entry === "string"
-      ? { verse: index + 1, text: entry }
-      : {
-          verse: index + 1,
-          text: entry.t,
-          speech_spans: entry.s ?? null,
-          theme_repeat_count: entry.r ?? 0,
-        };
-  return loadedChapterVerseFromRow(row);
-}
-
 export async function loadStaticScriptureChapterVerses(
   cwd: string,
   translationId: string,
@@ -124,12 +111,6 @@ export async function loadStaticScriptureChapterVerses(
   const entries = file?.c[String(chapter)];
   if (!entries || entries.length === 0) return null;
 
-  const verses: LoadedChapterVerse[] = [];
-  for (let i = 0; i < entries.length; i += 1) {
-    const entry = entries[i];
-    if (entry === undefined || entry === null) continue;
-    const v = toLoadedVerse(entry, i);
-    if (v) verses.push(v);
-  }
+  const verses = staticScriptureEntriesToLoadedVerses(entries);
   return verses.length > 0 ? verses : null;
 }

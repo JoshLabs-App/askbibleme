@@ -1,5 +1,5 @@
 import { AppShellProviders } from "./app-shell-providers";
-import { buildHomeVerseRotationFromShellCookies } from "@/lib/bible/home-verse-rotation-rsc";
+import { buildHomeVerseRotationByLocale } from "@/lib/bible/home-verse-ref-rotation";
 import "./read/read-parchment-background.css";
 import "./read/read-parchment-shell-chrome.css";
 
@@ -11,6 +11,11 @@ import "./read/read-parchment-shell-chrome.css";
  */
 export default async function AppShellLayout({ children }: { children: React.ReactNode }) {
   const cwd = process.cwd();
-  const verseFallbackByLocale = await buildHomeVerseRotationFromShellCookies(cwd);
+  /**
+   * 首屏兜底金句取全部语言（每种只有 bootstrap 的 40 句，很小），不再按请求 cookie 挑语言。
+   * 这里读了 cookies()/headers() 会让整个壳下面的页面都被迫动态渲染、响应 no-store，
+   * 读经章页因此每次现渲染（线上实测首字节 1.7s）。语言由客户端 LocaleProvider 选。
+   */
+  const verseFallbackByLocale = await buildHomeVerseRotationByLocale(cwd);
   return <AppShellProviders verseFallbackByLocale={verseFallbackByLocale}>{children}</AppShellProviders>;
 }

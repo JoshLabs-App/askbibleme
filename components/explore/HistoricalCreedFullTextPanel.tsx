@@ -5,7 +5,7 @@ import type { AppLocale } from "@/lib/i18n/config";
 import {
   resolveHistoricalCreedBodyParagraphs,
   resolveInlineHistoricalCreedBodyParagraphs,
-} from "@/lib/explore/historical-creeds-body-load";
+} from "@/lib/explore/historical-creeds-body-load-web";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { HistoricalCreedSectionedBody } from "@/components/explore/HistoricalCreedSectionedBody";
 

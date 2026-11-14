@@ -6,11 +6,6 @@ import { parseVerseKey } from "@/lib/bible/parse-verse-key";
 import { scriptureXrefSnippetKey } from "@/lib/bible/join-verse-range-text";
 import type { VerseRef } from "@/lib/bible/verse-ref";
 import { HOME_PRAYER_POOL_PUBLIC_BASE } from "@/lib/home-prayer-pools/constants";
-import {
-  HOME_PRAYER_POOL_CHUNKS,
-  HOME_PRAYER_POOL_MANIFEST,
-  HOME_PRAYER_POOL_SCOPE_ID,
-} from "@/lib/home-prayer-pools/chunk-registry.generated";
 
 function isManifestValid(data: HomePrayerManifestV1): boolean {
   return data?.version === 1 && Array.isArray(data.entries);
@@ -29,9 +24,6 @@ export function chunkUrl(scopeId: string, chunkIndex: number): string {
 }
 
 export async function fetchHomePrayerManifest(scopeId: string): Promise<HomePrayerManifestV1 | null> {
-  if (scopeId === HOME_PRAYER_POOL_SCOPE_ID) {
-    return isManifestValid(HOME_PRAYER_POOL_MANIFEST) ? HOME_PRAYER_POOL_MANIFEST : null;
-  }
   try {
     const res = await fetch(manifestUrl(scopeId), { cache: "force-cache" });
     if (!res.ok) return null;
@@ -43,10 +35,6 @@ export async function fetchHomePrayerManifest(scopeId: string): Promise<HomePray
 }
 
 export async function fetchHomePrayerChunk(scopeId: string, chunkIndex: number): Promise<HomePrayerChunkV1 | null> {
-  if (scopeId === HOME_PRAYER_POOL_SCOPE_ID) {
-    const data = HOME_PRAYER_POOL_CHUNKS[chunkIndex];
-    return data && isChunkValid(data) ? data : null;
-  }
   try {
     const res = await fetch(chunkUrl(scopeId, chunkIndex), { cache: "force-cache" });
     if (!res.ok) return null;
@@ -191,11 +179,6 @@ export function buildEntriesByLocaleFromKeys(
 
 export function prefetchChunkIdle(scopeId: string, chunkIndex: number, chunkCache: Map<number, HomePrayerChunkV1>): void {
   if (chunkCache.has(chunkIndex)) return;
-  if (scopeId === HOME_PRAYER_POOL_SCOPE_ID) {
-    const ch = HOME_PRAYER_POOL_CHUNKS[chunkIndex];
-    if (ch && isChunkValid(ch)) chunkCache.set(chunkIndex, ch);
-    return;
-  }
   if (typeof window === "undefined") return;
   const run = () => {
     void fetchHomePrayerChunk(scopeId, chunkIndex).then((ch) => {

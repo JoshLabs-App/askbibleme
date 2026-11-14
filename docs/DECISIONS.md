@@ -1604,6 +1604,9 @@ Play 要求**所有轨道**（正式 / 测试）上的包都不能再声明 `USE
 - **D-43 追记（2026-11-14，vinext 本机试迁）**：JOSHUA 同意「缓存/图片全选 none、只本机试迁、不上线」。试验分支 `claude/cf-vinext-trial`（WIP，不合入、不部署）。
   - **结论 1，应用本身能跑 vinext**：`vite build` 通过；`vinext start`（Node）下 24 条页面与 API 探测与 Next 一致（只有 `/api/mobile/auth/session` 在无环境变量时 503，预期内）。
   - **结论 2，体积够用**：Worker 包 gzip 约 2.3MB（免费档上限 3MB，余量不大；付费档 10MB）；静态文件 6119 个（免费档上限 20000）；无超 25MB 的单文件。
-  - **结论 3，没验证到**：本机 workerd（`vite dev` / `vite preview`）对所有页面与 API 返回空 404，只有静态资源 200；清缓存、调兼容日期、去掉中间件都没变化，原因未查清。**所以 Workers 运行时下 `fs` 读 `data/*.json` 的接口到底会不会失败，仍没有实测结果。**
+  - **结论 3（已更正，原写「原因未查清」）**：workerd 下全是空 404 的原因是我手装的 `@cloudflare/vite-plugin` 是 latest（v1.69.1），它不认 `cloudflare.config.ts`；vinext 要的是 v2 beta（`npm i -D @cloudflare/vite-plugin@beta`）。换成 `2.0.0-beta.v.17` 并在 `cloudflare.config.ts` 加 `compatibilityFlags: ["nodejs_compat"]` 后，页面与 API 能在本机 workerd 里响应。
+  - **结论 3b，workerd 实测（关键）**：页面 `/`、`/read/JHN/3`、`/web`、`/explore`、`/welcome` 都 200，越界章 404 正确；**但读 `fs` 的接口不报错而是静默返回空/错数据**：`/api/mobile/content/flags` 把 `memberRegisterEnabled` 返回成 `false`（线上是 `true`，会让 App 注册入口消失）、`/api/read/chapter` 404 `chapter_not_found`、`/api/read/chapter-segments` 空数组、`/api/nature/settings` 与 `/api/golden-verses/backgrounds` 返回空、`/api/read/reading-plans/registry` 404、`/api/home/bible-translations-catalog` 内容与线上不同（运行时读 fs 读到的不是仓库数据）、`/music` 页与 `/api/music/companion`、`/api/mobile/resource-pack/*/manifest` 直接 500（`operation not permitted`）。**这就是迁移的真实工作量：这批接口必须改成不依赖运行时 `fs`（构建期内联 / 静态资源 / R2），否则上线会静默出错。**
+  - **结论 3c，部署前置**：`vinext-cloudflare deploy` 要求 ISR 页面必须配缓存适配器（KV 等，新增资源）；`/app` 与 `/music` 用了 `revalidate`，试验分支里临时关掉了。Worker 包 gzip 约 2.3MB，已接近免费档 3MB 上限，把运行时数据内联进去很可能要升级 Workers 付费档（新费用，需 JOSHUA 确认）。
   - **结论 4，依赖冲突**：现有 vitest 2.x 要 vite 5，与 vinext 要的 vite 8 冲突（试验用 `--legacy-peer-deps`）；`vinext init` 还会把 react 升到 ^19.3.1 并加 `"type": "module"`，正式迁移要单独评估这两项对 App 页面的影响。
-  - **下一步要 JOSHUA 同意的事**：用 `vinext-cloudflare deploy --preview` 在 Cloudflare 上部署一个**预览 Worker**（新增云端资源、用 `~/.config/cloudflare/token`，该 token 的权限说明里没有 Workers，可能需要补权限）来拿到真实运行时结果。
+  - **没有部署预览 Worker**：本机 workerd 的结果已足够，不再往 Cloudflare 账号里新增资源（该 token 能列出 Workers，权限够，但部署校验先卡在 ISR 缓存适配器上）。
+  - **下一步（要 JOSHUA 定）**：①是否接受迁移的真实工作量（见 3b，把一批 fs 接口改成无 fs）；②运行时数据放哪（内联进 Worker 要付费档 / 放 R2 或静态资源改成异步读）；③缓存方案（KV 数据缓存等，新增资源）。三项定了再动，否则线上继续用 Vercel，读经页的优化已经生效。

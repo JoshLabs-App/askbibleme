@@ -140,3 +140,6 @@ tools/.reading-plans.json
 *.bak
 *.bak-*
 .wrangler/
+/dist/
+.vinext/
+.cloudflare/

@@ -212,7 +212,11 @@
     "check:member-sync": "node tools/member-sync-check.mjs",
     "check:reading-plan-usability": "node tools/reading-plan-usability-check.mjs",
     "gen:translation-catalog": "node node_modules/tsx/dist/cli.mjs tools/gen-translation-catalog.mts",
-    "check:translation-catalog": "node node_modules/tsx/dist/cli.mjs tools/gen-translation-catalog.mts --check"
+    "check:translation-catalog": "node node_modules/tsx/dist/cli.mjs tools/gen-translation-catalog.mts --check",
+    "dev:vinext": "vite dev --port 3001",
+    "build:vinext": "vite build",
+    "start:vinext": "vite preview",
+    "deploy:vinext": "vinext-cloudflare deploy"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
@@ -224,8 +228,8 @@
     "next": "^15.3.0",
     "opencc-js": "^1.3.1",
     "postcss": "^8.4.49",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "sharp": "^0.34.5",
@@ -235,16 +239,26 @@
     "typescript": "^5.7.0"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.69.1",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@vinext/cloudflare": "^1.3.4",
+    "@vitejs/plugin-react": "^6.3.0",
+    "@vitejs/plugin-rsc": "^0.5.39",
+    "cf": "^1.0.0-beta.32",
     "eas-cli": "^16.28.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "^15.3.0",
+    "react-server-dom-webpack": "^19.3.1",
+    "vinext": "^1.4.5",
+    "vite": "^8.3.8",
+    "vite-css-modules": "^1.16.1",
     "vitest": "^2.1.8"
   },
   "engines": {
     "node": ">=22.0.0 <23.0.0"
-  }
+  },
+  "type": "module"
 }

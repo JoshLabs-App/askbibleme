@@ -155,7 +155,7 @@ private struct AuthProviderButton: View {
                             if variant == .apple { AppleBrandMark(color: theme.ink) } else { GoogleBrandMark() }
                         }
                         .frame(width: 20, height: 20)
-                        Text(locale.zh(label)).font(.system(size: 15, weight: .semibold)).lineSpacing(5).foregroundStyle(theme.ink)
+                        Text(locale.zh(label)).askFont(size: 15, weight: .semibold).lineSpacing(5).foregroundStyle(theme.ink)
                             .multilineTextAlignment(.center).lineLimit(2).frame(maxWidth: .infinity)
                         Color.clear.frame(width: 20, height: 20)
                     }
@@ -185,7 +185,7 @@ private struct AuthOAuthError: View {
     let locale: AppLocale
     init(_ text: String, locale: AppLocale) { self.text = text; self.locale = locale }
     var body: some View {
-        Text(locale.zh(text)).font(.system(size: 13, weight: .medium)).lineSpacing(5).foregroundStyle(Color(rgb: 0xB42318))
+        Text(locale.zh(text)).askFont(size: 13, weight: .medium).lineSpacing(5).foregroundStyle(Color(rgb: 0xB42318))
             .multilineTextAlignment(.center).frame(maxWidth: .infinity)
     }
 }
@@ -197,7 +197,7 @@ private struct AuthMethodDivider: View {
     var body: some View {
         HStack(spacing: 12) {
             Rectangle().fill(theme.border).frame(height: 0.5)
-            Text(SiteCopy.t("auth.orDivider", locale)).font(.system(size: 11, weight: .semibold)).tracking(0.6).textCase(.uppercase).foregroundStyle(theme.faint)
+            Text(SiteCopy.t("auth.orDivider", locale)).askFont(size: 11, weight: .semibold).tracking(0.6).textCase(.uppercase).foregroundStyle(theme.faint)
             Rectangle().fill(theme.border).frame(height: 0.5)
         }
         .padding(.vertical, 6)
@@ -219,12 +219,12 @@ private struct AuthPage<Content: View>: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
                     Button(action: onBack) {
-                        Text(SiteCopy.t("pages.read.chapterChromeBack", locale)).font(.system(size: 14, weight: .medium)).foregroundStyle(theme.faint).padding(.vertical, 8)
+                        Text(SiteCopy.t("pages.read.chapterChromeBack", locale)).askFont(size: 14, weight: .medium).foregroundStyle(theme.faint).padding(.vertical, 8)
                     }
                     .buttonStyle(.plain)
-                    Text(locale.zh(title)).font(.system(size: 18, weight: .semibold)).foregroundStyle(theme.ink)
+                    Text(locale.zh(title)).askFont(size: 18, weight: .semibold).foregroundStyle(theme.ink)
                         .frame(maxWidth: .infinity).padding(.top, 8)
-                    Text(SiteCopy.t("auth.registerIntro", locale)).font(.system(size: 14)).lineSpacing(4).foregroundStyle(theme.muted)
+                    Text(SiteCopy.t("auth.registerIntro", locale)).askFont(size: 14).lineSpacing(4).foregroundStyle(theme.muted)
                         .multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(.top, 10)
                     VStack(alignment: .leading, spacing: 10) { content() }.padding(.top, 24)
                 }
@@ -249,11 +249,11 @@ struct AuthField: View {
     @Environment(\.parchment) private var theme
 
     var body: some View {
-        Text(locale.zh(label)).font(.system(size: 15, weight: .semibold)).foregroundStyle(theme.muted).padding(.top, 10)
+        Text(locale.zh(label)).askFont(size: 15, weight: .semibold).foregroundStyle(theme.muted).padding(.top, 10)
         Group {
             if secure { SecureField("", text: $text) } else { TextField("", text: $text) }
         }
-        .font(.system(size: 17))
+        .askFont(size: 17)
         .foregroundStyle(theme.ink)
         .keyboardType(keyboard)
         .textContentType(contentType)
@@ -272,7 +272,7 @@ struct AuthErrorText: View {
     let locale: AppLocale
     init(_ text: String, locale: AppLocale) { self.text = text; self.locale = locale }
     var body: some View {
-        Text(SiteCopy.localizeKnown(text, locale)).font(.system(size: 13, weight: .medium)).foregroundStyle(Color(rgb: 0xB42318))
+        Text(SiteCopy.localizeKnown(text, locale)).askFont(size: 13, weight: .medium).foregroundStyle(Color(rgb: 0xB42318))
             .multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(.top, 8)
     }
 }
@@ -288,7 +288,7 @@ struct AuthSubmit: View {
         Button(action: action) {
             ZStack {
                 if pending { ProgressView().tint(theme.ink) }
-                else { Text(locale.zh(title)).font(.system(size: 15, weight: .semibold)).foregroundStyle(theme.ink) }
+                else { Text(locale.zh(title)).askFont(size: 15, weight: .semibold).foregroundStyle(theme.ink) }
             }
             .frame(maxWidth: .infinity).frame(minHeight: 48)
             // 主 CTA 用琥珀（与欢迎页「开始今日灵修」同一颗），和纸色的次级按钮拉开层级
@@ -307,7 +307,7 @@ struct AuthLink: View {
     @Environment(\.parchment) private var theme
     var body: some View {
         Button(action: action) {
-            Text(locale.zh(title)).font(.system(size: 13, weight: .medium)).underline().foregroundStyle(theme.muted)
+            Text(locale.zh(title)).askFont(size: 13, weight: .medium).underline().foregroundStyle(theme.muted)
                 .frame(maxWidth: .infinity).padding(.vertical, 8)
         }
         .buttonStyle(.plain).padding(.top, 14)

@@ -70,7 +70,7 @@ struct SiblingAppsSection: View {
         VStack(alignment: .leading, spacing: 0) {
             if let catalog, !apps.isEmpty {
                 Text(catalog.text("title", locale))
-                    .font(.system(size: 15))
+                    .askFont(size: 15)
                     .foregroundStyle(theme.faint)
                     .padding(.top, 28)
                     .padding(.bottom, 6)
@@ -91,17 +91,17 @@ struct SiblingAppsSection: View {
                 icon(app)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(SiblingAppsCatalog.pick(app.name, locale))
-                        .font(.system(size: 15, weight: .semibold))
+                        .askFont(size: 15, weight: .semibold)
                         .foregroundStyle(theme.ink)
                     Text(SiblingAppsCatalog.pick(app.tagline, locale))
-                        .font(.system(size: 13))
+                        .askFont(size: 13)
                         .foregroundStyle(theme.muted)
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
+                    .askFont(size: 12, weight: .semibold)
                     .foregroundStyle(theme.muted.opacity(0.5))
             }
             .padding(.vertical, 8)

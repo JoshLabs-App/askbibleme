@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 电视启动器横幅（系统按 320x180 缩放）：图标底色 + 居中图标 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item><color android:color="@color/iconBackground" /></item>
+    <item android:gravity="center" android:width="120dp" android:height="120dp">
+        <bitmap android:src="@mipmap/ic_launcher" android:gravity="fill" />
+    </item>
+</layer-list>

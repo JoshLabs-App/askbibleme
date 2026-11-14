@@ -1,0 +1,16 @@
+{
+  "verifiedAt": "2026-11-05T17:14:00.033122+00:00",
+  "version": "1.0.55",
+  "versionCode": 252,
+  "productionStatus": "Published",
+  "rolloutPercent": 100,
+  "pendingChanges": false,
+  "publishedDate": "2026-11-05",
+  "source": "https://play.google.com/console/u/0/developers/8941832102415327484/app/4973771998382174204/test-and-release",
+  "nonBlockingConsoleNotices": [
+    "DEX obfuscation metric 0%, optimization deadline February 2027",
+    "androidx.fragment:fragment 1.1.0 deprecated, recommended 1.2.1+",
+    "Android 15 edge-to-edge compatibility notice"
+  ],
+  "publicPageAtFirstCheck": "Web source still showed Nov 4 release notes; public caching may lag console."
+}

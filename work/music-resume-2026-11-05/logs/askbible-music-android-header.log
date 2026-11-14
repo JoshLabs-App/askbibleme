@@ -1,0 +1,16 @@
+Running on 192.168.1.15:35601
+ > Flow askbible-music-android-header
+Launch app "me.askbible.musicqa"... COMPLETED
+Tap on "选音乐"... COMPLETED
+Assert that "返回首页" is visible... COMPLETED
+Assert that "定时停止音乐" is visible... COMPLETED
+Take screenshot /tmp/askbible-music-android-header-aligned... COMPLETED
+Tap on "定时停止音乐"... COMPLETED
+Take screenshot /tmp/askbible-music-android-header-timer... COMPLETED
+Press back... COMPLETED
+Tap on "返回首页"... COMPLETED
+Assert that "选音乐" is visible... COMPLETED
+Tap on "选音乐"... COMPLETED
+Assert that "返回首页" is visible... COMPLETED
+Assert that "播放音乐" is visible... COMPLETED
+Take screenshot /tmp/askbible-music-android-header-final... COMPLETED

@@ -21,10 +21,10 @@ struct ConfirmSheet: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 Text(title)
-                    .font(.system(size: 17, weight: .semibold))
+                    .askFont(size: 17, weight: .semibold)
                     .foregroundStyle(theme.ink)
                 Text(message)
-                    .font(.system(size: 14))
+                    .askFont(size: 14)
                     .lineSpacing(4)
                     .foregroundStyle(theme.muted)
                     .padding(.top, 8)
@@ -32,7 +32,7 @@ struct ConfirmSheet: View {
                 HStack(spacing: 10) {
                     Button(action: onCancel) {
                         Text(cancelTitle)
-                            .font(.system(size: 15, weight: .semibold))
+                            .askFont(size: 15, weight: .semibold)
                             .foregroundStyle(theme.ink)
                             .frame(maxWidth: .infinity).frame(minHeight: 48)
                             .background(RoundedRectangle(cornerRadius: 12).fill(Color(parchment: 0xFFFCF5, opacity: 0.62)))
@@ -43,7 +43,7 @@ struct ConfirmSheet: View {
 
                     Button(action: onConfirm) {
                         Text(confirmTitle)
-                            .font(.system(size: 15, weight: .semibold))
+                            .askFont(size: 15, weight: .semibold)
                             .foregroundStyle(Color.white)
                             .frame(maxWidth: .infinity).frame(minHeight: 48)
                             .background(RoundedRectangle(cornerRadius: 12).fill(Color(rgb: 0xB42318)))

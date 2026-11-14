@@ -1,0 +1,57 @@
+appId: me.askbible
+---
+- launchApp
+- tapOn:
+    text: "收起调整"
+    optional: true
+- swipe:
+    start: 50%, 76%
+    end: 50%, 50%
+    duration: 500
+- assertVisible: "收起调整"
+- takeScreenshot: /tmp/askbible-adjust-open
+- swipe:
+    start: 50%, 39%
+    end: 50%, 78%
+    duration: 600
+- assertVisible:
+    id: home.adjust
+- takeScreenshot: /tmp/askbible-home-closed
+- swipe:
+    start: 80%, 52%
+    end: 20%, 52%
+    duration: 500
+- tapOn:
+    id: home.adjust
+- assertVisible: "收起调整"
+- tapOn:
+    id: home.ambient.scene-rain
+- takeScreenshot: /tmp/askbible-ambient-on
+- tapOn: "收起调整"
+- swipe:
+    start: 80%, 52%
+    end: 20%, 52%
+    duration: 500
+- tapOn:
+    id: home.adjust
+- takeScreenshot: /tmp/askbible-ambient-after-scene
+- tapOn:
+    id: home.ambient.scene-rain
+- tapOn: "收起调整"
+- tapOn:
+    id: home.music
+- assertVisible:
+    id: home.adjust
+- takeScreenshot: /tmp/askbible-music-on
+- tapOn:
+    id: home.music
+- tapOn:
+    id: home.voice
+- assertVisible:
+    id: home.adjust
+- takeScreenshot: /tmp/askbible-voice-on
+- tapOn:
+    id: home.voice
+- tapOn:
+    id: home.adjust
+- takeScreenshot: /tmp/askbible-panel-final

@@ -17,6 +17,33 @@
   2. TovCore 过审后：`data/sibling-apps/apps.json` 给 tovcore 加 `ios` 再跑上传脚本（App 不用发版）；网页 `lib/sibling-app-urls.ts` 加 App Store 入口。
   3. 听到 / 查到 / 诗歌三个 App 里也做同样一节（读同一份线上清单，去掉自己）：推荐每个项目开一个会话做。
 
+### O-35 谷歌登录页显示「to continue to tgobadhdylarhssudplc.supabase.co」（2026-10-16）
+
+- **现状**：JOSHUA「登录应该学 Cabinet-X，直接用谷歌登录，不通过 supabase.co」。在三星上实测两个登录地址：AskBible 显示 `to continue to tgobadhdylarhssudplc.supabase.co`，**Cabinet-X 一样**显示 `copbrwcrdxvxjvpnyavo.supabase.co`。两个都是浏览器跳 Supabase `/auth/v1/authorize`（Cabinet-X D-R95），Cabinet-X 的做法没有不同。`askbible-sb.joshlabs.app` 代理改不了这一行：谷歌显示的是 Supabase 回跳地址的域名。
+- **影响**：用户在谷歌页上看到一串乱码域名，不像正规 App，也不知道是在登 AskBible。
+- **要 JOSHUA 决定**（三选一）：
+  - **A（推荐）原生谷歌登录**：安卓用系统 Credential Manager 弹底部账号框（只写「AskBible」，不开浏览器、看不到任何域名），拿到谷歌 ID token 再交给 Supabase `grant_type=id_token` 换会话；iOS 同理用 GoogleSignIn。代码改动中等，免费。要在 Google Cloud 建安卓 OAuth 客户端（包名 me.askbible / me.askbible.native + Play 签名和 upload key 的 SHA-1），把客户端 ID 加进 Supabase Google provider 的「Authorized Client IDs」。注意：这个 Supabase 项目和听到等 App 共用，只加 ID，不动别的。
+  - **B Supabase 自定义域名**（付费插件，约 $10/月）：域名变成例如 `auth.askbible.me`，四个共用这个库的 App 都会跟着变，各 App 要发新版。
+  - **C 不改**。
+- **进度 2026-10-16**：走了 A。PR #15 分支（`claude/android-prev-chapter-button-8ceuoz`）加了安卓 Credential Manager 谷歌登录，已侧载装三星。还要确认：Google Cloud 项目 827770827257 里有没有 me.askbible.native 的安卓 OAuth 客户端（upload key SHA-1 `8E:9F:DF:30:69:D1:C7:E2:90:20:51:23:B6:91:D3:17:A7:F9:02:C7`）。另外本机 `.env.local` 软链断了（指向的 `APP/00/projects/01AskBible/.env.local` 已丢），这次编译用的是 RN `app.config.js` 里的 Web client ID 兜底值，靠环境变量传入。
+
+### O-34 安卓探索页没有右上角「设置」入口，和 iOS 不一致（2026-10-12）
+
+- **现状**：iOS 2026-09-16 把设置菜单入口挪到探索页右上角；安卓的设置菜单仍只从首页左上角打开，探索页没有这个按钮。安卓菜单本来就是羊皮卷底（`ui/NavDrawer.kt` 一直铺 `ParchmentBackground`），没有 iOS 那种透明问题，D-40 不用改安卓。
+- **影响**：两端找设置的位置不一样。
+- **要 JOSHUA 决定**：安卓探索页要不要也加右上角设置入口，和 iOS 一致。推荐：加（改动小，只在 `ExploreScreen` 顶部加一个按钮，接 `showMenu = true`）。
+
+### O-29 自然场景动态：视频改成「图片 + 软件实时动画」要不要做（2026-10-05）
+
+- **现状**：首页 / 自然场景的水流、咖啡烟等动态全靠 720p mp4 循环（安卓 `NatureScenes.kt`、`HomeSceneVideo.kt`），默认景内置、其余走 R2。
+- **影响**：视频体积大（每景几 MB）、首次加载要下、换景要做视频。改成一张照片 + 流向图（flow map）+ 着色器实时扭曲，水流 / 蒸汽 / 薄烟 / 火可做到很真；但大幅动作（浪拍岸、人走动、树大摆）假不了，仍要视频。
+- **要 Josh 决定**：推荐先拿「水」+「咖啡厅」两景在 iOS 做原型，和现有视频并排装手机给他看，真了再铺三端；不真就停。
+- **进度 2026-10-05**：Josh「做」→ 独立测试 App 已装 home 手机（桌面名「场景实验」，`experiments/scene-shader-lab`，D-32）。默认流向图由原视频光流自动算出；可左右对比、手指画流向 / 点蒸汽源、滑杆调参，调好的参数存 App 的 Documents。**等 Josh 看完说真不真**：真 → 定是否进正式 App 三端（参数从手机取回）；不真 → 删 App 和目录。
+- **进度 2026-10-05 晚**：Josh 看完「效果很好」。已加「循环预览」+「导出 N 秒循环视频」：原图尺寸、HEVC 恒定质量 0.9（8 秒约 3 MB），首尾帧无缝（无损帧实测末帧→首帧差 0.208 = 普通相邻帧 0.21；成片里剩的一点是编码关键帧造成）。
+- **下一步要 Josh 定**：正式 App 走哪条——**推荐 B**：用这个工具导出循环 mp4 直接替换现有场景视频（正式 App 零改代码、三端和 YouTube 通用；配高清原图画质还能超过现在 720p）；A：正式 App 里实时着色器（素材最小，但三端各写一遍，且要 iOS 17 / Android 13 以上）。另需定：替换哪几景、用不用换高清底图（可让 ChatGPT 出或找原片）。
+- **实测资源占用 2026-10-05**（home iPhone，1170×2532，测试 App 未优化写法）：水景全分辨率 60fps 显卡每帧 14.9 ms、**忙 89%**（接近满载，长时间放会发热掉电）。按像素×帧率推算：半分辨率 60fps ≈ 22%，半分辨率 30fps ≈ 11%；再把现算噪声换成预烘焙噪声贴图估计可到 3–5%。播放视频走硬件解码，显卡 / CPU 都只有个位数百分比。结论更支持 B；选 A 必须先做上面这些优化再实测。
+- **2026-10-05**：出片工具改在新项目 `~/Desktop/APP/00makevideo` 做 Mac 版（见 DECISIONS 对应条），本仓库测试代码已移走。
+
 ### O-26 三星没装上 1.0.49（搜索修复）（2026-10-04）
 
 - **现状**：iOS 已装 home iPhone；三星 10-04 无线调试不在线，sideload 包没装。

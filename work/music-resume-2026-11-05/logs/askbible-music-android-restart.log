@@ -1,0 +1,29 @@
+Running on 192.168.1.15:35601
+ > Flow askbible-music-android-restart
+Launch app "me.askbible.musicqa"... COMPLETED
+Tap on "选音乐"... COMPLETED
+Assert that "暂停音乐" is visible... COMPLETED
+Take screenshot /tmp/askbible-music-android-resumed... COMPLETED
+Tap on "暂停音乐"... COMPLETED
+Assert that "播放音乐" is visible... COMPLETED
+Take screenshot /tmp/askbible-music-android-paused... COMPLETED
+Stop me.askbible.musicqa... COMPLETED
+Launch app "me.askbible.musicqa"... COMPLETED
+Tap on "选音乐"... COMPLETED
+Assert that "播放音乐" is visible... COMPLETED
+Take screenshot /tmp/askbible-music-android-paused-restart... COMPLETED
+Tap on "下一首"... COMPLETED
+Assert that "播放音乐" is visible... COMPLETED
+Take screenshot /tmp/askbible-music-android-next-paused... COMPLETED
+Tap on "休闲"... COMPLETED
+Tap on "播放音乐"... COMPLETED
+Assert that "暂停音乐" is visible... COMPLETED
+Tap x3 on "下一首"... COMPLETED
+Assert that "暂停音乐" is visible... COMPLETED
+Take screenshot /tmp/askbible-music-android-album-next... COMPLETED
+Tap on "暂停音乐"... COMPLETED
+Press back... COMPLETED
+Tap on "下一首"... COMPLETED
+Tap on "选音乐"... COMPLETED
+Assert that "播放音乐" is visible... COMPLETED
+Take screenshot /tmp/askbible-music-android-home-next... COMPLETED

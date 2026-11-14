@@ -1,0 +1,12 @@
+Running on iPhone 17 Pro - iOS 26.5 - 19295A0B-9D64-41AB-B3E6-4F009617CA9F
+ > Flow askbible-music-ios-open
+Launch app "me.askbible"... COMPLETED
+Tap on (Optional) "以后再说"... WARNED
+
+
+ Warning: Element not found: Text matching regex: 以后再说
+Assert that id: home.music.choose is visible... COMPLETED
+Take screenshot /tmp/askbible-music-ios-home... COMPLETED
+Tap on id: home.music.choose... COMPLETED
+Tap on id: music.toggle... COMPLETED
+Take screenshot /tmp/askbible-music-ios-page... COMPLETED

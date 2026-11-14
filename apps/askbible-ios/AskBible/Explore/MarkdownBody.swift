@@ -127,7 +127,7 @@ struct MarkdownBody: View {
                 ForEach(items.indices, id: \.self) { i in
                     HStack(alignment: .top, spacing: sx(4)) {
                         Text("\(i + 1).")
-                            .font(.system(size: sx(15), weight: .medium))
+                            .askFont(size: sx(15), weight: .medium)
                             .foregroundStyle(Self.accent)
                             .lineSpacing(max(0, sx(30) - sx(15)))
                             .frame(minWidth: sx(18), alignment: .leading)

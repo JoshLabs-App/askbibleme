@@ -1,0 +1,212 @@
+Prepared isolated source snapshot (5144 files): /var/folders/rj/x357sr953jdgkj821q6d034m0000gn/T/askbible-music-web-build-PvkkIu
+Preserved original local database and environment symlink. Running full npm run build, including prebuild.
+
+> askbible@0.1.0 prebuild
+> node scripts/write-app-build-meta.mjs && node scripts/sync-web-static-read-content.mjs && node node_modules/tsx/dist/cli.mjs scripts/build-bible-sqlite-from-json.ts && node node_modules/tsx/dist/cli.mjs --tsconfig scripts/tsconfig.config-build.json scripts/build-static-scripture.ts && node node_modules/tsx/dist/cli.mjs --tsconfig scripts/tsconfig.config-build.json scripts/build-static-xrefs.ts
+
+[write-app-build-meta] wrote /private/var/folders/rj/x357sr953jdgkj821q6d034m0000gn/T/askbible-music-web-build-PvkkIu/public/app-build.json id=a3df7dc5-a0d4-43db-ae19-fc062323e2a3
+[ok] open-usfm-chapter-segments.zh.json (5.6 MB)
+[ok] open-usfm-chapter-segments.story.t1.zh.json (0.7 MB)
+[ok] info-edition-v1-published.json (22.5 MB)
+[ok] generation-roles.json (0.0 MB)
+[done] → public/read
+[build-bible-sqlite] theme verses: 0, golden marker (≥3): 0
+[build-bible-sqlite] speech snapshot loaded (v2): 4 translations from data/bible/annotations/speech-spans-v2.json
+[build-bible-sqlite] asv: using committed sqlite (5881856 bytes, no uploads JSON)
+[build-bible-sqlite] bbe-en: 本机无主题库，沿用已提交 sqlite 的 theme_repeat_count（12585 节）
+[build-bible-sqlite] bbe-en: 31102 verses -> 5926912 bytes
+[build-bible-sqlite] blm-es: using committed sqlite (5722112 bytes, no uploads JSON)
+[build-bible-sqlite] cbs-zh: using committed sqlite (4837376 bytes, no uploads JSON)
+[build-bible-sqlite] cuv-simp: 本机无主题库，沿用已提交 sqlite 的 theme_repeat_count（12583 节）
+[build-bible-sqlite] cuv-simp: 31100 verses -> 5013504 bytes
+[build-bible-sqlite] cuv-trad: 本机无主题库，沿用已提交 sqlite 的 theme_repeat_count（12583 节）
+[build-bible-sqlite] cuv-trad: 31100 verses -> 5013504 bytes
+[build-bible-sqlite] dby-en: using committed sqlite (5836800 bytes, no uploads JSON)
+[build-bible-sqlite] gnv-en: using committed sqlite (5918720 bytes, no uploads JSON)
+[build-bible-sqlite] kjv: using committed sqlite (5890048 bytes, no uploads JSON)
+[build-bible-sqlite] otb-en-gb: using committed sqlite (5689344 bytes, no uploads JSON)
+[build-bible-sqlite] otb-zh-hans: using committed sqlite (4599808 bytes, no uploads JSON)
+[build-bible-sqlite] otb-zh-hant: using committed sqlite (4599808 bytes, no uploads JSON)
+[build-bible-sqlite] rv1909-es: 本机无主题库，沿用已提交 sqlite 的 theme_repeat_count（12480 节）
+[build-bible-sqlite] rv1909-es: 30959 verses -> 5763072 bytes
+[build-bible-sqlite] rvg-es: using committed sqlite (5685248 bytes, no uploads JSON)
+[build-bible-sqlite] swcb-zh: using committed sqlite (5177344 bytes, no uploads JSON)
+[build-bible-sqlite] ust-en: using committed sqlite (5435392 bytes, no uploads JSON)
+[build-bible-sqlite] web-en: 本机无主题库，沿用已提交 sqlite 的 theme_repeat_count（12583 节）
+[build-bible-sqlite] web-en: 31101 verses -> 5861376 bytes
+[build-bible-sqlite] ylt-en: using committed sqlite (5910528 bytes, no uploads JSON)
+     4.2 MB   66 卷  asv
+     4.2 MB   66 卷  bbe-en
+     4.0 MB   66 卷  blm-es
+     3.2 MB   66 卷  cbs-zh
+     3.5 MB   66 卷  cuv-simp
+     3.5 MB   66 卷  cuv-trad
+     4.1 MB   66 卷  dby-en
+     4.2 MB   66 卷  gnv-en
+     4.2 MB   66 卷  kjv
+     4.0 MB   66 卷  otb-en-gb
+     3.1 MB   66 卷  otb-zh-hans
+     3.1 MB   66 卷  otb-zh-hant
+     4.1 MB   66 卷  rv1909-es
+     4.0 MB   66 卷  rvg-es
+     3.5 MB   66 卷  swcb-zh
+     3.9 MB   56 卷  ust-en
+     4.2 MB   66 卷  web-en
+     4.2 MB   66 卷  ylt-en
+静态经文：1178 个文件，69.2 MB → public/scripture/
+静态交叉引用：66 个文件，1162 章有 xref，2.2 MB → public/xrefs/
+
+> askbible@0.1.0 build
+> NODE_OPTIONS=--max-old-space-size=8192 next build
+
+   ▲ Next.js 15.5.18
+   - Environments: .env.production.local
+   - Experiments (use with caution):
+     ✓ webpackMemoryOptimizations
+
+   Creating an optimized production build ...
+Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ Compiled successfully in 46s
+   Skipping linting
+   Checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/113) ...
+   Generating static pages (28/113) 
+   Generating static pages (56/113) 
+   Generating static pages (84/113) 
+ ✓ Generating static pages (113/113)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                                    Size  First Load JS  Revalidate  Expire
+┌ ○ /                                                       10.7 kB         185 kB
+├ ○ /_not-found                                               285 B         103 kB
+├ ƒ /about                                                   5.9 kB         343 kB
+├ ƒ /api/ai/chat                                              285 B         103 kB
+├ ƒ /api/ai/local-models                                      285 B         103 kB
+├ ƒ /api/ai/preset                                            285 B         103 kB
+├ ƒ /api/app-build                                            285 B         103 kB
+├ ƒ /api/auth/askbible                                        285 B         103 kB
+├ ƒ /api/auth/askbible/account                                285 B         103 kB
+├ ƒ /api/cron/keep-supabase-alive                             285 B         103 kB
+├ ƒ /api/golden-verses/backgrounds                            285 B         103 kB
+├ ƒ /api/golden-verses/upload-image                           285 B         103 kB
+├ ƒ /api/health                                               285 B         103 kB
+├ ƒ /api/home/bible-translations-catalog                      285 B         103 kB
+├ ƒ /api/mobile/auth/account                                  285 B         103 kB
+├ ƒ /api/mobile/auth/apple                                    285 B         103 kB
+├ ƒ /api/mobile/auth/google                                   285 B         103 kB
+├ ƒ /api/mobile/auth/login                                    285 B         103 kB
+├ ƒ /api/mobile/auth/register                                 285 B         103 kB
+├ ƒ /api/mobile/auth/session                                  285 B         103 kB
+├ ƒ /api/mobile/bible/translations                            285 B         103 kB
+├ ƒ /api/mobile/bible/youversion/books                        285 B         103 kB
+├ ƒ /api/mobile/bible/youversion/catalog                      285 B         103 kB
+├ ƒ /api/mobile/bible/youversion/chapter                      285 B         103 kB
+├ ƒ /api/mobile/content/flags                                 285 B         103 kB
+├ ƒ /api/mobile/content/manifest                              285 B         103 kB
+├ ƒ /api/mobile/explore/featured-articles                     285 B         103 kB
+├ ƒ /api/mobile/explore/legacy-figures                        285 B         103 kB
+├ ƒ /api/mobile/explore/modules                               285 B         103 kB
+├ ƒ /api/mobile/member/reading-sync                           285 B         103 kB
+├ ƒ /api/mobile/resource-pack/chapter-audio/manifest          285 B         103 kB
+├ ƒ /api/mobile/resource-pack/music/manifest                  285 B         103 kB
+├ ƒ /api/mobile/resource-pack/nature/manifest                 285 B         103 kB
+├ ƒ /api/music/companion                                      285 B         103 kB
+├ ƒ /api/music/upload                                         285 B         103 kB
+├ ƒ /api/music/upload-image                                   285 B         103 kB
+├ ƒ /api/nature/prefetch-srcs                                 285 B         103 kB
+├ ƒ /api/nature/settings                                      285 B         103 kB
+├ ƒ /api/nature/upload                                        285 B         103 kB
+├ ƒ /api/nature/upload-audio                                  285 B         103 kB
+├ ƒ /api/nature/upload-thumb                                  285 B         103 kB
+├ ƒ /api/read/chapter                                         285 B         103 kB
+├ ƒ /api/read/chapter-audio                                   285 B         103 kB
+├ ƒ /api/read/chapter-segments                                285 B         103 kB
+├ ƒ /api/read/info-edition-v1                                 285 B         103 kB
+├ ƒ /api/read/reading-plan/[planId]                           285 B         103 kB
+├ ƒ /api/read/reading-plans/registry                          285 B         103 kB
+├ ƒ /api/read/verse-snippets                                  285 B         103 kB
+├ ƒ /api/studio/assemble-ai-context                           285 B         103 kB
+├ ƒ /api/studio/discussion                                    285 B         103 kB
+├ ƒ /api/studio/product-memory                                285 B         103 kB
+├ ƒ /api/studio/save-docs                                     285 B         103 kB
+├ ƒ /api/tv-report                                            285 B         103 kB
+├ ○ /app                                                    1.47 kB         104 kB          1h      1y
+├ ƒ /auth/callback                                            285 B         103 kB
+├ ƒ /auth/mobile-callback                                     285 B         103 kB
+├ ƒ /dev/legacy-articles                                      355 B         332 kB
+├ ƒ /dev/legacy-articles/[slug]                              1.8 kB         377 kB
+├ ƒ /explore                                                12.4 kB         379 kB
+├ ● /explore/[stagedEntry]                                   1.8 kB         334 kB
+├   ├ /explore/bible-maps
+├   ├ /explore/history-timeline
+├   ├ /explore/scripture-pool-01
+├   └ [+4 more paths]
+├ ƒ /explore/achievements                                   2.03 kB         342 kB
+├ ● /explore/articles/[slug]                                 4.1 kB         414 kB
+├   ├ /explore/articles/a-mnw5wdz7-14908d
+├   ├ /explore/articles/a-mnwkmd4g-cb4d00
+├   ├ /explore/articles/article_1778108127353_fzymbc
+├   └ /explore/articles/a-macarthur-lifelong-bible-reading
+├ ƒ /explore/figures                                        3.28 kB         335 kB
+├ ƒ /explore/figures/[slug]                                 4.76 kB         380 kB
+├ ƒ /explore/figures/article/[slug]                         1.77 kB         377 kB
+├ ƒ /explore/historical-creeds                               296 kB         628 kB
+├ ƒ /explore/narrow-gate                                     1.8 kB         334 kB
+├ ƒ /explore/praise-worship                                  1.8 kB         334 kB
+├ ƒ /explore/prayer                                          1.8 kB         334 kB
+├ ƒ /explore/reading-planner                                6.88 kB         339 kB
+├ ƒ /explore/year-day-count                                 7.88 kB         348 kB
+├ ƒ /explore/years-days-eternity                              285 B         103 kB
+├ ƒ /feedback                                               3.22 kB         335 kB
+├ ○ /forgot-password                                        1.45 kB         333 kB
+├ ƒ /index                                                      0 B            0 B
+├ ƒ /install                                                3.44 kB         341 kB
+├ ƒ /joshmoney/privacy                                        927 B         333 kB
+├ ƒ /journey                                                3.63 kB         307 kB
+├ ○ /login                                                  4.39 kB         336 kB
+├ ƒ /manifest.webmanifest                                     285 B         103 kB
+├ ƒ /music                                                  14.7 kB         341 kB
+├ ƒ /nature                                                   170 B        1.47 MB
+├ ƒ /offline                                                  595 B         175 kB
+├ ƒ /privacy                                                  927 B         333 kB
+├ ƒ /read                                                   7.57 kB         360 kB
+├ ƒ /read/[bookId]/[chapter]                                28.3 kB         363 kB
+├ ƒ /read/catalog                                             285 B         103 kB
+├ ƒ /read/favorites                                         1.24 kB         333 kB
+├ ƒ /read/plan-play                                         9.14 kB         341 kB
+├ ƒ /read/plans                                               216 B         338 kB
+├ ● /read/plans/[planId]                                    3.25 kB         341 kB
+├   ├ /read/plans/triple-loop
+├   ├ /read/plans/nt-deep-repeat
+├   ├ /read/plans/esvthroughthebible
+├   └ [+9 more paths]
+├ ƒ /read/read                                                714 B         350 kB
+├ ƒ /read/search                                              328 B         335 kB
+├ ƒ /read/translations                                        781 B         333 kB
+├ ○ /register                                               4.39 kB         336 kB
+├ ƒ /relax                                                  6.08 kB        1.43 MB
+├ ○ /reset-password                                         1.58 kB         334 kB
+├ ƒ /scenes                                                  4.6 kB         308 kB
+├ ○ /studio                                                 28.9 kB         178 kB
+├ ƒ /template                                               5.42 kB         309 kB
+├ ƒ /tv                                                     7.69 kB         1.4 MB
+├ ƒ /verse                                                  18.2 kB        1.43 MB
+├ ƒ /web                                                      172 B        1.47 MB
+└ ƒ /welcome                                                4.54 kB         337 kB
++ First Load JS shared by all                                102 kB
+  ├ chunks/1255-eae4096fb21f1304.js                           46 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js                     54.2 kB
+  └ other shared chunks (total)                             2.21 kB
+
+
+ƒ Middleware                                                34.3 kB
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+
+{"stage":"/var/folders/rj/x357sr953jdgkj821q6d034m0000gn/T/askbible-music-web-build-PvkkIu","exitCode":0,"elapsedSeconds":61,"node":"v25.9.0","sourceFiles":5144,"published":false}

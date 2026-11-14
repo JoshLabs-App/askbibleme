@@ -18,7 +18,7 @@ struct ExploreArticleView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     Button(action: onBack) {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 22, weight: .semibold))
+                            .askFont(size: 22, weight: .semibold)
                             .foregroundStyle(theme.ink)
                             .frame(width: 44, height: 44, alignment: .leading)
                             .contentShape(Rectangle())
@@ -27,7 +27,7 @@ struct ExploreArticleView: View {
 
                     // articleHeader：上 12 / 下 18 / 发丝线
                     Text(article.title)
-                        .font(.system(size: 24, weight: .semibold))
+                        .askFont(size: 24, weight: .semibold)
                         .tracking(-0.3)
                         .lineSpacing(8)
                         .foregroundStyle(theme.ink)
@@ -38,7 +38,7 @@ struct ExploreArticleView: View {
                     Group {
                         if !article.sections.isEmpty && !article.prose {
                             Text(SiteCopy.t("native.articleTapHint"))
-                                .font(.system(size: 13, weight: .medium))
+                                .askFont(size: 13, weight: .medium)
                                 .foregroundStyle(theme.muted)
                                 .frame(maxWidth: .infinity)
                                 .padding(.bottom, 12)
@@ -81,13 +81,13 @@ struct ExploreArticleView: View {
                     } label: {
                         HStack(alignment: .top, spacing: 12) {
                             HStack(alignment: .top, spacing: 8) {
-                                Text("\(i + 1)").font(.system(size: 16, weight: .bold)).foregroundStyle(theme.parchmentAccent)
-                                Text(s.title).font(.system(size: 17, weight: .bold)).foregroundStyle(theme.parchmentAccent)
+                                Text("\(i + 1)").askFont(size: 16, weight: .bold).foregroundStyle(theme.parchmentAccent)
+                                Text(s.title).askFont(size: 17, weight: .bold).foregroundStyle(theme.parchmentAccent)
                                     .lineLimit(3).multilineTextAlignment(.leading)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             Text(expanded == s.id ? "\u{2212}" : "+")
-                                .font(.system(size: 22, weight: .bold)).foregroundStyle(theme.parchmentAccent)
+                                .askFont(size: 22, weight: .bold).foregroundStyle(theme.parchmentAccent)
                                 .frame(width: 18)
                         }
                         .padding(.horizontal, 14).padding(.vertical, 12)

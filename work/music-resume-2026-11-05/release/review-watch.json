@@ -1,0 +1,8 @@
+{
+  "automationId": "Automation_135f23e22730819181d675134208b6ab",
+  "title": "AskBible \u82f9\u679c\u53d1\u5e03\u8ddf\u8fdb",
+  "enabled": true,
+  "schedule": "RRULE:FREQ=HOURLY",
+  "scope": "Read-only iOS 1.1.8 (141) review and public release; pause after public release or a user-action blocker",
+  "createdAt": "2026-11-05T17:17:30.672248+00:00"
+}

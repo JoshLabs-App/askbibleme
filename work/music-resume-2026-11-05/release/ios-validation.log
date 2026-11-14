@@ -1,0 +1,7 @@
+Running altool at path '/Applications/Xcode.app/Contents/SharedFrameworks/ContentDelivery.framework/Resources/altool'...
+
+2026-11-05 11:35:33.278  INFO: [ContentDelivery.Uploader.74AB04D300] 
+==========================================
+VERIFY SUCCEEDED with no errors
+==========================================
+No errors validating archive at '/tmp/askbible-music-release-evidence/ios-export/AskBible.ipa'.

@@ -1,0 +1,18 @@
+appId: me.askbible
+---
+- stopApp
+- launchApp:
+    clearState: false
+- tapOn:
+    id: "home.music.choose"
+- assertVisible: "播放音乐"
+- takeScreenshot: /tmp/askbible-music-ios-paused-restart
+- tapOn:
+    id: "music.next"
+- assertVisible: "播放音乐"
+- takeScreenshot: /tmp/askbible-music-ios-next-paused
+- tapOn: "休闲"
+- tapOn:
+    id: "music.toggle"
+- assertVisible: "暂停音乐"
+- takeScreenshot: /tmp/askbible-music-ios-album

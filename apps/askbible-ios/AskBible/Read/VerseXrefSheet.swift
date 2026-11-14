@@ -22,13 +22,13 @@ struct VerseXrefSheet: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 Text(SiteCopy.f("pages.read.verseXrefSheetTitle", ["bookName": bookName, "chapter": "\(chapter)", "verse": "\(xrefs.verse)"]))
-                    .font(.system(size: max(17, (size.metrics.verseFontSize * 0.95).rounded()), weight: .bold))
+                    .askFont(size: max(17, (size.metrics.verseFontSize * 0.95).rounded()), weight: .bold)
                     .foregroundStyle(theme.ink)
                     .padding(.bottom, 14)
 
                 if xrefs.isEmpty {
                     Text(SiteCopy.t("pages.read.verseXrefEmpty"))
-                        .font(.system(size: (size.metrics.verseFontSize * 0.9).rounded()))
+                        .askFont(size: (size.metrics.verseFontSize * 0.9).rounded())
                         .foregroundStyle(theme.muted)
                 } else {
                     // 内容装得下就直接铺开（弹层贴着内容收口），装不下才套 ScrollView 限高 420 ——
@@ -67,17 +67,17 @@ struct VerseXrefSheet: View {
         if !refs.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 Text(title)
-                    .font(.system(size: 12, weight: .semibold))
+                    .askFont(size: 12, weight: .semibold)
                     .foregroundStyle(theme.muted)
                 ForEach(refs) { ref in
                     Button { onOpen(ref) } label: {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(ref.label(bookName: BibleCatalog.book(id: ref.bookId)?.name(locale) ?? ref.bookId))
-                                .font(.system(size: size.metrics.verseFontSize * 0.9, weight: .semibold))
+                                .askFont(size: size.metrics.verseFontSize * 0.9, weight: .semibold)
                                 .foregroundStyle(theme.parchmentAccent)
                             if let text = snippet(ref) {
                                 Text(text)
-                                    .font(.system(size: (size.metrics.verseFontSize * 0.9 * 0.9).rounded()))
+                                    .askFont(size: (size.metrics.verseFontSize * 0.9 * 0.9).rounded())
                                     .foregroundStyle(theme.muted)
                                     .lineLimit(3)
                             }
@@ -105,11 +105,11 @@ struct SleepTimerSheet: View {
                 .ignoresSafeArea().onTapGesture(perform: onClose)
             VStack(spacing: 10) {
                 Text(SiteCopy.t("native.sleepTimer"))
-                    .font(.system(size: 17, weight: .bold))
+                    .askFont(size: 17, weight: .bold)
                     .foregroundStyle(theme.ink)
                 if let left = remainingLabel {
                     Text(SiteCopy.f("native.sleepTimerLeft", ["left": left]))
-                        .font(.system(size: 13))
+                        .askFont(size: 13)
                         .foregroundStyle(theme.muted)
                 }
                 ForEach(ChapterAudioPlayer.sleepOptionsMinutes, id: \.self) { m in
@@ -133,7 +133,7 @@ struct SleepTimerSheet: View {
     private func option(_ title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 15, weight: .semibold))
+                .askFont(size: 15, weight: .semibold)
                 .foregroundStyle(theme.ink)
                 .frame(maxWidth: .infinity)
                 .frame(height: 44)

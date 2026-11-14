@@ -1,0 +1,181 @@
+--- before/HomeView.swift
++++ after/HomeView.swift
+@@ -18,6 +18,7 @@
+     @Environment(\.scenePhase) private var scenePhase
+     @Environment(\.colorScheme) private var colorScheme
+     @State private var toolsOpen = false
++    @State private var albumsOpen = false
+     @State private var idleEpoch = 0
+     @State private var chromeVisible = true
+     @State private var lockedBottomInset: CGFloat = 0
+@@ -43,8 +44,10 @@
+                     .accessibilityValue(prefs.sceneId)
+                     .accessibilityIdentifier("home.scenery")
+                     .accessibilityAction(named: copy("打开音乐", "Open music")) { touch(); onOpenMusic() }
++                    .accessibilityAction(named: copy("调整", "Adjust")) { setTools(true) }
+                     .onTapGesture {
+-                        if toolsOpen { setTools(false) }
++                        if albumsOpen { closeAlbums() }
++                        else if toolsOpen { setTools(false) }
+                         else {
+                             withAnimation(.easeInOut(duration: 0.3)) { chromeVisible.toggle() }
+                             onChromeHidden(!chromeVisible)
+@@ -53,6 +56,7 @@
+                     }
+                     .gesture(DragGesture(minimumDistance: 20).onEnded { g in
+                         guard !toolsOpen else { return }
++                        if albumsOpen { closeAlbums(); return }
+                         let dx = g.translation.width, dy = g.translation.height
+                         if abs(dx) > 60 && abs(dx) > abs(dy) * 1.5 {
+                             swipeScene(dx < 0 ? 1 : -1)
+@@ -67,28 +71,29 @@
+                 if !toolsOpen {
+                     VStack(spacing: 0) {
+                         Spacer(minLength: 0)
+-                        VStack(spacing: 8) {
++                        VStack(spacing: 14) {
++                            if albumsOpen {
++                                albumOptions { album in music.selectAlbum(album); closeAlbums() }
++                                    .padding(14).frame(maxWidth: 340)
++                                    .foregroundStyle(ink)
++                                    .background(colorScheme == .dark ? Color(rgb: 0x28251f) : Color(rgb: 0xf7f0e4), in: RoundedRectangle(cornerRadius: 22))
++                                    .shadow(color: .black.opacity(0.16), radius: 14, y: 4)
++                                    .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .bottom)))
++                            }
+                             HStack(spacing: 32) {
+-                                soundButton("music.note", title: copy("音乐", "Music"), on: music.isPlaying, id: "home.music") {
+-                                    touch(); onPressAlbum(music.album)
+-                                }
++                                musicControl
+                                 soundButton("speaker.wave.2", title: copy("朗读", "Read aloud"), on: home.voiceOn, id: "home.voice") {
+                                     touch(); home.toggleVoice()
+                                 }
+                                 .disabled(!home.voiceAvailable).opacity(home.voiceAvailable ? 1 : 0.35)
+                             }
+-                            Button { setTools(true) } label: {
+-                                Capsule().fill(.white.opacity(0.85)).frame(width: 42, height: 4)
+-                                    .frame(width: 100, height: 44).contentShape(Rectangle())
+-                            }
+-                            .accessibilityLabel(copy("调整", "Adjust"))
+-                            .accessibilityIdentifier("home.adjust")
++
+                         }
+                         .gesture(DragGesture(minimumDistance: 20).onEnded { g in
+                             if g.translation.height < -35 && abs(g.translation.height) > abs(g.translation.width) { setTools(true) }
+                         })
+                     }
+-                    .padding(.bottom, 76 + lockedBottomInset)
++                    .padding(.bottom, 128 + lockedBottomInset)
+                     .opacity(chromeVisible ? 1 : 0.55)
+                 }
+                 if toolsOpen {
+@@ -106,9 +111,9 @@
+             }
+         }
+         .task(id: idleEpoch) {
+-            guard !toolsOpen else { return }
++            guard !toolsOpen, !albumsOpen else { return }
+             try? await Task.sleep(nanoseconds: 7_000_000_000)
+-            guard !Task.isCancelled, !toolsOpen else { return }
++            guard !Task.isCancelled, !toolsOpen, !albumsOpen else { return }
+             withAnimation(.easeInOut(duration: 0.6)) { chromeVisible = false }
+             onChromeHidden(true)
+         }
+@@ -116,7 +121,7 @@
+     }
+ 
+     private func setTools(_ open: Bool) {
+-        withAnimation(.easeInOut(duration: 0.28)) { toolsOpen = open; chromeVisible = true }
++        withAnimation(.easeInOut(duration: 0.28)) { toolsOpen = open; albumsOpen = false; chromeVisible = true }
+         onChromeHidden(open)
+         idleEpoch += 1
+     }
+@@ -143,6 +148,60 @@
+                 .foregroundStyle(.white).kerning(0.1)
+                 .padding(.top, HomeVerseTypography.refTopGap(scale: prefs.textScale)).verseTextShadow()
+         }
++    }
++    private func closeAlbums() {
++        withAnimation(.easeInOut(duration: 0.2)) { albumsOpen = false }
++        touch()
++    }
++    private func openAlbums() {
++        touch()
++        withAnimation(.easeInOut(duration: 0.2)) { albumsOpen = true }
++    }
++    private var musicControl: some View {
++        VStack(spacing: 6) {
++            Image(systemName: albumSymbol(music.album)).font(.system(size: 26))
++            Text(copy("音乐", "Music")).askFont(size: 12)
++        }
++        .foregroundStyle(music.isPlaying ? Brand.logo : .white).verseTextShadow()
++        .frame(minWidth: 64, minHeight: 64).contentShape(Rectangle())
++        // 长按和短按互斥：展开专辑时不顺带播放或暂停。
++        .gesture(LongPressGesture(minimumDuration: 0.45).exclusively(before: TapGesture()).onEnded { result in
++            switch result {
++            case .first(true): openAlbums()
++            case .second: touch(); onPressAlbum(music.album)
++            default: break
++            }
++        })
++        .accessibilityElement(children: .ignore)
++        .accessibilityLabel(copy("音乐", "Music"))
++        .accessibilityValue(copy(music.album, albumEnglish(music.album)) + " · " + (music.isPlaying ? copy("开启", "On") : copy("关闭", "Off")))
++        .accessibilityHint(copy("长按选择专辑", "Touch and hold to choose an album"))
++        .accessibilityAddTraits(.isButton)
++        .accessibilityIdentifier("home.music")
++        .accessibilityAction { touch(); onPressAlbum(music.album) }
++        .accessibilityAction(named: copy("选择专辑", "Choose album")) { openAlbums() }
++    }
++    private func albumOptions(onSelect: @escaping (String) -> Void) -> some View {
++                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
++                        ForEach(MusicCatalog.albums, id: \.self) { album in
++                            let selected = music.album == album
++                            Button { onSelect(album) } label: {
++                                VStack(spacing: 7) {
++                                    Image(systemName: albumSymbol(album)).font(.system(size: 23))
++                                    Text(copy(album, albumEnglish(album)))
++                                        .askFont(size: 12).multilineTextAlignment(.center)
++                                }
++                                .frame(maxWidth: .infinity, minHeight: 68)
++                                .padding(.vertical, 6)
++                                .background(selected ? Brand.logo.opacity(0.22) : ink.opacity(0.05), in: RoundedRectangle(cornerRadius: 14))
++                                .overlay(RoundedRectangle(cornerRadius: 14).stroke(selected ? Color(rgb: 0xb88a35) : .clear, lineWidth: 1))
++                            }
++                            .buttonStyle(.plain)
++                            .accessibilityLabel(copy(album, albumEnglish(album)))
++                            .accessibilityAddTraits(selected ? .isSelected : [])
++                            .accessibilityIdentifier("home.album.\(album)")
++                        }
++                    }
+     }
+     private func soundButton(_ symbol: String, title: String, on: Bool, id: String, action: @escaping () -> Void) -> some View {
+         Button(action: action) {
+@@ -201,26 +260,7 @@
+                             .accessibilityLabel(copy("环境音音量", "Ambient volume"))
+                     }.disabled(!ambient.isOn).opacity(ambient.isOn ? 1 : 0.4)
+                     sectionTitle(copy("音乐专辑", "Music albums"))
+-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
+-                        ForEach(MusicCatalog.albums, id: \.self) { album in
+-                            let selected = music.album == album
+-                            Button { music.selectAlbum(album) } label: {
+-                                VStack(spacing: 7) {
+-                                    Image(systemName: albumSymbol(album)).font(.system(size: 23))
+-                                    Text(copy(album, albumEnglish(album)))
+-                                        .askFont(size: 12).multilineTextAlignment(.center)
+-                                }
+-                                .frame(maxWidth: .infinity, minHeight: 68)
+-                                .padding(.vertical, 6)
+-                                .background(selected ? Brand.logo.opacity(0.22) : ink.opacity(0.05), in: RoundedRectangle(cornerRadius: 14))
+-                                .overlay(RoundedRectangle(cornerRadius: 14).stroke(selected ? Color(rgb: 0xb88a35) : .clear, lineWidth: 1))
+-                            }
+-                            .buttonStyle(.plain)
+-                            .accessibilityLabel(copy(album, albumEnglish(album)))
+-                            .accessibilityAddTraits(selected ? .isSelected : [])
+-                            .accessibilityIdentifier("home.album.\(album)")
+-                        }
+-                    }
++                    albumOptions { music.selectAlbum($0) }
+                     sectionTitle(copy("画面", "Picture"))
+                     ScrollView(.horizontal, showsIndicators: false) {
+                         HStack(spacing: 12) {

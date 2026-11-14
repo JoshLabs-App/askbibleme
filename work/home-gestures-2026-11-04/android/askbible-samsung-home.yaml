@@ -1,0 +1,29 @@
+appId: me.askbible.native
+---
+- launchApp
+- tapOn:
+    text: "开始今日灵修|Start today's devotion"
+    optional: true
+- swipe:
+    start: 50%, 42%
+    end: 50%, 66%
+    duration: 500
+- assertVisible: "‹ 首页|‹ Home"
+- takeScreenshot: /tmp/askbible-samsung-music
+- tapOn:
+    point: 29%, 7%
+- assertVisible: "音乐"
+- longPressOn: "音乐"
+- assertVisible: "下午茶"
+- assertVisible: "专注工作"
+- takeScreenshot: /tmp/askbible-samsung-albums
+- tapOn: "下午茶"
+- swipe:
+    start: 50%, 83%
+    end: 50%, 52%
+    duration: 500
+- assertVisible: "调整"
+- assertVisible: "环境音"
+- takeScreenshot: /tmp/askbible-samsung-adjust
+- pressKey: Back
+- assertNotVisible: "调整"

@@ -3,7 +3,7 @@ import UIKit
 
 /// 长按某节弹出的操作单。对应 RN ReadChapterScreenVerseActionModal（ReadChapterBottomSheet 外壳）：
 /// 标题「第 N 节」+ 右上「关闭」，三列格子：本节复制 / 双击收藏（已收藏则不出）/ 分享。
-/// RN 的「划重点」还没接；「多选复制」2026-09-11 补上了。
+/// 阅读正文使用原生选区菜单；此面板保留给绘制模式的既有操作。
 struct VerseActionSheet: View {
     let verse: Int
     let bookmarked: Bool
@@ -11,8 +11,6 @@ struct VerseActionSheet: View {
     var onCopy: () -> Void
     var onBookmark: () -> Void
     var onShare: () -> Void
-    /// 多选复制：以这一节为起点进入选择态（RN runStartMultiCopy）
-    var onMultiCopy: () -> Void = {}
     /// 划重点：进入划字模式（RN runOpenHighlightEditor）
     var onHighlight: () -> Void = {}
     var onClose: () -> Void
@@ -29,9 +27,9 @@ struct VerseActionSheet: View {
                 .ignoresSafeArea()
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .top, spacing: 12) {
-                    Text(SiteCopy.f("pages.read.verseActionVerseTitle", ["verse": "\(verse)"])).font(.system(size: max(17, (fs * 0.95).rounded()), weight: .semibold)).foregroundStyle(theme.ink)
+                    Text(SiteCopy.f("pages.read.verseActionVerseTitle", ["verse": "\(verse)"])).askFont(size: max(17, (fs * 0.95).rounded()), weight: .semibold).foregroundStyle(theme.ink)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Button(action: onClose) { Text(SiteCopy.t("pages.read.verseActionClose")).font(.system(size: (fs * 0.85).rounded())).foregroundStyle(theme.muted) }
+                    Button(action: onClose) { Text(SiteCopy.t("pages.read.verseActionClose")).askFont(size: (fs * 0.85).rounded()).foregroundStyle(theme.muted) }
                         .buttonStyle(.plain)
                 }
                 .padding(.bottom, 10)
@@ -39,7 +37,6 @@ struct VerseActionSheet: View {
                     cell(MI.contentCopy, SiteCopy.t("pages.read.verseActionCopy"), iconSize, labelSize, onCopy)
                     if !bookmarked { cell(MI.bookmarkBorder, SiteCopy.t("pages.read.verseActionBookmark"), iconSize, labelSize, onBookmark) }
                     cell(MI.iosShare, SiteCopy.t("pages.read.verseActionShare"), iconSize, labelSize, onShare)
-                    cell(MI.libraryAddCheck, SiteCopy.t("native.verseMultiCopy"), iconSize, labelSize, onMultiCopy)
                     cell(MI.brush, SiteCopy.t("native.highlight"), iconSize, labelSize, onHighlight)
                 }
                 .padding(.top, 4).padding(.bottom, 8)
@@ -60,7 +57,7 @@ struct VerseActionSheet: View {
         Button(action: action) {
             VStack(spacing: 8) {
                 MaterialIcon(glyph: glyph, size: icon, color: theme.ink)
-                Text(label).font(.system(size: font, weight: .medium)).foregroundStyle(theme.ink).lineSpacing(2).multilineTextAlignment(.center).lineLimit(2)
+                Text(label).askFont(size: font, weight: .medium).foregroundStyle(theme.ink).lineSpacing(2).multilineTextAlignment(.center).lineLimit(2)
             }
             .frame(maxWidth: .infinity).padding(.horizontal, 6).padding(.vertical, 14)
         }
@@ -76,7 +73,7 @@ struct VerseFeedbackToast: View {
     var body: some View {
         if let message {
             Text(message)
-                .font(.system(size: 14, weight: .medium))
+                .askFont(size: 14, weight: .medium)
                 .foregroundStyle(Color(parchment: 0xF7F4EF))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 16).padding(.vertical, 10)

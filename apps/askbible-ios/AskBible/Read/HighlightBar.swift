@@ -15,16 +15,16 @@ struct HighlightBar: View {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(SiteCopy.t("native.highlight", locale))
-                        .font(.system(size: 17, weight: .semibold))
+                        .askFont(size: 17, weight: .semibold)
                         .foregroundStyle(theme.ink)
                     Text(SiteCopy.t("native.highlightHint", locale))
-                        .font(.system(size: 12))
+                        .askFont(size: 12)
                         .foregroundStyle(theme.muted)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 Button(action: onDone) {
                     Text(SiteCopy.t("native.done", locale))
-                        .font(.system(size: 15, weight: .semibold))
+                        .askFont(size: 15, weight: .semibold)
                         .foregroundStyle(theme.ink)
                         .contentShape(Rectangle())
                 }
@@ -54,7 +54,7 @@ struct HighlightBar: View {
                 Spacer(minLength: 8)
                 Button { erasing = true } label: {
                     Text(SiteCopy.t("native.highlightErase", locale))
-                        .font(.system(size: 13, weight: .semibold))
+                        .askFont(size: 13, weight: .semibold)
                         .foregroundStyle(erasing ? theme.ink : theme.muted)
                         .padding(.horizontal, 12).frame(minHeight: 34)
                         .background(

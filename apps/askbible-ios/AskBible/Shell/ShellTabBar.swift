@@ -3,12 +3,13 @@ import SwiftUI
 enum ShellTab: String, CaseIterable, Identifiable {
     /// `.plan` 是底栏中央键那页（读经计划播放页）：与首页平级的主页面，底栏照常；
     /// Josh 2026-09-09「中间计划与旁边的圣经，要直接就切换过来」
-    case home, music, plan, read, explore
+    case home, panorama, music, plan, read, explore
     var id: String { rawValue }
 
     /// 与 RN shellTabBarHelpers 同一套 MaterialIcons 字形
     var glyph: String {
         switch self {
+        case .panorama: return "\u{e55b}"
         case .home: return MI.home
         case .music: return MI.musicNote
         case .plan: return MCI.accountVoice
@@ -21,6 +22,7 @@ enum ShellTab: String, CaseIterable, Identifiable {
     /// 系统 Tab Bar 只认 SF Symbol 才能拿到 Liquid Glass 的选中形变与正确的度量。
     var symbol: String {
         switch self {
+        case .panorama: return "map.fill"
         case .home: return "house.fill"
         case .music: return "music.note"
         case .plan: return "person.wave.2.fill"
@@ -32,6 +34,9 @@ enum ShellTab: String, CaseIterable, Identifiable {
     /// 底栏文字。原来是纯图标栏（RN 同构），换原生栏后必须有标签 —— 系统要用它做无障碍与形变布局。
     func label(_ locale: AppLocale) -> String {
         switch (self, locale) {
+        case (.panorama, .en): return "Panorama"
+        case (.panorama, .zhTW): return "全景"
+        case (.panorama, _): return "全景"
         case (.home, .en): return "Home"
         case (.home, .zhTW): return "首頁"
         case (.home, _): return "首页"
@@ -85,7 +90,7 @@ struct AskTabShell<Screen: View, Dock: View>: View {
 
     private var tabs: some View {
         TabView(selection: $selection) {
-            ForEach(ShellTab.allCases) { tab in
+            ForEach(ShellTab.allCases.filter { $0 != .music }) { tab in
                 screen(tab)
                     .toolbar(showTabBar ? .visible : .hidden, for: .tabBar)
                     // 坞是我们自己的一块玻璃卡，不走 `tabViewBottomAccessory`（系统 accessory 只给一行高，

@@ -1,0 +1,40 @@
+appId: me.askbible
+---
+- launchApp
+- swipe:
+    start: 50%, 40%
+    end: 50%, 65%
+    duration: 500
+- assertVisible:
+    id: home.music.back
+- takeScreenshot: /tmp/askbible-music-screen
+- tapOn:
+    id: home.music.back
+- assertVisible:
+    id: home.adjust
+- tapOn:
+    id: home.music
+- swipe:
+    start: 50%, 40%
+    end: 50%, 65%
+    duration: 500
+- assertVisible:
+    id: home.music.back
+- tapOn:
+    id: home.music.back
+- assertVisible:
+    id: home.music
+    text: ".*开启.*"
+- tapOn:
+    id: home.music
+- tapOn:
+    id: home.adjust
+- swipe:
+    start: 50%, 39%
+    end: 50%, 78%
+    duration: 500
+- assertVisible:
+    id: home.adjust
+- assertNotVisible:
+    id: home.music.back
+- takeScreenshot: /tmp/askbible-down-panel-closed

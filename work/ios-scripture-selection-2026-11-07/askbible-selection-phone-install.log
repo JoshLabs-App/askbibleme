@@ -1,0 +1,2 @@
+ERROR: The device disconnected immediately after connecting. (com.apple.dt.CoreDeviceError error 4000 (0xFA0))
+       DeviceIdentifier = B46E6417-63D5-5690-85EE-AC42091E3ED5

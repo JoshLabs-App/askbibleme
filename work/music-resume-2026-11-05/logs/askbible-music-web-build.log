@@ -1,0 +1,15 @@
+
+> askbible@0.1.0 prebuild
+> node scripts/write-app-build-meta.mjs && node scripts/sync-web-static-read-content.mjs && node node_modules/tsx/dist/cli.mjs scripts/build-bible-sqlite-from-json.ts && node node_modules/tsx/dist/cli.mjs --tsconfig scripts/tsconfig.config-build.json scripts/build-static-scripture.ts && node node_modules/tsx/dist/cli.mjs --tsconfig scripts/tsconfig.config-build.json scripts/build-static-xrefs.ts
+
+[write-app-build-meta] wrote /Users/joshua/Desktop/APP/01AskBible/public/app-build.json id=28b45c08-1dac-482f-8f70-5596b0285587
+[ok] open-usfm-chapter-segments.zh.json (5.6 MB)
+[ok] open-usfm-chapter-segments.story.t1.zh.json (0.7 MB)
+[ok] info-edition-v1-published.json (22.5 MB)
+[ok] generation-roles.json (0.0 MB)
+[done] → public/read
+Error: no such table: verse
+    at e.handleError (/Users/joshua/Desktop/APP/01AskBible/node_modules/sql.js/dist/sql-wasm.js:90:192)
+    at e.tb (/Users/joshua/Desktop/APP/01AskBible/node_modules/sql.js/dist/sql-wasm.js:88:454)
+    at loadThemeRepeatCountMap (/Users/joshua/Desktop/APP/01AskBible/lib/bible/golden-verse-theme-repeat.ts:46:19)
+    at async main (/Users/joshua/Desktop/APP/01AskBible/scripts/build-bible-sqlite-from-json.ts:55:29)

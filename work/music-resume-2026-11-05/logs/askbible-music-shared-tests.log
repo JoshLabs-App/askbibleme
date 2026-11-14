@@ -1,0 +1,15 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/joshua/Desktop/APP/01AskBible
+
+ ✓ lib/home/home-nature-album-press.test.ts (3 tests) 1ms
+ ✓ apps/askbible-mobile/src/music/musicResumeForManualPlay.test.ts (2 tests) 2ms
+ ✓ apps/askbible-mobile/src/home/homeNatureAlbumPress.test.ts (14 tests) 2ms
+ ✓ lib/music-companion/shell-default-audio-src.test.ts (2 tests) 1ms
+ ✓ apps/askbible-mobile/src/music/musicAlbumPlayback.test.ts (5 tests) 2ms
+
+ Test Files  5 passed (5)
+      Tests  26 passed (26)
+   Start at  10:09:06
+   Duration  446ms (transform 113ms, setup 0ms, collect 156ms, tests 9ms, environment 0ms, prepare 252ms)
+

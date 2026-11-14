@@ -40,6 +40,10 @@ class AmbientPlayer(context: Context, private val scope: CoroutineScope) {
     var slotId by mutableStateOf<String?>(null); private set
     var sleepDeadlineMs by mutableStateOf<Long?>(null); private set
     val isOn: Boolean get() = slotId != null
+    private var volumeState by mutableStateOf(1f)
+    var volume: Float
+        get() = volumeState
+        set(value) { volumeState = value.coerceIn(0f, 1f); setDucked(ducked) }
 
     /** 开环境音前的互斥（人声 + 音乐都在时要停音乐），由 RootScreen 接线 */
     var onWillPlay: (() -> Unit)? = null
@@ -84,7 +88,7 @@ class AmbientPlayer(context: Context, private val scope: CoroutineScope) {
                 .setMediaMetadata(MediaMetadata.Builder().setTitle(slot.label).setArtist(SiteCopy.t("native.ambientNowPlaying")).build())
                 .build()
         )
-        player.volume = slot.gain * (if (ducked) DUCK_GAIN else 1f)
+        player.volume = slot.gain * volume * (if (ducked) DUCK_GAIN else 1f)
         player.prepare()
         player.playWhenReady = true
         PlaybackSessions.ensureStarted(appContext)
@@ -102,7 +106,7 @@ class AmbientPlayer(context: Context, private val scope: CoroutineScope) {
     fun setDucked(on: Boolean) {
         ducked = on
         val slot = slotId?.let { AmbientScenes.slot(it) } ?: return
-        player.volume = slot.gain * (if (on) DUCK_GAIN else 1f)
+        player.volume = slot.gain * volume * (if (on) DUCK_GAIN else 1f)
     }
 
     fun setSleepTimer(minutes: Int?) {

@@ -1,0 +1,29 @@
+appId: me.askbible
+---
+- launchApp
+- tapOn:
+    id: home.adjust
+- scrollUntilVisible:
+    element:
+      id: home.album.专注工作
+    direction: DOWN
+- assertVisible:
+    id: home.album.安静
+- assertVisible:
+    id: home.album.下午茶
+- assertVisible:
+    id: home.album.赞美诗
+- assertVisible:
+    id: home.album.钢琴
+- assertVisible:
+    id: home.album.睡眠
+- tapOn:
+    id: home.album.下午茶
+- takeScreenshot: /tmp/askbible-album-icons
+- tapOn:
+    id: home.album.安静
+- tapOn:
+    id: home.adjust.close
+- assertVisible:
+    id: home.music
+    text: ".*关闭.*"

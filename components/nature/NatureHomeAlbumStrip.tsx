@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import Link from "next/link";
+import { shellPlaybackUrlsEqual } from "@/lib/music-companion/shell-playback-storage";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { MusicAlbumGlyph } from "@/components/music/MusicAlbumGlyph";
 import type { MusicHomeTransportSideSlot } from "@/components/music/MusicHomeTransportButtonRow";
@@ -156,7 +158,8 @@ export function NatureHomeAlbumStrip({
   ];
 
   return (
-    <div className="nature-home-album-strip" data-shell-swipe-nav-exclude>
+    <div className="flex flex-col items-center gap-2" data-shell-swipe-nav-exclude>
+    <div className="nature-home-album-strip">
       {slots.map(({ key, slot }) => (
         <button
           key={key}
@@ -170,6 +173,23 @@ export function NatureHomeAlbumStrip({
           {slot.icon}
         </button>
       ))}
+    </div>
+    <div className="flex items-center gap-6 text-[13px] text-white/85">
+      <button type="button" className="inline-flex min-h-11 items-center gap-1.5"
+        onClick={() => {
+          const queue = storeTracks.filter((track) => inferTrackAlbumFromCompanionTrack(track) === (currentAlbum || DEFAULT_MUSIC_ALBUM));
+          const index = queue.findIndex((track) => shellPlaybackUrlsEqual(track.src ?? "", playback.effectiveSrc));
+          const next = queue[(index + 1) % queue.length];
+          if (next?.src) playback.setPlaybackSrc(next.src, { autoPlay: musicOn });
+        }}>
+        <ShellMaterialIcon name="skip-next" size={20} color={INK} legibilityShadow />
+        {zh ? "下一首" : "Next track"}
+      </button>
+      <Link href="/music" className="inline-flex min-h-11 items-center gap-1.5">
+        <ShellMaterialIcon name="queue-music" size={20} color={INK} legibilityShadow />
+        {zh ? (locale === "zh-TW" ? "選音樂" : "选音乐") : "Choose music"}
+      </Link>
+    </div>
     </div>
   );
 }

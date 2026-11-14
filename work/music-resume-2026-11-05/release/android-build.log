@@ -1,0 +1,146 @@
+> Task :app:preBuild UP-TO-DATE
+> Task :core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :core:processResources NO-SOURCE
+> Task :core:processTestResources NO-SOURCE
+> Task :app:processReleaseNavigationResources FROM-CACHE
+> Task :app:compileReleaseNavigationResources FROM-CACHE
+> Task :app:generateReleaseResValues FROM-CACHE
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources FROM-CACHE
+> Task :app:mergeReleaseResources FROM-CACHE
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease FROM-CACHE
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:packageReleaseResources FROM-CACHE
+> Task :app:checkReleaseAarMetadata
+> Task :app:parseReleaseLocalResources FROM-CACHE
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:buildKotlinToolingMetadata
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease FROM-CACHE
+> Task :app:desugarReleaseFileDependencies FROM-CACHE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseShaders
+> Task :app:mergeExtDexRelease FROM-CACHE
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:writeReleaseAppMetadata
+> Task :app:mergeReleaseArtProfile
+> Task :app:collectReleaseDependencies
+> Task :app:configureReleaseDependencies
+> Task :app:extractProguardFiles
+> Task :app:parseReleaseIntegrityConfig FROM-CACHE
+> Task :app:validateSigningRelease
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:generateDebugBuildConfig
+> Task :app:processDebugNavigationResources FROM-CACHE
+> Task :app:compileDebugNavigationResources FROM-CACHE
+> Task :app:generateDebugResValues FROM-CACHE
+> Task :app:checkDebugAarMetadata
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources FROM-CACHE
+> Task :app:mergeDebugResources FROM-CACHE
+> Task :app:packageDebugResources FROM-CACHE
+> Task :app:parseDebugLocalResources FROM-CACHE
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug FROM-CACHE
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:javaPreCompileDebug FROM-CACHE
+> Task :app:mergeDebugShaders
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets
+> Task :app:compressDebugAssets FROM-CACHE
+> Task :app:desugarDebugFileDependencies FROM-CACHE
+> Task :app:mergeDebugJniLibFolders
+> Task :app:validateSigningDebug
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
+> Task :app:checkDebugDuplicateClasses
+> Task :app:processDebugManifestForPackage
+> Task :app:mergeExtDexDebug FROM-CACHE
+> Task :app:processDebugResources
+> Task :app:processReleaseManifestForPackage
+> Task :app:processReleaseResources
+> Task :app:bundleReleaseResources
+> Task :core:compileKotlin
+> Task :core:compileJava NO-SOURCE
+> Task :core:classes UP-TO-DATE
+> Task :core:jar
+> Task :app:mergeReleaseNativeLibs
+
+> Task :app:stripReleaseDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so. Run with --info option to learn more.
+
+> Task :app:mergeDebugNativeLibs
+> Task :app:extractReleaseNativeSymbolTables FROM-CACHE
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so. Run with --info option to learn more.
+
+> Task :core:compileTestKotlin
+> Task :core:compileTestJava NO-SOURCE
+> Task :core:testClasses UP-TO-DATE
+> Task :core:test
+> Task :app:mergeLibDexDebug
+
+> Task :app:compileReleaseKotlin
+w: file:///private/tmp/askbible-music-release/apps/askbible-android/app/src/main/java/me/askbible/native_/MainActivity.kt:255:50 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+w: file:///private/tmp/askbible-music-release/apps/askbible-android/app/src/main/java/me/askbible/native_/audio/AudioInterruptionMonitor.kt:83:101 'static field FLAG_LOW_LATENCY: Int' is deprecated. Deprecated in Java.
+w: file:///private/tmp/askbible-music-release/apps/askbible-android/app/src/main/java/me/askbible/native_/audio/GoldenVersePlayer.kt:60:57 'static field FLAG_LOW_LATENCY: Int' is deprecated. Deprecated in Java.
+w: file:///private/tmp/askbible-music-release/apps/askbible-android/app/src/main/java/me/askbible/native_/ui/AchievementsScreen.kt:146:31 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///private/tmp/askbible-music-release/apps/askbible-android/app/src/main/java/me/askbible/native_/ui/HomeSceneVideo.kt:39:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+w: file:///private/tmp/askbible-music-release/apps/askbible-android/app/src/main/java/me/askbible/native_/ui/NavDrawer.kt:242:95 'field versionCode: Int' is deprecated. Deprecated in Java.
+w: file:///private/tmp/askbible-music-release/apps/askbible-android/app/src/main/java/me/askbible/native_/ui/SearchScreen.kt:169:39 'constructor(capitalization: KeyboardCapitalization = ..., autoCorrect: Boolean, keyboardType: KeyboardType = ..., imeAction: ImeAction = ..., platformImeOptions: PlatformImeOptions? = ..., showKeyboardOnFocus: Boolean? = ..., hintLocales: LocaleList? = ...): KeyboardOptions' is deprecated. Please use the new constructor that takes optional autoCorrectEnabled parameter.
+w: file:///private/tmp/askbible-music-release/apps/askbible-android/app/src/main/java/me/askbible/native_/ui/TranslationPanel.kt:97:35 'val Icons.Filled.MenuBook: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.MenuBook.
+w: file:///private/tmp/askbible-music-release/apps/askbible-android/app/src/main/java/me/askbible/native_/update/PlayUpdateGate.kt:41:33 'fun startUpdateFlowForResult(p0: AppUpdateInfo, p1: Int, p2: Activity, p3: Int): Boolean' is deprecated. Deprecated in Java.
+
+> Task :app:compileDebugKotlin
+w: file:///private/tmp/askbible-music-release/apps/askbible-android/app/src/main/java/me/askbible/native_/MainActivity.kt:255:50 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+w: file:///private/tmp/askbible-music-release/apps/askbible-android/app/src/main/java/me/askbible/native_/audio/AudioInterruptionMonitor.kt:83:101 'static field FLAG_LOW_LATENCY: Int' is deprecated. Deprecated in Java.
+w: file:///private/tmp/askbible-music-release/apps/askbible-android/app/src/main/java/me/askbible/native_/audio/GoldenVersePlayer.kt:60:57 'static field FLAG_LOW_LATENCY: Int' is deprecated. Deprecated in Java.
+w: file:///private/tmp/askbible-music-release/apps/askbible-android/app/src/main/java/me/askbible/native_/ui/AchievementsScreen.kt:146:31 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///private/tmp/askbible-music-release/apps/askbible-android/app/src/main/java/me/askbible/native_/ui/HomeSceneVideo.kt:39:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+w: file:///private/tmp/askbible-music-release/apps/askbible-android/app/src/main/java/me/askbible/native_/ui/NavDrawer.kt:242:95 'field versionCode: Int' is deprecated. Deprecated in Java.
+w: file:///private/tmp/askbible-music-release/apps/askbible-android/app/src/main/java/me/askbible/native_/ui/SearchScreen.kt:169:39 'constructor(capitalization: KeyboardCapitalization = ..., autoCorrect: Boolean, keyboardType: KeyboardType = ..., imeAction: ImeAction = ..., platformImeOptions: PlatformImeOptions? = ..., showKeyboardOnFocus: Boolean? = ..., hintLocales: LocaleList? = ...): KeyboardOptions' is deprecated. Please use the new constructor that takes optional autoCorrectEnabled parameter.
+w: file:///private/tmp/askbible-music-release/apps/askbible-android/app/src/main/java/me/askbible/native_/ui/TranslationPanel.kt:97:35 'val Icons.Filled.MenuBook: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.MenuBook.
+w: file:///private/tmp/askbible-music-release/apps/askbible-android/app/src/main/java/me/askbible/native_/update/PlayUpdateGate.kt:41:33 'fun startUpdateFlowForResult(p0: AppUpdateInfo, p1: Int, p2: Activity, p3: Int): Boolean' is deprecated. Deprecated in Java.
+
+> Task :app:compileReleaseJavaWithJavac
+> Task :app:dexBuilderRelease
+> Task :app:mergeReleaseGlobalSynthetics FROM-CACHE
+> Task :app:processReleaseJavaRes
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:compileDebugJavaWithJavac
+> Task :app:mergeReleaseJavaResource
+> Task :app:dexBuilderDebug
+> Task :app:mergeDebugGlobalSynthetics FROM-CACHE
+> Task :app:processDebugJavaRes
+> Task :app:mergeProjectDexDebug
+> Task :app:mergeDebugJavaResource
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :app:assembleDebug
+> Task :app:mergeDexRelease
+> Task :app:buildReleasePreBundle
+> Task :app:compileReleaseArtProfile
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:packageReleaseBundle
+> Task :app:signReleaseBundle
+> Task :app:produceReleaseBundleIdeListingFile
+> Task :app:createReleaseBundleListingFileRedirect
+> Task :app:bundleRelease
+
+BUILD SUCCESSFUL in 32s
+98 actionable tasks: 71 executed, 27 from cache

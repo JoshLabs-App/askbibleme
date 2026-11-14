@@ -1,0 +1,16 @@
+
+> askbible@0.1.0 build
+> NODE_OPTIONS=--max-old-space-size=8192 next build
+
+   ▲ Next.js 15.5.18
+   - Experiments (use with caution):
+     ✓ webpackMemoryOptimizations
+
+
+> Build error occurred
+[Error: ENOENT: no such file or directory, stat '/Users/joshua/Desktop/APP/01AskBible/.env.local'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'stat',
+  path: '/Users/joshua/Desktop/APP/01AskBible/.env.local'
+}

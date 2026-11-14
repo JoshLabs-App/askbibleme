@@ -40,16 +40,16 @@ struct PostReadingEditions: View {
     private var heading: some View {
         VStack(spacing: 0) {
             Text(SiteCopy.t("pages.read.postReadingEditionsHeading"))
-                .font(.system(size: sx(22), weight: .semibold)).tracking(0.8)
+                .askFont(size: sx(22), weight: .semibold).tracking(0.8)
                 .lineSpacing(max(0, sx(30) - sx(22)))
                 .foregroundStyle(theme.ink).multilineTextAlignment(.center)
                 .padding(.bottom, 10)
             Text(SiteCopy.t("pages.read.postReadingEditionsLead"))
-                .font(.system(size: sx(13))).lineSpacing(max(0, sx(21) - sx(13)))
+                .askFont(size: sx(13)).lineSpacing(max(0, sx(21) - sx(13)))
                 .foregroundStyle(Self.lead).multilineTextAlignment(.center)
                 .padding(.horizontal, 18).padding(.bottom, 10)
             Text(SiteCopy.t("pages.read.postReadingEditionsTapHint"))
-                .font(.system(size: sx(12), weight: .medium)).tracking(0.2)
+                .askFont(size: sx(12), weight: .medium).tracking(0.2)
                 .lineSpacing(max(0, sx(18) - sx(12)))
                 .foregroundStyle(Self.hint).multilineTextAlignment(.center)
                 .padding(.bottom, 8)
@@ -88,16 +88,16 @@ struct PostReadingEditions: View {
                 }
                 VStack(spacing: 7) {
                     Text(title)
-                        .font(.system(size: sx(17), weight: .semibold)).tracking(0.6)
+                        .askFont(size: sx(17), weight: .semibold).tracking(0.6)
                         .lineSpacing(max(0, sx(24) - sx(17)))
                         .foregroundStyle(MarkdownBody.accent).multilineTextAlignment(.center)
                     Text(blurb)
-                        .font(.system(size: sx(11))).lineSpacing(max(0, sx(17) - sx(11)))
+                        .askFont(size: sx(11)).lineSpacing(max(0, sx(17) - sx(11)))
                         .foregroundStyle(Color(red: 120 / 255, green: 75 / 255, blue: 30 / 255, opacity: 0.86))
                         .multilineTextAlignment(.center).frame(maxWidth: 168)
                     HStack(spacing: 2) {
                         Text(SiteCopy.t(isActive ? "pages.read.postReadingEditionSelected" : "pages.read.postReadingEditionTapAction"))
-                            .font(.system(size: 11, weight: .medium)).tracking(0.2)
+                            .askFont(size: 11, weight: .medium).tracking(0.2)
                             .foregroundStyle(Self.hint)
                         MaterialIcon(glyph: isActive ? MI.checkCircle : MI.chevronRight, size: 14,
                                      color: isActive ? Color(parchment: 0x7A633A) : Self.navInk)
@@ -120,7 +120,7 @@ struct PostReadingEditions: View {
                     Button { onNavigate(p.bookId, p.chapter) } label: {
                         HStack(spacing: 1) {
                             MaterialIcon(glyph: MI.chevronLeft, size: 16, color: Self.navInk)
-                            Text(SiteCopy.t("pages.read.chapterEndNavPrev")).font(.system(size: 13, weight: .medium)).tracking(0.1)
+                            Text(SiteCopy.t("pages.read.chapterEndNavPrev")).askFont(size: 13, weight: .medium).tracking(0.1)
                                 .foregroundStyle(Color(red: 140 / 255, green: 90 / 255, blue: 42 / 255, opacity: 0.88))
                         }
                         .padding(6)
@@ -130,7 +130,7 @@ struct PostReadingEditions: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             Button(action: onBackToTop) {
-                Text(SiteCopy.t("pages.read.postReadingBackToTop")).font(.system(size: sx(14), weight: .medium)).tracking(0.2)
+                Text(SiteCopy.t("pages.read.postReadingBackToTop")).askFont(size: sx(14), weight: .medium).tracking(0.2)
                     .foregroundStyle(Color(red: 140 / 255, green: 90 / 255, blue: 42 / 255, opacity: 0.84))
                     .padding(.horizontal, 8).padding(.vertical, 6)
             }
@@ -139,7 +139,7 @@ struct PostReadingEditions: View {
                 if let n = next {
                     Button { onNavigate(n.bookId, n.chapter) } label: {
                         HStack(spacing: 1) {
-                            Text(SiteCopy.t("pages.read.chapterChromeNext")).font(.system(size: 13, weight: .medium)).tracking(0.1)
+                            Text(SiteCopy.t("pages.read.chapterChromeNext")).askFont(size: 13, weight: .medium).tracking(0.1)
                                 .foregroundStyle(Color(red: 140 / 255, green: 90 / 255, blue: 42 / 255, opacity: 0.88))
                             MaterialIcon(glyph: MI.chevronRight, size: 16, color: Self.navInk)
                         }
@@ -182,7 +182,7 @@ private struct EditionBlock: View {
         let content = loaded
         VStack(spacing: 0) {
             Text(SiteCopy.t("pages.read.infoEditionDisclaimer"))
-                .font(.system(size: sx(12))).lineSpacing(max(0, sx(19) - sx(12)))
+                .askFont(size: sx(12)).lineSpacing(max(0, sx(19) - sx(12)))
                 .foregroundStyle(theme.muted).multilineTextAlignment(.center)
                 .frame(maxWidth: 320).padding(.horizontal, 8)
                 .padding(.top, 10).padding(.bottom, 14 + 4)
@@ -200,7 +200,7 @@ private struct EditionBlock: View {
                             .tint(Color(parchment: 0x8C5A2A))
                             .frame(width: 36, height: 36)
                         Text("首次准备中")
-                            .font(.system(size: sx(13))).foregroundStyle(theme.muted)
+                            .askFont(size: sx(13)).foregroundStyle(theme.muted)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 48)
@@ -209,10 +209,10 @@ private struct EditionBlock: View {
                 case .failed(let msg):
                     VStack(spacing: 16) {
                         Text(SiteCopy.t("pages.read.infoEditionLoadFailed"))
-                            .font(.system(size: sx(13))).lineSpacing(max(0, sx(20) - sx(13)))
+                            .askFont(size: sx(13)).lineSpacing(max(0, sx(20) - sx(13)))
                             .foregroundStyle(theme.muted).frame(maxWidth: .infinity)
                         Button("重试") { downloader.resetForRetry() }
-                            .font(.system(size: sx(14), weight: .semibold))
+                            .askFont(size: sx(14), weight: .semibold)
                             .foregroundStyle(Color(parchment: 0x8C5A2A))
                     }
                     .frame(maxWidth: .infinity)
@@ -224,7 +224,7 @@ private struct EditionBlock: View {
                         if let h = content.heading {
                             // titleStyles：24/700 强调色、行高 36、字距 .5、居中、上 30 下 22
                             Text(h)
-                                .font(.system(size: sx(24), weight: .bold)).tracking(0.5)
+                                .askFont(size: sx(24), weight: .bold).tracking(0.5)
                                 .lineSpacing(max(0, sx(36) - sx(24)))
                                 .foregroundStyle(MarkdownBody.accent).multilineTextAlignment(.center)
                                 .frame(maxWidth: .infinity)
@@ -233,13 +233,13 @@ private struct EditionBlock: View {
                         MarkdownBody(markdown: content.body, size: size, theme: theme)
                     } else {
                         Text(SiteCopy.t("pages.read.infoEditionLoadFailed"))
-                            .font(.system(size: sx(13))).lineSpacing(max(0, sx(20) - sx(13)))
+                            .askFont(size: sx(13)).lineSpacing(max(0, sx(20) - sx(13)))
                             .foregroundStyle(theme.muted).frame(maxWidth: .infinity)
                     }
                 }
 
                 Button(action: onBack) {
-                    Text(SiteCopy.t("pages.read.chapterChromeBack")).font(.system(size: sx(14), weight: .semibold)).tracking(0.3)
+                    Text(SiteCopy.t("pages.read.chapterChromeBack")).askFont(size: sx(14), weight: .semibold).tracking(0.3)
                         .foregroundStyle(Color(parchment: 0x8C5A2A))
                         .padding(.horizontal, 8).padding(.vertical, 6)
                 }

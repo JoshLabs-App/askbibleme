@@ -1,0 +1,8 @@
+Running on 192.168.1.15:35601
+ > Flow askbible-music-android-open
+Launch app "me.askbible.musicqa"... COMPLETED
+Assert that "选音乐" is visible... COMPLETED
+Take screenshot /tmp/askbible-music-android-home... COMPLETED
+Tap on "音乐"... COMPLETED
+Tap on "选音乐"... COMPLETED
+Take screenshot /tmp/askbible-music-android-playing... COMPLETED

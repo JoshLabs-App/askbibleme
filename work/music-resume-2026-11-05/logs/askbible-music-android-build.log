@@ -1,0 +1,70 @@
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateDebugBuildConfig FROM-CACHE
+> Task :core:processResources NO-SOURCE
+> Task :app:checkDebugAarMetadata
+> Task :app:processDebugNavigationResources FROM-CACHE
+> Task :app:compileDebugNavigationResources FROM-CACHE
+> Task :app:generateDebugResValues FROM-CACHE
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources FROM-CACHE
+> Task :app:mergeDebugResources FROM-CACHE
+> Task :app:packageDebugResources FROM-CACHE
+> Task :app:parseDebugLocalResources FROM-CACHE
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug FROM-CACHE
+> Task :app:processDebugMainManifest FROM-CACHE
+> Task :app:processDebugManifest FROM-CACHE
+> Task :app:processDebugManifestForPackage FROM-CACHE
+> Task :app:processDebugResources FROM-CACHE
+> Task :app:javaPreCompileDebug FROM-CACHE
+> Task :app:mergeDebugShaders
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets
+> Task :app:desugarDebugFileDependencies FROM-CACHE
+> Task :app:mergeDebugJniLibFolders
+> Task :app:validateSigningDebug
+> Task :app:writeDebugAppMetadata
+> Task :app:checkDebugDuplicateClasses
+> Task :app:writeDebugSigningConfigVersions
+> Task :app:mergeExtDexDebug FROM-CACHE
+> Task :app:compressDebugAssets
+> Task :core:compileKotlin
+> Task :core:compileJava NO-SOURCE
+> Task :core:classes UP-TO-DATE
+> Task :core:jar
+> Task :app:mergeDebugNativeLibs
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so. Run with --info option to learn more.
+
+> Task :app:mergeLibDexDebug
+
+> Task :app:compileDebugKotlin
+w: file:///Users/joshua/Desktop/APP/01AskBible/apps/askbible-android/app/src/main/java/me/askbible/native_/MainActivity.kt:272:50 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+w: file:///Users/joshua/Desktop/APP/01AskBible/apps/askbible-android/app/src/main/java/me/askbible/native_/audio/AudioInterruptionMonitor.kt:83:101 'static field FLAG_LOW_LATENCY: Int' is deprecated. Deprecated in Java.
+w: file:///Users/joshua/Desktop/APP/01AskBible/apps/askbible-android/app/src/main/java/me/askbible/native_/audio/GoldenVersePlayer.kt:60:57 'static field FLAG_LOW_LATENCY: Int' is deprecated. Deprecated in Java.
+w: file:///Users/joshua/Desktop/APP/01AskBible/apps/askbible-android/app/src/main/java/me/askbible/native_/ui/AchievementsScreen.kt:146:31 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///Users/joshua/Desktop/APP/01AskBible/apps/askbible-android/app/src/main/java/me/askbible/native_/ui/HomeSceneVideo.kt:39:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+w: file:///Users/joshua/Desktop/APP/01AskBible/apps/askbible-android/app/src/main/java/me/askbible/native_/ui/NavDrawer.kt:230:95 'field versionCode: Int' is deprecated. Deprecated in Java.
+w: file:///Users/joshua/Desktop/APP/01AskBible/apps/askbible-android/app/src/main/java/me/askbible/native_/ui/SearchScreen.kt:169:39 'constructor(capitalization: KeyboardCapitalization = ..., autoCorrect: Boolean, keyboardType: KeyboardType = ..., imeAction: ImeAction = ..., platformImeOptions: PlatformImeOptions? = ..., showKeyboardOnFocus: Boolean? = ..., hintLocales: LocaleList? = ...): KeyboardOptions' is deprecated. Please use the new constructor that takes optional autoCorrectEnabled parameter.
+w: file:///Users/joshua/Desktop/APP/01AskBible/apps/askbible-android/app/src/main/java/me/askbible/native_/ui/TranslationPanel.kt:97:35 'val Icons.Filled.MenuBook: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.MenuBook.
+w: file:///Users/joshua/Desktop/APP/01AskBible/apps/askbible-android/app/src/main/java/me/askbible/native_/update/PlayUpdateGate.kt:41:33 'fun startUpdateFlowForResult(p0: AppUpdateInfo, p1: Int, p2: Activity, p3: Int): Boolean' is deprecated. Deprecated in Java.
+
+> Task :app:compileDebugJavaWithJavac
+> Task :app:dexBuilderDebug
+> Task :app:mergeDebugGlobalSynthetics FROM-CACHE
+> Task :app:processDebugJavaRes
+> Task :app:mergeProjectDexDebug
+> Task :app:mergeDebugJavaResource
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :app:assembleDebug
+
+BUILD SUCCESSFUL in 27s
+41 actionable tasks: 24 executed, 17 from cache

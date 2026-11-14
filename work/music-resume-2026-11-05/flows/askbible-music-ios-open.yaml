@@ -1,0 +1,15 @@
+appId: me.askbible
+---
+- launchApp:
+    clearState: false
+- tapOn:
+    text: "以后再说"
+    optional: true
+- assertVisible:
+    id: "home.music.choose"
+- takeScreenshot: /tmp/askbible-music-ios-home
+- tapOn:
+    id: "home.music.choose"
+- tapOn:
+    id: "music.toggle"
+- takeScreenshot: /tmp/askbible-music-ios-page

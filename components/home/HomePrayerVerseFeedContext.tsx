@@ -56,26 +56,28 @@ export function useOptionalHomePrayerVerseFeedContext(): HomePrayerVerseFeedCont
 type ProviderProps = {
   fallbackByLocale: Record<AppLocale, HomeVerseEntry[]>;
   children: ReactNode;
+  randomOrder?: boolean;
 };
 
 /**
  * 全站壳内单一经文池 + 单一轮播进度：子路由切换不另起一套 `useHomePrayerVerseFeed` 或本地下标。
  * 若已在更外层 Provider 内，本层不重复挂载（避免嵌套覆盖进度与 fallback）。
  */
-export function HomePrayerVerseFeedProvider({ fallbackByLocale, children }: ProviderProps) {
+export function HomePrayerVerseFeedProvider({ fallbackByLocale, children, randomOrder }: ProviderProps) {
   const existing = useOptionalHomePrayerVerseFeedContext();
   if (existing) {
     return <>{children}</>;
   }
-  return <HomePrayerVerseFeedProviderInner fallbackByLocale={fallbackByLocale}>{children}</HomePrayerVerseFeedProviderInner>;
+  return <HomePrayerVerseFeedProviderInner randomOrder={randomOrder} fallbackByLocale={fallbackByLocale}>{children}</HomePrayerVerseFeedProviderInner>;
 }
 
-function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: ProviderProps) {
+function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children, randomOrder }: ProviderProps) {
   const { locale } = useLocale();
   const { entriesByLocale, bilingual, verseKeys, homeVerseStableMs, onVerseCommitted, onVerseAudioCompleted, onNearEnd } =
     useHomePrayerVerseFeed({
       fallbackByLocale,
       locale,
+      randomOrder,
     });
 
   const [activeIndex, setActiveIndex] = useState(0);

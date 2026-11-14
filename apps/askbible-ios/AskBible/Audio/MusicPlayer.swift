@@ -33,17 +33,33 @@ final class MusicPlayer: ObservableObject {
     private var statusObserver: NSKeyValueObservation?
     private var loadedId: String?
     private var wantsPlayback = false
+    private let defaults: UserDefaults
+    private var restoreOnOpen = false
+    private var pendingSeek: Double?
+    private var seekGeneration = 0
+    private var lastSaveAt = Date.distantPast
     private var gain: Float
     /// 读经朗读在放时音乐压到 30%（Josh 2026-09-11「读圣经时音乐降到主线程的 30%」）
     private(set) var ducked = false
     private var effectiveGain: Float { ducked ? gain * 0.3 : gain }
 
-    init() {
-        let a = MusicCatalog.defaultAlbum
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        let saved = defaults.data(forKey: MusicResumeState.storageKey)
+            .flatMap { try? JSONDecoder().decode(MusicResumeState.self, from: $0) }
+        let savedIndex = saved?.trackIndex(in: MusicCatalog.tracks)
+        let a = savedIndex.map { MusicCatalog.tracks[$0].album } ?? MusicCatalog.defaultAlbum
         album = a
-        trackIndex = MusicAlbumRules.startIndex(MusicCatalog.tracks, album: a, current: -1) ?? 0
-        repeatMode = MusicAlbumRules.defaultRepeatMode(a) ?? .all
+        trackIndex = savedIndex ?? MusicAlbumRules.startIndex(MusicCatalog.tracks, album: a, current: -1) ?? 0
+        repeatMode = savedIndex != nil ? (saved.flatMap { MusicRepeatMode(rawValue: $0.repeatMode) } ?? .all) : (MusicAlbumRules.defaultRepeatMode(a) ?? .all)
         gain = MusicAlbumRules.defaultGain(a)
+        if let saved, savedIndex != nil {
+            currentTime = MusicResumeState.position(saved.timeSec, duration: 0)
+            restoreOnOpen = saved.shouldResume(now: Date().timeIntervalSince1970)
+            if let deadline = saved.sleepDeadline, deadline > Date().timeIntervalSince1970 {
+                scheduleSleepTimer(deadline: Date(timeIntervalSince1970: deadline))
+            }
+        }
         observeInterruptions()
         AudioSessionPolicy.register { [weak self] in self?.isPlaying ?? false }
     }
@@ -115,7 +131,7 @@ final class MusicPlayer: ObservableObject {
     /// 音乐页播放键（RN resolveMusicPageToggleAction）：
     /// 正在播且当前曲就在选中专辑 → 暂停；否则在选中专辑里起播（当前曲在专辑内就接着它）。
     func toggle() {
-        if isPlaying, track?.album == album { pause(); return }
+        if isPlaying || wantsPlayback, track?.album == album { pause(); return }
         if let t = track, t.album == album {
             if loadedId == t.id { resume() } else { play(index: trackIndex, autoPlay: true) }
             return
@@ -142,23 +158,26 @@ final class MusicPlayer: ObservableObject {
         play(index: index, autoPlay: true)
     }
 
-    func toggleRepeatOne() { repeatMode = repeatMode == .one ? .off : .one }
-    func toggleRepeatAll() { repeatMode = repeatMode == .all ? .off : .all }
+    func toggleRepeatOne() { repeatMode = repeatMode == .one ? .off : .one; saveResume() }
+    func toggleRepeatAll() { repeatMode = repeatMode == .all ? .off : .all; saveResume() }
 
     /// 装载并（可选）起播某一首
     func play(index: Int, autoPlay: Bool) {
         guard MusicCatalog.tracks.indices.contains(index) else { return }
         let t = MusicCatalog.tracks[index]
+        let position = index == trackIndex ? currentTime : 0
         trackIndex = index
-        if loadedId != t.id { load(t) }
+        if loadedId != t.id { load(t, position: position) }
         if autoPlay { resume() }
+        else { wantsPlayback = false; saveResume() }
     }
 
-    private func load(_ t: MusicTrack) {
+    private func load(_ t: MusicTrack, position: Double) {
         teardown()
         loadedId = t.id
         errorMessage = nil
-        currentTime = 0
+        currentTime = MusicResumeState.position(position, duration: 0)
+        pendingSeek = currentTime > 0 ? currentTime : nil
         duration = 0
         guard let url = MusicAudioSource.url(for: t) else {
             errorMessage = SiteCopy.t("native.trackNoSource")
@@ -176,12 +195,15 @@ final class MusicPlayer: ObservableObject {
 
         statusObserver = item.observe(\.status, options: [.new]) { [weak self] item, _ in
             Task { @MainActor in
-                guard let self else { return }
+                guard let self, self.player?.currentItem === item else { return }
                 switch item.status {
                 case .readyToPlay:
                     self.isLoading = false
                     let d = item.duration.seconds
                     self.duration = d.isFinite && d > 0 ? d : 0
+                    if let position = self.pendingSeek {
+                        self.seek(to: MusicResumeState.position(position, duration: self.duration))
+                    }
                     self.updateNowPlaying()
                 case .failed:
                     self.isLoading = false
@@ -195,20 +217,24 @@ final class MusicPlayer: ObservableObject {
 
         timeObserver = avPlayer.addPeriodicTimeObserver(
             forInterval: CMTime(seconds: 0.25, preferredTimescale: 600), queue: .main
-        ) { [weak self] time in
+        ) { [weak self, weak avPlayer] time in
             Task { @MainActor in
-                guard let self else { return }
+                guard let self, let avPlayer, self.player === avPlayer, self.pendingSeek == nil else { return }
                 self.currentTime = time.seconds.isFinite ? time.seconds : 0
                 if self.duration == 0, let d = self.player?.currentItem?.duration.seconds, d.isFinite, d > 0 {
                     self.duration = d
                 }
+                if Date().timeIntervalSince(self.lastSaveAt) >= 2 { self.saveResume() }
             }
         }
 
         endObserver = NotificationCenter.default.addObserver(
             forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in self?.handleEnded() }
+            Task { @MainActor in
+                guard let self, self.player?.currentItem === item else { return }
+                self.handleEnded()
+            }
         }
     }
 
@@ -229,6 +255,7 @@ final class MusicPlayer: ObservableObject {
                 wantsPlayback = false
                 currentTime = duration
                 updateNowPlaying()
+                saveResume()
             }
         }
     }
@@ -236,6 +263,7 @@ final class MusicPlayer: ObservableObject {
     /// 用户点播放（或打断结束自动续播）：不看 `interrupted` —— 通话 / Siri / 别的 App 抢声道后 iOS 常常不发「打断结束」，
     /// 之前这里 guard 一下就把播放键永久点死了（Josh 真机 2026-09-10「点播放播放不了」）。RN 也只挡后台自动续播，不挡用户点。
     func resume() {
+        if player == nil, let track { load(track, position: currentTime) }
         guard player != nil else { return }
         wantsPlayback = true
         interrupted = false
@@ -243,9 +271,28 @@ final class MusicPlayer: ObservableObject {
         AudioSessionPolicy.playback()
         RemoteControlHub.shared.claim(self)
         player?.volume = effectiveGain
-        player?.play()
+        if pendingSeek == nil { player?.play() }
         isPlaying = true
         updateNowPlaying()
+        saveResume()
+    }
+
+    /// Call after the shell has connected the audio coordination callbacks.
+    func restorePlaybackIfNeeded() {
+        guard restoreOnOpen else { return }
+        restoreOnOpen = false
+        resume()
+    }
+
+    func saveResume() {
+        guard let track else { return }
+        let saved = MusicResumeState(trackId: track.id, timeSec: currentTime,
+                                    repeatMode: repeatMode.rawValue, wasPlaying: wantsPlayback,
+                                    sleepDeadline: sleepDeadline?.timeIntervalSince1970)
+        if let data = try? JSONEncoder().encode(saved) {
+            defaults.set(data, forKey: MusicResumeState.storageKey)
+            lastSaveAt = Date()
+        }
     }
 
     /// 回到前台：被打断停掉但还想播的，续上（RN recoverMusicPlaybackAfterBackground；iOS 常不发「打断结束」）
@@ -259,6 +306,7 @@ final class MusicPlayer: ObservableObject {
         player?.pause()
         isPlaying = false
         updateNowPlaying()
+        saveResume()
     }
 
     func seek(ratio: Double) {
@@ -269,10 +317,23 @@ final class MusicPlayer: ObservableObject {
 
     func seek(to seconds: Double) {
         let d = displayDuration
+        guard seconds.isFinite else { return }
         let clamped = d > 0 ? min(max(0, seconds), d) : max(0, seconds)
-        player?.seek(to: CMTime(seconds: clamped, preferredTimescale: 600))
         currentTime = clamped
+        seekGeneration += 1
+        let generation = seekGeneration
+        if let player {
+            pendingSeek = clamped
+            player.seek(to: CMTime(seconds: clamped, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero) { [weak self, weak player] finished in
+                Task { @MainActor in
+                    guard let self, let player, self.player === player, self.seekGeneration == generation, finished else { return }
+                    self.pendingSeek = nil
+                    if self.wantsPlayback { player.play() }
+                }
+            }
+        }
         updateNowPlaying()
+        saveResume()
     }
 
     // MARK: 睡眠定时（与 ChapterAudioPlayer 同一套：到期只暂停）
@@ -280,9 +341,13 @@ final class MusicPlayer: ObservableObject {
     func setSleepTimer(minutes: Int?) {
         sleepTimer?.invalidate()
         sleepTimer = nil
-        guard let minutes, minutes > 0 else { sleepMinutes = 0; sleepDeadline = nil; return }
-        sleepMinutes = minutes
-        let deadline = Date().addingTimeInterval(TimeInterval(minutes * 60))
+        guard let minutes, minutes > 0 else { sleepMinutes = 0; sleepDeadline = nil; saveResume(); return }
+        scheduleSleepTimer(deadline: Date().addingTimeInterval(TimeInterval(minutes * 60)))
+        saveResume()
+    }
+
+    private func scheduleSleepTimer(deadline: Date) {
+        sleepMinutes = max(1, Int(ceil(deadline.timeIntervalSinceNow / 60)))
         sleepDeadline = deadline
         sleepTimer = Timer.scheduledTimer(withTimeInterval: deadline.timeIntervalSinceNow, repeats: false) { [weak self] _ in
             Task { @MainActor in
@@ -357,6 +422,8 @@ final class MusicPlayer: ObservableObject {
     }
 
     private func teardown() {
+        seekGeneration += 1
+        pendingSeek = nil
         if let timeObserver { player?.removeTimeObserver(timeObserver) }
         if let endObserver { NotificationCenter.default.removeObserver(endObserver) }
         statusObserver?.invalidate()

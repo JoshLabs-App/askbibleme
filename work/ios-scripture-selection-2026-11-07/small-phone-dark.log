@@ -1,0 +1,483 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project /tmp/askbible-selection-final/tests/SelectionAcceptance.xcodeproj -scheme SelectionTests -destination id=E7347DC0-C9F8-46C8-BFC4-49C745EB117C -derivedDataPath /tmp/askbible-selection-small-ui "-only-testing:SelectionTests/SelectionTests/testSingleVerseCopy" CODE_SIGNING_ALLOWED=NO test
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (1 target)
+    Target 'SelectionTests' in project 'SelectionAcceptance' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.2.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 3cfdd3939da599991d7f49b91ee9aecf
+Build description path: /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/XCBuildData/3cfdd3939da599991d7f49b91ee9aecf.xcbuilddata
+CreateBuildDirectory /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules
+    cd /tmp/askbible-selection-final/tests/SelectionAcceptance.xcodeproj
+    builtin-create-build-directory /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules
+
+CreateBuildDirectory /tmp/askbible-selection-small-ui/ModuleCache.noindex
+    cd /tmp/askbible-selection-final/tests/SelectionAcceptance.xcodeproj
+    builtin-create-build-directory /tmp/askbible-selection-small-ui/ModuleCache.noindex
+
+CreateBuildDirectory /tmp/askbible-selection-small-ui/CompilationCache.noindex
+    cd /tmp/askbible-selection-final/tests/SelectionAcceptance.xcodeproj
+    builtin-create-build-directory /tmp/askbible-selection-small-ui/CompilationCache.noindex
+
+CreateBuildDirectory /tmp/askbible-selection-small-ui/Build/Products
+    cd /tmp/askbible-selection-final/tests/SelectionAcceptance.xcodeproj
+    builtin-create-build-directory /tmp/askbible-selection-small-ui/Build/Products
+
+CreateBuildDirectory /tmp/askbible-selection-small-ui/Build/Intermediates.noindex
+    cd /tmp/askbible-selection-final/tests/SelectionAcceptance.xcodeproj
+    builtin-create-build-directory /tmp/askbible-selection-small-ui/Build/Intermediates.noindex
+
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.2.sdk /tmp/askbible-selection-small-ui/SDKStatCaches.noindex/iphonesimulator27.2-24B8118-cc78df9d8a9de6526dea716b1c70fd8e.sdkstatcache
+    cd /tmp/askbible-selection-final/tests/SelectionAcceptance.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.2.sdk -o /tmp/askbible-selection-small-ui/SDKStatCaches.noindex/iphonesimulator27.2-24B8118-cc78df9d8a9de6526dea716b1c70fd8e.sdkstatcache
+
+CreateBuildDirectory /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+    cd /tmp/askbible-selection-final/tests/SelectionAcceptance.xcodeproj
+    builtin-create-build-directory /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+CreateBuildDirectory /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/PrecompiledHeaders
+    cd /tmp/askbible-selection-final/tests/SelectionAcceptance.xcodeproj
+    builtin-create-build-directory /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/PrecompiledHeaders
+
+WriteAuxiliaryFile /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionAcceptance-9ceaca785672b3e194a35a83649e1a39-VFS-iphonesimulator/all-product-headers.yaml
+    cd /tmp/askbible-selection-final/tests/SelectionAcceptance.xcodeproj
+    write-file /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionAcceptance-9ceaca785672b3e194a35a83649e1a39-VFS-iphonesimulator/all-product-headers.yaml
+
+CreateBuildDirectory /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/ExplicitPrecompiledModules
+    cd /tmp/askbible-selection-final/tests/SelectionAcceptance.xcodeproj
+    builtin-create-build-directory /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+CreateBuildDirectory /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator
+    cd /tmp/askbible-selection-final/tests/SelectionAcceptance.xcodeproj
+    builtin-create-build-directory /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator
+
+CreateBuildDirectory /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator
+    cd /tmp/askbible-selection-final/tests/SelectionAcceptance.xcodeproj
+    builtin-create-build-directory /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator
+
+WriteAuxiliaryFile /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/empty-SelectionTests.plist (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    write-file /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/empty-SelectionTests.plist
+
+WriteAuxiliaryFile /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests.hmap (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    write-file /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests.hmap
+
+WriteAuxiliaryFile /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests.DependencyStaticMetadataFileList (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    write-file /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests.DependencyMetadataFileList (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    write-file /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests.DependencyMetadataFileList
+
+WriteAuxiliaryFile /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-project-headers.hmap (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    write-file /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-project-headers.hmap
+
+WriteAuxiliaryFile /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-own-target-headers.hmap (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    write-file /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-own-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-generated-files.hmap (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    write-file /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-generated-files.hmap
+
+WriteAuxiliaryFile /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-all-target-headers.hmap (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    write-file /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-all-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-all-non-framework-target-headers.hmap (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    write-file /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-all-non-framework-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/ProductTypeInfoPlistAdditions.plist (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    write-file /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/ProductTypeInfoPlistAdditions.plist
+
+WriteAuxiliaryFile /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests_const_extract_protocols.json (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    write-file /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests_const_extract_protocols.json
+
+WriteAuxiliaryFile /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.SwiftFileList (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    write-file /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.SwiftFileList
+
+WriteAuxiliaryFile /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.SwiftConstValuesFileList (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    write-file /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.LinkFileList (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    write-file /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.LinkFileList
+
+WriteAuxiliaryFile /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests-OutputFileMap.json (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    write-file /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests-OutputFileMap.json
+
+MkDir /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    /bin/mkdir -p /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest
+
+ProcessInfoPlistFile /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest/Info.plist /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/empty-SelectionTests.plist (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    builtin-infoPlistUtility /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/empty-SelectionTests.plist -producttype com.apple.product-type.bundle.ui-testing -expandbuildsettings -format binary -platform iphonesimulator -additionalcontentfile /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/ProductTypeInfoPlistAdditions.plist -o /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest/Info.plist
+
+SwiftDriver SelectionTests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name SelectionTests -Onone @/tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.SwiftFileList -DDEBUG -module-alias Testing\=_Testing_Unavailable -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.2.sdk -target arm64-apple-ios17.0-simulator -g -module-cache-path /tmp/askbible-selection-small-ui/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/askbible-selection-small-ui/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib -F /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.2.sdk/Developer/Library/Frameworks -parse-as-library -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/askbible-selection-small-ui/SDKStatCaches.noindex/iphonesimulator27.2-24B8118-cc78df9d8a9de6526dea716b1c70fd8e.sdkstatcache -output-file-map /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/askbible-selection-small-ui/ModuleCache.noindex -sdk-module-cache-path /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/askbible-selection-small-ui/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-generated-files.hmap -Xcc -I/tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-own-target-headers.hmap -Xcc -I/tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-project-headers.hmap -Xcc -I/tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/DerivedSources-normal/arm64 -Xcc -I/tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/DerivedSources/arm64 -Xcc -I/tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests-Swift.h -working-directory /tmp/askbible-selection-final/tests -experimental-emit-module-separately -disable-cmo
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/_Builtin_float-1V6JK4TT0VW9Q2DE4ONC2H46L.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/_Builtin_stdbool-8JI7FRGLKM5YRPT29XCDG7Y0C.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/SwiftShims-D71KVMHVP620HVKFSK3D7MZCU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/_Builtin_stdarg-8HK7EPN30ZVHSJNIA79ZWFCRZ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/_Builtin_stddef-9X3AABXS3ADYX9K27VMEXOUWK.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/ptrauth-B4ZJS0LTQCM39ZTNZFUEZYN5O.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/_SwiftConcurrencyShims-37NBY6J5T7CBADGYSQTKFSJDO.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/DeveloperToolsSupport-746R1XWN55HWHNQZQF9PB0HC5.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/ptrcheck-B7D6A5HX4SS2X0JQHOFKN742N.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/_AvailabilityInternal-EW6CDTT1CIHI8A42Z6Q0MITQY.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/_DarwinFoundation1-66M1BIF9HJGP462SUGA0SJ759.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/_DarwinFoundation2-7802ZKR0CL9GYXSRQ2B3UQJP.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/_Builtin_limits-BZXGH675LYZLN9OU43L4I559U.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/_Builtin_tgmath-42IAJMESTMV0VAOLMQWG2DOUR.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/sys_types-1WBT8C1MYYVE3883YTZ1WE79G.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/_Builtin_stdint-4H6ANRUA3LL3XR59C06CRFDQC.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/string_h-1C0F1NGKJ6UMHTQXEMFFRLNKA.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/_Builtin_intrinsics-1DCMZ7BXB7RXQN2E86UUECHDU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/_Builtin_stdatomic-AVJE9O2EK6ULFNMS8YL1IKU96.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/_DarwinFoundation3-6LXMKSX96W7IBN62ETKE0MEWU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/_Builtin_inttypes-AN0SQHYBYTA2AXHF0DC1R0C0S.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/Darwin-4CCFZOILZT4WTO5NXFA1ZS3SI.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/simd-5Q1B259T1CO9286XLQVWVG008.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/ObjectiveC-E7SOB1DMKWLCRWC61UGMSCZIU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/MachO-NC8D3SYUOS8ZQUXIFVBNNHXM.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/os_object-3SEBLT3WXX4BU4M9N2PHJOHE5.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/Spatial-DFIEWUB1NSI71EA4TUXJNDUVC.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/os_workgroup-E22ELEJCIQQYSPU2UYYM3TTYK.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/Dispatch-TJ8CY2JK160UE8QGE5QNWAEW.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/XPC-5GJ4LO92F9CSHQ234DS7YU6ZE.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/CoreFoundation-1ASSFUSW5S9YKW63QE44W6BQP.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/os-2QYX7A6N2D7FIZC7RB41250IA.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/Security-72HUPCKV7GAAMRWD2WDR21ANO.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/CFNetwork-1440BE4P21P4OYATM6SR1CGYS.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/CoreGraphics-9DS507V0FR46UWHHD8MME2B4Q.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/Foundation-AUPAXM75255WFW36O5HI2ZI32.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/CoreText-BOMQR7TYY60R17VNXSM9A0THK.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/ImageIO-3LG22RF9BE3J8L2J4XUTWHEVS.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/Accessibility-B1K4YVJD4H9861TJXYGBROLJQ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/CoreTransferable-1RH94YQMJCJH084THHJWTWGWO.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/FileProvider-2IT2G3HCDGYIFCY6YGCQ7GZ0V.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/Symbols-AHGSHANYGQPE2I70RNSPAWT5B.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/IOSurface-958O3YZJ08SRHNTYLYD3HMM0X.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/UniformTypeIdentifiers-9ETYIXA8PX1PBSOOQ9RDOE8N.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/OpenGLES-BEJHQLNFFHGWMAOICH1ORFHR6.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/UIUtilities-ALTREBFFP6DJXF5WOLFLO5VQA.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/UserNotifications-3T0KUGX3OKD8SJKJ9NG4TQGDM.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/DataDetection-F2T2214HNQERBDTQWWREUDJVU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/_LocationEssentials-CS02059SRXKKR2M9E7L7TAL3A.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/OSLog-3J2DJPNOUZC05MX5VVAM7NW9I.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/CoreLocation-EEIF19PE3WGDDWDUUY2URBVN5.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/Metal-D75CA0X86QQNB506PBJ6KVE69.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/CoreMotion-2SUMJA03ET8HPHV3H7UNVI9RL.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/CoreVideo-67163WLGA2GFUHN0P7K7OHVV.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/QuartzCore-DEBGO1GTQ02JVL9JSXSNEO9KX.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/CoreImage-2T3F24CJOMIRT671Y53ZM3I5S.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/SwiftUICore-9CKP0M0CIVIACCO0H8NO0YYWB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules/UIKit-NR1PR3S7WZGFRXN6L3H9CADU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules/XCUIAutomation-ETNXYVQTW09KQKEAIS6FEBRBY.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules/XCTest-25QGUSBC57UVETU7L4XX7WBHE.pcm
+
+SwiftExplicitDependencyCompileModuleFromInterface arm64 /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules/XCUIAutomation-1MP9RHD0MUZA8.swiftmodule
+
+SwiftExplicitDependencyCompileModuleFromInterface arm64 /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules/XCTest-7200EMP0YSEI.swiftmodule
+
+SwiftCompile normal arm64 Compiling\ SelectionTests.swift /tmp/askbible-selection-final/tests/SelectionTests.swift (in target 'SelectionTests' from project 'SelectionAcceptance')
+
+SwiftCompile normal arm64 /tmp/askbible-selection-final/tests/SelectionTests.swift (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    builtin-SwiftPerFileCompile SelectionTests.swift
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ SelectionTests (in target 'SelectionTests' from project 'SelectionAcceptance')
+
+SwiftCompile normal arm64 (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for SelectionTests (in target 'SelectionTests' from project 'SelectionAcceptance')
+
+SwiftDriver\ Compilation\ Requirements SelectionTests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name SelectionTests -Onone @/tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.SwiftFileList -DDEBUG -module-alias Testing\=_Testing_Unavailable -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.2.sdk -target arm64-apple-ios17.0-simulator -g -module-cache-path /tmp/askbible-selection-small-ui/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/askbible-selection-small-ui/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib -F /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.2.sdk/Developer/Library/Frameworks -parse-as-library -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/askbible-selection-small-ui/SDKStatCaches.noindex/iphonesimulator27.2-24B8118-cc78df9d8a9de6526dea716b1c70fd8e.sdkstatcache -output-file-map /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/askbible-selection-small-ui/ModuleCache.noindex -sdk-module-cache-path /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/askbible-selection-small-ui/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-generated-files.hmap -Xcc -I/tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-own-target-headers.hmap -Xcc -I/tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-project-headers.hmap -Xcc -I/tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/DerivedSources-normal/arm64 -Xcc -I/tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/DerivedSources/arm64 -Xcc -I/tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests-Swift.h -working-directory /tmp/askbible-selection-final/tests -experimental-emit-module-separately -disable-cmo
+
+SwiftMergeGeneratedHeaders /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/DerivedSources/SelectionTests-Swift.h /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests-Swift.h (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    builtin-swiftHeaderTool -arch arm64 /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests-Swift.h -o /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/DerivedSources/SelectionTests-Swift.h
+
+Copy /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests.swiftmodule/arm64-apple-ios-simulator.swiftmodule /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.swiftmodule (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.swiftmodule /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests.swiftmodule/arm64-apple-ios-simulator.swiftmodule
+
+Copy /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests.swiftmodule/arm64-apple-ios-simulator.swiftdoc /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.swiftdoc (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.swiftdoc /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests.swiftmodule/arm64-apple-ios-simulator.swiftdoc
+
+Copy /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests.swiftmodule/arm64-apple-ios-simulator.abi.json /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.abi.json (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.abi.json /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests.swiftmodule/arm64-apple-ios-simulator.abi.json
+
+Copy /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.swiftsourceinfo (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.swiftsourceinfo /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo
+
+SwiftDriverJobDiscovery normal arm64 Compiling SelectionTests.swift (in target 'SelectionTests' from project 'SelectionAcceptance')
+
+SwiftDriver\ Compilation SelectionTests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name SelectionTests -Onone @/tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.SwiftFileList -DDEBUG -module-alias Testing\=_Testing_Unavailable -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.2.sdk -target arm64-apple-ios17.0-simulator -g -module-cache-path /tmp/askbible-selection-small-ui/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/askbible-selection-small-ui/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib -F /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.2.sdk/Developer/Library/Frameworks -parse-as-library -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/askbible-selection-small-ui/SDKStatCaches.noindex/iphonesimulator27.2-24B8118-cc78df9d8a9de6526dea716b1c70fd8e.sdkstatcache -output-file-map /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/askbible-selection-small-ui/ModuleCache.noindex -sdk-module-cache-path /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/askbible-selection-small-ui/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-generated-files.hmap -Xcc -I/tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-own-target-headers.hmap -Xcc -I/tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests-project-headers.hmap -Xcc -I/tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/DerivedSources-normal/arm64 -Xcc -I/tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/DerivedSources/arm64 -Xcc -I/tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests-Swift.h -working-directory /tmp/askbible-selection-final/tests -experimental-emit-module-separately -disable-cmo
+
+Ld /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest/SelectionTests normal (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios17.0-simulator -bundle -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.2.sdk -O0 -Xlinker -no_warn_duplicate_libraries -L/tmp/askbible-selection-small-ui/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -L/tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator -L/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib -F/tmp/askbible-selection-small-ui/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -F/tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator -iframework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks -iframework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.2.sdk/Developer/Library/Frameworks -filelist /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.LinkFileList -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @loader_path/Frameworks -Xlinker -rpath -Xlinker @executable_path/Frameworks -Xlinker -dead_strip -Xlinker -object_path_lto -Xlinker /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -Xlinker -dependency_info -Xlinker /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphonesimulator -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.swiftmodule -Xlinker -needed_framework -Xlinker XCTest -framework XCTest -Xlinker -needed-lXCTestSwiftSupport -lXCTestSwiftSupport -o /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest/SelectionTests
+
+ExtractAppIntentsMetadata (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name SelectionTests --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.2.sdk --xcode-version 27B52 --platform-family iOS --deployment-target 17.0 --bundle-identifier me.askbible.acceptance.SelectionTests --output /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest --target-triple arm64-apple-ios17.0-simulator --binary-file /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest/SelectionTests --dependency-file /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests_dependency_info.dat --stringsdata-file /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.SwiftFileList --metadata-file-list /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests.DependencyMetadataFileList --static-metadata-file-list /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/Objects-normal/arm64/SelectionTests.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --no-app-shortcuts-localization
+2026-11-07 22:03:15.098 appintentsmetadataprocessor[98582:63585998] Starting App Intents metadata extraction
+2026-11-07 22:03:15.108 appintentsmetadataprocessor[98582:63585998] warning: Metadata extraction skipped, no AppIntents.framework dependency found
+
+CopySwiftLibs /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    builtin-swiftStdLibTool --copy --verbose --scan-executable /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest/SelectionTests --scan-folder /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest/Frameworks --scan-folder /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest/PlugIns --scan-folder /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest/SystemExtensions --scan-folder /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest/Extensions --platform iphonesimulator --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest/Frameworks --strip-bitcode --scan-executable /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libXCTestSwiftSupport.dylib --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+Ignoring --strip-bitcode because --sign was not passed
+
+AppIntentsSSUTraining (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsnltrainingprocessor --infoplist-path /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest/Info.plist --temp-dir-path /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/ssu --bundle-id me.askbible.acceptance.SelectionTests --product-path /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest --extracted-metadata-path /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest/Metadata.appintents --metadata-file-list /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SelectionAcceptance.build/Debug-iphonesimulator/SelectionTests.build/SelectionTests.DependencyMetadataFileList --source-file /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest/Info.plist --archive-ssu-assets
+2026-11-07 22:03:15.145 appintentsnltrainingprocessor[98584:63586029] Parsing options for appintentsnltrainingprocessor
+2026-11-07 22:03:15.145 appintentsnltrainingprocessor[98584:63586029] Starting AppIntents SSU YAML Generation
+2026-11-07 22:03:15.147 appintentsnltrainingprocessor[98584:63586029] No AppShortcuts found - Skipping.
+
+MkDir /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    /bin/mkdir -p /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app
+
+CopyPlistFile /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/Info.plist /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Xcode/Agents/XCTRunner.app/Info.plist (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    builtin-copyPlist --validate --convert xml1 --macro-expansion WRAPPEDPRODUCTNAME SelectionTests-Runner --macro-expansion WRAPPEDPRODUCTBUNDLEIDENTIFIER me.askbible.acceptance.SelectionTests.xctrunner --macro-expansion TESTPRODUCTNAME SelectionTests --macro-expansion TESTPRODUCTBUNDLEIDENTIFIER me.askbible.acceptance.SelectionTests --copy-value UIDeviceFamily /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest/Info.plist --outdir /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app -- /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Xcode/Agents/XCTRunner.app/Info.plist
+
+CopyAndPreserveArchs /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/SelectionTests-Runner (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Xcode/Agents/XCTRunner.app/XCTRunner -output /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/SelectionTests-Runner -extract arm64
+
+Copy /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PkgInfo /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Xcode/Agents/XCTRunner.app/PkgInfo (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Xcode/Agents/XCTRunner.app/PkgInfo /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app
+
+RegisterExecutionPolicyException /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    builtin-RegisterExecutionPolicyException /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest
+
+Touch /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest (in target 'SelectionTests' from project 'SelectionAcceptance')
+    cd /tmp/askbible-selection-final/tests
+    /usr/bin/touch -c /tmp/askbible-selection-small-ui/Build/Products/Debug-iphonesimulator/SelectionTests-Runner.app/PlugIns/SelectionTests.xctest
+
+PruneExplicitPrecompiledModules /tmp/askbible-selection-small-ui/SDKExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/askbible-selection-small-ui/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+2026-11-07 22:03:16.930721-0500 SelectionTests-Runner[98591:63586155] [Default] Running tests...
+objc[98591]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x108944310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x1089e0398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-11-07 22:03:19.360.
+Test Suite 'SelectionTests.xctest' started at 2026-11-07 22:03:19.361.
+Test Suite 'SelectionTests' started at 2026-11-07 22:03:19.361.
+Test Case '-[SelectionTests.SelectionTests testSingleVerseCopy]' started.
+    t =     0.00s Start Test at 2026-11-07 22:03:19.363
+    t =     0.26s Set Up
+    t =     0.28s Open me.askbible
+    t =     0.28s     Launch me.askbible
+    t =     0.38s         Setting up automation session
+    t =     0.86s         Wait for me.askbible to idle
+    t =     2.50s Waiting 2.0s for "开始今日灵修" Button to exist
+    t =     3.53s     Checking `Expect predicate `existsNoRetry == 1` for object "开始今日灵修" Button`
+    t =     3.54s         Checking existence of `"开始今日灵修" Button`
+    t =     3.60s Tap "开始今日灵修" Button
+    t =     3.60s     Wait for me.askbible to idle
+    t =     3.60s     Find the "开始今日灵修" Button
+    t =     3.62s     Check for interrupting elements affecting "开始今日灵修" Button
+    t =     3.64s     Synthesize event
+    t =     4.04s     Wait for me.askbible to idle
+    t =     4.74s Waiting 2.0s for "以后再说" Button to exist
+    t =     5.78s     Checking `Expect predicate `existsNoRetry == 1` for object "以后再说" Button`
+    t =     5.78s         Checking existence of `"以后再说" Button`
+    t =     5.79s         Capturing element debug description
+    t =     6.75s     Checking `Expect predicate `existsNoRetry == 1` for object "以后再说" Button`
+    t =     6.75s         Checking existence of `"以后再说" Button`
+    t =     6.76s         Capturing element debug description
+    t =     6.76s     Checking existence of `"以后再说" Button`
+    t =     6.77s Collecting debug information to assist test failure triage
+    t =     6.77s     Requesting snapshot of accessibility hierarchy for app with pid 98634
+    t =     6.79s Tap Window (First Match)[0.67, 0.93]
+    t =     6.79s     Wait for me.askbible to idle
+    t =     6.79s     Find the Window (First Match)
+    t =     6.80s     Check for interrupting elements affecting Window
+    t =     6.81s     Synthesize event
+    t =     6.82s         Find the Window at {{0.0, 0.0}, {375.0, 667.0}}
+    t =     6.83s         Find the Window at {{0.0, 0.0}, {375.0, 667.0}}
+    t =     6.84s         Find the Window at {{0.0, 0.0}, {375.0, 667.0}}
+    t =     7.13s     Wait for me.askbible to idle
+    t =     8.38s Waiting 1.0s for "01, 创世记" Button to exist
+    t =     9.38s     Checking `Expect predicate `existsNoRetry == 1` for object "01, 创世记" Button`
+    t =     9.38s         Checking existence of `"01, 创世记" Button`
+    t =     9.44s     Checking existence of `"01, 创世记" Button`
+    t =     9.49s Waiting 3.0s for "01, 创世记" Button to exist
+    t =    10.52s     Checking `Expect predicate `existsNoRetry == 1` for object "01, 创世记" Button`
+    t =    10.52s         Checking existence of `"01, 创世记" Button`
+    t =    10.57s Tap "01, 创世记" Button
+    t =    10.57s     Wait for me.askbible to idle
+    t =    10.57s     Find the "01, 创世记" Button
+    t =    10.63s     Check for interrupting elements affecting "01, 创世记" Button
+    t =    10.68s     Synthesize event
+    t =    10.99s     Wait for me.askbible to idle
+    t =    10.99s Waiting 3.0s for "1" Button to exist
+    t =    12.03s     Checking `Expect predicate `existsNoRetry == 1` for object "1" Button`
+    t =    12.03s         Checking existence of `"1" Button`
+    t =    12.09s Tap "1" Button
+    t =    12.09s     Wait for me.askbible to idle
+    t =    12.10s     Find the "1" Button
+    t =    12.15s     Check for interrupting elements affecting "1" Button
+    t =    12.21s     Synthesize event
+    t =    12.50s     Wait for me.askbible to idle
+    t =    12.50s Waiting 3.0s for "read.chapter.text" TextView to exist
+    t =    13.54s     Checking `Expect predicate `existsNoRetry == 1` for object "read.chapter.text" TextView`
+    t =    13.54s         Checking existence of `"read.chapter.text" TextView`
+    t =    13.68s Waiting 3.0s for TextView (First Match) to exist
+    t =    14.71s     Checking `Expect predicate `existsNoRetry == 1` for object TextView (First Match)`
+    t =    14.71s         Checking existence of `TextView (First Match)`
+    t =    14.73s Find the TextView (First Match)
+    t =    14.75s Press Window (First Match)[0.00, 0.00] -> (106.2, 233.9) for 0.7 seconds
+    t =    14.75s     Wait for me.askbible to idle
+    t =    14.75s     Find the Window (First Match)
+    t =    14.75s     Check for interrupting elements affecting Window
+    t =    14.78s     Synthesize event
+    t =    14.78s         Find the Window at {{0.0, 0.0}, {375.0, 667.0}}
+    t =    14.79s         Find the Window at {{0.0, 0.0}, {375.0, 667.0}}
+    t =    14.80s         Find the Window at {{0.0, 0.0}, {375.0, 667.0}}
+    t =    15.73s     Wait for me.askbible to idle
+    t =    16.00s Waiting 3.0s for "复制" MenuItem to exist
+    t =    17.04s     Checking `Expect predicate `existsNoRetry == 1` for object "复制" MenuItem`
+    t =    17.04s         Checking existence of `"复制" MenuItem`
+    t =    17.22s Checking existence of `"收藏" MenuItem`
+    t =    17.40s Checking existence of `"多选复制" MenuItem`
+    t =    17.57s Find the Application 'me.askbible'
+    t =    17.65s Added attachment named 'single-verse'
+    t =    17.65s Tap "复制" MenuItem
+    t =    17.65s     Wait for me.askbible to idle
+    t =    17.66s     Find the "复制" MenuItem
+    t =    17.84s     Check for interrupting elements affecting "复制" MenuItem
+    t =    17.86s     Synthesize event
+    t =    18.16s     Wait for me.askbible to idle
+    t =    18.44s Tear Down
+Test Case '-[SelectionTests.SelectionTests testSingleVerseCopy]' passed (18.677 seconds).
+Test Suite 'SelectionTests' passed at 2026-11-07 22:03:38.040.
+	 Executed 1 test, with 0 failures (0 unexpected) in 18.677 (18.678) seconds
+Test Suite 'SelectionTests.xctest' passed at 2026-11-07 22:03:38.040.
+	 Executed 1 test, with 0 failures (0 unexpected) in 18.677 (18.679) seconds
+Test Suite 'Selected tests' passed at 2026-11-07 22:03:38.040.
+	 Executed 1 test, with 0 failures (0 unexpected) in 18.677 (18.680) seconds
+2026-11-07 22:03:38.343 xcodebuild[97554:63583780] [MT] IDETestOperationsObserverDebug: 23.126 elapsed -- Testing started completed.
+2026-11-07 22:03:38.343 xcodebuild[97554:63583780] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-07 22:03:38.343 xcodebuild[97554:63583780] [MT] IDETestOperationsObserverDebug: 23.126 sec, +23.126 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/askbible-selection-small-ui/Logs/Test/Test-SelectionTests-2026.11.07_22-03-04--0500.xcresult
+
+** TEST SUCCEEDED **
+
+Testing started

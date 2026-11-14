@@ -165,6 +165,124 @@ export async function signInWithPasswordInApp(input: {
   }
 }
 
+export async function signInWithOtpInApp(email: string): Promise<{
+  ok: boolean;
+  schemaVersion: number;
+  error?: string;
+  code?: string;
+  status?: number;
+}> {
+  const supabase = createMobileSupabaseClient();
+  if (!supabase) {
+    return {
+      ok: false,
+      schemaVersion: SCHEMA_VERSION,
+      error: "Supabase 未配置",
+      code: "supabase_not_configured",
+    };
+  }
+  const trimmed = email.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+    return {
+      ok: false,
+      schemaVersion: SCHEMA_VERSION,
+      error: "邮箱格式不正确。",
+      code: "invalid_email",
+    };
+  }
+
+  try {
+    const { error } = await supabase.auth.signInWithOtp({
+      email: trimmed,
+    });
+    if (error) {
+      if (error.status === 429) {
+        return {
+          ok: false,
+          schemaVersion: SCHEMA_VERSION,
+          error: "登录邮件发送过于频繁。请查看邮箱里的最新邮件，或稍后再试。",
+          code: "rate_limit_exceeded",
+          status: 429,
+        };
+      }
+      const mapped = mapAuthErrorMessage(error.message);
+      return { ok: false, schemaVersion: SCHEMA_VERSION, ...mapped, status: error.status };
+    }
+    return { ok: true, schemaVersion: SCHEMA_VERSION };
+  } catch (err) {
+    const mapped = mapAuthErrorMessage(err instanceof Error ? err.message : String(err));
+    return { ok: false, schemaVersion: SCHEMA_VERSION, ...mapped };
+  }
+}
+
+export async function verifyOtpInApp(input: {
+  email: string;
+  token: string;
+  locale?: string;
+}): Promise<MobileLoginResult> {
+  const supabase = createMobileSupabaseClient();
+  if (!supabase) {
+    return {
+      ok: false,
+      schemaVersion: SCHEMA_VERSION,
+      error: "Supabase 未配置",
+      code: "supabase_not_configured",
+    };
+  }
+
+  const email = input.email.trim();
+  const token = input.token.trim();
+  if (!email || !token) {
+    return {
+      ok: false,
+      schemaVersion: SCHEMA_VERSION,
+      error: "请输入验证码",
+      code: "invalid_params",
+    };
+  }
+
+  try {
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: "email",
+    });
+    if (error || !data.session?.user) {
+      if (error?.status === 429) {
+        return {
+          ok: false,
+          schemaVersion: SCHEMA_VERSION,
+          error: "验证码尝试过于频繁，请稍后再试。",
+          code: "rate_limit_exceeded",
+        };
+      }
+      return {
+        ok: false,
+        schemaVersion: SCHEMA_VERSION,
+        error: "验证码不正确或已失效，请检查最新邮件。",
+        code: "invalid_otp",
+      };
+    }
+
+    const tokens = sessionPayload(data.session);
+    const profile = await ensureOwnProfile({
+      accessToken: tokens.sessionToken,
+      user: data.session.user,
+      locale: input.locale,
+    });
+    return {
+      ok: true,
+      schemaVersion: SCHEMA_VERSION,
+      user: authUserFromSession(data.session, profile),
+      sessionToken: tokens.sessionToken,
+      expiresAt: tokens.expiresAt,
+    };
+  } catch (err) {
+    const mapped = mapAuthErrorMessage(err instanceof Error ? err.message : String(err));
+    return { ok: false, schemaVersion: SCHEMA_VERSION, ...mapped };
+  }
+}
+
 export async function signUpWithPasswordInApp(input: {
   email: string;
   password: string;

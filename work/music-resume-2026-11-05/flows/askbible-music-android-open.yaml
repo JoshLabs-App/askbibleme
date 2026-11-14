@@ -1,0 +1,9 @@
+appId: me.askbible.musicqa
+---
+- launchApp:
+    clearState: false
+- assertVisible: "选音乐"
+- takeScreenshot: /tmp/askbible-music-android-home
+- tapOn: "音乐"
+- tapOn: "选音乐"
+- takeScreenshot: /tmp/askbible-music-android-playing

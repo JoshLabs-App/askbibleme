@@ -1,0 +1,1341 @@
+--- /dev/null
++++ b/apps/askbible-ios/AskBible/Audio/MusicResumeState.swift
+@@ -0,0 +1,26 @@
++import Foundation
++
++/// Store stable IDs, never catalog offsets: adding/reordering songs must not change the saved song.
++struct MusicResumeState: Codable {
++    static let storageKey = "askbible.music.resume.v1"
++    let trackId: String
++    let timeSec: Double
++    let repeatMode: String
++    let wasPlaying: Bool
++    let sleepDeadline: Double?
++
++    func trackIndex(in tracks: [MusicTrack]) -> Int? {
++        tracks.firstIndex { $0.id == trackId }
++    }
++
++    static func position(_ seconds: Double, duration: Double) -> Double {
++        guard seconds.isFinite, seconds > 0 else { return 0 }
++        // A completed song can be started again; don't silently restart merely near its end.
++        if duration.isFinite, duration > 0, seconds >= duration { return 0 }
++        return seconds
++    }
++
++    func shouldResume(now: Double) -> Bool {
++        wasPlaying && (sleepDeadline.map { $0 > now } ?? true)
++    }
++}
+--- a/apps/askbible-ios/AskBible/Audio/MusicPlayer.swift
++++ b/apps/askbible-ios/AskBible/Audio/MusicPlayer.swift
+@@ -33,17 +33,33 @@
+     private var statusObserver: NSKeyValueObservation?
+     private var loadedId: String?
+     private var wantsPlayback = false
++    private let defaults: UserDefaults
++    private var restoreOnOpen = false
++    private var pendingSeek: Double?
++    private var seekGeneration = 0
++    private var lastSaveAt = Date.distantPast
+     private var gain: Float
+     /// 读经朗读在放时音乐压到 30%（Josh 2026-09-11「读圣经时音乐降到主线程的 30%」）
+     private(set) var ducked = false
+     private var effectiveGain: Float { ducked ? gain * 0.3 : gain }
+ 
+-    init() {
+-        let a = MusicCatalog.defaultAlbum
++    init(defaults: UserDefaults = .standard) {
++        self.defaults = defaults
++        let saved = defaults.data(forKey: MusicResumeState.storageKey)
++            .flatMap { try? JSONDecoder().decode(MusicResumeState.self, from: $0) }
++        let savedIndex = saved?.trackIndex(in: MusicCatalog.tracks)
++        let a = savedIndex.map { MusicCatalog.tracks[$0].album } ?? MusicCatalog.defaultAlbum
+         album = a
+-        trackIndex = MusicAlbumRules.startIndex(MusicCatalog.tracks, album: a, current: -1) ?? 0
+-        repeatMode = MusicAlbumRules.defaultRepeatMode(a) ?? .all
++        trackIndex = savedIndex ?? MusicAlbumRules.startIndex(MusicCatalog.tracks, album: a, current: -1) ?? 0
++        repeatMode = savedIndex != nil ? (saved.flatMap { MusicRepeatMode(rawValue: $0.repeatMode) } ?? .all) : (MusicAlbumRules.defaultRepeatMode(a) ?? .all)
+         gain = MusicAlbumRules.defaultGain(a)
++        if let saved, savedIndex != nil {
++            currentTime = MusicResumeState.position(saved.timeSec, duration: 0)
++            restoreOnOpen = saved.shouldResume(now: Date().timeIntervalSince1970)
++            if let deadline = saved.sleepDeadline, deadline > Date().timeIntervalSince1970 {
++                scheduleSleepTimer(deadline: Date(timeIntervalSince1970: deadline))
++            }
++        }
+         observeInterruptions()
+         AudioSessionPolicy.register { [weak self] in self?.isPlaying ?? false }
+     }
+@@ -115,7 +131,7 @@
+     /// 音乐页播放键（RN resolveMusicPageToggleAction）：
+     /// 正在播且当前曲就在选中专辑 → 暂停；否则在选中专辑里起播（当前曲在专辑内就接着它）。
+     func toggle() {
+-        if isPlaying, track?.album == album { pause(); return }
++        if isPlaying || wantsPlayback, track?.album == album { pause(); return }
+         if let t = track, t.album == album {
+             if loadedId == t.id { resume() } else { play(index: trackIndex, autoPlay: true) }
+             return
+@@ -142,23 +158,26 @@
+         play(index: index, autoPlay: true)
+     }
+ 
+-    func toggleRepeatOne() { repeatMode = repeatMode == .one ? .off : .one }
+-    func toggleRepeatAll() { repeatMode = repeatMode == .all ? .off : .all }
++    func toggleRepeatOne() { repeatMode = repeatMode == .one ? .off : .one; saveResume() }
++    func toggleRepeatAll() { repeatMode = repeatMode == .all ? .off : .all; saveResume() }
+ 
+     /// 装载并（可选）起播某一首
+     func play(index: Int, autoPlay: Bool) {
+         guard MusicCatalog.tracks.indices.contains(index) else { return }
+         let t = MusicCatalog.tracks[index]
++        let position = index == trackIndex ? currentTime : 0
+         trackIndex = index
+-        if loadedId != t.id { load(t) }
++        if loadedId != t.id { load(t, position: position) }
+         if autoPlay { resume() }
+-    }
+-
+-    private func load(_ t: MusicTrack) {
++        else { wantsPlayback = false; saveResume() }
++    }
++
++    private func load(_ t: MusicTrack, position: Double) {
+         teardown()
+         loadedId = t.id
+         errorMessage = nil
+-        currentTime = 0
++        currentTime = MusicResumeState.position(position, duration: 0)
++        pendingSeek = currentTime > 0 ? currentTime : nil
+         duration = 0
+         guard let url = MusicAudioSource.url(for: t) else {
+             errorMessage = SiteCopy.t("native.trackNoSource")
+@@ -176,12 +195,15 @@
+ 
+         statusObserver = item.observe(\.status, options: [.new]) { [weak self] item, _ in
+             Task { @MainActor in
+-                guard let self else { return }
++                guard let self, self.player?.currentItem === item else { return }
+                 switch item.status {
+                 case .readyToPlay:
+                     self.isLoading = false
+                     let d = item.duration.seconds
+                     self.duration = d.isFinite && d > 0 ? d : 0
++                    if let position = self.pendingSeek {
++                        self.seek(to: MusicResumeState.position(position, duration: self.duration))
++                    }
+                     self.updateNowPlaying()
+                 case .failed:
+                     self.isLoading = false
+@@ -195,20 +217,24 @@
+ 
+         timeObserver = avPlayer.addPeriodicTimeObserver(
+             forInterval: CMTime(seconds: 0.25, preferredTimescale: 600), queue: .main
+-        ) { [weak self] time in
+-            Task { @MainActor in
+-                guard let self else { return }
++        ) { [weak self, weak avPlayer] time in
++            Task { @MainActor in
++                guard let self, let avPlayer, self.player === avPlayer, self.pendingSeek == nil else { return }
+                 self.currentTime = time.seconds.isFinite ? time.seconds : 0
+                 if self.duration == 0, let d = self.player?.currentItem?.duration.seconds, d.isFinite, d > 0 {
+                     self.duration = d
+                 }
++                if Date().timeIntervalSince(self.lastSaveAt) >= 2 { self.saveResume() }
+             }
+         }
+ 
+         endObserver = NotificationCenter.default.addObserver(
+             forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main
+         ) { [weak self] _ in
+-            Task { @MainActor in self?.handleEnded() }
++            Task { @MainActor in
++                guard let self, self.player?.currentItem === item else { return }
++                self.handleEnded()
++            }
+         }
+     }
+ 
+@@ -229,6 +255,7 @@
+                 wantsPlayback = false
+                 currentTime = duration
+                 updateNowPlaying()
++                saveResume()
+             }
+         }
+     }
+@@ -236,6 +263,7 @@
+     /// 用户点播放（或打断结束自动续播）：不看 `interrupted` —— 通话 / Siri / 别的 App 抢声道后 iOS 常常不发「打断结束」，
+     /// 之前这里 guard 一下就把播放键永久点死了（Josh 真机 2026-09-10「点播放播放不了」）。RN 也只挡后台自动续播，不挡用户点。
+     func resume() {
++        if player == nil, let track { load(track, position: currentTime) }
+         guard player != nil else { return }
+         wantsPlayback = true
+         interrupted = false
+@@ -243,9 +271,28 @@
+         AudioSessionPolicy.playback()
+         RemoteControlHub.shared.claim(self)
+         player?.volume = effectiveGain
+-        player?.play()
++        if pendingSeek == nil { player?.play() }
+         isPlaying = true
+         updateNowPlaying()
++        saveResume()
++    }
++
++    /// Call after the shell has connected the audio coordination callbacks.
++    func restorePlaybackIfNeeded() {
++        guard restoreOnOpen else { return }
++        restoreOnOpen = false
++        resume()
++    }
++
++    func saveResume() {
++        guard let track else { return }
++        let saved = MusicResumeState(trackId: track.id, timeSec: currentTime,
++                                    repeatMode: repeatMode.rawValue, wasPlaying: wantsPlayback,
++                                    sleepDeadline: sleepDeadline?.timeIntervalSince1970)
++        if let data = try? JSONEncoder().encode(saved) {
++            defaults.set(data, forKey: MusicResumeState.storageKey)
++            lastSaveAt = Date()
++        }
+     }
+ 
+     /// 回到前台：被打断停掉但还想播的，续上（RN recoverMusicPlaybackAfterBackground；iOS 常不发「打断结束」）
+@@ -259,6 +306,7 @@
+         player?.pause()
+         isPlaying = false
+         updateNowPlaying()
++        saveResume()
+     }
+ 
+     func seek(ratio: Double) {
+@@ -269,10 +317,23 @@
+ 
+     func seek(to seconds: Double) {
+         let d = displayDuration
++        guard seconds.isFinite else { return }
+         let clamped = d > 0 ? min(max(0, seconds), d) : max(0, seconds)
+-        player?.seek(to: CMTime(seconds: clamped, preferredTimescale: 600))
+         currentTime = clamped
++        seekGeneration += 1
++        let generation = seekGeneration
++        if let player {
++            pendingSeek = clamped
++            player.seek(to: CMTime(seconds: clamped, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero) { [weak self, weak player] finished in
++                Task { @MainActor in
++                    guard let self, let player, self.player === player, self.seekGeneration == generation, finished else { return }
++                    self.pendingSeek = nil
++                    if self.wantsPlayback { player.play() }
++                }
++            }
++        }
+         updateNowPlaying()
++        saveResume()
+     }
+ 
+     // MARK: 睡眠定时（与 ChapterAudioPlayer 同一套：到期只暂停）
+@@ -280,9 +341,13 @@
+     func setSleepTimer(minutes: Int?) {
+         sleepTimer?.invalidate()
+         sleepTimer = nil
+-        guard let minutes, minutes > 0 else { sleepMinutes = 0; sleepDeadline = nil; return }
+-        sleepMinutes = minutes
+-        let deadline = Date().addingTimeInterval(TimeInterval(minutes * 60))
++        guard let minutes, minutes > 0 else { sleepMinutes = 0; sleepDeadline = nil; saveResume(); return }
++        scheduleSleepTimer(deadline: Date().addingTimeInterval(TimeInterval(minutes * 60)))
++        saveResume()
++    }
++
++    private func scheduleSleepTimer(deadline: Date) {
++        sleepMinutes = max(1, Int(ceil(deadline.timeIntervalSinceNow / 60)))
+         sleepDeadline = deadline
+         sleepTimer = Timer.scheduledTimer(withTimeInterval: deadline.timeIntervalSinceNow, repeats: false) { [weak self] _ in
+             Task { @MainActor in
+@@ -357,6 +422,8 @@
+     }
+ 
+     private func teardown() {
++        seekGeneration += 1
++        pendingSeek = nil
+         if let timeObserver { player?.removeTimeObserver(timeObserver) }
+         if let endObserver { NotificationCenter.default.removeObserver(endObserver) }
+         statusObserver?.invalidate()
+--- a/apps/askbible-ios/AskBible/AskBibleApp.swift
++++ b/apps/askbible-ios/AskBible/AskBibleApp.swift
+@@ -488,6 +488,7 @@
+                     activity.noteForeground(); activity.touchHabitDay(); naturePrefs.rotateIfNewDay()
+                     Task { await Endpoints.refresh(); await sync.flushNow(reason: "foreground") }
+                 } else {
++                    music.saveResume()
+                     activity.noteBackground()
+                 }
+             }
+@@ -546,6 +547,7 @@
+                     let voice = (home?.voiceOn ?? false) || (audio?.isPlaying ?? false)
+                     if voice, music?.isPlaying == true { music?.pause() }
+                 }
++                music.restorePlaybackIfNeeded()
+             }
+     }
+ 
+--- a/apps/askbible-ios/AskBible/Home/HomeView.swift
++++ b/apps/askbible-ios/AskBible/Home/HomeView.swift
+@@ -87,7 +87,21 @@
+                                 }
+                                 .disabled(!home.voiceAvailable).opacity(home.voiceAvailable ? 1 : 0.35)
+                             }
+-
++                            HStack(spacing: 24) {
++                                Button { touch(); music.next() } label: {
++                                    Label(copy("下一首", "Next track"), systemImage: "forward.end")
++                                        .frame(minHeight: 44)
++                                }
++                                .disabled(music.nextTrack == nil)
++                                .accessibilityIdentifier("home.music.next")
++                                Button { touch(); onOpenMusic() } label: {
++                                    Label(copy("选音乐", "Choose music"), systemImage: "music.note.list")
++                                        .frame(minHeight: 44)
++                                }
++                                .accessibilityIdentifier("home.music.choose")
++                            }
++                            .buttonStyle(.plain).askFont(size: 13)
++                            .foregroundStyle(.white.opacity(0.85)).verseTextShadow()
+                         }
+                         .gesture(DragGesture(minimumDistance: 20).onEnded { g in
+                             if g.translation.height < -35 && abs(g.translation.height) > abs(g.translation.width) { setTools(true) }
+--- a/apps/askbible-ios/AskBible/Music/MusicView.swift
++++ b/apps/askbible-ios/AskBible/Music/MusicView.swift
+@@ -191,6 +191,7 @@
+             // RN MusicHomeTransportButtonRow：skip 36 白、播放 64 白底 #1C1410 图标 34、循环自绘 24（开 白 / 关 白 .48）
+             Button { player.previous() } label: { icon(MI.skipPrevious, size: ShellMetrics.skipIconSize, color: .white) }
+                 .buttonStyle(.plain)
++                .accessibilityLabel(AppLocale.pick("上一首", "Previous track"))
+             Spacer()
+             Button { player.toggle() } label: {
+                 ZStack {
+@@ -206,9 +207,13 @@
+                 .frame(width: ShellMetrics.playButtonSize, height: ShellMetrics.playButtonSize)
+             }
+             .buttonStyle(.plain)
++            .accessibilityLabel(player.isPlaying ? AppLocale.pick("暂停音乐", "Pause music") : AppLocale.pick("播放音乐", "Play music"))
++            .accessibilityIdentifier("music.toggle")
+             Spacer()
+             Button { player.next() } label: { icon(MI.skipNext, size: ShellMetrics.skipIconSize, color: .white) }
+                 .buttonStyle(.plain)
++                .accessibilityLabel(AppLocale.pick("下一首", "Next track"))
++                .accessibilityIdentifier("music.next")
+             Spacer()
+             loopButton(one: false, on: player.repeatMode == .all) { player.toggleRepeatAll() }
+         }
+--- /dev/null
++++ b/apps/askbible-android/core/src/main/kotlin/me/askbible/native_/data/MusicResumeState.kt
+@@ -0,0 +1,31 @@
++package me.askbible.native_.data
++
++import org.json.JSONObject
++
++/** Stable IDs survive catalog reordering; a missing song falls back to the quiet album. */
++data class MusicResumeState(
++    val trackId: String,
++    val timeSec: Double,
++    val repeatMode: String,
++    val wasPlaying: Boolean,
++    val sleepDeadline: Double?,
++) {
++    fun trackIndex(tracks: List<MusicTrack>): Int? = tracks.indexOfFirst { it.id == trackId }.takeIf { it >= 0 }
++    fun shouldResume(now: Double): Boolean = wasPlaying && (sleepDeadline == null || sleepDeadline > now)
++    fun encode(): String = JSONObject().put("trackId", trackId).put("timeSec", timeSec)
++        .put("repeatMode", repeatMode).put("wasPlaying", wasPlaying).put("sleepDeadline", sleepDeadline).toString()
++
++    companion object {
++        const val STORAGE_KEY = "askbible.music.resume.v1"
++        fun decode(raw: String?): MusicResumeState? = try {
++            raw?.let { JSONObject(it) }?.let {
++                MusicResumeState(it.getString("trackId"), it.optDouble("timeSec", 0.0),
++                    it.optString("repeatMode", "all"), it.optBoolean("wasPlaying", false),
++                    if (it.isNull("sleepDeadline")) null else it.getDouble("sleepDeadline"))
++            }
++        } catch (_: Exception) { null }
++
++        fun position(seconds: Double, duration: Double): Double =
++            if (!seconds.isFinite() || seconds <= 0 || (duration.isFinite() && duration > 0 && seconds >= duration)) 0.0 else seconds
++    }
++}
+--- /dev/null
++++ b/apps/askbible-android/core/src/test/kotlin/me/askbible/native_/data/MusicResumeStateTest.kt
+@@ -0,0 +1,46 @@
++package me.askbible.native_.data
++
++import org.junit.Assert.*
++import org.junit.Test
++
++class MusicResumeStateTest {
++    private val track = MusicCatalog.tracks[1]
++    private fun saved(playing: Boolean = false, deadline: Double? = null) =
++        MusicResumeState(track.id, 83.25, "off", playing, deadline)
++
++    @Test fun restartPreservesTrackPositionPauseAndRepeat() {
++        assertEquals(saved(), MusicResumeState.decode(saved().encode()))
++    }
++
++    @Test fun catalogReorderingKeepsTheSameSong() {
++        val reordered = MusicCatalog.tracks.reversed()
++        assertEquals(track.id, reordered[saved().trackIndex(reordered)!!].id)
++    }
++
++    @Test fun deletedSongDoesNotResumeAnUnrelatedSong() {
++        assertNull(saved().trackIndex(MusicCatalog.tracks.filter { it.id != track.id }))
++    }
++
++    @Test fun malformedStorageIsIgnored() {
++        assertNull(MusicResumeState.decode("{broken"))
++        assertNull(MusicResumeState.decode("{}"))
++    }
++
++    @Test fun pendingDurationAndLastSecondsAreRetained() {
++        assertEquals(83.25, MusicResumeState.position(83.25, 0.0), 0.0)
++        assertEquals(99.5, MusicResumeState.position(99.5, 100.0), 0.0)
++    }
++
++    @Test fun completedAndInvalidPositionsRestartSafely() {
++        for (position in listOf(-1.0, Double.NaN, Double.POSITIVE_INFINITY, 100.0, 101.0)) {
++            assertEquals(0.0, MusicResumeState.position(position, 100.0), 0.0)
++        }
++    }
++
++    @Test fun pausedOrExpiredSleepTimerNeverAutoplays() {
++        assertFalse(saved().shouldResume(100.0))
++        assertFalse(saved(true, 99.0).shouldResume(100.0))
++        assertTrue(saved(true, 101.0).shouldResume(100.0))
++        assertTrue(saved(true).shouldResume(100.0))
++    }
++}
+--- a/apps/askbible-android/core/build.gradle.kts
++++ b/apps/askbible-android/core/build.gradle.kts
+@@ -10,4 +10,7 @@
+ application { mainClass.set("me.askbible.parity.MainKt") }
+ 
+ // 收藏 JSON 的解析规则要进对拍（JVM 上跑），所以 core 自带 org.json；:app 里排除它，用 Android 框架自带的那份
+-dependencies { implementation("org.json:json:20240303") }
++dependencies {
++    implementation("org.json:json:20240303")
++    testImplementation("junit:junit:4.13.2")
++}
+--- a/apps/askbible-android/app/src/main/java/me/askbible/native_/audio/MusicPlayer.kt
++++ b/apps/askbible-android/app/src/main/java/me/askbible/native_/audio/MusicPlayer.kt
+@@ -25,6 +25,7 @@
+ import me.askbible.native_.data.MusicCatalog
+ import me.askbible.native_.data.MusicRepeatMode
+ import me.askbible.native_.data.MusicTrack
++import me.askbible.native_.data.MusicResumeState
+ 
+ /**
+  * 音乐页播放器（ExoPlayer）。与 iOS 的 MusicPlayer 对等：曲库 MusicCatalog（内置 5 首 + R2 点播），
+@@ -35,6 +36,9 @@
+  */
+ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
+     private val appContext = context.applicationContext
++    private val prefs = appContext.getSharedPreferences("music-playback", Context.MODE_PRIVATE)
++    private var restoreOnOpen = false
++    private var lastSaveAt = 0L
+ 
+     var album by mutableStateOf(MusicCatalog.DEFAULT_ALBUM); private set
+     /** 当前曲在 MusicCatalog.tracks 里的下标 */
+@@ -88,10 +92,19 @@
+         .also { PlaybackSessions.register(it) { wantsPlayback } }
+ 
+     init {
+-        val a = MusicCatalog.DEFAULT_ALBUM
+-        trackIndex = MusicAlbumRules.startIndex(MusicCatalog.tracks, a, -1) ?: 0
+-        repeatMode = MusicAlbumRules.defaultRepeatMode(a) ?: MusicRepeatMode.ALL
++        val saved = MusicResumeState.decode(prefs.getString(MusicResumeState.STORAGE_KEY, null))
++        val savedIndex = saved?.trackIndex(MusicCatalog.tracks)
++        val a = savedIndex?.let { MusicCatalog.tracks[it].album } ?: MusicCatalog.DEFAULT_ALBUM
++        album = a
++        trackIndex = savedIndex ?: MusicAlbumRules.startIndex(MusicCatalog.tracks, a, -1) ?: 0
++        repeatMode = if (savedIndex != null) MusicRepeatMode.entries.find { it.raw == saved?.repeatMode } ?: MusicRepeatMode.ALL
++            else MusicAlbumRules.defaultRepeatMode(a) ?: MusicRepeatMode.ALL
+         gain = MusicAlbumRules.defaultGain(a)
++        if (saved != null && savedIndex != null) {
++            currentTime = MusicResumeState.position(saved.timeSec, 0.0)
++            restoreOnOpen = saved.shouldResume(System.currentTimeMillis() / 1000.0)
++            saved.sleepDeadline?.let { if (it * 1000 > System.currentTimeMillis()) scheduleSleepTimer((it * 1000).toLong()) }
++        }
+         player.setAudioAttributes(
+             AudioAttributes.Builder()
+                 .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+@@ -107,6 +120,12 @@
+             override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+                 if (playWhenReady) focusLost = false
+                 else if (reason == Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_FOCUS_LOSS && wantsPlayback) focusLost = true
++                // Lock-screen controls go directly through MediaSession/ExoPlayer.
++                if (reason == Player.PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST ||
++                    reason == Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_BECOMING_NOISY) {
++                    wantsPlayback = playWhenReady
++                    saveResume()
++                }
+             }
+ 
+             override fun onPlaybackStateChanged(state: Int) {
+@@ -114,6 +133,7 @@
+                 if (state == Player.STATE_READY && this@MusicPlayer.duration <= 0) {
+                     val d = player.duration
+                     if (d > 0) this@MusicPlayer.duration = d / 1000.0
++                    if (duration > 0 && currentTime >= duration) seekTo(0.0)
+                 }
+                 if (state == Player.STATE_ENDED) onEnded()
+             }
+@@ -177,7 +197,7 @@
+      */
+     fun toggle() {
+         val t = track
+-        if (isPlaying && t?.album == album) { pause(); return }
++        if ((isPlaying || wantsPlayback) && t?.album == album) { pause(); return }
+         if (t != null && t.album == album) {
+             if (loadedId == t.id) resume() else play(trackIndex, true)
+             return
+@@ -202,21 +222,23 @@
+         play(index, true)
+     }
+ 
+-    fun toggleRepeatOne() { repeatMode = if (repeatMode == MusicRepeatMode.ONE) MusicRepeatMode.OFF else MusicRepeatMode.ONE }
+-    fun toggleRepeatAll() { repeatMode = if (repeatMode == MusicRepeatMode.ALL) MusicRepeatMode.OFF else MusicRepeatMode.ALL }
++    fun toggleRepeatOne() { repeatMode = if (repeatMode == MusicRepeatMode.ONE) MusicRepeatMode.OFF else MusicRepeatMode.ONE; saveResume() }
++    fun toggleRepeatAll() { repeatMode = if (repeatMode == MusicRepeatMode.ALL) MusicRepeatMode.OFF else MusicRepeatMode.ALL; saveResume() }
+ 
+     /** 装载并（可选）起播某一首 */
+     fun play(index: Int, autoPlay: Boolean) {
+         val t = MusicCatalog.tracks.getOrNull(index) ?: return
++        val position = if (index == trackIndex) currentTime else 0.0
+         trackIndex = index
+-        if (loadedId != t.id) load(t)
++        if (loadedId != t.id) load(t, position)
+         if (autoPlay) resume()
+-    }
+-
+-    private fun load(t: MusicTrack) {
++        else { wantsPlayback = false; player.playWhenReady = false; saveResume() }
++    }
++
++    private fun load(t: MusicTrack, position: Double = currentTime) {
+         loadedId = t.id
+         errorMessage = null
+-        currentTime = 0.0
++        currentTime = MusicResumeState.position(position, 0.0)
+         duration = 0.0
+         val uri = MusicAudioSource.uri(t)
+         if (uri == null) {
+@@ -233,7 +255,8 @@
+                         .setArtist(t.artist.ifEmpty { "AskBible" })
+                         .setAlbumTitle(t.album)
+                         .build())
+-                .build()
++                .build(),
++            (currentTime * 1000).toLong()
+         )
+         player.volume = effectiveGain
+         player.prepare()
+@@ -249,7 +272,7 @@
+                 val q = queue
+                 val pos = q.indexOf(trackIndex)
+                 if (pos >= 0 && pos + 1 < q.size) play(q[pos + 1], true)
+-                else { wantsPlayback = false; currentTime = duration }
++                else { wantsPlayback = false; currentTime = duration; saveResume() }
+             }
+         }
+     }
+@@ -261,12 +284,28 @@
+         PlaybackSessions.ensureStarted(appContext)
+         player.volume = effectiveGain
+         player.playWhenReady = true
++        saveResume()
++    }
++
++    fun restorePlaybackIfNeeded() {
++        if (!restoreOnOpen) return
++        restoreOnOpen = false
++        resume()
++    }
++
++    fun saveResume() {
++        val t = track ?: return
++        val saved = MusicResumeState(t.id, currentTime, repeatMode.raw, wantsPlayback, sleepDeadlineMs?.div(1000.0))
++        prefs.edit().putString(MusicResumeState.STORAGE_KEY, saved.encode()).apply()
++        lastSaveAt = android.os.SystemClock.elapsedRealtime()
+     }
+ 
+     fun pause() {
+         wantsPlayback = false
+         focusLost = false
+         player.playWhenReady = false
++        if (loadedId != null) currentTime = player.currentPosition / 1000.0
++        saveResume()
+     }
+ 
+     /** 外部声音停了 / 回到前台：永久失焦停掉的、还想播的，叫回来（RN recoverMusicPlaybackAfterBackground） */
+@@ -284,19 +323,25 @@
+     }
+ 
+     fun seekTo(seconds: Double) {
++        if (!seconds.isFinite()) return
+         val d = displayDuration
+         val clamped = if (d > 0) seconds.coerceIn(0.0, d) else maxOf(0.0, seconds)
+         player.seekTo((clamped * 1000).toLong())
+         currentTime = clamped
++        saveResume()
+     }
+ 
+     // ---- 睡眠定时（与 ChapterAudioPlayer 同一套：到期只暂停） ----
+ 
+     fun setSleepTimer(minutes: Int?) {
+         sleepJob?.cancel(); sleepJob = null
+-        if (minutes == null || minutes <= 0) { sleepMinutes = 0; sleepDeadlineMs = null; return }
+-        sleepMinutes = minutes
+-        val deadline = System.currentTimeMillis() + minutes * 60_000L
++        if (minutes == null || minutes <= 0) { sleepMinutes = 0; sleepDeadlineMs = null; saveResume(); return }
++        scheduleSleepTimer(System.currentTimeMillis() + minutes * 60_000L)
++        saveResume()
++    }
++
++    private fun scheduleSleepTimer(deadline: Long) {
++        sleepMinutes = maxOf(1, kotlin.math.ceil((deadline - System.currentTimeMillis()) / 60_000.0).toInt())
+         sleepDeadlineMs = deadline
+         sleepJob = scope.launch(Dispatchers.Main) {
+             delay(deadline - System.currentTimeMillis())
+@@ -320,12 +365,14 @@
+             while (true) {
+                 currentTime = player.currentPosition / 1000.0
+                 if (duration <= 0 && player.duration > 0) duration = player.duration / 1000.0
++                if (android.os.SystemClock.elapsedRealtime() - lastSaveAt >= 2000) saveResume()
+                 delay(250)
+             }
+         }
+     }
+ 
+     fun release() {
++        saveResume()
+         sleepJob?.cancel()
+         ticker?.cancel()
+         PlaybackSessions.unregister(mediaSession)
+--- a/apps/askbible-android/app/src/main/java/me/askbible/native_/MainActivity.kt
++++ b/apps/askbible-android/app/src/main/java/me/askbible/native_/MainActivity.kt
+@@ -479,6 +479,13 @@
+         }
+     }
+     val music = remember { MusicPlayer(context, scope) }
++    DisposableEffect(lifecycle, music) {
++        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
++            if (event == androidx.lifecycle.Lifecycle.Event.ON_PAUSE) music.saveResume()
++        }
++        lifecycle.addObserver(observer)
++        onDispose { lifecycle.removeObserver(observer) }
++    }
+     val home = remember { HomeVerseController(context, scope) }
+     // 首页金句跟当前读经版本走：内置译本读本机库，在线译本（含法语等）取该版本的正文
+     LaunchedEffect(translation.id) { home.setSource(translation) }
+@@ -527,6 +534,7 @@
+         devotional.onWillPlay = { audio.pause(); home.stopVoice(); music.setDucked(true) }
+         devotional.onStopped = { music.setDucked(audio.isPlaying) }
+         ambient.onWillPlay = { if ((home.voiceOn || audio.isPlaying) && music.isPlaying) music.pause() }
++        music.restorePlaybackIfNeeded()
+         onDispose { audio.release(); music.release(); home.release(); ambient.release(); devotional.release() }
+     }
+     // 整章朗读时环境音压半，停了恢复（「读经混播时继续播并压音量」）
+@@ -694,6 +702,7 @@
+                 ambientVolume = ambient.volume, onAmbientVolume = { ambient.volume = it },
+                 onChooseAlbum = { music.selectAlbum(it) },
+                 onOpenMusic = { homeChromeHidden = false; tab = ShellTab.MUSIC },
++                onNextMusic = { music.next() },
+                 sleepTimerMinutes = sleepTimerMinutes,
+                 // 点选场景：记次数、存档、跟场景默认环境音（RN selectScene source=user）
+                 onSelectScene = { id ->
+@@ -728,15 +737,10 @@
+                 chromeHidden = homeChromeHidden,
+                 onChromeHidden = { homeChromeHidden = it },
+             )
+-            ShellTab.MUSIC -> Box(Modifier.fillMaxSize()) {
+-                MusicScreen(player = music, onChromeHidden = { musicChromeHidden = it },
++            ShellTab.MUSIC -> MusicScreen(player = music, onChromeHidden = { musicChromeHidden = it },
++                onBackHome = { musicChromeHidden = false; tab = ShellTab.HOME },
+                 sleepActive = audio.sleepDeadlineMs != null || music.sleepDeadlineMs != null || home.sleepDeadlineMs != null || ambient.sleepDeadlineMs != null,
+                 onSleepTimer = { showSleepSheet = true })
+-                androidx.compose.material3.TextButton(
+-                    onClick = { musicChromeHidden = false; tab = ShellTab.HOME },
+-                    modifier = Modifier.align(Alignment.TopStart).statusBarsPadding().padding(top = 12.dp).width(136.dp).height(56.dp),
+-                ) { Text(AppLocale.pick("‹ 首页", "‹ Home", appLocale), color = Color.White, fontSize = 17.sp) }
+-            }
+             ShellTab.EXPLORE -> ExploreScreen(
+                 size = size, article = exploreArticle, onOpenArticle = { exploreArticle = it },
+                 auth = auth, locale = appLocale, onOpenLogin = { authRoute = "login" },
+--- a/apps/askbible-android/app/src/main/java/me/askbible/native_/ui/HomeScreen.kt
++++ b/apps/askbible-android/app/src/main/java/me/askbible/native_/ui/HomeScreen.kt
+@@ -43,6 +43,7 @@
+     onBumpTextScale: (Int) -> Unit, onCycleSleepTimer: () -> Unit,
+     onToggleVoice: () -> Unit, onPressAlbum: (String) -> Unit,
+     onChooseAlbum: (String) -> Unit, onOpenMusic: () -> Unit, onOpenMenu: () -> Unit,
++    onNextMusic: () -> Unit,
+     chromeHidden: Boolean = false, onChromeHidden: (Boolean) -> Unit = {},
+ ) {
+     var toolsOpen by remember { mutableStateOf(false) }
+@@ -127,6 +128,18 @@
+                     Text(t("朗读", "Read aloud"), color = Color.White, fontSize = 12.sp)
+                 }
+             }
++            Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
++                TextButton(onClick = { touch(); onNextMusic() }) {
++                    MaterialIcon(MI.SKIP_NEXT, 20f, Color.White, shadow = true)
++                    Spacer(Modifier.width(6.dp))
++                    Text(t("下一首", "Next track"), color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
++                }
++                TextButton(onClick = { touch(); onOpenMusic() }) {
++                    MaterialIcon(MI.MUSIC_NOTE, 20f, Color.White, shadow = true)
++                    Spacer(Modifier.width(6.dp))
++                    Text(t("选音乐", "Choose music"), color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
++                }
++            }
+         }
+     }
+     if (toolsOpen) {
+--- a/apps/askbible-android/app/src/main/java/me/askbible/native_/ui/MusicScreen.kt
++++ b/apps/askbible-android/app/src/main/java/me/askbible/native_/ui/MusicScreen.kt
+@@ -3,6 +3,7 @@
+ import androidx.compose.foundation.Canvas
+ import androidx.compose.foundation.background
+ import androidx.compose.foundation.layout.Arrangement
++import androidx.compose.foundation.layout.PaddingValues
+ import androidx.compose.foundation.layout.Box
+ import androidx.compose.foundation.layout.Column
+ import androidx.compose.foundation.layout.Row
+@@ -17,8 +18,14 @@
+ import androidx.compose.foundation.layout.statusBarsPadding
+ import androidx.compose.foundation.layout.widthIn
+ import androidx.compose.foundation.layout.width
++import androidx.compose.foundation.layout.WindowInsets
++import androidx.compose.foundation.layout.WindowInsetsSides
++import androidx.compose.foundation.layout.only
++import androidx.compose.foundation.layout.safeDrawing
++import androidx.compose.foundation.layout.windowInsetsPadding
+ import androidx.compose.foundation.shape.CircleShape
+ import androidx.compose.material3.Text
++import androidx.compose.material3.TextButton
+ import androidx.compose.runtime.Composable
+ import androidx.compose.runtime.getValue
+ import androidx.compose.runtime.mutableStateOf
+@@ -26,6 +33,8 @@
+ import androidx.compose.runtime.setValue
+ import androidx.compose.ui.Alignment
+ import androidx.compose.ui.Modifier
++import androidx.compose.ui.semantics.semantics
++import androidx.compose.ui.semantics.contentDescription
+ import androidx.compose.ui.draw.clip
+ import androidx.compose.ui.geometry.Offset
+ import androidx.compose.ui.graphics.Brush
+@@ -43,6 +52,7 @@
+ import androidx.compose.ui.input.pointer.pointerInput
+ import androidx.compose.foundation.layout.fillMaxHeight
+ import androidx.compose.ui.platform.LocalDensity
++import androidx.compose.ui.platform.testTag
+ import androidx.compose.ui.graphics.graphicsLayer
+ import androidx.compose.ui.graphics.CompositingStrategy
+ import androidx.compose.ui.graphics.BlendMode
+@@ -66,6 +76,7 @@
+ import me.askbible.native_.audio.MusicPlayer
+ import me.askbible.native_.data.MusicAlbumRules
+ import me.askbible.native_.data.MusicCatalog
++import me.askbible.native_.data.AppLocale
+ import me.askbible.native_.data.MusicRepeatMode
+ import me.askbible.native_.data.Brand
+ import me.askbible.native_.data.ShellMetrics
+@@ -81,7 +92,8 @@
+  * 播放状态全部来自 MusicPlayer；心境条 = MusicCatalog.albums（与 RN KNOWN_MUSIC_ALBUMS 同序）。
+  */
+ @Composable
+-fun MusicScreen(player: MusicPlayer, sleepActive: Boolean = false, onSleepTimer: () -> Unit = {},
++fun MusicScreen(player: MusicPlayer, onBackHome: () -> Unit,
++                sleepActive: Boolean = false, onSleepTimer: () -> Unit = {},
+                 /** 睡眠专辑自动隐藏了按钮时通知壳把底栏也藏起来（RN setMusicAutoHideChrome → ShellTabBar） */
+                 onChromeHidden: (Boolean) -> Unit = {}) {
+     /** 拖进度条时的预览比例；null = 没在拖 */
+@@ -105,13 +117,25 @@
+         // 只盖舞台上半段（曲目列表以上），列表 / 按钮藏起来后点下半段只算「碰一下回来」
+         Box(Modifier.fillMaxWidth().fillMaxHeight(0.42f).clickableNoRipple { if (player.track != null) player.toggle() })
+ 
+-        // 睡眠定时器
+-        AnimatedVisibility(uiVisible, Modifier.align(Alignment.TopEnd), enter = fadeIn(), exit = fadeOut()) {
+-        Box(Modifier.statusBarsPadding().padding(top = 6.dp, end = ShellMetrics.topChromeSideInset.dp)
+-            .size(50.dp).clickableNoRipple(onSleepTimer), contentAlignment = Alignment.Center) {
+-            // RN MusicHomeSleepTimerButton：timer 26，开着 LOGO 黄，否则白
+-            MaterialIcon(MI.TIMER, 26f, if (sleepActive) Brand.logo.toColor() else Color.White, shadow = true)
+-        }
++        // 两端控件共用安全区与同一行，避免返回文字和定时器各自偏移。
++        AnimatedVisibility(uiVisible, Modifier.align(Alignment.TopCenter), enter = fadeIn(), exit = fadeOut()) {
++            Row(Modifier.fillMaxWidth().statusBarsPadding()
++                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
++                .padding(top = 6.dp, start = ShellMetrics.topChromeSideInset.dp, end = ShellMetrics.topChromeSideInset.dp),
++                verticalAlignment = Alignment.CenterVertically,
++                horizontalArrangement = Arrangement.SpaceBetween) {
++                TextButton(onClick = onBackHome,
++                    modifier = Modifier.height(50.dp).testTag("music.home")
++                        .semantics { contentDescription = AppLocale.pick("返回首页", "Back to Home") },
++                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)) {
++                    Text(AppLocale.pick("‹ 首页", "‹ Home"), color = Color.White, fontSize = 17.sp)
++                }
++                Box(Modifier.size(50.dp).testTag("music.sleep-timer")
++                    .semantics { contentDescription = AppLocale.pick("定时停止音乐", "Sleep timer") }
++                    .clickableNoRipple(onSleepTimer), contentAlignment = Alignment.Center) {
++                    MaterialIcon(MI.TIMER, 26f, if (sleepActive) Brand.logo.toColor() else Color.White, shadow = true)
++                }
++            }
+         }
+ 
+         AnimatedVisibility(uiVisible, enter = fadeIn(), exit = fadeOut()) {
+@@ -201,10 +225,13 @@
+                 // 单曲循环（左）/ 整专辑循环（右）：开着的带圆底，与 RN loopBtnOn 一致
+                 // RN MusicHomeTransportButtonRow：skip 36 白、播放 64 白底 #1C1410 图标 34、循环自绘 24（开 白 / 关 白 .48）
+                 LoopButton(one = true, on = player.repeatMode == MusicRepeatMode.ONE) { player.toggleRepeatOne() }
+-                Box(Modifier.size(48.dp).clickableNoRipple { player.previous() }, contentAlignment = Alignment.Center) {
++                Box(Modifier.size(48.dp).semantics { contentDescription = AppLocale.pick("上一首", "Previous track") }
++                    .clickableNoRipple { player.previous() }, contentAlignment = Alignment.Center) {
+                     MaterialIcon(MI.SKIP_PREVIOUS, ShellMetrics.skipIconSize, Color.White)
+                 }
+-                Box(Modifier.size(ShellMetrics.playButtonSize.dp).clip(CircleShape).background(Color.White).clickableNoRipple { player.toggle() },
++                Box(Modifier.size(ShellMetrics.playButtonSize.dp).clip(CircleShape).background(Color.White)
++                    .semantics { contentDescription = if (player.isPlaying) AppLocale.pick("暂停音乐", "Pause music") else AppLocale.pick("播放音乐", "Play music") }
++                    .clickableNoRipple { player.toggle() },
+                     contentAlignment = Alignment.Center) {
+                     if (player.isLoading) {
+                         CircularProgressIndicator(color = Color(0xFF1C1410), strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
+@@ -213,7 +240,8 @@
+                                      modifier = Modifier.offset(x = if (player.isPlaying) 0.dp else ShellMetrics.playIconNudge.dp))
+                     }
+                 }
+-                Box(Modifier.size(48.dp).clickableNoRipple { player.next() }, contentAlignment = Alignment.Center) {
++                Box(Modifier.size(48.dp).semantics { contentDescription = AppLocale.pick("下一首", "Next track") }
++                    .clickableNoRipple { player.next() }, contentAlignment = Alignment.Center) {
+                     MaterialIcon(MI.SKIP_NEXT, ShellMetrics.skipIconSize, Color.White)
+                 }
+                 LoopButton(one = false, on = player.repeatMode == MusicRepeatMode.ALL) { player.toggleRepeatAll() }
+--- a/components/music/MusicShellPlaybackContext.tsx
++++ b/components/music/MusicShellPlaybackContext.tsx
+@@ -26,7 +26,7 @@
+   resolveShellMusicEndedAction,
+   pickRandomShellAudioTrackSrcInAlbum,
+ } from "@/lib/music/shell-music-advance";
+-import { getShellDefaultAudioSrc, getShellSceneBoundAudioSrc, pickRandomShellAudioTrackSrc } from "@/lib/music-companion/shell-default-audio-src";
++import { getShellDefaultAudioSrc, pickRandomShellAudioTrackSrc } from "@/lib/music-companion/shell-default-audio-src";
+ import {
+   musicCompanionStoreHasPlayableTracks,
+   shippedPublicMusicCompanionStore,
+@@ -279,8 +279,6 @@
+   );
+   const sleepTimerDeadlineRef = useRef<number | null>(null);
+   const shellPlaybackHydratedRef = useRef(false);
+-  /** 非音乐路由异步恢复（本机曲优先）时防止并发重复跑 */
+-  const nonMusicHydrateLockRef = useRef(false);
+   /** 避免 `currentSrc` 尚未就绪时反复 `load()` 触发 setState 风暴 */
+   const lastBoundEffectiveSrcRef = useRef("");
+   const lastUnavailableKjvSrcRef = useRef("");
+@@ -289,8 +287,6 @@
+     timeSec: number;
+     tryPlay: boolean;
+   } | null>(null);
+-  /** 音乐路由：同一 pathname 内避免 store 引用更新时重复随机 */
+-  const musicShellSessionKeyRef = useRef<string>("");
+   /** 减轻「回前台就拉曲库」：全平台最短间隔（毫秒） */
+   const companionFetchMinIntervalMs = 45_000;
+   const companionLastFetchAtRef = useRef(0);
+@@ -299,6 +295,7 @@
+   const shellPlaybackLastPersistAtRef = useRef(0);
+   /** 曲目自然结束后切到下一首并自动播放（避免 `ended` 时 `paused` 导致仅绑 src 不 play） */
+   const playAfterNextBindRef = useRef(false);
++  const [playRequestEpoch, setPlayRequestEpoch] = useState(0);
+   const musicAlbumRepeatModeOverrideRef = useRef<MusicAlbumRepeatMode | null>(null);
+   const readHomeScriptureReadyRef = useRef(false);
+   const [readHomeScripturePlaybackReady, setReadHomeScripturePlaybackReadyState] = useState(false);
+@@ -344,7 +341,14 @@
+   const setPlaybackSrc = useCallback(
+     (src: string | null, opts?: { autoPlay?: boolean }) => {
+       clearDevicePlaybackPersisted();
++      const requestedSrc = src?.trim() || defaultSrc;
++      const restore = shellPlaybackRestoreRef.current;
++      if (restore && !shellPlaybackUrlsEqual(restore.targetSrc, requestedSrc)) {
++        shellPlaybackRestoreRef.current = null;
++        shellPlaybackPersistEnabledRef.current = true;
++      }
+       if (opts?.autoPlay) {
++        setPlayRequestEpoch((epoch) => epoch + 1);
+         playAfterNextBindRef.current = true;
+         setShellAudioHomePrimed(true);
+       }
+@@ -612,13 +616,10 @@
+     }
+   }, [defaultSrc, playbackOverride]);
+ 
+-  /** 首次拿到曲库后：从 localStorage 恢复（非 `/music`）；本机导入曲优先于曲库 URL；音乐页每次进入随机起播并清远程持久化 */
++  /** Restore once on every route, including /music. Navigation must never reset a listening session. */
+   useEffect(() => {
+     if (loading || shellPlaybackHydratedRef.current) return;
+     if (!store && typeof navigator !== "undefined" && navigator.onLine) return;
+-    if (isMusicShellPath(pathname)) return;
+-    if (nonMusicHydrateLockRef.current) return;
+-    nonMusicHydrateLockRef.current = true;
+ 
+     let cancelled = false;
+ 
+@@ -672,53 +673,14 @@
+         timeSec: persisted.timeSec,
+         tryPlay: persisted.wasPlaying,
+       };
+-      const def = store ? (getShellSceneBoundAudioSrc(store)?.trim() ?? "") : "";
+-      if (def && shellPlaybackUrlsEqual(persisted.src, def)) setPlaybackOverride(null);
+-      else setPlaybackOverride(persisted.src.trim());
++      setPlaybackOverride(persisted.src.trim());
+       shellPlaybackHydratedRef.current = true;
+-    })().finally(() => {
+-      nonMusicHydrateLockRef.current = false;
+-    });
++    })();
+ 
+     return () => {
+       cancelled = true;
+     };
+   }, [store, loading, pathname]);
+-
+-  useEffect(() => {
+-    if (loading || !store) return;
+-    if (!isMusicShellPath(pathname)) {
+-      musicShellSessionKeyRef.current = "";
+-      return;
+-    }
+-    if (musicShellSessionKeyRef.current === pathname) return;
+-    musicShellSessionKeyRef.current = pathname;
+-
+-    if (!shellPlaybackHydratedRef.current) {
+-      shellPlaybackHydratedRef.current = true;
+-    }
+-
+-    clearShellPlaybackPersisted();
+-    clearDevicePlaybackPersisted();
+-    setDevicePlaybackState((prev) => {
+-      if (prev?.objectUrl) URL.revokeObjectURL(prev.objectUrl);
+-      return null;
+-    });
+-    shellPlaybackRestoreRef.current = null;
+-    shellPlaybackPersistEnabledRef.current = true;
+-    setShellAudioHomePrimed(true);
+-
+-    const url = pickRandomShellAudioTrackSrc(store, null);
+-    if (!url) return;
+-
+-    const def = getShellSceneBoundAudioSrc(store)?.trim() ?? "";
+-    if (def && shellPlaybackUrlsEqual(url, def)) {
+-      setPlaybackOverride(null);
+-    } else {
+-      playAfterNextBindRef.current = true;
+-      setPlaybackOverride(url);
+-    }
+-  }, [pathname, store, loading]);
+ 
+   /** 曲库加载失败等：无 store 时仍允许写入进度，避免持久化被永久关闭 */
+   useEffect(() => {
+@@ -738,7 +700,7 @@
+   useLayoutEffect(() => {
+     const a = audioRef.current;
+     if (!a) return;
+-    a.preload = "none";
++    a.preload = shellPlaybackRestoreRef.current ? "metadata" : "none";
+     const isHomeNature = pathname === "/" || isWebAppHomePath(pathname) || pathname === "/nature";
+     const bindSrc =
+       !effectiveSrc.trim() || !isHomeNature || shellAudioHomePrimed ? effectiveSrc.trim() : "";
+@@ -768,6 +730,8 @@
+     lastBoundEffectiveSrcRef.current = bindSrc;
+     const wasPlaying = !a.paused;
+     const playAfterAdvance = playAfterNextBindRef.current;
++    setCurrentSec(0);
++    setDurationSec(0);
+     a.src = bindSrc;
+     a.muted = shellAudioMuted;
+     a.load();
+@@ -776,7 +740,7 @@
+       void attemptShellPlay(a);
+     }
+     /** 未在播时不要 `setPlaying(false)`：会制造无意义重渲染，曾与首页对齐 `effectiveSrc` 的 effect 形成更新风暴。 */
+-  }, [effectiveSrc, pathname, shellAudioHomePrimed, shellAudioMuted, attemptShellPlay]);
++  }, [effectiveSrc, pathname, shellAudioHomePrimed, shellAudioMuted, attemptShellPlay, playRequestEpoch]);
+ 
+   /** 在对应 src 的 metadata 就绪后 seek，并可选自动续播 */
+   useEffect(() => {
+@@ -798,6 +762,8 @@
+         t = Math.max(0, t);
+       }
+       a.currentTime = t;
++      setCurrentSec(t);
++      setDurationSec(Number.isFinite(dur) ? dur : 0);
+       const tryPlay = shellPlaybackRestoreRef.current.tryPlay;
+       shellPlaybackRestoreRef.current = null;
+       shellPlaybackPersistEnabledRef.current = true;
+@@ -840,7 +806,8 @@
+       return;
+     }
+     const src = effectiveSrc.trim();
+-    if (!src || src.startsWith("blob:")) return;
++    if (!src || src.startsWith("blob:") || !storeRef.current?.audioTracks.some((track) => shellPlaybackUrlsEqual(track.src ?? "", src))) return;
++    if (!audioUrlEquals(a, src)) return;
+     writeShellPlaybackPersisted({
+       v: 1,
+       src,
+--- a/components/music/MusicHomeClient.tsx
++++ b/components/music/MusicHomeClient.tsx
+@@ -123,11 +123,13 @@
+   setTrackPoolIdx: (n: number) => void;
+ }) {
+   const sp = useSearchParams();
++  const appliedTrackRef = useRef<string | null>(null);
+   useEffect(() => {
+     const tid = sp.get("track")?.trim();
+-    if (!tid) return;
++    if (!tid || appliedTrackRef.current === tid) return;
+     const idx = tracksWithSrc.findIndex((t) => t.id === tid);
+     if (idx < 0) return;
++    appliedTrackRef.current = tid;
+     bumpUserSkip();
+     setTrackPoolIdx(idx);
+   }, [sp, tracksWithSrc, bumpUserSkip, setTrackPoolIdx]);
+@@ -154,7 +156,6 @@
+     musicStore,
+     deviceLibraryPlayback,
+     clearDeviceLibraryPlayback,
+-    pausePlayback,
+     playing,
+     canPlay,
+     sleepTimerMinutes,
+@@ -176,22 +177,24 @@
+   const initialSi = initialSceneIndex(initialStore);
+   const [sceneIndex, setSceneIndex] = useState(() => initialSi);
+   const [album, setAlbum] = useState<string>(DEFAULT_ALBUM);
+-  const [trackPoolIdx, setTrackPoolIdx] = useState(() => computeRandomTrackPoolIdx(initialStore));
+-  const fullMusicSrcGateDone = useRef(false);
++  const [trackPoolIdx, setTrackPoolIdx] = useState(0);
+   /** 用户刚点上一首/下一首/随机：短时间内优先信任 trackPoolIdx，避免壳层 ended 已切歌而此处仍用旧 URL 把播放源推回去导致更新风暴 */
+   const userSkipAtRef = useRef(0);
+   const bumpUserSkip = useCallback(() => {
+     userSkipAtRef.current = typeof performance !== "undefined" ? performance.now() : 0;
+   }, []);
+-  const setPlaybackSrcRef = useRef(setPlaybackSrc);
+-  setPlaybackSrcRef.current = setPlaybackSrc;
+ 
+   useEffect(() => {
+     const es = effectiveSrc.trim();
+     if (!es) return;
+     const list = store.audioTracks.filter((t) => Boolean(t.src?.trim()));
+     const j = list.findIndex((t) => urlsEqual((t.src ?? "").trim(), es));
+-    if (j >= 0) setTrackPoolIdx(j);
++    if (j >= 0) {
++      const activeAlbum = inferTrackAlbumFromCompanionTrack(list[j]!);
++      setAlbum(activeAlbum);
++      const albumTracks = list.filter((track) => inferTrackAlbumFromCompanionTrack(track) === activeAlbum);
++      setTrackPoolIdx(albumTracks.findIndex((track) => urlsEqual(track.src ?? "", es)));
++    }
+   }, [effectiveSrc, store.audioTracks]);
+ 
+   const orderedScenes = useMemo(
+@@ -246,10 +249,6 @@
+     const next = albumNames.find((name) => (albumCounts[name] ?? 0) > 0) ?? DEFAULT_ALBUM;
+     if (next !== album) setAlbum(next);
+   }, [album, albumCounts, albumNames]);
+-
+-  useEffect(() => {
+-    setTrackPoolIdx(0);
+-  }, [album]);
+ 
+   const resolvedTrackIdx = useMemo(() => {
+     const tracks = tracksWithSrc;
+@@ -356,31 +355,16 @@
+   const chromeVisible = landscapeNarrow ? landscapeMenuVisible : uiVisible;
+   const nowClockText = useMemo(() => formatNowClock(new Date(nowMs)), [nowMs]);
+ 
+-  useEffect(() => {
+-    if (deviceLibraryPlayback) return;
+-    const want = audioSrc.trim();
+-    if (!want) {
+-      setPlaybackSrcRef.current(null);
+-      return;
+-    }
+-    const cur = effectiveSrc.trim();
+-    if (urlsEqual(want, cur)) return;
+-
+-    if (!fullMusicSrcGateDone.current) {
+-      fullMusicSrcGateDone.current = true;
+-      if (cur) return;
+-    }
+-
+-    setPlaybackSrcRef.current(want);
+-  }, [audioSrc, effectiveSrc, deviceLibraryPlayback]);
+-
+   const selectTrack = useCallback(
+-    (idx: number) => {
++    (idx: number, autoPlay = true) => {
++      const selected = tracksWithSrc[idx];
++      if (!selected?.src) return;
+       clearDeviceLibraryPlayback();
+       bumpUserSkip();
+       setTrackPoolIdx(idx);
++      setPlaybackSrc(selected.src, { autoPlay });
+     },
+-    [clearDeviceLibraryPlayback, bumpUserSkip],
++    [tracksWithSrc, clearDeviceLibraryPlayback, bumpUserSkip, setPlaybackSrc],
+   );
+ 
+   const selectAlbum = useCallback(
+@@ -400,9 +384,8 @@
+       if (track && inferTrackAlbumFromCompanionTrack(track) === nextAlbum) return;
+       const nextTracks = allTracksWithSrc.filter((tr) => inferTrackAlbumFromCompanionTrack(tr) === nextAlbum);
+       if (nextTracks.length === 0) return;
+-      const pickIndex = Math.floor(Math.random() * nextTracks.length);
++      const pickIndex = 0;
+       const pick = nextTracks[pickIndex]!;
+-      pausePlayback();
+       clearDeviceLibraryPlayback();
+       bumpUserSkip();
+       const src = (pick.src ?? "").trim();
+@@ -412,7 +395,8 @@
+         if (nextPick && nextPick.id !== pick.id) {
+           prefetchMusicTrackBundle({ src: nextPick.src, analysisSrc: nextPick.analysisSrc });
+         }
+-        setPlaybackSrc(src);
++        setTrackPoolIdx(pickIndex);
++        setPlaybackSrc(src, { autoPlay: playing });
+       }
+     },
+     [
+@@ -420,7 +404,7 @@
+       allTracksWithSrc,
+       bumpUserSkip,
+       clearDeviceLibraryPlayback,
+-      pausePlayback,
++      playing,
+       setPlaybackSrc,
+       setSleepTimerMinutes,
+       sleepTimerMinutes,
+@@ -572,14 +556,14 @@
+     }
+     if (tracksWithSrc.length <= 1) return;
+     const prevIdx = resolvedTrackIdx <= 0 ? tracksWithSrc.length - 1 : resolvedTrackIdx - 1;
+-    selectTrack(prevIdx);
+-  }, [currentSec, musicActive, resolvedTrackIdx, seekRatio, selectTrack, tracksWithSrc.length]);
++    selectTrack(prevIdx, playing);
++  }, [currentSec, musicActive, resolvedTrackIdx, seekRatio, selectTrack, tracksWithSrc.length, playing]);
+ 
+   const onNext = useCallback(() => {
+     if (tracksWithSrc.length <= 1) return;
+     const nextIdx = (resolvedTrackIdx + 1) % tracksWithSrc.length;
+-    selectTrack(nextIdx);
+-  }, [resolvedTrackIdx, selectTrack, tracksWithSrc.length]);
++    selectTrack(nextIdx, playing);
++  }, [resolvedTrackIdx, selectTrack, tracksWithSrc.length, playing]);
+ 
+   const onMusicSwipe = useCallback(
+     (direction: "left" | "right") => {
+@@ -667,7 +651,7 @@
+         <MusicHomeTrackFromQuery
+           tracksWithSrc={tracksWithSrc}
+           bumpUserSkip={bumpUserSkip}
+-          setTrackPoolIdx={setTrackPoolIdx}
++          setTrackPoolIdx={selectTrack}
+         />
+       </Suspense>
+ 
+--- a/components/nature/NatureHomeAlbumStrip.tsx
++++ b/components/nature/NatureHomeAlbumStrip.tsx
+@@ -1,6 +1,8 @@
+ "use client";
+ 
+ import { useCallback, useState } from "react";
++import Link from "next/link";
++import { shellPlaybackUrlsEqual } from "@/lib/music-companion/shell-playback-storage";
+ import { useLocale } from "@/components/i18n/LocaleProvider";
+ import { MusicAlbumGlyph } from "@/components/music/MusicAlbumGlyph";
+ import type { MusicHomeTransportSideSlot } from "@/components/music/MusicHomeTransportButtonRow";
+@@ -156,7 +158,8 @@
+   ];
+ 
+   return (
+-    <div className="nature-home-album-strip" data-shell-swipe-nav-exclude>
++    <div className="flex flex-col items-center gap-2" data-shell-swipe-nav-exclude>
++    <div className="nature-home-album-strip">
+       {slots.map(({ key, slot }) => (
+         <button
+           key={key}
+@@ -171,5 +174,22 @@
+         </button>
+       ))}
+     </div>
++    <div className="flex items-center gap-6 text-[13px] text-white/85">
++      <button type="button" className="inline-flex min-h-11 items-center gap-1.5"
++        onClick={() => {
++          const queue = storeTracks.filter((track) => inferTrackAlbumFromCompanionTrack(track) === (currentAlbum || DEFAULT_MUSIC_ALBUM));
++          const index = queue.findIndex((track) => shellPlaybackUrlsEqual(track.src ?? "", playback.effectiveSrc));
++          const next = queue[(index + 1) % queue.length];
++          if (next?.src) playback.setPlaybackSrc(next.src, { autoPlay: musicOn });
++        }}>
++        <ShellMaterialIcon name="skip-next" size={20} color={INK} legibilityShadow />
++        {zh ? "下一首" : "Next track"}
++      </button>
++      <Link href="/music" className="inline-flex min-h-11 items-center gap-1.5">
++        <ShellMaterialIcon name="queue-music" size={20} color={INK} legibilityShadow />
++        {zh ? (locale === "zh-TW" ? "選音樂" : "选音乐") : "Choose music"}
++      </Link>
++    </div>
++    </div>
+   );
+ }
+--- a/lib/music-companion/shell-default-audio-src.ts
++++ b/lib/music-companion/shell-default-audio-src.ts
+@@ -1,4 +1,5 @@
+ import { shellPlaybackUrlsEqual } from "@/lib/music-companion/shell-playback-storage";
++import { DEFAULT_MUSIC_ALBUM, inferTrackAlbumFromCompanionTrack } from "@/lib/music/album-playback";
+ import type { MusicCompanionStore, Scene } from "./types";
+ 
+ function pickScene(store: MusicCompanionStore): Scene | null {
+@@ -26,15 +27,13 @@
+ }
+ 
+ /**
+- * 壳层「默认播放」URL：多曲时在池内随机；单曲则唯一一条。
+- * 每次 `store` 更新或 `togglePlay` 在曲首/曲尾起播时会重新随机（见 `MusicShellPlaybackContext`）。
++ * Stable quiet-album default. A catalog refresh must not change an un-overridden song.
++ * Other albums are reached through the user's selection, including a saved selection.
+  */
+ export function getShellDefaultAudioSrc(store: MusicCompanionStore): string | null {
+-  const tracksWithSrc = store.audioTracks.filter((t) => t.src?.trim());
++  const tracksWithSrc = store.audioTracks.filter((t) => t.src?.trim() && inferTrackAlbumFromCompanionTrack(t) === DEFAULT_MUSIC_ALBUM);
+   if (tracksWithSrc.length === 0) return null;
+-  if (tracksWithSrc.length === 1) return tracksWithSrc[0].src?.trim() ?? null;
+-  const i = Math.floor(Math.random() * tracksWithSrc.length);
+-  return tracksWithSrc[i]?.src?.trim() ?? null;
++  return tracksWithSrc[0].src?.trim() ?? null;
+ }
+ 
+ /**
+--- /dev/null
++++ b/lib/music-companion/shell-default-audio-src.test.ts
+@@ -0,0 +1,24 @@
++import { describe, expect, it, vi } from "vitest";
++import { getShellDefaultAudioSrc } from "./shell-default-audio-src";
++import type { AudioTrack, MusicCompanionStore } from "./types";
++
++const quiet: AudioTrack = { id: "quiet", src: "/music/quiet.mp3", title: "Quiet", remark: "安静" };
++const tea: AudioTrack = { id: "tea", src: "/music/tea.mp3", title: "Tea", remark: "下午茶" };
++const store = (tracks: AudioTrack[]): MusicCompanionStore => ({
++  version: 1, audioTracks: tracks, scenes: [], backgroundVisuals: [], defaultSceneId: null,
++});
++
++describe("the shell's first music selection", () => {
++  it("remains stable across catalog refreshes and does not choose another album", () => {
++    const random = vi.spyOn(Math, "random").mockReturnValue(0.99);
++    try {
++      expect(getShellDefaultAudioSrc(store([tea, quiet]))).toBe(quiet.src);
++      expect(getShellDefaultAudioSrc(store([{ ...tea }, { ...quiet }]))).toBe(quiet.src);
++      expect(random).not.toHaveBeenCalled();
++    } finally { random.mockRestore(); }
++  });
++
++  it("does not substitute a different album when quiet music is unavailable", () => {
++    expect(getShellDefaultAudioSrc(store([tea]))).toBeNull();
++  });
++});
+--- a/lib/home/home-nature-album-press.ts
++++ b/lib/home/home-nature-album-press.ts
+@@ -37,7 +37,7 @@
+   localReady?: boolean;
+ };
+ 
+-/** 只从点中的专辑里选曲，绝不落到安静或其它目录。 */
++/** Reopening an album resumes its current song; only explicit next/selection changes songs. */
+ export function resolveHomeAlbumPlayIndex(
+   tracks: readonly AlbumPickTrack[],
+   albumName: string,
+@@ -58,8 +58,6 @@
+   }
+   const pool = local.length > 0 ? local : playable.length > 0 ? playable : any;
+   if (pool.length === 0) return null;
+-  if (pool.length === 1) return pool[0]!;
+-  const rest = pool.filter((idx) => idx !== currentIndex);
+-  const pick = rest.length > 0 ? rest : pool;
+-  return pick[Math.floor(Math.random() * pick.length)]!;
++  if (pool.includes(currentIndex)) return currentIndex;
++  return pool[0]!;
+ }
+--- /dev/null
++++ b/lib/home/home-nature-album-press.test.ts
+@@ -0,0 +1,21 @@
++import { describe, expect, it } from "vitest";
++import { resolveHomeAlbumPlayIndex } from "./home-nature-album-press";
++
++const tracks = [
++  { album: "安静", localReady: true },
++  { album: "安静", localReady: true },
++  { album: "下午茶", localReady: true },
++];
++
++describe("reopening background music", () => {
++  it("keeps the current song when the same album is turned back on", () => {
++    expect(resolveHomeAlbumPlayIndex(tracks, "安静", 1, () => true)).toBe(1);
++  });
++  it("only changes the song when the user chooses a different album", () => {
++    expect(resolveHomeAlbumPlayIndex(tracks, "下午茶", 1, () => true)).toBe(2);
++  });
++  it("falls back within the selected album when the saved song is unavailable", () => {
++    expect(resolveHomeAlbumPlayIndex(tracks, "安静", 1, (_, index) => index !== 1)).toBe(0);
++    expect(resolveHomeAlbumPlayIndex([], "安静", 1, () => true)).toBeNull();
++  });
++});
+--- /dev/null
++++ b/tools/music-resume-check.mjs
+@@ -0,0 +1,22 @@
++import { execFileSync } from "node:child_process";
++import { mkdtempSync, rmSync } from "node:fs";
++import { tmpdir } from "node:os";
++import path from "node:path";
++import { fileURLToPath } from "node:url";
++
++const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
++const ios = path.join(root, "apps/askbible-ios/AskBible");
++const dir = mkdtempSync(path.join(tmpdir(), "askbible-music-resume-"));
++try {
++  execFileSync("swiftc", ["-swift-version", "5", "-module-cache-path", path.join(dir, "cache"),
++    ...["Audio/MusicResumeState.swift", "Model/MusicCatalog.swift", "Model/AppLocale.swift",
++      "Model/LocaleTables.swift", "Model/SiteCopy.swift", "Model/BibleCatalog.swift", "Theme/ParchmentTheme.swift"]
++      .map((file) => path.join(ios, file)),
++    path.join(root, "tools/swift-harness/music-resume/main.swift"), "-o", path.join(dir, "check")], { stdio: "inherit" });
++  execFileSync(path.join(dir, "check"), [], { stdio: "inherit" });
++  execFileSync("./gradlew", [":core:test", "--offline"], {
++    cwd: path.join(root, "apps/askbible-android"), stdio: "inherit",
++  });
++} finally {
++  rmSync(dir, { recursive: true, force: true });
++}
+--- /dev/null
++++ b/tools/swift-harness/music-resume/main.swift
+@@ -0,0 +1,20 @@
++import Foundation
++
++let track = MusicCatalog.tracks[1]
++let saved = MusicResumeState(trackId: track.id, timeSec: 83.25, repeatMode: "off", wasPlaying: false, sleepDeadline: nil)
++let decoded = try JSONDecoder().decode(MusicResumeState.self, from: JSONEncoder().encode(saved))
++precondition(decoded.trackId == track.id && decoded.timeSec == 83.25 && decoded.repeatMode == "off" && !decoded.wasPlaying)
++let reordered = Array(MusicCatalog.tracks.reversed())
++precondition(reordered[saved.trackIndex(in: reordered)!].id == track.id)
++precondition(saved.trackIndex(in: MusicCatalog.tracks.filter { $0.id != track.id }) == nil)
++precondition((try? JSONDecoder().decode(MusicResumeState.self, from: Data("{broken".utf8))) == nil)
++precondition(MusicResumeState.position(83.25, duration: 0) == 83.25)
++precondition(MusicResumeState.position(99.5, duration: 100) == 99.5)
++for position in [-1.0, .nan, .infinity, 100, 101] {
++    precondition(MusicResumeState.position(position, duration: 100) == 0)
++}
++precondition(!saved.shouldResume(now: 100))
++let expired = MusicResumeState(trackId: track.id, timeSec: 83.25, repeatMode: "all", wasPlaying: true, sleepDeadline: 99)
++precondition(!expired.shouldResume(now: 100))
++precondition(expired.shouldResume(now: 98))
++print("Swift music resume: round trip, stable IDs, missing song, malformed state, positions, paused state, sleep expiry passed")

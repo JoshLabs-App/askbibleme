@@ -1,7 +1,7 @@
 # AskBible.me — AI 交接开发文档
 
 **用途**：其它 AI / Agent 接手本仓库时的**唯一启动入口**。先读本文，再按需下钻；不要通读全库。  
-**日期**：2026-08-27  
+**规则整理**：2026-11-03（后文带日期的状态与操作案例是历史记录，当前版本、设备、路径和命令须核实）
 **仓库**：`/Users/joshua/Desktop/APP/01AskBible`  
 **显示名**：AskBible.me（域名 `askbible.me`）。内部名 `selah-*`、包名 `me.askbible` **不得**出现在用户界面。
 
@@ -9,19 +9,19 @@
 
 ## 0. 启动顺序（强制）
 
-按顺序读，读完再改代码：
+先读通用 skill 与 core-dev-principles，再读项目 AGENTS/overlay；下表为按需查阅入口，历史案例不要求通读：
 
 | 步 | 文件 | 用途 |
 |----|------|------|
-| 1 | 本文 `docs/HANDOFF.md` | 边界、地图、命令、当前状态 |
-| 2 | `AGENTS.md`（仓库根） | 产品哲学与工作方式真源 |
-| 3 | `/Users/joshua/Desktop/APP/skills/joshlabs-dev/SKILL.md` | 通用开发流程（最小闭环、不擅自扩功能） |
+| 1 | `/Users/joshua/Desktop/APP/skills/joshlabs-dev/SKILL.md` 与 `references/core-dev-principles.md` | 通用完整交付流程 |
+| 2 | `AGENTS.md` 与项目 overlay | 当前产品、完成标准与授权真源 |
+| 3 | 本文 `docs/HANDOFF.md` | 地图与历史参考，按任务查阅 |
 | 4 | `.cursor/rules/*.mdc` | 领域硬规则（按任务只读相关条） |
 | 5 | 任务相关文档（见下文索引） | 进屏 / 媒体 / OAuth / 发版 / parking lot |
 
 任务点名 AskBible 时，人类记忆卡（可选）：`/Users/joshua/Documents/Cursor-Memory/项目/01AskBible.md`。
 
-用户说 **`DD`** = 在质疑后继续执行。
+用户说 **`DD`** = 在授权范围内继续；正常任务不必等 DD 才完成。
 
 ---
 
@@ -36,14 +36,14 @@
 - 游戏化圣经 / Dashboard / 内容平台 / SaaS
 
 危险方向真源：`docs/09-dangerous-directions.md`。  
-超出范围的想法只写 `docs/10-parking-lot.md`，**不要**写进代码。
+完成标准与已有授权统一见 `AGENTS.md`，历史记录不覆盖现行规则。
 
 ### Studio vs App（现实对齐）
 
 | 层 | 定位 | 路径 |
 |----|------|------|
 | **Studio** | 产品大脑（策展/编辑部）：理清意图、防失忆、写回 `docs/`；**不是** CMS / 运营后台 | Web：`/studio`（本机） |
-| **Mobile App** | 已上架、持续维护的用户端（Expo）；当前商店约 **1.0.38**（build 119） | `apps/askbible-mobile` |
+| **Mobile App** | 已上架、持续维护的用户端；原生 iOS / Android，具体商店版本现场核实 | `apps/askbible-ios`、`apps/askbible-android`；Expo 历史目录 `apps/askbible-mobile` |
 | **Web 站点** | Next.js；生产在 **Vercel**（2026-10-01 实测 `askbible.me` 响应头 `server: Vercel`；Render 已停用，`www` 只剩一条 301 回根域） | `app/`、`components/`、`lib/` |
 
 `AGENTS.md` 写「不要先做 Journey/CMS」= **不要新开产品线堆功能**；不是禁止修现有 App bug / 发版 / 对齐 iOS。
@@ -54,7 +54,7 @@
 
 ## 2. 硬禁令（违反即错）
 
-1. **不擅自扩功能**；与边界冲突先短质疑 + 更紧方案，等确认（或 `DD`）。
+1. 持续完成修复、最终产物验收、已有授权发布与发布后验证；必要配套工作自行推进。
 2. **移动端禁止 EAS 云端构建**；iOS 本机 Xcode，Android 本机 Gradle。见 `docs/mobile-release-checklist.md`、`.cursor/rules/mobile-local-build-only.mdc`。
 3. **媒体**：播放默认本地；大体积增量 **禁止** 走主站（Vercel）/ `askbible.me`。  
    - 音乐：安装包每专辑**第一首**；其余 TEMPORARY = **Cloudflare R2** + 本机缓存。  
@@ -63,7 +63,7 @@
    真源：`.cursor/rules/mobile-local-media-playback-first.mdc`、`docs/mobile-golden-verse-audio.md`。
 4. **外站拉取音频等**：禁止压缩/转码/降码率；原样直存。`.cursor/rules/no-compression-on-remote-fetch.mdc`。
 5. **OAuth**：从 App 发起的登录默认回调回 App；勿盲目改成网页 HTTPS 回调。验收：`.cursor/skills/验收-OAuth/SKILL.md`。
-6. **未要求不 commit / 不 push / 不发版**。Push `main` 会触发 Vercel 自动部署 + CI。
+6. 发布与迁移授权统一见 `AGENTS.md`；网页本机构建直发 Vercel，校验 `/app-build.json` 和实际页面，保留回滚部署。
 7. **禁止无门禁直推 main**；合入走 PR + `auto-merge` 标签。见 `docs/mobile-maestro-auto-merge.md`。
 8. UI：安静羊皮卷气质；不擅自加装饰/动画/工业风系统默认壳。
 
@@ -82,7 +82,9 @@
 │   └── overnight-optimization-2026-08-27.md  # 最近一夜审查与 backlog
 ├── .cursor/rules/            # Agent 硬规则（mdc）
 ├── .cursor/skills/           # 验收-UI / 验收-OAuth / 验收-媒体
-├── apps/askbible-mobile/     # Expo App（主战场）
+├── apps/askbible-ios/        # 原生 iOS
+├── apps/askbible-android/    # 原生 Android
+├── apps/askbible-mobile/     # 历史 Expo App
 │   ├── app/                  # 路由（四 Tab：Home / Music / Read / Explore）
 │   └── src/                  # auth / read / music / explore / shell / home / …
 ├── app/                      # Next.js App Router（站点 + API + Studio）
@@ -107,9 +109,9 @@
 | 层 | 选型 |
 |----|------|
 | Web / Studio | Next.js App Router + TypeScript + Tailwind |
-| Mobile | Expo / React Native（`apps/askbible-mobile`） |
+| Mobile | 原生 Swift / Kotlin；Expo 为历史实现 |
 | 数据 | 本地优先：`data/` + sqlite；`DATA_ROOT` 持久盘是 Render 时代的做法，Vercel 上没有持久盘，以代码为准 |
-| 部署 | Vercel（推 `main` 自动部署）。Render Web Service + Persistent Disk 是旧方案，已停用 |
+| 部署 | Vercel（本机构建，预构建产物直发；Git 自动部署已关闭）。Render Web Service + Persistent Disk 是旧方案，已停用 |
 | 媒体增量 | Cloudflare R2（金句语音、非首曲音乐） |
 
 ### 常用命令
@@ -190,7 +192,7 @@ Maestro 真源：`docs/mobile-maestro-auto-merge.md`。GitHub Linux CI **不跑*
 
 ---
 
-## 6. 当前状态（2026-09-14）
+## 6. 历史状态（2026-09-14；不作为当前版本或待办）
 
 ### 已交付 / 基线
 
@@ -243,7 +245,7 @@ adb -s R5CW11DNS2K shell am start -n me.askbible.native/me.askbible.native_.Main
 
 ### 工作习惯提醒
 
-- 默认只本地改；用户说「上线 / 发布 / push / ship」才 push。  
+- 发布与文档任务的完成标准统一见 `AGENTS.md`。
 - iOS 用户说「上传 / 发版 / 上架」= 完整发版一条龙（见 `.cursor/rules/ios-release.mdc`），除非说「只上传不提审」。  
 - 讲道集 `/jd` 源在姊妹项目 `03CHURCH`：先 `SKIP_UPDATE=1 npm run deploy:jd` 同步到 `public/jd/`，确认后再单独 commit。
 
@@ -279,10 +281,9 @@ adb -s R5CW11DNS2K shell am start -n me.askbible.native/me.askbible.native_.Main
 | `mobile-local-media-playback-first.mdc` | 音乐/视频/金句 |
 | `mobile-local-build-only.mdc` | 打包发版 |
 | `ios-release.mdc` / `android-release.mdc` | 商店上传 |
-| `askbible-production-hosting.mdc` | Render / DATA_ROOT / info-edition |
+| `askbible-production-hosting.mdc` | Vercel / 当前数据存储 / 发布 |
 | `mobile-maestro-auto-merge.mdc` | 改 App 后验收合入 |
 | `no-compression-on-remote-fetch.mdc` | 外站拉音频 |
-| `ponytail-minimal-implementation.mdc` | 最小实现 |
 
 ---
 
@@ -292,13 +293,13 @@ adb -s R5CW11DNS2K shell am start -n me.askbible.native/me.askbible.native_.Main
 
 ```text
 你在仓库 /Users/joshua/Desktop/APP/01AskBible。
-先读 docs/HANDOFF.md，再读 AGENTS.md 与 joshlabs-dev skill。
+先读 joshlabs-dev skill 与 core-dev-principles.md，再读 AGENTS.md、项目 overlay 和 HANDOFF。
 产品：AskBible.me = 安静进圣经的入口，不是 Bible tool / chatbot / 游戏化。
-平台：iOS → Android → Web；App 在 apps/askbible-mobile。
-硬禁：不擅自扩功能；禁止 EAS 云构建；媒体不走 askbible.me 增量；PAD 默认关；未要求不 commit/push。
-改 App 后跑 npm run mobile:maestro:smoke；合 main 走 PR + npm run pr:auto-merge。
+平台：iOS → Android → Web；原生 App 在 apps/askbible-ios、apps/askbible-android；Expo 为历史实现。
+硬禁：禁止 EAS 云构建；媒体不走 askbible.me 增量；PAD 默认关；改完验证通过后自行直接发布；只提交本任务改动。
+改 App 后运行对应原生平台验收；Expo 改动才使用 mobile:maestro:smoke。合 main 遵守现行 PR 门禁。
 当前 backlog 见 docs/overnight-optimization-2026-08-27.md。
-用户说 DD = 质疑后继续。
+用户说 DD = 授权范围内继续；无需等 DD 才推进。
 任务：<在此填写本轮唯一目标>
 ```
 
@@ -306,11 +307,11 @@ adb -s R5CW11DNS2K shell am start -n me.askbible.native/me.askbible.native_.Main
 
 ## 9. 自检清单（交付前）
 
-- [ ] 改动是否落在本轮唯一目标内？有没有「顺手」扩功能？
+- [ ] 用户要求的实际结果及必要配套工作是否全部完成？
 - [ ] 是否违反媒体 / OAuth / 构建 / 产品边界硬禁？
 - [ ] App 改动是否对照 Feature Map？能否跑 Maestro？
-- [ ] 超范围想法是否只进了 `docs/10-parking-lot.md`？
-- [ ] 未要求是否避免了 commit / push / 发版？
+- [ ] 原问题是否在最终产物上复验通过，相关回归是否通过？
+- [ ] 应用改动是否按已有授权完成发布和线上验证并保留回滚部署？纯文档改动只做文档校验。
 
 ---
 
@@ -625,7 +626,7 @@ for f in xp chapter earn levelup; do ffmpeg -v error -y -i $f.wav -c:a aac -b:a 
 
 **当前状态（2026-10-01 夜）**：官网首屏改成几个软件的入口（D-22：一排图标切换，标题 / 入口 / 手机画面跟着换，等 Josh 看）、官网加了「同系列工具」一节（D-21：听到 / 查到 / 小小圣经）、原生首页金句换思源宋体（D-19，两端已改，iPhone 已装、三星没装）、官网（D-10）、网页版首页对齐安卓（D-11）、探索页照安卓（D-12）、撤掉网页专有设置（D-13、D-18）、
 菜单「回主页」（D-14）、官网手机模型放真的网页版（D-15）、下载入口加图标（D-16）、安卓「最新版 / 商店版」二选一（D-17）都做完、本机验过、
-**2026-10-02 Josh 说「发布」「上线」，这一整批已合进 main 并推送（Vercel 自动部署）**；官网上不写备用地址（D-22 补充）。
+**2026-10-02 Josh 说「发布」「上线」，这一整批已合进 main 并推送（当时的 Vercel 自动部署；现已禁用）**；官网上不写备用地址（D-22 补充）。
 之前是在分支 `claude/upbeat-mayer-752c72`（worktree `.claude/worktrees/strange-dewdney-3855d7`）上做的。主目录 `~/Desktop/APP/01AskBible` 里有别的会话没提交的改动，
 所以是从 worktree 直接 `git push origin HEAD:main` 推的（`e9851a81`）；主目录的本地 main 随后由「防封换线」会话快进到同一个提交，那边没提交的改动原样保留。
 **线上已核对（2026-10-02 00:25，Vercel 部署成功）**：`askbible.me/` 是新官网（四个软件切换、听到 / 查到 / 小小圣经的地址都在）；`/web`、`/app`、`/explore`、`/read` 都是 200；
@@ -771,3 +772,5 @@ manifest `start_url=/web`；手机截图和金句字体文件都取得到。本�
 ### 别踩的坑
 - 旧电视内核不认 `dvh`，布局高度要带 `vh` 回退。
 - 电视浏览器判断集中在 `lib/dom/is-tv-browser.ts`，别在别处另写一份。
+
+**网页只在本机构建（2026-10-31 用户明确要求）**：Agent 在本机完成生产构建，只上传 `.vercel/output` 产物（`vercel deploy --prebuilt --prod`）。禁止 Vercel 云端构建、`--remote` 回退和通过 Git 自动构建发布；`vercel.json` 关闭 Git 自动部署。缺失本地构建配置时先补齐，不得改用云端构建。服务端运行时配置继续由 Vercel 正式环境提供。

@@ -1,0 +1,14 @@
+Running on iPhone 17 Pro - iOS 26.5 - 19295A0B-9D64-41AB-B3E6-4F009617CA9F
+ > Flow askbible-music-ios-paused
+Stop me.askbible... COMPLETED
+Launch app "me.askbible"... COMPLETED
+Tap on id: home.music.choose... COMPLETED
+Assert that "播放音乐" is visible... COMPLETED
+Take screenshot /tmp/askbible-music-ios-paused-restart... COMPLETED
+Tap on id: music.next... COMPLETED
+Assert that "播放音乐" is visible... COMPLETED
+Take screenshot /tmp/askbible-music-ios-next-paused... COMPLETED
+Tap on "休闲"... COMPLETED
+Tap on id: music.toggle... COMPLETED
+Assert that "暂停音乐" is visible... COMPLETED
+Take screenshot /tmp/askbible-music-ios-album... COMPLETED

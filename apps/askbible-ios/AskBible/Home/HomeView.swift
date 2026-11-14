@@ -1,417 +1,348 @@
 import SwiftUI
 
-/// 首页：全屏场景视频 / 柔焦静帧 + 金句 + 底部「场景与音效」带。与 RN HomeNatureScreen 对等（Android HomeScreen 同构）：
-/// 右上齿轮展开 字号/定时 行、环境音九槽、场景条（首格「模糊」），闲置 7 秒自动收起；
-/// 最下一排是 安静专辑 / 金句朗读 / 下午茶专辑 三个开关（RN HomeNatureAlbumStrip）—— 咖啡杯是「下午茶」专辑，不是环境音。
-/// 整屏上下滑换场景：上滑下一景、下滑上一景（按场景固定顺序循环）。
-/// 金句排版来自 verseTypography()：body 24 / 行高 37 / 700，ref 18 / 行高 26 / 700 / 上距 12，随字号档缩放。
+/// 左右换景、底部上拉调整。背景手势与控件分层，环境音只有开启后才随景切换。
 struct HomeView: View {
     @ObservedObject var home: HomeVerseController
     @ObservedObject var music: MusicPlayer
     @ObservedObject var ambient: AmbientPlayer
     @ObservedObject var prefs: NatureHomePrefs
-    /// 睡眠定时分钟数（0 = 未设），四路播放器共用
     var sleepTimerMinutes: Int
     var onSelectScene: (String) -> Void
     var onToggleAmbient: (String) -> Void
     var onCycleSleepTimer: () -> Void
     var onPressAlbum: (String) -> Void
     var onOpenMenu: () -> Void = {}
-    /// 界面收起 / 唤回时通知壳：首页闲置后连系统底栏一起淡出，全景不被任何东西压着（Josh 2026-09-18）
+    var onOpenMusic: () -> Void = {}
     var onChromeHidden: (Bool) -> Void = { _ in }
 
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.colorScheme) private var colorScheme
     @State private var toolsOpen = false
+    @State private var albumsOpen = false
     @State private var idleEpoch = 0
-    /// 闲置后收起菜单钮与专辑排，只留金句 + 底栏（DECISIONS 2026-09-16 首页方案 A）；点屏幕恢复
     @State private var chromeVisible = true
-    /// 底部安全区的**锁定值**：界面收起时系统底栏跟着隐藏，`geo.safeAreaInsets.bottom`
-    /// 会从「底栏高 + home 指示条」缩成「只剩 home 指示条」，于是三颗常用键整排往下坠一截
-    /// —— 这正是 Josh 2026-09-23 说的「隐藏其它图标时它会落到更底的位置」。
-    /// 只取见过的**最大值**，之后再也不跟着缩，位置就钉死了。
     @State private var lockedBottomInset: CGFloat = 0
-    private var verse: GoldenVerse { home.verse }
-
-    /// RN homeNatureLayoutMetrics / homeNatureScreenConstants / shellPlaybackTransportLayout 逐值
-    private enum M {
-        static let edgePad: CGFloat = 16          // HOME_SCENE_STRIP_EDGE_PAD
-        static let iconGap: CGFloat = 16          // AMBIENT_ICON_GAP / QUICK_CONTROL_ICON_GAP
-        static let rowGap: CGFloat = 22           // HOME_BOTTOM_ICON_ROW_GAP
-        static let bandPadTop: CGFloat = 12       // HOME_NATURE_BOTTOM_BAND_PAD_TOP
-        static let ambientIcon: CGFloat = 36      // AMBIENT_ICON_SIZE（芯片 = 图标）
-        static let scaleTimerRowH: CGFloat = 36   // HOME_SCALE_TIMER_ROW_H
-        static let scaleTimerIcon: CGFloat = 26
-        static let thumb: CGFloat = 64            // HOME_SCENE_THUMB_SIZE
-        static let thumbSlotPad: CGFloat = 10     // HOME_SCENE_THUMB_SLOT_PAD
-        static let thumbGap: CGFloat = 10         // HOME_SCENE_THUMB_GAP
-        static let sceneRowPadBottom: CGFloat = 6 // HOME_NATURE_BOTTOM_BAND_SCENE_ROW_PAD
-        static let albumBtn: CGFloat = 52         // HOME_ALBUM_BTN_SIZE
-        static let albumGap: CGFloat = 28         // transportMainGap
-        static let toolsAutoCloseNs: UInt64 = 7_000_000_000  // HOME_SCENE_TOOLS_AUTO_CLOSE_MS
-        static let sceneSwipe: CGFloat = 72       // 上下滑换场景的最小距离（同安卓）
-    }
+    private var ink: Color { colorScheme == .dark ? Color(rgb: 0xeee3d1) : Color(rgb: 0x493b2c) }
+    private func copy(_ zh: String, _ en: String) -> String { AppLocale.pick(zh, en) }
 
     var body: some View {
         GeometryReader { geo in
-            let safeTop = geo.safeAreaInsets.top
-            // GeometryReader 量到的是扣掉安全区的高度；外层 ZStack 又 ignoresSafeArea 顶到屏幕底，
-            // 底图只按 geo.size 裁的话，底栏那一截露出的是黑底 —— 原版底栏在首页是透明的，底图要铺到最底。
             let fullHeight = geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom
             ZStack(alignment: .top) {
                 Color(rgb: 0x1a1512)
-
-                // 底图：柔焦静帧一直垫着（关 live 就只看它），live 时循环视频出首帧后盖上来
                 if let poster = NatureScenes.posterImage(id: prefs.sceneId, soft: !prefs.liveVideo) {
-                    Image(uiImage: poster)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: geo.size.width, height: fullHeight)
-                        .clipped()
+                    Image(uiImage: poster).resizable().scaledToFill()
+                        .frame(width: geo.size.width, height: fullHeight).clipped().allowsHitTesting(false)
                 }
                 if prefs.liveVideo {
                     HomeSceneVideo(sceneId: prefs.sceneId, paused: scenePhase != .active)
-                        .frame(width: geo.size.width, height: fullHeight)
+                        .frame(width: geo.size.width, height: fullHeight).allowsHitTesting(false)
                 }
-
-                // 顶部原来有一层 180pt 暗渐变保图标可读；图标现在是玻璃圆钮，自带对比，
-                // 这层只剩把天空压暗的副作用 —— Josh 2026-09-16：「首页上面不要一层阴影层」，去掉。
-
-                verseBlock
-                    .allowsHitTesting(false)
-                    .padding(.horizontal, 22)
-                    .padding(.top, safeTop + 99)
-
-                // 首页打开不打扰（JOSHUA 2026-10-11）：原「回归卡」（我们上次停在这里）已撤，顶部只留齿轮。
-
-                // 设置齿轮回到右上（Josh 2026-09-21）。2026-09-16 曾把它塞进底部专辑排末尾，
-                // 结果专辑排的宽度会随它出现/消失而变，三颗常用键跟着左右挪——那是他这次要去掉的位移。
-                HStack {
-                    Spacer()
-                    chromeButton(MI.settings,
-                                 color: (toolsOpen || ambient.isOn) ? Brand.logo : .white.opacity(0.9)) {
-                        touch(); toolsOpen.toggle()
+                // 只有背景接收换景与显隐手势，上层按钮不会冒泡到这里。
+                Color.clear.contentShape(Rectangle())
+                    .accessibilityLabel(copy("风景", "Scenery"))
+                    .accessibilityValue(prefs.sceneId)
+                    .accessibilityIdentifier("home.scenery")
+                    .accessibilityAction(named: copy("打开音乐", "Open music")) { touch(); onOpenMusic() }
+                    .accessibilityAction(named: copy("调整", "Adjust")) { setTools(true) }
+                    .onTapGesture {
+                        if albumsOpen { closeAlbums() }
+                        else if toolsOpen { setTools(false) }
+                        else {
+                            withAnimation(.easeInOut(duration: 0.3)) { chromeVisible.toggle() }
+                            onChromeHidden(!chromeVisible)
+                            idleEpoch += 1
+                        }
                     }
-                }
-                .padding(.horizontal, ShellMetrics.topChromeSideInset)
-                .padding(.top, geo.safeAreaInsets.top + ShellMetrics.topChromeOffset)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                .opacity(chromeVisible ? 1 : 0.55)
-                .animation(.easeInOut(duration: 0.4), value: chromeVisible)
-                .allowsHitTesting(true)
-
-                // 常用键要一直够得着，所以这一带不整体淡出，只在闲置时压淡；
-                // 底栏没了之后它可以往下坐一些（Josh 2026-09-18）
-                // 用 VStack + Spacer 推到底，**不要**用 frame(maxHeight:.infinity)：
-                // 那样这一层会撑满整屏并吃掉所有点击（玻璃容器把空白区也算命中区），
-                // 于是界面收起后点屏幕再也叫不回来。Spacer 不参与命中，点击照常落到 ZStack 的手势上。
-                VStack(spacing: 0) {
-                    Spacer(minLength: 0)
-                    bottomBand
-                }
-                // 位置固定：闲置时只压淡、不位移（Josh 2026-09-21）。
-                // 原来 92 → 36 会让三颗常用键在底栏淡出时整体往下坠一截。
-                // 2026-09-23 又发现第二个来源：底栏隐藏时安全区本身会缩，所以这里
-                // **不能直接用 geo.safeAreaInsets.bottom**，要用锁定过的那份。
-                .padding(.bottom, 92 + lockedBottomInset)
-                .onAppear { lockedBottomInset = max(lockedBottomInset, geo.safeAreaInsets.bottom) }
-                .onChange(of: geo.safeAreaInsets.bottom) { _, v in
-                    lockedBottomInset = max(lockedBottomInset, v)
-                }
+                    .gesture(DragGesture(minimumDistance: 20).onEnded { g in
+                        guard !toolsOpen else { return }
+                        if albumsOpen { closeAlbums(); return }
+                        let dx = g.translation.width, dy = g.translation.height
+                        if abs(dx) > 60 && abs(dx) > abs(dy) * 1.5 {
+                            swipeScene(dx < 0 ? 1 : -1)
+                        } else if dy < -50 && abs(dy) > abs(dx) * 1.5 && g.startLocation.y > fullHeight * 0.55 {
+                            setTools(true)
+                        } else if dy > 60 && dy > abs(dx) * 1.5 {
+                            touch(); onOpenMusic()
+                        }
+                    })
+                verseBlock.padding(.horizontal, 22).padding(.top, geo.safeAreaInsets.top + 99)
+                    .allowsHitTesting(false)
+                if !toolsOpen {
+                    VStack(spacing: 0) {
+                        Spacer(minLength: 0)
+                        VStack(spacing: 14) {
+                            if albumsOpen {
+                                albumOptions { album in music.selectAlbum(album); closeAlbums() }
+                                    .padding(14).frame(maxWidth: 340)
+                                    .foregroundStyle(ink)
+                                    .background(colorScheme == .dark ? Color(rgb: 0x28251f) : Color(rgb: 0xf7f0e4), in: RoundedRectangle(cornerRadius: 22))
+                                    .shadow(color: .black.opacity(0.16), radius: 14, y: 4)
+                                    .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .bottom)))
+                            }
+                            HStack(spacing: 32) {
+                                musicControl
+                                soundButton("speaker.wave.2", title: copy("朗读", "Read aloud"), on: home.voiceOn, id: "home.voice") {
+                                    touch(); home.toggleVoice()
+                                }
+                                .disabled(!home.voiceAvailable).opacity(home.voiceAvailable ? 1 : 0.35)
+                            }
+                            HStack(spacing: 24) {
+                                Button { touch(); music.next() } label: {
+                                    Label(copy("下一首", "Next track"), systemImage: "forward.end")
+                                        .frame(minHeight: 44)
+                                }
+                                .disabled(music.nextTrack == nil)
+                                .accessibilityIdentifier("home.music.next")
+                                Button { touch(); onOpenMusic() } label: {
+                                    Label(copy("选音乐", "Choose music"), systemImage: "music.note.list")
+                                        .frame(minHeight: 44)
+                                }
+                                .accessibilityIdentifier("home.music.choose")
+                            }
+                            .buttonStyle(.plain).askFont(size: 13)
+                            .foregroundStyle(.white.opacity(0.85)).verseTextShadow()
+                        }
+                        .gesture(DragGesture(minimumDistance: 20).onEnded { g in
+                            if g.translation.height < -35 && abs(g.translation.height) > abs(g.translation.width) { setTools(true) }
+                        })
+                    }
+                    .padding(.bottom, 128 + lockedBottomInset)
                     .opacity(chromeVisible ? 1 : 0.55)
-                    .animation(.easeInOut(duration: 0.4), value: chromeVisible)
+                }
+                if toolsOpen {
+                    VStack(spacing: 0) {
+                        Spacer(minLength: 0)
+                        adjustmentPanel(maxHeight: fullHeight * 0.64)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
             .ignoresSafeArea()
-            // 点空白处：收起的界面叫回来；已显示时再点就立即收起。
-            // 用 simultaneousGesture 挂在整个 ZStack 上：铺一层透明视图接不住（场景视频是
-            // UIViewRepresentable，撑满的底部层也会抢），而普通 onTapGesture 会被子视图吃掉。
-            // simultaneous 同时收到，按钮各自的点击照常生效。
-            .simultaneousGesture(TapGesture().onEnded {
-                let next = !chromeVisible
-                if toolsOpen { toolsOpen = false }
-                withAnimation(.easeInOut(duration: 0.3)) { chromeVisible = next }
-                onChromeHidden(!next)
-                idleEpoch += 1
-            })
-            // 上下滑换场景（JOSHUA 2026-10-22，跟安卓同）：上滑下一景、下滑上一景。
-            // 只认竖向为主的滑动，场景条 / 环境音条的横向滚动不会误触；只重新计时，不叫回收起的界面。
-            .simultaneousGesture(DragGesture(minimumDistance: 20).onEnded { g in
-                let dy = g.translation.height
-                guard abs(dy) >= M.sceneSwipe, abs(dy) > abs(g.translation.width) * 1.5 else { return }
-                idleEpoch += 1
-                swipeScene(dy < 0 ? 1 : -1)
-            })
+            .onAppear { lockedBottomInset = max(lockedBottomInset, geo.safeAreaInsets.bottom) }
+            .onChange(of: geo.safeAreaInsets.bottom) { _, value in
+                lockedBottomInset = max(lockedBottomInset, value)
+            }
         }
-        // 点开设置后闲置 7 秒自动收起（HOME_SCENE_TOOLS_AUTO_CLOSE_MS）；任何一次操作都重新计时
-        // 闲置 7 秒：先收设置簇，再过 7 秒淡出整层界面；任何一次操作都重新计时
         .task(id: idleEpoch) {
-            try? await Task.sleep(nanoseconds: M.toolsAutoCloseNs)
-            guard !Task.isCancelled else { return }
-            if toolsOpen { toolsOpen = false; idleEpoch += 1; return }
+            guard !toolsOpen, !albumsOpen else { return }
+            try? await Task.sleep(nanoseconds: 7_000_000_000)
+            guard !Task.isCancelled, !toolsOpen, !albumsOpen else { return }
             withAnimation(.easeInOut(duration: 0.6)) { chromeVisible = false }
             onChromeHidden(true)
         }
+        .onDisappear { onChromeHidden(false) }
     }
 
-    /// 按场景固定顺序循环，不记点选次数（免得场景条跟着乱跳）；
-    /// 环境音开着才跟到新场景的默认音，没开就不出声（首页打开不打扰）
-    private func swipeScene(_ step: Int) {
-        let all = NatureScenes.scenes
-        guard all.count > 1 else { return }
-        let i = all.firstIndex { $0.id == prefs.sceneId } ?? 0
-        let next = all[((i + step) % all.count + all.count) % all.count]
-        prefs.selectScene(next.id)
-        if ambient.isOn, let slot = next.defaultAmbient { ambient.start(slotId: slot) }
+    private func setTools(_ open: Bool) {
+        withAnimation(.easeInOut(duration: 0.28)) { toolsOpen = open; albumsOpen = false; chromeVisible = true }
+        onChromeHidden(open)
+        idleEpoch += 1
     }
-
     private func touch() {
         idleEpoch += 1
-        if !chromeVisible {
-            withAnimation(.easeInOut(duration: 0.3)) { chromeVisible = true }
-            onChromeHidden(false)
-        }
+        chromeVisible = true
+        onChromeHidden(toolsOpen)
     }
-
-    // MARK: 金句
-
+    private func swipeScene(_ step: Int) {
+        let scenes = NatureScenes.scenes
+        guard let index = scenes.firstIndex(where: { $0.id == prefs.sceneId }), !scenes.isEmpty else { return }
+        onSelectScene(scenes[(index + step + scenes.count) % scenes.count].id)
+        idleEpoch += 1
+    }
     private var verseBlock: some View {
-        let scale = prefs.textScale
-        return VStack(spacing: 0) {
-            Text(verse.text)
-                .font(.system(size: HomeVerseTypography.bodySize(scale: scale), weight: .bold))
-                .foregroundStyle(.white)
-                .multilineTextAlignment(.center)
-                .lineSpacing(HomeVerseTypography.bodyLineHeight(scale: scale) - HomeVerseTypography.bodySize(scale: scale))
+        VStack(spacing: 0) {
+            Text(home.verse.text)
+                .askFont(size: HomeVerseTypography.bodySize(scale: prefs.textScale), weight: .bold)
+                .foregroundStyle(.white).multilineTextAlignment(.center)
+                .lineSpacing(HomeVerseTypography.bodyLineHeight(scale: prefs.textScale) - HomeVerseTypography.bodySize(scale: prefs.textScale))
                 .verseTextShadow()
-
-            Text(verse.reference)
-                .font(.system(size: HomeVerseTypography.refSize(scale: scale), weight: .bold))
-                .foregroundStyle(.white)
-                .kerning(0.1)
-                .padding(.top, HomeVerseTypography.refTopGap(scale: scale))
-                .verseTextShadow()
+            Text(home.verse.reference)
+                .askFont(size: HomeVerseTypography.refSize(scale: prefs.textScale), weight: .bold)
+                .foregroundStyle(.white).kerning(0.1)
+                .padding(.top, HomeVerseTypography.refTopGap(scale: prefs.textScale)).verseTextShadow()
         }
     }
-
-    // MARK: 顶部
-
-    private func topChrome(safeTop: CGFloat) -> some View {
-        // RN HomeNatureScreenTopChrome：展开中或环境音开着时齿轮点亮 LOGO 色
-        // 方案 A（2026-09-16）：右上齿轮移到底部专辑排末尾，顶部只留一颗淡一点的菜单钮，画面上方保持干净
-        HStack {
-            chromeButton(MI.menu, color: .white.opacity(0.85), action: onOpenMenu)
-            Spacer()
-        }
-        .padding(.horizontal, ShellMetrics.topChromeSideInset)
-        .padding(.top, safeTop + ShellMetrics.topChromeOffset)
-        .frame(maxHeight: .infinity, alignment: .top)
+    private func closeAlbums() {
+        withAnimation(.easeInOut(duration: 0.2)) { albumsOpen = false }
+        touch()
     }
-
-    /// 玻璃小圆钮（DECISIONS 2026-09-15：操作 = 玻璃）。不再靠双层黑影在视频上硬造层次。
-    private func chromeButton(_ glyph: String, color: Color, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            MaterialIcon(glyph: glyph, size: 22, color: color)
-                // 玻璃不再着色（Josh 要原生质感），白图标的对比改由这层极轻阴影负责
-                .askGlassIconShadow()
-                .frame(width: 44, height: 44)
-                .contentShape(Rectangle())
-                .askGlassCapsule(tone: .dark, interactive: true)
-                .askFloatingShadow()
-        }
-        .buttonStyle(.plain)
+    private func openAlbums() {
+        touch()
+        withAnimation(.easeInOut(duration: 0.2)) { albumsOpen = true }
     }
-
-    // MARK: 底部带
-
-    /// bottomBand：paddingTop 12，各排之间 22；展开时上面多出 字号/定时 行、环境音、场景条
-    private var bottomBand: some View {
-        // 齿轮展开的那堆东西收进**一块**玻璃控制簇（GPT 评审：不要做成一排各自为政的玻璃按钮），
-        // 专辑排自己是一块玻璃胶囊；两块同处一个 AskGlassGroup，iOS 26 下展开/收起有玻璃形变过渡。
-        AskGlassGroup(spacing: 14) {
-            VStack(spacing: 14) {
-                if toolsOpen {
-                    VStack(spacing: M.rowGap) {
-                        scaleTimerRow
-                        ambientRow
-                        sceneStrip
-                    }
-                    .padding(.vertical, 14)
-                    // 不再给这簇垫玻璃：iOS 26 的 clear 玻璃在浅色场景（晴天湖面）上会提亮成一块发白的板子，
-                    // 风景被蒙住，场景缩略图反被压暗（Josh 2026-09-18「玻璃在浅色状态下很不好看」）。
-                    // 跟专辑排 2026-09-16 那次同一个处理：图标直接浮在画面上，可读性交给图标自己的阴影。
-                    .padding(.horizontal, AskGlassMetrics.capsuleInset)
-                }
-                // 专辑排不要玻璃底（Josh 2026-09-16）：白图标直接浮在画面上，靠图标阴影保可读
-                albumRow
+    private var musicControl: some View {
+        VStack(spacing: 6) {
+            Image(systemName: albumSymbol(music.album)).font(.system(size: 26))
+            Text(copy("音乐", "Music")).askFont(size: 12)
+        }
+        .foregroundStyle(music.isPlaying ? Brand.logo : .white).verseTextShadow()
+        .frame(minWidth: 64, minHeight: 64).contentShape(Rectangle())
+        // 长按和短按互斥：展开专辑时不顺带播放或暂停。
+        .gesture(LongPressGesture(minimumDuration: 0.45).exclusively(before: TapGesture()).onEnded { result in
+            switch result {
+            case .first(true): openAlbums()
+            case .second: touch(); onPressAlbum(music.album)
+            default: break
             }
-        }
-        .padding(.top, M.bandPadTop)
+        })
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(copy("音乐", "Music"))
+        .accessibilityValue(copy(music.album, albumEnglish(music.album)) + " · " + (music.isPlaying ? copy("开启", "On") : copy("关闭", "Off")))
+        .accessibilityHint(copy("长按选择专辑", "Touch and hold to choose an album"))
+        .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("home.music")
+        .accessibilityAction { touch(); onPressAlbum(music.album) }
+        .accessibilityAction(named: copy("选择专辑", "Choose album")) { openAlbums() }
     }
-
-    /// RN HomeVerseScaleTimerControl：减 / 加 / 定时（定时开着亮黄并角标分钟数）
-    private var scaleTimerRow: some View {
-        // 玻璃是 .clear（不着色），白图标全靠自己的不透明度和阴影压住亮天空 —— 0.78 在雪山湖面上看不见（Josh 2026-09-18）
-        let idle = Color.white.opacity(0.95)
-        let timerOn = sleepTimerMinutes > 0
-        return HStack(spacing: M.iconGap) {
-            quickChip(MI.remove, color: idle) { touch(); prefs.bumpTextScale(-1) }
-            quickChip(MI.add, color: idle) { touch(); prefs.bumpTextScale(1) }
-            Button { touch(); onCycleSleepTimer() } label: {
-                MaterialIcon(glyph: MI.timer, size: M.scaleTimerIcon, color: timerOn ? Brand.logo : idle)
-                    .shadow(color: .black.opacity(0.45), radius: 4, x: 0, y: 1)
-                    .frame(width: M.scaleTimerRowH, height: M.scaleTimerRowH)
-                    .overlay(alignment: .topTrailing) {
-                        if timerOn {
-                            // quickControlTimerBadge：右上角 -2/-6，黑 .55 圆角 8，黄字 10/700
-                            Text("\(sleepTimerMinutes)")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(Brand.logo)
-                                .padding(.horizontal, 3)
-                                .padding(.vertical, 1)
-                                .background(RoundedRectangle(cornerRadius: 8).fill(Color.black.opacity(0.55)))
-                                .offset(x: 6, y: -2)
+    private func albumOptions(onSelect: @escaping (String) -> Void) -> some View {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
+                        ForEach(MusicCatalog.albums, id: \.self) { album in
+                            let selected = music.album == album
+                            Button { onSelect(album) } label: {
+                                VStack(spacing: 7) {
+                                    Image(systemName: albumSymbol(album)).font(.system(size: 23))
+                                    Text(copy(album, albumEnglish(album)))
+                                        .askFont(size: 12).multilineTextAlignment(.center)
+                                }
+                                .frame(maxWidth: .infinity, minHeight: 68)
+                                .padding(.vertical, 6)
+                                .background(selected ? Brand.logo.opacity(0.22) : ink.opacity(0.05), in: RoundedRectangle(cornerRadius: 14))
+                                .overlay(RoundedRectangle(cornerRadius: 14).stroke(selected ? Color(rgb: 0xb88a35) : .clear, lineWidth: 1))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(copy(album, albumEnglish(album)))
+                            .accessibilityAddTraits(selected ? .isSelected : [])
+                            .accessibilityIdentifier("home.album.\(album)")
                         }
                     }
-            }
-            .buttonStyle(.plain)
-        }
-        .frame(height: M.scaleTimerRowH)
     }
-
-    private func quickChip(_ glyph: String, color: Color, action: @escaping () -> Void) -> some View {
+    private func soundButton(_ symbol: String, title: String, on: Bool, id: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            MaterialIcon(glyph: glyph, size: M.scaleTimerIcon, color: color)
-                .shadow(color: .black.opacity(0.45), radius: 4, x: 0, y: 1)
-                .frame(width: M.scaleTimerRowH, height: M.scaleTimerRowH)
+            VStack(spacing: 6) {
+                Image(systemName: symbol).font(.system(size: 26))
+                Text(title).askFont(size: 12)
+            }
+            .foregroundStyle(on ? Brand.logo : .white).verseTextShadow()
+            .frame(minWidth: 64, minHeight: 64).contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.plain).accessibilityLabel(title)
+        .accessibilityValue(on ? copy("开启", "On") : copy("关闭", "Off"))
+        .accessibilityIdentifier(id)
     }
-
-    /// 环境音九槽横条：选中 LOGO 色 + 放大 1.06，其余白 .6；选中项滚到视口居中（ambientStripScrollX）
-    private var ambientRow: some View {
-        ScrollViewReader { proxy in
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: M.iconGap) {
-                    ForEach(AmbientScenes.slots) { slot in
-                        let selected = ambient.slotId == slot.id
-                        Button { touch(); onToggleAmbient(slot.id) } label: {
-                            MaterialIcon(glyph: Self.ambientGlyph(slot.id), size: M.ambientIcon,
-                                         color: selected ? Brand.logo : .white, community: true)
-                                .shadow(color: .black.opacity(0.45), radius: 4, x: 0, y: 1)
-                                .frame(width: M.ambientIcon, height: M.ambientIcon)
-                                .scaleEffect(selected ? 1.06 : 1)
-                                .opacity(selected ? 1 : 0.8)
+    private func adjustmentPanel(maxHeight: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            Button { setTools(false) } label: {
+                VStack(spacing: 10) {
+                    Capsule().fill(ink.opacity(0.35)).frame(width: 42, height: 4)
+                    Text(copy("调整", "Adjust")).askFont(size: 17, weight: .semibold)
+                }.frame(maxWidth: .infinity).padding(.vertical, 14).contentShape(Rectangle())
+            }
+            .buttonStyle(.plain).accessibilityLabel(copy("收起调整", "Close adjustments"))
+            .accessibilityIdentifier("home.adjust.close")
+            .gesture(DragGesture(minimumDistance: 15).onEnded { g in
+                if g.translation.height > 35 && g.translation.height > abs(g.translation.width) { setTools(false) }
+            })
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    sectionTitle(copy("声音", "Sound"))
+                    Toggle(copy("环境音", "Ambient sound"), isOn: Binding(get: { ambient.isOn }, set: { on in
+                        if on { ambient.start(slotId: NatureScenes.scene(id: prefs.sceneId)?.defaultAmbient ?? AmbientScenes.defaultSlotId) }
+                        else { ambient.stop() }
+                    }))
+                        .accessibilityIdentifier("home.ambient")
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach(AmbientScenes.slots) { slot in
+                                Button { onToggleAmbient(slot.id) } label: {
+                                    VStack(spacing: 7) {
+                                        Image(systemName: ambientSymbol(slot.id)).font(.system(size: 23))
+                                        Text(copy(slot.label, slot.labelEn)).askFont(size: 12)
+                                    }
+                                    .frame(minWidth: 64, minHeight: 68).padding(.horizontal, 6)
+                                    .background(ambient.slotId == slot.id ? Brand.logo.opacity(0.22) : ink.opacity(0.05), in: RoundedRectangle(cornerRadius: 14))
+                                }.buttonStyle(.plain)
+                                .accessibilityLabel(copy(slot.label, slot.labelEn))
+                                .accessibilityAddTraits(ambient.slotId == slot.id ? .isSelected : [])
+                                .accessibilityIdentifier("home.ambient.\(slot.id)")
+                            }
                         }
-                        .buttonStyle(.plain)
-                        .id(slot.id)
                     }
-                }
-                .padding(.horizontal, M.edgePad)
-            }
-            .frame(height: M.ambientIcon)
-            .onAppear { if let id = ambient.slotId { proxy.scrollTo(id, anchor: .center) } }
-            .onChange(of: ambient.slotId) { _, id in
-                if let id { withAnimation { proxy.scrollTo(id, anchor: .center) } }
+                    HStack {
+                        Image(systemName: "speaker.wave.1")
+                        Slider(value: $ambient.volume, in: 0...1)
+                            .accessibilityLabel(copy("环境音音量", "Ambient volume"))
+                    }.disabled(!ambient.isOn).opacity(ambient.isOn ? 1 : 0.4)
+                    sectionTitle(copy("音乐专辑", "Music albums"))
+                    albumOptions { music.selectAlbum($0) }
+                    sectionTitle(copy("画面", "Picture"))
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(NatureScenes.scenes) { scene in
+                                Button { onSelectScene(scene.id) } label: {
+                                    VStack(spacing: 6) {
+                                        if let image = NatureScenes.thumbImage(id: scene.id) {
+                                            Image(uiImage: image).resizable().scaledToFill().frame(width: 90, height: 58).clipped()
+                                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                                                .overlay(RoundedRectangle(cornerRadius: 10).stroke(prefs.sceneId == scene.id ? Brand.logo : .clear, lineWidth: 2))
+                                        }
+                                        Text(copy(scene.title, scene.titleEn)).askFont(size: 12)
+                                    }
+                                }.buttonStyle(.plain).accessibilityIdentifier("home.scene.\(scene.id)")
+                            }
+                        }.padding(2)
+                    }
+                    Toggle(copy("动态画面", "Live scenery"), isOn: Binding(get: { prefs.liveVideo }, set: { prefs.toggleLiveVideo($0) }))
+                    sectionTitle(copy("阅读与休息", "Reading & rest"))
+                    HStack {
+                        Text(copy("字号", "Text size")); Spacer()
+                        Button { prefs.bumpTextScale(-1) } label: { Image(systemName: "minus").frame(width: 44, height: 44) }
+                            .accessibilityLabel(copy("缩小字号", "Smaller text"))
+                        Button { prefs.bumpTextScale(1) } label: { Image(systemName: "plus").frame(width: 44, height: 44) }
+                            .accessibilityLabel(copy("放大字号", "Larger text"))
+                    }
+                    Button(action: onCycleSleepTimer) {
+                        HStack {
+                            Text(copy("睡眠定时", "Sleep timer")); Spacer()
+                            Text(sleepTimerMinutes == 0 ? copy("关闭", "Off") : "\(sleepTimerMinutes) " + copy("分钟", "min"))
+                            Image(systemName: "chevron.right").font(.caption)
+                        }.frame(minHeight: 44)
+                    }.buttonStyle(.plain)
+                }.padding(.horizontal, 24).padding(.bottom, 36)
             }
         }
+        .askFont(size: 15).foregroundStyle(ink).tint(Color(rgb: 0xb88a35))
+        .frame(maxHeight: maxHeight)
+        .background(colorScheme == .dark ? Color(rgb: 0x28251f) : Color(rgb: 0xf7f0e4), in: UnevenRoundedRectangle(topLeadingRadius: 28, topTrailingRadius: 28))
     }
-
-    private static func ambientGlyph(_ id: String) -> String {
+    private func sectionTitle(_ title: String) -> some View {
+        HStack { Text(title).askFont(size: 13, weight: .medium); Rectangle().fill(ink.opacity(0.12)).frame(height: 1) }
+    }
+    private func ambientSymbol(_ id: String) -> String {
         switch id {
-        case "scene-water": return MCI.water
-        case "scene-rain": return MCI.weatherRainy
-        case "scene-birds": return MCI.bird
-        case "scene-white-noise": return MCI.radioTower
-        case "scene-wind": return MCI.weatherWindy
-        case "scene-fire": return MCI.fire
-        case "scene-waves": return MCI.waves
-        case "scene-thunder": return MCI.weatherLightning
-        default: return MCI.coffee
+        case "scene-water": return "drop"
+        case "scene-rain": return "cloud.rain"
+        case "scene-birds": return "bird"
+        case "scene-white-noise": return "waveform"
+        case "scene-wind": return "wind"
+        case "scene-fire": return "flame"
+        case "scene-waves": return "water.waves"
+        case "scene-thunder": return "cloud.bolt.rain"
+        default: return "cup.and.saucer"
         }
     }
-
-    /// 场景条：首格「模糊」（关 live 时选中），后面按点选次数排的九个场景圆图（sortNatureScenesByUsage）
-    private var sceneStrip: some View {
-        let scenes = NatureScenes.sortedByUsage(prefs.usage)
-        return ScrollViewReader { proxy in
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(alignment: .top, spacing: M.thumbGap) {
-                    SceneThumb(selected: !prefs.liveVideo, image: nil) {
-                        touch()
-                        prefs.toggleLiveVideo(!prefs.liveVideo)
-                    }
-                    .id("scene-blur-toggle")
-                    ForEach(scenes) { s in
-                        SceneThumb(selected: s.id == prefs.sceneId, image: NatureScenes.thumbImage(id: s.id)) {
-                            touch()
-                            onSelectScene(s.id)
-                        }
-                        .id(s.id)
-                    }
-                }
-                // sceneLeftPad = 16 - (slot - thumb)/2
-                .padding(.leading, M.edgePad - M.thumbSlotPad / 2)
-                .padding(.trailing, M.edgePad)
-                .padding(.bottom, M.sceneRowPadBottom)
-            }
-            .onAppear { proxy.scrollTo(prefs.sceneId, anchor: .center) }
-            .onChange(of: prefs.sceneId) { _, id in withAnimation { proxy.scrollTo(id, anchor: .center) } }
+    private func albumSymbol(_ album: String) -> String {
+        switch album {
+        case "安静": return "leaf"
+        case "下午茶": return "cup.and.saucer"
+        case "赞美诗": return "music.note.list"
+        case "钢琴": return "pianokeys"
+        case "睡眠": return "moon.stars"
+        case "专注工作": return "deskclock"
+        default: return "music.note"
         }
     }
-
-    /// RN HomeNatureAlbumStrip：安静（music-note-outline）/ 金句 volume-up / 下午茶（coffee-outline），
-    /// 触控 52、间距 28（transportMainGap）、图标 36；专辑亮 = 正在出声的就是它
-    private var albumRow: some View {
-        let playingAlbum = music.isPlaying ? music.track?.album : nil
-        return HStack(spacing: M.albumGap) {
-            albumButton(MCI.musicNoteOutline, community: true, on: playingAlbum == "安静") { touch(); onPressAlbum("安静") }
-            // 金句朗读只有和合本 / WEBP 两套：显示的是别的版本（法语等）时没有对得上的朗读，喇叭不出
-            // 朗读不可用（法语等没有对得上的朗读）时保留空槽，不塌缩 ——
-            // 塌缩会让左右两颗横向挪位（Josh 2026-09-21「不要动，不要移位置」）
-            albumButton(MI.volumeUp, on: home.voiceOn) { touch(); home.toggleVoice() }
-                .opacity(home.voiceAvailable ? 1 : 0)
-                .allowsHitTesting(home.voiceAvailable)
-            albumButton(MCI.coffeeOutline, community: true, on: playingAlbum == "下午茶") { touch(); onPressAlbum("下午茶") }
-        }
-        .frame(height: M.albumBtn)
-    }
-
-    private func albumButton(_ glyph: String, community: Bool = false, on: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            MaterialIcon(glyph: glyph, size: ShellMetrics.tabIconSize, color: on ? Brand.logo : .white, community: community)
-                .shadow(color: .black.opacity(0.45), radius: 4, x: 0, y: 1)
-                .frame(width: M.albumBtn, height: M.albumBtn)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-/// HomeSceneThumb：64 圆图，未选中缩 .9 / 60% 不透明，弹簧过渡；没图的格子（「模糊」）画 blur 图标。
-/// 槽位宽 74（64 + 10），上下各撑 10 给放大与阴影留地方。
-private struct SceneThumb: View {
-    let selected: Bool
-    let image: UIImage?
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            ZStack {
-                Circle().fill(Color(rgb: 0x1c1814, opacity: 0.75))
-                if let image {
-                    Image(uiImage: image).resizable().scaledToFill()
-                } else {
-                    MaterialIcon(glyph: MCI.blur, size: 28, color: .white.opacity(0.88), community: true)
-                }
-            }
-            .frame(width: 64, height: 64)
-            .clipShape(Circle())
-            .shadow(color: .black.opacity(selected ? 0.45 : 0.3), radius: selected ? 5 : 3, y: 2)
-            .scaleEffect(selected ? 1 : 0.9)
-            .opacity(selected ? 1 : 0.6)
-            .animation(.spring(response: 0.35, dampingFraction: 0.75), value: selected)
-            .padding(.vertical, 10)
-            .frame(width: 74)
-        }
-        .buttonStyle(.plain)
+    private func albumEnglish(_ album: String) -> String {
+        switch album { case "安静": return "Quiet"; case "下午茶": return "Afternoon tea"; case "专注工作": return "Focus"; case "睡眠": return "Sleep"; case "赞美诗": return "Hymns"; case "钢琴": return "Piano"; default: return album }
     }
 }

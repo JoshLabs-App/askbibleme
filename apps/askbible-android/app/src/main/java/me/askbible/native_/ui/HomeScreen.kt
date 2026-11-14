@@ -1,412 +1,223 @@
 package me.askbible.native_.ui
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
-import me.askbible.native_.data.AmbientScenes
-import me.askbible.native_.data.Brand
-import me.askbible.native_.data.GoldenVerse
-import me.askbible.native_.data.HomeVerseTypography
-import me.askbible.native_.data.NatureScene
-import me.askbible.native_.data.NatureScenes
-import me.askbible.native_.data.ShellMetrics
-import me.askbible.native_.data.SiteCopy
+import me.askbible.native_.data.*
+import kotlin.math.abs
 
-/** RN homeNatureLayoutMetrics / homeNatureScreenConstants 逐值 */
-private object HomeMetrics {
-    const val EDGE_PAD = 16f            // HOME_SCENE_STRIP_EDGE_PAD
-    const val ICON_GAP = 16f            // AMBIENT_ICON_GAP
-    const val ROW_GAP = 22f             // HOME_BOTTOM_ICON_ROW_GAP
-    const val BAND_PAD_TOP = 12f        // HOME_NATURE_BOTTOM_BAND_PAD_TOP
-    const val AMBIENT_ICON = 36f        // AMBIENT_ICON_SIZE（芯片 = 图标）
-    const val SCALE_TIMER_ROW_H = 36f   // HOME_SCALE_TIMER_ROW_H
-    const val SCALE_TIMER_ICON = 26f
-    const val THUMB = 64f               // HOME_SCENE_THUMB_SIZE
-    const val THUMB_SLOT_PAD = 10f      // HOME_SCENE_THUMB_SLOT_PAD
-    const val THUMB_GAP = 10f
-    const val SCENE_ROW_PAD_BOTTOM = 6f
-    const val ALBUM_BTN = 52f           // HOME_ALBUM_BTN_SIZE
-    const val ALBUM_GAP = 28f           // transportMainGap
-    const val TOOLS_AUTO_CLOSE_MS = 7000L
-    const val SCENE_SWIPE = 72f         // 上下滑换场景的最小距离
-}
-
-/**
- * 首页：全屏场景视频 / 柔焦静帧 + 金句 + 底部「场景与音效」带。与 RN HomeNatureScreen 对等：
- * 右上齿轮展开 字号/定时 行、环境音九槽、场景条（首格「模糊」），闲置 7 秒自动收起；
- * 最下一排是 放松专辑 / 金句朗读 / 休闲专辑 三个开关（HomeNatureAlbumStrip）。
- * 整屏上下滑换场景：上滑下一景、下滑上一景（按场景固定顺序循环）。
- */
+/** 与原生 iOS 同步：首页左右换景，上拉调整，下拉音乐，长按音乐选专辑。 */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
-    verse: GoldenVerse,
-    textScale: Float,
-    sceneId: String,
-    scenes: List<NatureScene>,
-    liveVideo: Boolean,
-    ambientSlotId: String?,
-    voiceOn: Boolean,
-    /** 金句朗读只有和合本 / WEBP 两套：显示的是别的版本（法语等）时没有对得上的朗读，喇叭不出 */
-    voiceAvailable: Boolean = true,
-    /** 正在出声的专辑名（没在放 = null） */
-    playingAlbum: String?,
-    sleepTimerMinutes: Int,
-    onSelectScene: (String) -> Unit,
-    /** 首屏上下滑：+1 = 上滑换下一景，-1 = 下滑回上一景 */
-    onSwipeScene: (Int) -> Unit = {},
-    onToggleLiveVideo: () -> Unit,
-    onToggleAmbient: (String) -> Unit,
-    onBumpTextScale: (Int) -> Unit,
-    onCycleSleepTimer: () -> Unit,
-    onToggleVoice: () -> Unit,
-    onPressAlbum: (String) -> Unit,
-    onOpenMenu: () -> Unit,
-    /** 闲置收起（D-28，照 iOS HomeView）：true = 底栏藏起、齿轮和三个常用键压淡；状态放在壳里，壳据此藏底栏 */
-    chromeHidden: Boolean = false,
-    onChromeHidden: (Boolean) -> Unit = {},
+    verse: GoldenVerse, textScale: Float, sceneId: String, scenes: List<NatureScene>,
+    liveVideo: Boolean, ambientSlotId: String?, voiceOn: Boolean, voiceAvailable: Boolean = true,
+    playingAlbum: String?, selectedAlbum: String, sleepTimerMinutes: Int,
+    ambientVolume: Float, onAmbientVolume: (Float) -> Unit,
+    onSelectScene: (String) -> Unit, onSwipeScene: (Int) -> Unit = {},
+    onToggleLiveVideo: () -> Unit, onToggleAmbient: (String) -> Unit,
+    onBumpTextScale: (Int) -> Unit, onCycleSleepTimer: () -> Unit,
+    onToggleVoice: () -> Unit, onPressAlbum: (String) -> Unit,
+    onChooseAlbum: (String) -> Unit, onOpenMusic: () -> Unit, onOpenMenu: () -> Unit,
+    onNextMusic: () -> Unit,
+    chromeHidden: Boolean = false, onChromeHidden: (Boolean) -> Unit = {},
 ) {
     var toolsOpen by remember { mutableStateOf(false) }
+    var albumsOpen by remember { mutableStateOf(false) }
     var idleEpoch by remember { mutableIntStateOf(0) }
+    val dark = isSystemInDarkTheme()
+    val paper = if (dark) Color(0xFF28251F) else Color(0xFFF7F0E4)
+    val ink = if (dark) Color(0xFFEEE3D1) else Color(0xFF493B2C)
+    val gold = Color(0xFFB88A35)
+    fun t(zh: String, en: String) = AppLocale.pick(zh, en)
+    fun touch() { idleEpoch++; onChromeHidden(false) }
+    fun openTools() { albumsOpen = false; toolsOpen = true; touch() }
+    LaunchedEffect(toolsOpen, albumsOpen, idleEpoch) {
+        if (toolsOpen || albumsOpen) return@LaunchedEffect
+        delay(7000); onChromeHidden(true)
+    }
+    BackHandler(albumsOpen) { albumsOpen = false; touch() }
+    val density = LocalDensity.current
+    val swipeThreshold = with(density) { 55.dp.toPx() }
+    val swipeCallback by rememberUpdatedState(onSwipeScene)
+    val openMusicCallback by rememberUpdatedState(onOpenMusic)
     val hidden by rememberUpdatedState(chromeHidden)
-    val touch = {
-        idleEpoch += 1
-        if (hidden) onChromeHidden(false)
-    }
-    // 闲置 7 秒：先收设置簇，再过 7 秒收起整层界面（D-28，照 iOS）；任何一次操作都重新计时
-    LaunchedEffect(toolsOpen, idleEpoch, chromeHidden) {
-        if (chromeHidden) return@LaunchedEffect
-        delay(HomeMetrics.TOOLS_AUTO_CLOSE_MS)
-        if (toolsOpen) toolsOpen = false else onChromeHidden(true)
-    }
-    // 收起时只压淡、不位移（iOS 同值 0.55）
-    val chromeAlpha by animateFloatAsState(if (chromeHidden) 0.55f else 1f, tween(400), label = "homeChrome")
-    val swipePx = with(LocalDensity.current) { HomeMetrics.SCENE_SWIPE.dp.toPx() }
-    val swipeScene by rememberUpdatedState(onSwipeScene)
-
-    Box(Modifier.fillMaxSize().background(Color(0xFF1A1512))
-        // 点空白处：收起的界面叫回来；已显示时再点就立即收起（按键自己吃掉点击，不会走到这里）
-        .pointerInput(Unit) {
-            detectTapGestures {
-                toolsOpen = false
-                idleEpoch += 1
-                onChromeHidden(!hidden)
-            }
-        }
-        // 上下滑换场景（JOSHUA 2026-10-22）：只重新计时、不叫回收起的界面，沉浸着一张张翻
-        .pointerInput(Unit) {
-            var dy = 0f
-            detectVerticalDragGestures(
-                onDragStart = { dy = 0f },
-                onDragEnd = {
-                    if (dy <= -swipePx) { idleEpoch += 1; swipeScene(1) }
-                    else if (dy >= swipePx) { idleEpoch += 1; swipeScene(-1) }
-                },
-            ) { _, amount -> dy += amount }
-        }) {
-        // 底图：柔焦静帧一直垫着，live 时视频出首帧后盖上来
-        val poster = rememberAssetImage(
-            if (liveVideo) NatureScenes.posterAsset(sceneId)
-            else NatureScenes.softPosterAsset(sceneId))
-        if (poster != null) {
-            Image(poster, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-        }
+    val wide = LocalConfiguration.current.let { it.screenWidthDp > it.screenHeightDp }
+    Box(Modifier.fillMaxSize().background(Color(0xFF1A1512))) {
+        val poster = rememberAssetImage(if (liveVideo) NatureScenes.posterAsset(sceneId) else NatureScenes.softPosterAsset(sceneId))
+        if (poster != null) Image(poster, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         if (liveVideo) HomeSceneVideo(sceneId, Modifier.fillMaxSize())
-
-        // 顶部渐变，保图标可读
-        Box(Modifier.fillMaxWidth().height(180.dp).background(
-            Brush.verticalGradient(listOf(Color(0x6B1C1410), Color.Transparent))))
-
-        Column(Modifier.fillMaxSize().statusBarsPadding()) {
-            Row(
-                Modifier.fillMaxWidth().alpha(chromeAlpha).padding(
-                    horizontal = ShellMetrics.topChromeSideInset.dp,
-                    vertical = ShellMetrics.topChromeOffset.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                // RN ShellMenuButton menu 28 / HomeNatureScreenTopChrome settings 28（展开或环境音开着时点亮）
-                ChromeButton(MI.MENU, Color.White) { touch(); onOpenMenu() }
-                val settingsLit = toolsOpen || ambientSlotId != null
-                ChromeButton(MI.SETTINGS, if (settingsLit) Brand.logo.toColor() else Color.White) {
-                    touch(); toolsOpen = !toolsOpen
+        // 手势只放在背景层，面板滚动、图标点击不触发换景。
+        Box(Modifier.fillMaxSize()
+            .semantics { contentDescription = t("风景", "Scenery"); customActions = listOf(
+                CustomAccessibilityAction(t("调整", "Adjust")) { openTools(); true },
+                CustomAccessibilityAction(t("打开音乐", "Open music")) { onOpenMusic(); true }) }
+            .pointerInput(Unit) { detectTapGestures {
+                if (albumsOpen) { albumsOpen = false; touch() }
+                else { idleEpoch++; onChromeHidden(!hidden) }
+            } }
+            .pointerInput(swipeThreshold) {
+                var movement = Offset.Zero
+                var startY = 0f
+                detectDragGestures(onDragStart = { movement = Offset.Zero; startY = it.y }, onDragEnd = {
+                    if (albumsOpen) { albumsOpen = false; touch() }
+                    else if (abs(movement.x) > swipeThreshold && abs(movement.x) > abs(movement.y) * 1.5f) {
+                        idleEpoch++; swipeCallback(if (movement.x < 0) 1 else -1)
+                    } else if (abs(movement.y) > swipeThreshold && abs(movement.y) > abs(movement.x) * 1.5f) {
+                        if (movement.y < 0 && startY > size.height * 0.55f) openTools()
+                        else if (movement.y > 0) { touch(); openMusicCallback() }
+                    }
+                }) { change, amount -> change.consume(); movement += amount }
+            })
+        val vScale = if (wide) textScale * 0.6f else textScale
+        Column(Modifier.fillMaxWidth().statusBarsPadding().padding(top = if (wide) 24.dp else 99.dp)
+            .heightIn(max = (LocalConfiguration.current.screenHeightDp * 0.55f).dp)
+            .then(if (wide) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+            .padding(horizontal = if (wide) 120.dp else 22.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            val shadow = Shadow(Color(0x8C000000), Offset(0f, 2f), 8f)
+            Text(verse.text, style = TextStyle(color = Color.White, fontSize = HomeVerseTypography.bodySize(vScale).sp,
+                lineHeight = HomeVerseTypography.bodyLineHeight(vScale).sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, shadow = shadow))
+            Spacer(Modifier.height(HomeVerseTypography.refTopGap(vScale).dp))
+            Text(verse.reference, style = TextStyle(color = Color.White, fontSize = HomeVerseTypography.refSize(vScale).sp,
+                lineHeight = HomeVerseTypography.refLineHeight(vScale).sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, shadow = shadow))
+        }
+        Column(Modifier.align(Alignment.BottomCenter).padding(bottom = shellTabBarBottomInset() + (ShellMetrics.tabRowHeight + 90).dp)
+            .padding(horizontal = 22.dp).alpha(if (chromeHidden && !albumsOpen) 0.55f else 1f), horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            if (albumsOpen) Column(Modifier.widthIn(max = 340.dp).clip(RoundedCornerShape(22.dp)).background(paper).padding(14.dp)) {
+                HomeAlbumOptions(selectedAlbum, ink) { onChooseAlbum(it); albumsOpen = false; touch() }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+                val glyph = MusicAlbumGlyph.glyph(selectedAlbum)
+                Column(Modifier.size(72.dp).combinedClickable(
+                    onClick = { touch(); onPressAlbum(selectedAlbum) },
+                    onLongClickLabel = t("选择专辑", "Choose album"), onLongClick = { touch(); albumsOpen = true })
+                    .semantics(mergeDescendants = true) { contentDescription = t("音乐", "Music"); stateDescription = selectedAlbum + if (playingAlbum != null) " On" else " Off" },
+                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                    MaterialIcon(glyph.first, 28f, if (playingAlbum != null) Brand.logo.toColor() else Color.White, community = glyph.second, shadow = true)
+                    Text(t("音乐", "Music"), color = Color.White, fontSize = 12.sp)
+                }
+                Column(Modifier.size(72.dp).alpha(if (voiceAvailable) 1f else 0.35f).clickable(enabled = voiceAvailable) { touch(); onToggleVoice() }
+                    .semantics(mergeDescendants = true) { contentDescription = t("朗读", "Read aloud"); stateDescription = if (voiceOn) "On" else "Off" },
+                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                    MaterialIcon(MI.VOLUME_UP, 28f, if (voiceOn) Brand.logo.toColor() else Color.White, shadow = true)
+                    Text(t("朗读", "Read aloud"), color = Color.White, fontSize = 12.sp)
                 }
             }
-
-            // 首页打开不打扰（JOSHUA 2026-10-11）：原「回归卡」（我们上次停在这里）已撤
-
-            Column(
-                Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                val shadow = Shadow(Color(0x8C000000), Offset(0f, 2f), 8f)
-                Text(
-                    verse.text,
-                    style = TextStyle(
-                        color = Color.White,
-                        fontSize = HomeVerseTypography.bodySize(textScale).sp,
-                        lineHeight = HomeVerseTypography.bodyLineHeight(textScale).sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        shadow = shadow,
-                    ),
-                )
-                Spacer(Modifier.height(HomeVerseTypography.refTopGap(textScale).dp))
-                Text(
-                    verse.reference,
-                    style = TextStyle(
-                        color = Color.White,
-                        fontSize = HomeVerseTypography.refSize(textScale).sp,
-                        lineHeight = HomeVerseTypography.refLineHeight(textScale).sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        shadow = shadow,
-                    ),
-                )
-            }
-
-            Spacer(Modifier.weight(1f))
-
-            // bottomBand：paddingTop 12，各排之间 22
-            Column(
-                Modifier.fillMaxWidth().alpha(chromeAlpha).padding(top = HomeMetrics.BAND_PAD_TOP.dp),
-                verticalArrangement = Arrangement.spacedBy(HomeMetrics.ROW_GAP.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                if (toolsOpen) {
-                    ScaleTimerRow(
-                        atMin = false, sleepTimerMinutes = sleepTimerMinutes,
-                        onBump = { touch(); onBumpTextScale(it) },
-                        onTimer = { touch(); onCycleSleepTimer() },
-                    )
-                    AmbientRow(ambientSlotId) { touch(); onToggleAmbient(it) }
-                    SceneStrip(scenes, sceneId, liveVideo,
-                        onPick = { touch(); onSelectScene(it) },
-                        onToggleLive = { touch(); onToggleLiveVideo() })
+            Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                TextButton(onClick = { touch(); onNextMusic() }) {
+                    MaterialIcon(MI.SKIP_NEXT, 20f, Color.White, shadow = true)
+                    Spacer(Modifier.width(6.dp))
+                    Text(t("下一首", "Next track"), color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
                 }
-                // HomeNatureAlbumStrip：安静 / 金句 / 下午茶，52 触控、间距 28、图标 36
-                Row(
-                    Modifier.height(HomeMetrics.ALBUM_BTN.dp),
-                    horizontalArrangement = Arrangement.spacedBy(HomeMetrics.ALBUM_GAP.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    AlbumButton(MCI.MUSIC_NOTE_OUTLINE, community = true, on = playingAlbum == "安静") { touch(); onPressAlbum("安静") }
-                    if (voiceAvailable) AlbumButton(MI.VOLUME_UP, on = voiceOn) { touch(); onToggleVoice() }
-                    AlbumButton(MCI.COFFEE_OUTLINE, community = true, on = playingAlbum == "下午茶") { touch(); onPressAlbum("下午茶") }
+                TextButton(onClick = { touch(); onOpenMusic() }) {
+                    MaterialIcon(MI.MUSIC_NOTE, 20f, Color.White, shadow = true)
+                    Spacer(Modifier.width(6.dp))
+                    Text(t("选音乐", "Choose music"), color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
                 }
             }
-            Spacer(Modifier.height(shellTabBarBottomInset() + (ShellMetrics.tabRowHeight + 38f).dp))
         }
     }
-}
-
-@Composable
-private fun ChromeButton(glyph: String, color: Color, onClick: () -> Unit) {
-    Box(Modifier.size(ShellMetrics.topChromeButton.dp).clickableNoRipple(onClick),
-        contentAlignment = Alignment.Center) {
-        MaterialIcon(glyph, 28f, color, shadow = true)
-    }
-}
-
-@Composable
-private fun AlbumButton(glyph: String, community: Boolean = false, on: Boolean, onClick: () -> Unit) {
-    Box(Modifier.size(HomeMetrics.ALBUM_BTN.dp).clickableNoRipple(onClick), contentAlignment = Alignment.Center) {
-        MaterialIcon(glyph, ShellMetrics.tabIconSize, if (on) Brand.logo.toColor() else Color.White,
-                     community = community, shadow = true)
-    }
-}
-
-/** HomeVerseScaleTimerControl：减 / 加 / 定时（定时开着亮黄并角标分钟数） */
-@Composable
-private fun ScaleTimerRow(atMin: Boolean, sleepTimerMinutes: Int, onBump: (Int) -> Unit, onTimer: () -> Unit) {
-    val idle = Color.White.copy(alpha = 0.78f)
-    Row(
-        Modifier.height(HomeMetrics.SCALE_TIMER_ROW_H.dp),
-        horizontalArrangement = Arrangement.spacedBy(HomeMetrics.ICON_GAP.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(Modifier.size(HomeMetrics.SCALE_TIMER_ROW_H.dp).clickableNoRipple { onBump(-1) }, contentAlignment = Alignment.Center) {
-            MaterialIcon(MI.REMOVE, HomeMetrics.SCALE_TIMER_ICON, idle)
-        }
-        Box(Modifier.size(HomeMetrics.SCALE_TIMER_ROW_H.dp).clickableNoRipple { onBump(1) }, contentAlignment = Alignment.Center) {
-            MaterialIcon(MI.ADD, HomeMetrics.SCALE_TIMER_ICON, idle)
-        }
-        Box(Modifier.size(HomeMetrics.SCALE_TIMER_ROW_H.dp).clickableNoRipple(onTimer), contentAlignment = Alignment.Center) {
-            val on = sleepTimerMinutes > 0
-            MaterialIcon(MI.TIMER, HomeMetrics.SCALE_TIMER_ICON, if (on) Brand.logo.toColor() else idle)
-            if (on) {
-                // quickControlTimerBadge：右上角 -2/-6，黑 .55 圆角 8，黄字 10/700
-                Box(
-                    Modifier.align(Alignment.TopEnd).offset(x = 6.dp, y = (-2).dp)
-                        .clip(RoundedCornerShape(8.dp)).background(Color(0x8C000000))
-                        .padding(horizontal = 3.dp, vertical = 1.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(sleepTimerMinutes.toString(), color = Brand.logo.toColor(), fontSize = 10.sp,
-                         lineHeight = 12.sp, fontWeight = FontWeight.Bold)
+    if (toolsOpen) {
+        ModalBottomSheet(onDismissRequest = { toolsOpen = false; touch() }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = paper, contentColor = ink) {
+            Column(Modifier.fillMaxWidth().heightIn(max = (LocalConfiguration.current.screenHeightDp * 0.66f).dp)
+                .verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).navigationBarsPadding().padding(bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Text(t("调整", "Adjust"), Modifier.align(Alignment.CenterHorizontally), fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                Text(t("声音", "Sound"), fontSize = 13.sp)
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(t("环境音", "Ambient sound"), Modifier.weight(1f))
+                    Switch(ambientSlotId != null, { onToggleAmbient(ambientSlotId ?: NatureScenes.scene(sceneId)?.defaultAmbient ?: AmbientScenes.DEFAULT_SLOT_ID) })
+                }
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    items(AmbientScenes.slots.size) { i ->
+                        val slot = AmbientScenes.slots[i]
+                        HomeOption(ambientGlyph(slot.id), true, t(slot.label, slot.labelEn), slot.id == ambientSlotId, ink,
+                            Modifier.width(74.dp)) { onToggleAmbient(slot.id) }
+                    }
+                }
+                Slider(value = ambientVolume, onValueChange = onAmbientVolume, enabled = ambientSlotId != null,
+                    modifier = Modifier.semantics { contentDescription = t("环境音音量", "Ambient volume") })
+                Text(t("音乐专辑", "Music albums"), fontSize = 13.sp)
+                HomeAlbumOptions(selectedAlbum, ink, onChooseAlbum)
+                Text(t("画面", "Picture"), fontSize = 13.sp)
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    items(scenes.size) { i ->
+                        val scene = scenes[i]
+                        Column(Modifier.width(90.dp).clickable { onSelectScene(scene.id) }.semantics { selected = scene.id == sceneId }, horizontalAlignment = Alignment.CenterHorizontally) {
+                            val thumb = rememberAssetThumb(NatureScenes.posterAsset(scene.id))
+                            if (thumb != null) Image(thumb, null, Modifier.size(90.dp, 58.dp).clip(RoundedCornerShape(10.dp))
+                                .border(if (scene.id == sceneId) 2.dp else 0.dp, if (scene.id == sceneId) gold else Color.Transparent, RoundedCornerShape(10.dp)), contentScale = ContentScale.Crop)
+                            Text(t(scene.title, scene.titleEn), fontSize = 12.sp)
+                        }
+                    }
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) { Text(t("动态画面", "Live scenery"), Modifier.weight(1f)); Switch(liveVideo, { onToggleLiveVideo() }) }
+                Text(t("阅读与休息", "Reading & rest"), fontSize = 13.sp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(t("字号", "Text size"), Modifier.weight(1f))
+                    TextButton(onClick = { onBumpTextScale(-1) }) { Text("−", fontSize = 22.sp) }
+                    TextButton(onClick = { onBumpTextScale(1) }) { Text("+", fontSize = 22.sp) }
+                }
+                Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = onCycleSleepTimer), verticalAlignment = Alignment.CenterVertically) {
+                    Text(t("睡眠定时", "Sleep timer"), Modifier.weight(1f)); Text(if (sleepTimerMinutes == 0) t("关闭", "Off") else "$sleepTimerMinutes " + t("分钟", "min"))
                 }
             }
         }
     }
 }
 
-private fun ambientGlyph(id: String): String = when (id) {
-    "scene-water" -> MCI.WATER
-    "scene-rain" -> MCI.WEATHER_RAINY
-    "scene-birds" -> MCI.BIRD
-    "scene-white-noise" -> MCI.RADIO_TOWER
-    "scene-wind" -> MCI.WEATHER_WINDY
-    "scene-fire" -> MCI.FIRE
-    "scene-waves" -> MCI.WAVES
-    "scene-thunder" -> MCI.WEATHER_LIGHTNING
-    else -> MCI.COFFEE
-}
-
-/** 环境音九槽横条：选中黄 + 放大 1.06，其余白 .6 */
 @Composable
-private fun AmbientRow(active: String?, onToggle: (String) -> Unit) {
-    val state = rememberLazyListState()
-    var viewportW by remember { mutableIntStateOf(0) }
-    val slots = AmbientScenes.slots
-    CenterOnSelected(state, slots.indexOfFirst { it.id == active }, viewportW, HomeMetrics.AMBIENT_ICON)
-    LazyRow(
-        state = state,
-        modifier = Modifier.fillMaxWidth().height(HomeMetrics.AMBIENT_ICON.dp).onSizeChanged { viewportW = it.width },
-        contentPadding = PaddingValues(horizontal = HomeMetrics.EDGE_PAD.dp),
-        horizontalArrangement = Arrangement.spacedBy(HomeMetrics.ICON_GAP.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        items(slots.size) { i ->
-            val slot = slots[i]
-            val selected = slot.id == active
-            Box(
-                Modifier.size(HomeMetrics.AMBIENT_ICON.dp)
-                    .scale(if (selected) 1.06f else 1f)
-                    .alpha(if (selected) 1f else 0.6f)
-                    .clickableNoRipple { onToggle(slot.id) },
-                contentAlignment = Alignment.Center,
-            ) {
-                MaterialIcon(ambientGlyph(slot.id), HomeMetrics.AMBIENT_ICON,
-                             if (selected) Brand.logo.toColor() else Color.White, community = true)
+private fun HomeAlbumOptions(active: String, ink: Color, onChoose: (String) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        MusicCatalog.albums.chunked(3).forEach { albums ->
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                albums.forEach { album ->
+                    val glyph = MusicAlbumGlyph.glyph(album)
+                    HomeOption(glyph.first, glyph.second, AppLocale.pick(album, when(album) {
+                        "安静" -> "Quiet"; "下午茶" -> "Afternoon tea"; "赞美诗" -> "Hymns"; "钢琴" -> "Piano"; "睡眠" -> "Sleep"; else -> "Focus"
+                    }), active == album, ink, Modifier.weight(1f)) { onChoose(album) }
+                }
             }
         }
     }
 }
-
-/** 场景条：首格「模糊」（关 live 时选中），后面按点选次数排的九个场景圆图 */
 @Composable
-private fun SceneStrip(
-    scenes: List<NatureScene>, sceneId: String, liveVideo: Boolean,
-    onPick: (String) -> Unit, onToggleLive: () -> Unit,
-) {
-    val state = rememberLazyListState()
-    var viewportW by remember { mutableIntStateOf(0) }
-    val slotW = HomeMetrics.THUMB + HomeMetrics.THUMB_SLOT_PAD
-    val selectedIndex = scenes.indexOfFirst { it.id == sceneId }.let { if (it < 0) 0 else it + 1 }
-    CenterOnSelected(state, selectedIndex, viewportW, slotW)
-    LazyRow(
-        state = state,
-        modifier = Modifier.fillMaxWidth().onSizeChanged { viewportW = it.width },
-        // sceneLeftPad = 16 - (slot - thumb)/2
-        contentPadding = PaddingValues(
-            start = (HomeMetrics.EDGE_PAD - HomeMetrics.THUMB_SLOT_PAD / 2).dp, end = HomeMetrics.EDGE_PAD.dp,
-            bottom = HomeMetrics.SCENE_ROW_PAD_BOTTOM.dp),
-        horizontalArrangement = Arrangement.spacedBy(HomeMetrics.THUMB_GAP.dp),
-        verticalAlignment = Alignment.Top,
-    ) {
-        item { SceneThumb(selected = !liveVideo, posterAsset = null, onClick = onToggleLive) }
-        items(scenes.size) { i ->
-            val s = scenes[i]
-            SceneThumb(selected = s.id == sceneId,
-                       posterAsset = NatureScenes.posterAsset(s.id)) { onPick(s.id) }
-        }
+private fun HomeOption(glyph: String, community: Boolean, title: String, active: Boolean, ink: Color, modifier: Modifier, onClick: () -> Unit) {
+    Column(modifier.clip(RoundedCornerShape(14.dp)).background(if (active) Color(0x38FFB101) else ink.copy(alpha = 0.05f))
+        .clickable(onClick = onClick).semantics(mergeDescendants = true) { selected = active; contentDescription = title }
+        .padding(8.dp).heightIn(min = 64.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        MaterialIcon(glyph, 24f, ink, community = community)
+        Spacer(Modifier.height(6.dp)); Text(title, color = ink, fontSize = 12.sp, textAlign = TextAlign.Center)
     }
 }
-
-/** HomeSceneThumb：64 圆图，未选中缩 .9 / 60% 不透明，弹簧过渡 */
-@Composable
-private fun SceneThumb(selected: Boolean, posterAsset: String?, onClick: () -> Unit) {
-    val focus by animateFloatAsState(if (selected) 1f else 0f, spring(dampingRatio = 0.75f, stiffness = 400f), label = "thumb")
-    val slot = HomeMetrics.THUMB + HomeMetrics.THUMB_SLOT_PAD
-    Box(
-        Modifier.width(slot.dp).height((HomeMetrics.THUMB + HomeMetrics.THUMB_SLOT_PAD * 2).dp).clickableNoRipple(onClick),
-        contentAlignment = Alignment.TopCenter,
-    ) {
-        Box(
-            Modifier.padding(top = HomeMetrics.THUMB_SLOT_PAD.dp)
-                .scale(0.9f + 0.1f * focus).alpha(0.6f + 0.4f * focus)
-                .shadow(if (selected) 5.dp else 3.dp, CircleShape)
-                .size(HomeMetrics.THUMB.dp).clip(CircleShape)
-                .background(Color(0xBF1C1814)),
-            contentAlignment = Alignment.Center,
-        ) {
-            val img = posterAsset?.let { rememberAssetThumb(it) }
-            if (img != null) {
-                Image(img, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-            } else {
-                MaterialIcon(MCI.BLUR, 28f, Color.White.copy(alpha = 0.88f), community = true)
-            }
-        }
-    }
-}
-
-/** RN homeSceneStripScrollX / ambientStripScrollX：把选中项滚到视口居中 */
-@Composable
-private fun CenterOnSelected(state: LazyListState, index: Int, viewportWpx: Int, itemWdp: Float) {
-    val density = androidx.compose.ui.platform.LocalDensity.current
-    LaunchedEffect(index, viewportWpx) {
-        if (index < 0 || viewportWpx <= 0) return@LaunchedEffect
-        val itemPx = with(density) { itemWdp.dp.roundToPx() }
-        state.animateScrollToItem(index, -((viewportWpx - itemPx) / 2))
-    }
+private fun ambientGlyph(id: String): String = when(id) {
+    "scene-water" -> MCI.WATER; "scene-rain" -> MCI.WEATHER_RAINY; "scene-birds" -> MCI.BIRD
+    "scene-white-noise" -> MCI.RADIO_TOWER; "scene-wind" -> MCI.WEATHER_WINDY; "scene-fire" -> MCI.FIRE
+    "scene-waves" -> MCI.WAVES; "scene-thunder" -> MCI.WEATHER_LIGHTNING; else -> MCI.COFFEE
 }

@@ -70,6 +70,7 @@ function rotateFallbackByLocale(
 type Args = {
   fallbackByLocale: Record<AppLocale, HomeVerseEntry[]>;
   locale: AppLocale;
+  randomOrder?: boolean;
 };
 
 function pickScopeIdForFeed(
@@ -83,7 +84,7 @@ function pickScopeIdForFeed(
   return HOME_PRAYER_POOL_SCOPE_ID;
 }
 
-export function useHomePrayerVerseFeed({ fallbackByLocale, locale }: Args): {
+export function useHomePrayerVerseFeed({ fallbackByLocale, locale, randomOrder }: Args): {
   entriesByLocale: Record<AppLocale, HomeVerseEntry[]>;
   bilingual: boolean;
   verseKeys: string[] | undefined;
@@ -98,6 +99,7 @@ export function useHomePrayerVerseFeed({ fallbackByLocale, locale }: Args): {
   /** 首帧与 SSR 一致：勿在 hydration 前读 localStorage，否则双语等与服务器默认不符会触发 hydration mismatch */
   const [prefsHydrated, setPrefsHydrated] = useState(false);
 
+  const sourceKeysRef = useRef<string[]>([]);
   const manifestRef = useRef<HomePrayerManifestV1 | null>(null);
   const bodiesRef = useRef<VerseBodyMap>(new Map());
   const chunkCacheRef = useRef(new Map<number, HomePrayerChunkV1>());
@@ -160,8 +162,15 @@ export function useHomePrayerVerseFeed({ fallbackByLocale, locale }: Args): {
         return;
       }
       manifestRef.current = manifest;
-      const cursor = homeListeningCursor(menuScope);
+      const cursor = randomOrder ? 0 : homeListeningCursor(menuScope);
       const sourceKeys = manifest.entries.map((entry) => entry.verseKey);
+      if (randomOrder) {
+        for (let i = sourceKeys.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [sourceKeys[i], sourceKeys[j]] = [sourceKeys[j], sourceKeys[i]];
+        }
+      }
+      sourceKeysRef.current = sourceKeys;
       const keys = buildFixedVerseFlow(sourceKeys, cursor, HOME_PRAYER_FEED_BATCH_SIZE);
       bodiesRef.current = new Map();
       chunkCacheRef.current = new Map();
@@ -206,16 +215,17 @@ export function useHomePrayerVerseFeed({ fallbackByLocale, locale }: Args): {
       }
       if (fallbackTimer != null) window.clearTimeout(fallbackTimer);
     };
-  }, [prefsToken, locale]);
+  }, [prefsToken, locale, randomOrder]);
 
   /** 文字轮播不再代表听过；保留旧回调形状供现有轮播组件使用。 */
   const onVerseCommitted = useCallback((_key: string) => {}, []);
 
   const onVerseAudioCompleted = useCallback((key: string, feedIndex: number) => {
+    if (randomOrder) return;
     const position = queueCursorPositionsRef.current[feedIndex];
     if (position == null) return;
     completeHomeListeningVerse(menuScopeRef.current, key, position + 1);
-  }, []);
+  }, [randomOrder]);
 
   const extendFeed = useCallback(async () => {
     if (extendingRef.current) return;
@@ -229,7 +239,7 @@ export function useHomePrayerVerseFeed({ fallbackByLocale, locale }: Args): {
       const cur = keysQueueRef.current;
       const targetMore = Math.max(8, Math.floor(HOME_PRAYER_FEED_BATCH_SIZE / 2));
       const startCursor = (queueCursorPositionsRef.current.at(-1) ?? homeListeningCursor(menuScope)) + 1;
-      const sourceKeys = manifest.entries.map((entry) => entry.verseKey);
+      const sourceKeys = sourceKeysRef.current;
       const more = buildFixedVerseFlow(sourceKeys, startCursor, targetMore);
       if (more.length === 0) return;
       const merged = [...cur, ...more];

@@ -34,6 +34,9 @@ const nextConfig = {
   outputFileTracingExcludes: {
     "/*": [
       "./.git/**",
+      "./.next/cache/**",
+      "./.next/types/**",
+      "./.vercel/**",
       "./.claude/**",
       "./.cursor/**",
       "./.github/**",
@@ -47,6 +50,10 @@ const nextConfig = {
       "./00/**",
       "./AA/**",
     ],
+    // 这三条金句背景路由只读取背景配置与上传目录，不需要整套经文数据或编辑文档。
+    "/verse": ["./data/bible/**", "./data/figure-visual-profiles/**", "./docs/**"],
+    "/api/golden-verses/backgrounds": ["./data/bible/**", "./data/figure-visual-profiles/**", "./docs/**"],
+    "/api/golden-verses/upload-image": ["./data/bible/**", "./data/figure-visual-profiles/**", "./docs/**"],
   },
 
   // 避免父目录存在其他 lockfile 时被误判为 monorepo 根

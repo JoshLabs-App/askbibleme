@@ -10,4 +10,7 @@ kotlin { jvmToolchain(17) }
 application { mainClass.set("me.askbible.parity.MainKt") }
 
 // 收藏 JSON 的解析规则要进对拍（JVM 上跑），所以 core 自带 org.json；:app 里排除它，用 Android 框架自带的那份
-dependencies { implementation("org.json:json:20240303") }
+dependencies {
+    implementation("org.json:json:20240303")
+    testImplementation("junit:junit:4.13.2")
+}

@@ -1,0 +1,18 @@
+appId: me.askbible
+---
+- tapOn:
+    id: "music.next"
+    repeat: 3
+    delay: 150
+- assertVisible: "暂停音乐"
+- takeScreenshot: /tmp/askbible-music-ios-rapid-next
+- tapOn:
+    id: "music.toggle"
+- tapOn:
+    id: "home.music.back"
+- tapOn:
+    id: "home.music.next"
+- tapOn:
+    id: "home.music.choose"
+- assertVisible: "播放音乐"
+- takeScreenshot: /tmp/askbible-music-ios-home-next

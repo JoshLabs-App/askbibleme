@@ -1,0 +1,185 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project apps/askbible-ios/AskBible.xcodeproj -scheme AskBible -configuration Debug -destination generic/platform=iOS -derivedDataPath /tmp/askbible-home-build -allowProvisioningUpdates build
+
+2026-11-04 14:22:39.731 xcodebuild[77459:45283787] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-11-04 14:22:39.745 xcodebuild[77459:45283787] [MT] IDESchemeActionsInvocationRecord: Device <DVTiPhonePlaceholder: 0x7acd2e26c0 (Any iOS Device | undefined_arch)> is missing operatingSystemVersion, operatingSystemVersionWithBuildNumber.
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (2 targets)
+    Target 'AskBible' in project 'AskBible'
+        ➜ Explicit dependency on target 'AskBibleWidget' in project 'AskBible'
+    Target 'AskBibleWidget' in project 'AskBible' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/AskBible/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+Build description signature: 23fe2fc7631f5def2e512b01bc8369e9
+Build description path: /tmp/askbible-home-build/Build/Intermediates.noindex/XCBuildData/23fe2fc7631f5def2e512b01bc8369e9.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk /tmp/askbible-home-build/SDKStatCaches.noindex/iphoneos27.2-24B8118-6890c9e4970e00494a266ff652f095d9.sdkstatcache
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/AskBible.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk -o /tmp/askbible-home-build/SDKStatCaches.noindex/iphoneos27.2-24B8118-6890c9e4970e00494a266ff652f095d9.sdkstatcache
+
+ProcessInfoPlistFile /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBibleWidget.appex/Info.plist /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/AskBibleWidget/Info.plist (in target 'AskBibleWidget' from project 'AskBible')
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios
+    builtin-infoPlistUtility /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/AskBibleWidget/Info.plist -producttype com.apple.product-type.app-extension -expandbuildsettings -format binary -platform iphoneos -requiredArchitecture arm64 -o /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBibleWidget.appex/Info.plist
+
+SwiftDriver AskBible normal arm64 com.apple.xcode.tools.swift.compiler (in target 'AskBible' from project 'AskBible')
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name AskBible -Onone @/tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk -target arm64-apple-ios17.0 -g -module-cache-path /tmp/askbible-home-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/askbible-home-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/askbible-home-build/Build/Products/Debug-iphoneos -F /tmp/askbible-home-build/Build/Products/Debug-iphoneos -emit-localized-strings -emit-localized-strings-path /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64 -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/askbible-home-build/SDKStatCaches.noindex/iphoneos27.2-24B8118-6890c9e4970e00494a266ff652f095d9.sdkstatcache -output-file-map /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/askbible-home-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/askbible-home-build/ModuleCache.noindex -sdk-module-cache-path /tmp/askbible-home-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/askbible-home-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/AskBible-generated-files.hmap -Xcc -I/tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/AskBible-own-target-headers.hmap -Xcc -I/tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/AskBible-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/AskBible-project-headers.hmap -Xcc -I/tmp/askbible-home-build/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/DerivedSources-normal/arm64 -Xcc -I/tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/DerivedSources/arm64 -Xcc -I/tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible-Swift.h -working-directory /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios -experimental-emit-module-separately -disable-cmo
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ AskBible (in target 'AskBible' from project 'AskBible')
+
+SwiftCompile normal arm64 (in target 'AskBible' from project 'AskBible')
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios
+    
+
+/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/AskBible/AskBibleApp.swift:34:17: warning: cannot use generic class 'Autoconnect' in a property declaration member of a type not marked '@_implementationOnly'; 'Combine' was not imported by this file
+  32 |     @Environment(\.scenePhase) private var scenePhase
+  33 |     /// 15 秒一跳：使用时长打点 + 记当天为读经日；每三跳（45 秒）轮询一次同步（RN AppUsageTimeBridge / useMemberReadingSync）
+  34 |     private let usageTicker = Timer.publish(every: 15, on: .main, in: .common).autoconnect()
+     |                 `- warning: cannot use generic class 'Autoconnect' in a property declaration member of a type not marked '@_implementationOnly'; 'Combine' was not imported by this file
+  35 |     @State private var usageTicks = 0
+  36 |     /// 界面语言跟系统走；读经展示语言再跟主译本走（英文译本 → 英文面）
+
+Combine.Publishers.Autoconnect:2:14: note: generic class declared here
+ 1 | enum Publishers {
+ 2 | public class Autoconnect<Upstream> : Publisher where Upstream : ConnectablePublisher {
+   |              `- note: generic class declared here
+ 3 |     public typealias Output = Upstream.Output
+ 4 |     public typealias Failure = Upstream.Failure
+
+/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/AskBible/AskBibleApp.swift:34:17: warning: cannot use enum 'Publishers' in a property declaration member of a type not marked '@_implementationOnly'; 'Combine' was not imported by this file
+  32 |     @Environment(\.scenePhase) private var scenePhase
+  33 |     /// 15 秒一跳：使用时长打点 + 记当天为读经日；每三跳（45 秒）轮询一次同步（RN AppUsageTimeBridge / useMemberReadingSync）
+  34 |     private let usageTicker = Timer.publish(every: 15, on: .main, in: .common).autoconnect()
+     |                 `- warning: cannot use enum 'Publishers' in a property declaration member of a type not marked '@_implementationOnly'; 'Combine' was not imported by this file
+  35 |     @State private var usageTicks = 0
+  36 |     /// 界面语言跟系统走；读经展示语言再跟主译本走（英文译本 → 英文面）
+
+Combine.Publishers:2:13: note: enum declared here
+1 | @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+2 | public enum Publishers {
+  |             `- note: enum declared here
+3 | }
+SwiftCompile normal arm64 Compiling\ HomeView.swift /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/AskBible/Home/HomeView.swift (in target 'AskBible' from project 'AskBible')
+
+SwiftCompile normal arm64 /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/AskBible/Home/HomeView.swift (in target 'AskBible' from project 'AskBible')
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios
+    builtin-SwiftPerFileCompile HomeView.swift
+
+SwiftDriverJobDiscovery normal arm64 Compiling HomeView.swift (in target 'AskBible' from project 'AskBible')
+
+SwiftDriver\ Compilation AskBible normal arm64 com.apple.xcode.tools.swift.compiler (in target 'AskBible' from project 'AskBible')
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name AskBible -Onone @/tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk -target arm64-apple-ios17.0 -g -module-cache-path /tmp/askbible-home-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/askbible-home-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/askbible-home-build/Build/Products/Debug-iphoneos -F /tmp/askbible-home-build/Build/Products/Debug-iphoneos -emit-localized-strings -emit-localized-strings-path /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64 -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/askbible-home-build/SDKStatCaches.noindex/iphoneos27.2-24B8118-6890c9e4970e00494a266ff652f095d9.sdkstatcache -output-file-map /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/askbible-home-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/askbible-home-build/ModuleCache.noindex -sdk-module-cache-path /tmp/askbible-home-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/askbible-home-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/AskBible-generated-files.hmap -Xcc -I/tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/AskBible-own-target-headers.hmap -Xcc -I/tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/AskBible-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/AskBible-project-headers.hmap -Xcc -I/tmp/askbible-home-build/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/DerivedSources-normal/arm64 -Xcc -I/tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/DerivedSources/arm64 -Xcc -I/tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible-Swift.h -working-directory /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios -experimental-emit-module-separately -disable-cmo
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for AskBible (in target 'AskBible' from project 'AskBible')
+
+SwiftDriver\ Compilation\ Requirements AskBible normal arm64 com.apple.xcode.tools.swift.compiler (in target 'AskBible' from project 'AskBible')
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name AskBible -Onone @/tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk -target arm64-apple-ios17.0 -g -module-cache-path /tmp/askbible-home-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/askbible-home-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/askbible-home-build/Build/Products/Debug-iphoneos -F /tmp/askbible-home-build/Build/Products/Debug-iphoneos -emit-localized-strings -emit-localized-strings-path /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64 -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/askbible-home-build/SDKStatCaches.noindex/iphoneos27.2-24B8118-6890c9e4970e00494a266ff652f095d9.sdkstatcache -output-file-map /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/askbible-home-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/askbible-home-build/ModuleCache.noindex -sdk-module-cache-path /tmp/askbible-home-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/askbible-home-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/AskBible-generated-files.hmap -Xcc -I/tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/AskBible-own-target-headers.hmap -Xcc -I/tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/AskBible-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/AskBible-project-headers.hmap -Xcc -I/tmp/askbible-home-build/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/DerivedSources-normal/arm64 -Xcc -I/tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/DerivedSources/arm64 -Xcc -I/tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible-Swift.h -working-directory /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios -experimental-emit-module-separately -disable-cmo
+
+Copy /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.swiftsourceinfo (in target 'AskBible' from project 'AskBible')
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.swiftsourceinfo /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+Copy /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.swiftmodule/arm64-apple-ios.abi.json /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.abi.json (in target 'AskBible' from project 'AskBible')
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.abi.json /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.swiftmodule/arm64-apple-ios.abi.json
+
+Ld /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/AskBible.debug.dylib normal (in target 'AskBible' from project 'AskBible')
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios17.0 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk -O0 -Xlinker -no_warn_duplicate_libraries -L/tmp/askbible-home-build/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -L/tmp/askbible-home-build/Build/Products/Debug-iphoneos -F/tmp/askbible-home-build/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -F/tmp/askbible-home-build/Build/Products/Debug-iphoneos -filelist /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.LinkFileList -install_name @rpath/AskBible.debug.dylib -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @executable_path/Frameworks -Xlinker -dead_strip -Xlinker -object_path_lto -Xlinker /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.swiftmodule -lsqlite3 -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -framework WidgetKit -Xlinker -no_adhoc_codesign -o /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/AskBible.debug.dylib
+
+ConstructStubExecutorLinkFileList /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/AskBible-ExecutorLinkFileList-normal-arm64.txt (in target 'AskBible' from project 'AskBible')
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios
+    construct-stub-executor-link-file-list /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/AskBible.debug.dylib /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/AskBible-ExecutorLinkFileList-normal-arm64.txt
+note: Using stub executor library with Swift entry point. (in target 'AskBible' from project 'AskBible')
+
+Ld /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/AskBible normal (in target 'AskBible' from project 'AskBible')
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios17.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk -O0 -Xlinker -no_warn_duplicate_libraries -L/tmp/askbible-home-build/Build/Products/Debug-iphoneos -F/tmp/askbible-home-build/Build/Products/Debug-iphoneos -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker @executable_path/Frameworks -rdynamic -Xlinker -no_deduplicate -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/AskBible-DebugDylibPath-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/AskBible-DebugDylibInstallName-normal-arm64.txt -Xlinker -filelist -Xlinker /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/AskBible-ExecutorLinkFileList-normal-arm64.txt /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/AskBible.debug.dylib -Xlinker -no_adhoc_codesign -o /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/AskBible
+
+Copy /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/PlugIns/AskBibleWidget.appex /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBibleWidget.appex (in target 'AskBible' from project 'AskBible')
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks -remove-static-executable /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBibleWidget.appex /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/PlugIns
+
+ExtractAppIntentsMetadata (in target 'AskBible' from project 'AskBible')
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name AskBible --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk --xcode-version 27B52 --platform-family iOS --deployment-target 17.0 --bundle-identifier me.askbible --output /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app --target-triple arm64-apple-ios17.0 --binary-file /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/AskBible --dependency-file /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible_dependency_info.dat --stringsdata-file /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.SwiftFileList --metadata-file-list /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/AskBible.DependencyMetadataFileList --static-metadata-file-list /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/AskBible.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --no-app-shortcuts-localization
+2026-11-04 14:22:43.702 appintentsmetadataprocessor[77495:45284259] Starting App Intents metadata extraction
+2026-11-04 14:22:43.751 appintentsmetadataprocessor[77495:45284259] Extracted no relevant App Intents symbols, skipping writing output
+
+ProcessInfoPlistFile /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/Info.plist /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/Info.plist (in target 'AskBible' from project 'AskBible')
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios
+    builtin-infoPlistUtility /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/Info.plist -producttype com.apple.product-type.application -genpkginfo /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/PkgInfo -expandbuildsettings -format binary -platform iphoneos -additionalcontentfile /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/assetcatalog_generated_info.plist -scanforprivacyfile /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/PlugIns/AskBibleWidget.appex -requiredArchitecture arm64 -o /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/Info.plist
+
+CopySwiftLibs /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app (in target 'AskBible' from project 'AskBible')
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios
+    builtin-swiftStdLibTool --copy --verbose --sign 62305EB9041AC68F6350D9C56408DA30F92BDA17 --scan-executable /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/AskBible.debug.dylib --scan-folder /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/Frameworks --scan-folder /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/PlugIns --scan-folder /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/SystemExtensions --scan-folder /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/Extensions --scan-folder /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk/System/Library/Frameworks/WidgetKit.framework --platform iphoneos --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os --back-deploy-swift-span
+
+CodeSign /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/AskBible.debug.dylib (in target 'AskBible' from project 'AskBible')
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios
+    
+    Signing Identity:     "Apple Development: Created via API (9HDA27WY8C)"
+    Provisioning Profile: "iOS Team Provisioning Profile: me.askbible"
+                          (49c6e892-e156-40af-b45f-4ebedd004656)
+    
+    /usr/bin/codesign --force --sign 62305EB9041AC68F6350D9C56408DA30F92BDA17 --timestamp\=none --generate-entitlement-der --strip-disallowed-xattrs /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/AskBible.debug.dylib
+
+CodeSign /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/__preview.dylib (in target 'AskBible' from project 'AskBible')
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios
+    
+    Signing Identity:     "Apple Development: Created via API (9HDA27WY8C)"
+    Provisioning Profile: "iOS Team Provisioning Profile: me.askbible"
+                          (49c6e892-e156-40af-b45f-4ebedd004656)
+    
+    /usr/bin/codesign --force --sign 62305EB9041AC68F6350D9C56408DA30F92BDA17 --timestamp\=none --generate-entitlement-der --strip-disallowed-xattrs /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/__preview.dylib
+/tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/__preview.dylib: replacing existing signature
+
+CodeSign /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app (in target 'AskBible' from project 'AskBible')
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios
+    
+    Signing Identity:     "Apple Development: Created via API (9HDA27WY8C)"
+    Provisioning Profile: "iOS Team Provisioning Profile: me.askbible"
+                          (49c6e892-e156-40af-b45f-4ebedd004656)
+    
+    /usr/bin/codesign --force --sign 62305EB9041AC68F6350D9C56408DA30F92BDA17 --entitlements /tmp/askbible-home-build/Build/Intermediates.noindex/AskBible.build/Debug-iphoneos/AskBible.build/AskBible.app.xcent --timestamp\=none --generate-entitlement-der --strip-disallowed-xattrs /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app
+
+ValidateEmbeddedBinary /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/PlugIns/AskBibleWidget.appex (in target 'AskBible' from project 'AskBible')
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios
+    /Applications/Xcode.app/Contents/Developer/usr/bin/embeddedBinaryValidationUtility /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/PlugIns/AskBibleWidget.appex -signing-cert 62305EB9041AC68F6350D9C56408DA30F92BDA17 -info-plist-path /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app/Info.plist
+
+Validate /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app (in target 'AskBible' from project 'AskBible')
+    cd /Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios
+    builtin-validationUtility /tmp/askbible-home-build/Build/Products/Debug-iphoneos/AskBible.app -shallow-bundle -infoplist-subpath Info.plist
+
+PruneExplicitPrecompiledModules /tmp/askbible-home-build/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/askbible-home-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/askbible-home-build/SDKExplicitPrecompiledModules
+
+** BUILD SUCCEEDED **
+

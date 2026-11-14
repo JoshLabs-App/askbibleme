@@ -1,0 +1,18 @@
+[
+  {
+    "file": "apps/askbible-android/app/src/main/java/me/askbible/native_/audio/MusicPlayer.kt",
+    "matchesDeviceTestedSource": true
+  },
+  {
+    "file": "apps/askbible-android/app/src/main/java/me/askbible/native_/ui/MusicScreen.kt",
+    "matchesDeviceTestedSource": true
+  },
+  {
+    "file": "apps/askbible-android/core/src/main/kotlin/me/askbible/native_/data/MusicResumeState.kt",
+    "matchesDeviceTestedSource": true
+  },
+  {
+    "file": "apps/askbible-ios/AskBible/Audio/MusicPlayer.swift",
+    "matchesDeviceTestedSource": true
+  }
+]

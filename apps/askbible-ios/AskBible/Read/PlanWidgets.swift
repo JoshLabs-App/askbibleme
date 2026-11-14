@@ -45,7 +45,7 @@ struct PlanFactChip: View {
     var body: some View {
         HStack(spacing: 6) {
             MaterialIcon(glyph: PlanIcons.glyph(fact.icon), size: 18, color: theme.muted)
-            Text(fact.text).font(.system(size: 15, weight: .semibold)).foregroundStyle(theme.ink)
+            Text(fact.text).askFont(size: 15, weight: .semibold).foregroundStyle(theme.ink)
         }
         .padding(.horizontal, 12).padding(.vertical, 7)
         .background(Capsule().fill(theme.surface.opacity(0.85)))
@@ -129,7 +129,7 @@ struct PlanHowRow: View {
                 MaterialIcon(glyph: PlanIcons.glyph(fact.icon), size: 20, color: theme.ink)
             }
             .frame(width: 36, height: 36).contentShape(Rectangle())
-            Text(fact.text).font(.system(size: 17, weight: .medium)).lineSpacing(6).foregroundStyle(theme.inkSoft)
+            Text(fact.text).askFont(size: 17, weight: .medium).lineSpacing(6).foregroundStyle(theme.inkSoft)
             Spacer(minLength: 0)
         }
     }
@@ -156,9 +156,9 @@ struct PlanTodayCard: View {
                     .frame(width: 46, height: 46)
                 }
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(label).font(.system(size: 14, weight: .semibold)).kerning(0.6).foregroundStyle(theme.faint)
-                    Text(title).font(.system(size: 22, weight: .bold)).foregroundStyle(theme.ink).lineLimit(2)
-                    if let subtitle { Text(subtitle).font(.system(size: 15)).foregroundStyle(theme.muted) }
+                    Text(label).askFont(size: 14, weight: .semibold).kerning(0.6).foregroundStyle(theme.faint)
+                    Text(title).askFont(size: 22, weight: .bold).foregroundStyle(theme.ink).lineLimit(2)
+                    if let subtitle { Text(subtitle).askFont(size: 15).foregroundStyle(theme.muted) }
                     if let progress { PlanProgressBar(value: progress).padding(.top, 4) }
                 }
                 Spacer(minLength: 0)
@@ -194,7 +194,7 @@ struct PlanPrimaryButton: View {
     @Environment(\.parchment) private var theme
     var body: some View {
         Button(action: action) {
-            Text(title).font(.system(size: 17, weight: .semibold))
+            Text(title).askFont(size: 17, weight: .semibold)
                 .foregroundStyle(filled ? Color(parchment: 0xF5EFE4) : theme.ink)
                 .frame(maxWidth: .infinity).frame(height: 52)
                 .background(RoundedRectangle(cornerRadius: 14).fill(filled ? theme.ink : theme.surface))
@@ -210,8 +210,8 @@ struct PlanSectionHeader: View {
     @Environment(\.parchment) private var theme
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.system(size: 20, weight: .bold)).foregroundStyle(theme.ink)
-            if let hint { Text(hint).font(.system(size: 15)).foregroundStyle(theme.muted) }
+            Text(title).askFont(size: 20, weight: .bold).foregroundStyle(theme.ink)
+            if let hint { Text(hint).askFont(size: 15).foregroundStyle(theme.muted) }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -223,7 +223,7 @@ struct PlanStatusPill: View {
     var body: some View {
         HStack(spacing: 6) {
             MaterialIcon(glyph: MI.checkCircle, size: 18, color: Color(parchment: 0x8A5A00))
-            Text(text).font(.system(size: 15, weight: .semibold)).foregroundStyle(Color(parchment: 0x5B3A00))
+            Text(text).askFont(size: 15, weight: .semibold).foregroundStyle(Color(parchment: 0x5B3A00))
         }
         .padding(.horizontal, 12).padding(.vertical, 7)
         .background(Capsule().fill(Brand.logo.opacity(0.26)))
@@ -240,8 +240,8 @@ struct PlanChoiceTile: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 4) {
-                Text(title).font(.system(size: 18, weight: .bold)).foregroundStyle(theme.ink)
-                Text(subtitle).font(.system(size: 14, weight: .medium)).foregroundStyle(theme.muted).multilineTextAlignment(.center)
+                Text(title).askFont(size: 18, weight: .bold).foregroundStyle(theme.ink)
+                Text(subtitle).askFont(size: 14, weight: .medium).foregroundStyle(theme.muted).multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity).padding(.vertical, 12).padding(.horizontal, 8)
             .background(RoundedRectangle(cornerRadius: 12).fill(on ? Brand.logo.opacity(0.28) : theme.surface.opacity(0.6)))
@@ -260,9 +260,9 @@ struct PlanStepper: View {
         HStack(spacing: 16) {
             step(MI.remove, enabled: value > range.lowerBound) { value = max(range.lowerBound, value - 1) }
             HStack(spacing: 4) {
-                Text(SiteCopy.t("native.stepDayPrefix")).font(.system(size: 16)).foregroundStyle(theme.muted)
-                Text("\(value)").font(.system(size: 24, weight: .bold)).foregroundStyle(theme.ink).frame(minWidth: 44)
-                Text(SiteCopy.t("native.stepDaySuffix")).font(.system(size: 16)).foregroundStyle(theme.muted)
+                Text(SiteCopy.t("native.stepDayPrefix")).askFont(size: 16).foregroundStyle(theme.muted)
+                Text("\(value)").askFont(size: 24, weight: .bold).foregroundStyle(theme.ink).frame(minWidth: 44)
+                Text(SiteCopy.t("native.stepDaySuffix")).askFont(size: 16).foregroundStyle(theme.muted)
             }
             step(MI.add, enabled: value < range.upperBound) { value = min(range.upperBound, value + 1) }
         }
@@ -290,7 +290,7 @@ struct PlanDisclosure<Content: View>: View {
         VStack(alignment: .leading, spacing: 12) {
             Button { withAnimation(.easeInOut(duration: 0.2)) { open.toggle() } } label: {
                 HStack(spacing: 4) {
-                    Text(open ? closeTitle : openTitle).font(.system(size: 16, weight: .semibold)).foregroundStyle(theme.muted)
+                    Text(open ? closeTitle : openTitle).askFont(size: 16, weight: .semibold).foregroundStyle(theme.muted)
                     MaterialIcon(glyph: open ? MI.expandLess : MI.expandMore, size: 22, color: theme.muted)
                 }
                 .frame(minHeight: 44)
@@ -311,8 +311,8 @@ struct PlanLinkCard: View {
         Button(action: action) {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(title).font(.system(size: 17, weight: .semibold)).foregroundStyle(theme.ink)
-                    Text(lead).font(.system(size: 15)).foregroundStyle(theme.muted)
+                    Text(title).askFont(size: 17, weight: .semibold).foregroundStyle(theme.ink)
+                    Text(lead).askFont(size: 15).foregroundStyle(theme.muted)
                 }
                 Spacer(minLength: 0)
                 MaterialIcon(glyph: MI.arrowForward, size: 24, color: theme.ink)
@@ -334,7 +334,7 @@ struct PlanBackButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: "arrow.left")
-                .font(.system(size: 22, weight: .medium))
+                .askFont(size: 22, weight: .medium)
                 .foregroundStyle(theme.ink)
                 .frame(width: 44, height: 44).contentShape(Rectangle())
         }

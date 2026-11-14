@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// 连排段落：一段里的各节接排成一个文本块（RN 默认 verseParagraphFlow = true）。
+/// 绘制模式的连排段落；普通阅读使用 NativeChapterText 的整章系统选区。
 ///
 /// 用 TextKit 自绘（NSLayoutManager 直接画进一个普通 UIView），不用 UITextView：
 /// UITextView 是 UIScrollView 的子类，套在 SwiftUI ScrollView 里多一层滚动视图和一堆文本交互手势，
@@ -11,6 +11,9 @@ import UIKit
 struct ChapterFlowParagraph: UIViewRepresentable {
     let verses: [LoadedVerse]
     let metrics: ReadTypographyMetrics
+    @Environment(\.appTextSize) private var appSize
+    @ScaledMetric(relativeTo: .body) private var systemScale = 1.0
+    private var textScale: CGFloat { appTextScale(appSize, system: systemScale) }
     let theme: Parchment
     let xrefVerses: Set<Int>
     let activeVerse: Int?
@@ -417,7 +420,7 @@ struct ChapterFlowParagraph: UIViewRepresentable {
             // 关键词再加粗压成正文最深色，和搜索结果列表一致
             let text = NSMutableAttributedString(attributedString: built.text)
             for r in matches {
-                text.addAttributes([.font: UIFont.systemFont(ofSize: metrics.verseFontSize, weight: .bold),
+                text.addAttributes([.font: UIFont.systemFont(ofSize: (metrics.verseFontSize * textScale), weight: .bold),
                                     .foregroundColor: UIColor(theme.ink)], range: r)
             }
             v.setText(text)
@@ -522,18 +525,19 @@ struct ChapterFlowParagraph: UIViewRepresentable {
     }
 
     /// 对应 displayedParagraphVerseChunk：`${节号}${gap}${正文} `，节号加粗按有无串珠分色，正文按神言 / 人言着色
-    private func build() -> (text: NSAttributedString, ranges: [(verse: Int, range: NSRange)], numberRanges: [(verse: Int, range: NSRange)], textRanges: [(verse: Int, range: NSRange)]) {
+    func build(scale: CGFloat? = nil) -> (text: NSAttributedString, ranges: [(verse: Int, range: NSRange)], numberRanges: [(verse: Int, range: NSRange)], textRanges: [(verse: Int, range: NSRange)]) {
+        let textScale = scale ?? self.textScale
         let out = NSMutableAttributedString()
         var ranges: [(Int, NSRange)] = []
         var numberRanges: [(Int, NSRange)] = []
         var textRanges: [(Int, NSRange)] = []
         let para = NSMutableParagraphStyle()
-        para.minimumLineHeight = metrics.verseLineHeight
-        para.maximumLineHeight = metrics.verseLineHeight
-        let bodyFont = UIFont.systemFont(ofSize: metrics.verseFontSize, weight: .medium)
-        let numFont = UIFont.systemFont(ofSize: metrics.verseNumFontSize, weight: .bold)
+        para.minimumLineHeight = (metrics.verseLineHeight * textScale)
+        para.maximumLineHeight = (metrics.verseLineHeight * textScale)
+        let bodyFont = UIFont.systemFont(ofSize: (metrics.verseFontSize * textScale), weight: .medium)
+        let numFont = UIFont.systemFont(ofSize: (metrics.verseNumFontSize * textScale), weight: .bold)
         // 行高固定后小字号的节号会沉到基线下面，抬一点
-        let numOffset = (metrics.verseFontSize - metrics.verseNumFontSize) * 0.35
+        let numOffset = ((metrics.verseFontSize * textScale) - (metrics.verseNumFontSize * textScale)) * 0.35
 
         for v in verses {
             let start = out.length

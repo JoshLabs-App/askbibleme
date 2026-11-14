@@ -1,0 +1,38 @@
+appId: me.askbible
+---
+- launchApp
+- tapOn:
+    id: home.adjust
+- tapOn: "安静"
+- assertVisible: "下午茶"
+- assertVisible: "赞美诗"
+- assertVisible: "钢琴"
+- assertVisible: "睡眠"
+- assertVisible: "专注工作"
+- tapOn: "下午茶"
+- assertVisible: "下午茶"
+- takeScreenshot: /tmp/askbible-album-selected
+- tapOn: "收起调整"
+- assertVisible:
+    id: home.music
+    text: ".*关闭.*"
+- tapOn:
+    id: home.music
+- tapOn:
+    id: home.adjust
+- tapOn: "下午茶"
+- tapOn: "安静"
+- takeScreenshot: /tmp/askbible-album-playing-switch
+- tapOn: "收起调整"
+- assertVisible:
+    id: home.music
+    text: ".*开启.*"
+- tapOn:
+    id: home.music
+- tapOn:
+    id: home.adjust
+- scrollUntilVisible:
+    element:
+      text: "睡眠定时"
+    direction: DOWN
+- takeScreenshot: /tmp/askbible-panel-bottom

@@ -1,0 +1,594 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project apps/askbible-ios/AskBible.xcodeproj -scheme AskBible -configuration Release -sdk iphoneos -destination generic/platform=iOS -derivedDataPath /tmp/askbible-selection-device-build -allowProvisioningUpdates build
+
+Build settings from command line:
+    SDKROOT = iphoneos27.2
+
+2026-11-07 21:55:25.252 xcodebuild[89235:63536289] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-11-07 21:55:25.283 xcodebuild[89235:63536289] [MT] IDESchemeActionsInvocationRecord: Device <DVTiPhonePlaceholder: 0x77dd59e6c0 (Any iOS Device | undefined_arch)> is missing operatingSystemVersion, operatingSystemVersionWithBuildNumber.
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (2 targets)
+    Target 'AskBible' in project 'AskBible'
+        ➜ Explicit dependency on target 'AskBibleWidget' in project 'AskBible'
+    Target 'AskBibleWidget' in project 'AskBible' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 53795903142dffa3b6085f2287cc2e04
+Build description path: /tmp/askbible-selection-device-build/Build/Intermediates.noindex/XCBuildData/53795903142dffa3b6085f2287cc2e04.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk /tmp/askbible-selection-device-build/SDKStatCaches.noindex/iphoneos27.2-24B8118-6890c9e4970e00494a266ff652f095d9.sdkstatcache
+    cd /tmp/askbible-selection-release/apps/askbible-ios/AskBible.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk -o /tmp/askbible-selection-device-build/SDKStatCaches.noindex/iphoneos27.2-24B8118-6890c9e4970e00494a266ff652f095d9.sdkstatcache
+
+ProcessInfoPlistFile /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBibleWidget.appex/Info.plist /tmp/askbible-selection-release/apps/askbible-ios/AskBibleWidget/Info.plist (in target 'AskBibleWidget' from project 'AskBible')
+    cd /tmp/askbible-selection-release/apps/askbible-ios
+    builtin-infoPlistUtility /tmp/askbible-selection-release/apps/askbible-ios/AskBibleWidget/Info.plist -producttype com.apple.product-type.app-extension -expandbuildsettings -format binary -platform iphoneos -requiredArchitecture arm64 -o /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBibleWidget.appex/Info.plist
+
+SwiftDriver AskBible normal arm64 com.apple.xcode.tools.swift.compiler (in target 'AskBible' from project 'AskBible')
+    cd /tmp/askbible-selection-release/apps/askbible-ios
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name AskBible -O -whole-module-optimization @/tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.SwiftFileList -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk -target arm64-apple-ios17.0 -g -module-cache-path /tmp/askbible-selection-device-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -swift-version 5 -I /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos -F /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos -emit-localized-strings -emit-localized-strings-path /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64 -c -num-threads 18 -Xcc -ivfsstatcache -Xcc /tmp/askbible-selection-device-build/SDKStatCaches.noindex/iphoneos27.2-24B8118-6890c9e4970e00494a266ff652f095d9.sdkstatcache -output-file-map /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/askbible-selection-device-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/askbible-selection-device-build/ModuleCache.noindex -sdk-module-cache-path /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/askbible-selection-device-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/AskBible-generated-files.hmap -Xcc -I/tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/AskBible-own-target-headers.hmap -Xcc -I/tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/AskBible-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/AskBible-project-headers.hmap -Xcc -I/tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/include -Xcc -I/tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/DerivedSources-normal/arm64 -Xcc -I/tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/DerivedSources/arm64 -Xcc -I/tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/DerivedSources -emit-objc-header -emit-objc-header-path /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible-Swift.h -working-directory /tmp/askbible-selection-release/apps/askbible-ios -no-emit-module-separately-wmo
+
+SwiftCompile normal arm64 Compiling\ AmbientPlayer.swift,\ AmbientScenes.swift,\ AudioSessionPolicy.swift,\ ChapterAudioPlayer.swift,\ ChapterAudioSource.swift,\ GoldenVerseAudioSource.swift,\ GoldenVersePlayer.swift,\ MusicAudioSource.swift,\ MusicPlayer.swift,\ MusicResumeState.swift,\ RemoteControlHub.swift,\ VerseTimings.swift,\ AuthViews.swift,\ SocialSignIn.swift,\ ExploreArticleView.swift,\ ExploreView.swift,\ MarkdownBody.swift,\ HomeSceneVideo.swift,\ HomeVerseController.swift,\ HomeVersePool.swift,\ HomeView.swift,\ NatureHomePrefs.swift,\ AchievementFeedback.swift,\ AchievementStore.swift,\ AppLocale.swift,\ BibleCatalog.swift,\ BiblePanorama.swift,\ ChapterSegments.swift,\ Endpoints.swift,\ ExploreArticleCatalog.swift,\ ExploreArticles.swift,\ InfoEditionDatabase.swift,\ InfoEditionDownloader.swift,\ InfoEditionFormat.swift,\ LanguageOrder.swift,\ LocaleTables.swift,\ MedalCatalog.swift,\ MemberAuth.swift,\ MemberAuthStore.swift,\ MemberOAuth.swift,\ MemberReadingSync.swift,\ MemberReadingSyncEngine.swift,\ MusicCatalog.swift,\ MusicVisuals.swift,\ NatureScenes.swift,\ PlanPlay.swift,\ ReadingActivityStore.swift,\ ReadingPlanCatalog.swift,\ ReadingPlans.swift,\ RemoteBookNames.swift,\ RemoteChapterStore.swift,\ RemoteTranslations.swift,\ ScriptureDatabase.swift,\ ScriptureModels.swift,\ ScriptureSearch.swift,\ ScriptureStore.swift,\ ScriptureTranslation.swift,\ SiteCopy.swift,\ TranslationCatalog.swift,\ TranslationDownloader.swift,\ TranslationPrefs.swift,\ VerseAnnotations.swift,\ VerseBookmarks.swift,\ VerseDisplayNotes.swift,\ VerseTextHighlights.swift,\ MusicSceneViews.swift,\ MusicView.swift,\ WelcomeView.swift,\ BiblePanoramaView.swift,\ AchievementsView.swift,\ AchievementViews.swift,\ CatalogView.swift,\ ChapterFlowParagraph.swift,\ ChapterView.swift,\ FavoritesView.swift,\ HighlightBar.swift,\ MedalDetailView.swift,\ NativeChapterText.swift,\ PlanDetailView.swift,\ PlanPlayView.swift,\ PlansListView.swift,\ PlanWidgets.swift,\ PlaybackDock.swift,\ PostReadingEditions.swift,\ ReadingPlanStore.swift,\ RoundedHighlightText.swift,\ SearchView.swift,\ VerseActionSheet.swift,\ VerseSentences.swift,\ VerseXrefSheet.swift,\ AppUpdateGate.swift,\ ConfirmSheet.swift,\ NavDrawer.swift,\ ParchmentBackground.swift,\ ParchmentFade.swift,\ ReadingReminder.swift,\ ShellTabBar.swift,\ SiblingAppsSection.swift,\ TimePickerSheet.swift,\ AppTextSizing.swift,\ AskGlass.swift,\ MaterialIcon.swift,\ ParchmentTheme.swift,\ ReadTypography.swift,\ TouchObserver.swift,\ AskBibleApp.swift,\ GeneratedAssetSymbols.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Audio/AmbientPlayer.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Audio/AmbientScenes.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Audio/AudioSessionPolicy.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Audio/ChapterAudioPlayer.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Audio/ChapterAudioSource.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Audio/GoldenVerseAudioSource.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Audio/GoldenVersePlayer.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Audio/MusicAudioSource.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Audio/MusicPlayer.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Audio/MusicResumeState.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Audio/RemoteControlHub.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Audio/VerseTimings.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Auth/AuthViews.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Auth/SocialSignIn.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Explore/ExploreArticleView.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Explore/ExploreView.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Explore/MarkdownBody.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Home/HomeSceneVideo.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Home/HomeVerseController.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Home/HomeVersePool.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Home/HomeView.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Home/NatureHomePrefs.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/AchievementFeedback.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/AchievementStore.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/AppLocale.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/BibleCatalog.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/BiblePanorama.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/ChapterSegments.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/Endpoints.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/ExploreArticleCatalog.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/ExploreArticles.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/InfoEditionDatabase.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/InfoEditionDownloader.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/InfoEditionFormat.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/LanguageOrder.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/LocaleTables.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/MedalCatalog.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/MemberAuth.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/MemberAuthStore.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/MemberOAuth.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/MemberReadingSync.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/MemberReadingSyncEngine.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/MusicCatalog.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/MusicVisuals.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/NatureScenes.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/PlanPlay.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/ReadingActivityStore.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/ReadingPlanCatalog.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/ReadingPlans.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/RemoteBookNames.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/RemoteChapterStore.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/RemoteTranslations.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/ScriptureDatabase.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/ScriptureModels.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/ScriptureSearch.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/ScriptureStore.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/ScriptureTranslation.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/SiteCopy.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/TranslationCatalog.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/TranslationDownloader.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/TranslationPrefs.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/VerseAnnotations.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/VerseBookmarks.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/VerseDisplayNotes.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/VerseTextHighlights.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Music/MusicSceneViews.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Music/MusicView.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Onboarding/WelcomeView.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Panorama/BiblePanoramaView.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/AchievementsView.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/AchievementViews.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/CatalogView.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/ChapterFlowParagraph.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/ChapterView.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/FavoritesView.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/HighlightBar.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/MedalDetailView.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/NativeChapterText.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/PlanDetailView.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/PlanPlayView.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/PlansListView.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/PlanWidgets.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/PlaybackDock.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/PostReadingEditions.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/ReadingPlanStore.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/RoundedHighlightText.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/SearchView.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/VerseActionSheet.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/VerseSentences.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/VerseXrefSheet.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Shell/AppUpdateGate.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Shell/ConfirmSheet.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Shell/NavDrawer.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Shell/ParchmentBackground.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Shell/ParchmentFade.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Shell/ReadingReminder.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Shell/ShellTabBar.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Shell/SiblingAppsSection.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Shell/TimePickerSheet.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Theme/AppTextSizing.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Theme/AskGlass.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Theme/MaterialIcon.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Theme/ParchmentTheme.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Theme/ReadTypography.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/Theme/TouchObserver.swift /tmp/askbible-selection-release/apps/askbible-ios/AskBible/AskBibleApp.swift /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/DerivedSources/GeneratedAssetSymbols.swift /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/XPC.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/StoreKit.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/QuartzCore.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/AVFAudio.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/Combine.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/UIKit.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/CoreTransferable.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/MediaToolbox.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/Distributed.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/Swift.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/DataDetection.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/CoreText.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/CoreGraphics.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/CoreFoundation.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/ExtensionFoundation.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/CoreImage.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/os.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/LightweightCodeRequirements.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/Symbols.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/LocalAuthentication.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/_StringProcessing.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/_AppIntents_SwiftUI.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/_Concurrency.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/_Builtin_float.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/CoreData.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/BackgroundAssets.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/UniformTypeIdentifiers.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/CoreMotion.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/AppIntentsTypeSupport.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/simd.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/CoreMIDI.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/ImageIO.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/CoreSpotlight.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/DeveloperToolsSupport.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/Synchronization.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/AuthenticationServices.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/Accessibility.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/FileProvider.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/_StoreKit_SwiftUI.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/_DarwinFoundation3.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/MediaPlayer.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/CoreVideo.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/OSLog.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/WidgetKit.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/Dispatch.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/CoreMedia.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/AVFoundation.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/Network.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/CryptoKit.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/RelevanceKit.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/VideoToolbox.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/System.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/Spatial.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/AudioToolbox.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/SwiftUI.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/CoreAudio.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/SwiftUICore.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/Intents.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/_AuthenticationServices_SwiftUI.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/_DarwinFoundation1.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/ActivityKit.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/ObjectiveC.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/Metal.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/Darwin.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/_DarwinFoundation2.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/CoreLocation.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/AppIntents.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/Foundation.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/27.2/Observation.swiftmodule/arm64e-apple-ios.swiftmodule /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/CoreFoundation-5BDABBLUMJVTLHMUJQE5NW2YI.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/Security-5PA5P4ZLWKBL1009HZNCUHW7S.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/_Builtin_inttypes-AKSLDG73RSWFTOL1NR3CTJ0C7.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/RelevanceKit-F0ROFH34KVM1I3T83X4T0YURC.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/SwiftShims-6E86QUSP86YVOPCE2EKQVY0R0.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/Dispatch-D5850OQTSJLLBZM1AISXZCUS.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/OpenGLES-7FXVE2JF1VIAI568MTCEREMWG.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/CoreSpotlight-1I4GFWSTDFE1UQKKY130DISA2.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/ActivityKit-244SJMIN4WXSC53PBDUZJL1WV.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/CoreLocation-D2IXXMBY38M3SPZYG2D7WWXB6.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/os_workgroup-CYMT3MZ2N3T4MT0HMGCGQSZ7Z.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/Network-8Q4FPHZAH4EXXF7KYAR142JPN.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/ptrcheck-F0CM8JEAY7V568VHMP0D8YBU6.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/_StoreKit_SwiftUI-CUK69DNWEFP6AZ33AOVLH2LJ0.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/AppIntentsTypeSupport-DYZKX8KG3BGY3EGIJJWKHKZC5.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/CoreVideo-2GJOCU4KD9RMJ1K148YF2WGRV.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/_Builtin_stddef-7Z0P6MIQ6ERR9ZMHA5WK0RQF.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/Metal-AR5OE6MZONT5SV2QBW7GPNI0V.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/CoreImage-3W3Q43222Q8T0NJZ3VFK74TV1.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/AuthenticationServices-3H29MO8BB25L3SKPFR16U5F3H.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/AppIntents-AYL1GEE0IGIIWMPPTVBRXVH71.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/ptrauth-809IGA2Y2NBMVQCFGEGIAQ7TO.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/_LocationEssentials-DUIRH27LI2DDO9QEFJJNXSH91.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/dnssd-DAOX9UNRLU120JYI1IC68VGPQ.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/_AvailabilityInternal-4KKB4TSXHDVR2RCMPHCSN5LNW.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/CoreGraphics-5N6IGXA0NY160MTQ9P9UAGYBB.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/_Builtin_stdint-91CYHO3HHTM5HDVRQUVU5B6S9.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/LocalAuthentication-CJPV1C3YQO36L7RTR2PH7GCWO.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/_DarwinFoundation2-5SWGHBXW3HWVNASI18M0VLKEN.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/_Builtin_tgmath-66081IBKZTZ34N3C9NN2N804O.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/Foundation-BKX9OCCZEZ4TSYY68KPXV092P.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/_Builtin_stdbool-8LAG13AA03962Y2OXCWWBRQFE.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/ObjectiveC-9KSXB6QY6PDMDGMLSJB5I0GPE.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/VideoToolbox-4NVDJIGK4RUEVD2OPA89L91L2.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/UIUtilities-8EWMH6I287Q3DUN1OV222RJ4J.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/XPC-4HIDHO8TS5N34HT0LRXACN141.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/sys_types-133ZK0ZFELEPUMI69Q5UZ5KNH.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/CoreTransferable-75J2RTTKD5XJJY9KAMPYKCEPA.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/CoreData-7BDPEJ9KBFO5Z8I1PII0SCIPV.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/OSLog-4UDTOI55VL1Z5V8G6IFXF4VG6.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/IOSurface-8XDUOP1WBPVJ1UNF0XEM176K9.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/string_h-S1Q7UHGIQPTBVNUVWFA8INF7.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/_Builtin_float-BHC0Z7OV3WWYH1L84FTHAJ4EC.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/MediaPlayer-5CM9A9VQGW3YUX4WX9I5VNDS8.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/QuartzCore-4U2FNQWPAT527KJUIZWFT5V6F.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/os_object-N688WXTLXWG5ZXYZ1PETFMJB.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/SwiftUI-24DE9KRA73WQHGQXB5P3SR7LD.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/AVFoundation-7RL6RD1PGMYFXG0F0GYF4WC2J.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/Darwin-4VAGHUX0UY7TRS2I1HRNWGJC6.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/FileProvider-CPLPU1BGNRK03IWMEA5B4CD8X.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/_Builtin_intrinsics-EB8KQNYBTAEWXHYNON7M04KO0.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/simd-9I3YOFK6BN0U779IM3AYWZ79C.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/_Builtin_limits-QODQMDPR3DQKSOP4N7WRW70.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/AudioToolbox-9P3PNBVVKODAJ44LRJB6SLLET.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/DeveloperToolsSupport-EKYZPPP59U7QQD19I4D4JSOOF.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/CoreMIDI-D6HFRY66DJF2SQOZKZQ8EN1Z7.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/Spatial-2LM364XUNULAJYLOL5DS5CWIU.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/MachO-3P3FSQVBSUC8AYUI4VFS2KSEF.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/CoreMedia-E8GZY9N33NDK7HYATY4FN9G94.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/CFNetwork-BKRYU306T3VAF6R6M6169G9WE.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/os-19RHSJTLT5WPLB4F3BEXSBDOL.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/_SwiftConcurrencyShims-1Q3ABMJUZLJMITIODY4TCXDUY.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/AVFAudio-6UNPOBQVRT30Y6FPX1TBN1FY7.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/CoreMotion-DGZPTRPLMQXVYR0IMPNIWODAK.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/_Builtin_stdarg-BS0SVFHPGYOD2YCGTAOAVBNX8.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/_DarwinFoundation1-B1LEFQYJOV3QLIXX3KAVYIFH0.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/UniformTypeIdentifiers-BRDHE2QXDISHTO1U77EMA9J6E.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/ExtensionFoundation-DT0SCM6GEQUEZDO7QARGHYEJT.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/UIKit-EYT8DA1WCLEH5YU2UM2K3HRCO.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/SwiftUICore-BCHDMDUBFK5SQZEBYAFJUQS7M.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/CoreAudioTypes-7FQX64JN4IFRRKBGX3Z2A94U1.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/Symbols-7DDUMFKE1ANBP68F2EQ66NFQB.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/CoreText-B6X3FWCDCJGHEQBRA0T9WD24K.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/ImageIO-AEY5LVZPG67KATZPUPZDVSGQ1.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/_DarwinFoundation3-NESJ8H02CJVKGZD6D7GMGCCO.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/Accessibility-97FTPCMJ501G40DAM94GQC3EB.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/UserNotifications-C2I7Q1HXPGP8YO2UUD1CMY1D6.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/_Builtin_stdatomic-BPKBW5VQRKS4SGGKR4J0KUUMF.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/WidgetKit-73QHN9J4Z7HUKJLZ6NM17Z9AU.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/CoreAudio-F1PZY52KZENYSKPKIMMHE19ZX.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/StoreKit-60DLWBR7OKMLWZR3UJ7QZNA64.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/MediaToolbox-QBKFTR1MD731B5L7M1T72FR4.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/AVRouting-6E55M8PJC19U65KZFEW6HJVDJ.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/SQLite3-1A23VUJLV50G7G1Z8A9NQZ29S.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/BackgroundAssets-239GY5HARA41UHGPB4MCV9AMB.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/DataDetection-CEO7AR9OSZ2P2455LIAV8AI0Y.pcm /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules/Intents-27PWVG5DPEBNCIWYRB1JYNYMU.pcm /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible-dependencies-1.json (in target 'AskBible' from project 'AskBible')
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/Endpoints.swift:96:14: warning: instance method 'lock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+ 94 |     /// 启动后、回前台时在后台调。挑出可用域、拉新的候选表。`force` 为 false 时 10 分钟内不重复探。
+ 95 |     static func refresh(force: Bool = false) async {
+ 96 |         lock.lock()
+    |              `- warning: instance method 'lock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+ 97 |         let recent = lastRefresh.map { Date().timeIntervalSince($0) < refreshInterval } ?? false
+ 98 |         if recent && !force { lock.unlock(); return }
+
+/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSLock.h:15:1: note: 'lock()' declared here
+ 13 | 
+ 14 | /// Attempts to acquire a lock, blocking a thread's execution until the lock can be acquired.
+ 15 | - (void)lock NS_SWIFT_UNAVAILABLE_FROM_ASYNC("Use async-safe scoped locking instead");
+    | `- note: 'lock()' declared here
+ 16 | 
+ 17 | /// Relinquishes a previously acquired lock.
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/Endpoints.swift:98:36: warning: instance method 'unlock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+ 96 |         lock.lock()
+ 97 |         let recent = lastRefresh.map { Date().timeIntervalSince($0) < refreshInterval } ?? false
+ 98 |         if recent && !force { lock.unlock(); return }
+    |                                    `- warning: instance method 'unlock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+ 99 |         lastRefresh = Date()
+100 |         lock.unlock()
+
+/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSLock.h:18:1: note: 'unlock()' declared here
+ 16 | 
+ 17 | /// Relinquishes a previously acquired lock.
+ 18 | - (void)unlock NS_SWIFT_UNAVAILABLE_FROM_ASYNC("Use async-safe scoped locking instead");
+    | `- note: 'unlock()' declared here
+ 19 | 
+ 20 | @end
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/Endpoints.swift:100:14: warning: instance method 'unlock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+ 98 |         if recent && !force { lock.unlock(); return }
+ 99 |         lastRefresh = Date()
+100 |         lock.unlock()
+    |              `- warning: instance method 'unlock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+101 | 
+102 |         await pickAll()
+
+/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSLock.h:18:1: note: 'unlock()' declared here
+ 16 | 
+ 17 | /// Relinquishes a previously acquired lock.
+ 18 | - (void)unlock NS_SWIFT_UNAVAILABLE_FROM_ASYNC("Use async-safe scoped locking instead");
+    | `- note: 'unlock()' declared here
+ 19 | 
+ 20 | @end
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/Endpoints.swift:112:22: warning: instance method 'lock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+110 |             for await (r, host) in group {
+111 |                 guard let host else { continue }
+112 |                 lock.lock(); chosen[r] = host; lock.unlock()
+    |                      `- warning: instance method 'lock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+113 |                 UserDefaults.standard.set(host, forKey: hostKey(r))
+114 |             }
+
+/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSLock.h:15:1: note: 'lock()' declared here
+ 13 | 
+ 14 | /// Attempts to acquire a lock, blocking a thread's execution until the lock can be acquired.
+ 15 | - (void)lock NS_SWIFT_UNAVAILABLE_FROM_ASYNC("Use async-safe scoped locking instead");
+    | `- note: 'lock()' declared here
+ 16 | 
+ 17 | /// Relinquishes a previously acquired lock.
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/Endpoints.swift:112:53: warning: instance method 'unlock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+110 |             for await (r, host) in group {
+111 |                 guard let host else { continue }
+112 |                 lock.lock(); chosen[r] = host; lock.unlock()
+    |                                                     `- warning: instance method 'unlock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+113 |                 UserDefaults.standard.set(host, forKey: hostKey(r))
+114 |             }
+
+/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSLock.h:18:1: note: 'unlock()' declared here
+ 16 | 
+ 17 | /// Relinquishes a previously acquired lock.
+ 18 | - (void)unlock NS_SWIFT_UNAVAILABLE_FROM_ASYNC("Use async-safe scoped locking instead");
+    | `- note: 'unlock()' declared here
+ 19 | 
+ 20 | @end
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/RemoteBookNames.swift:39:14: warning: instance method 'lock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+37 |     static func ensure(_ t: ScriptureTranslation) async -> Bool {
+38 |         guard usesRemoteNames(t) else { return false }
+39 |         lock.lock()
+   |              `- warning: instance method 'lock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+40 |         let cached = memory[t.remoteId]
+41 |         lock.unlock()
+
+/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSLock.h:15:1: note: 'lock()' declared here
+ 13 | 
+ 14 | /// Attempts to acquire a lock, blocking a thread's execution until the lock can be acquired.
+ 15 | - (void)lock NS_SWIFT_UNAVAILABLE_FROM_ASYNC("Use async-safe scoped locking instead");
+    | `- note: 'lock()' declared here
+ 16 | 
+ 17 | /// Relinquishes a previously acquired lock.
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/RemoteBookNames.swift:41:14: warning: instance method 'unlock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+39 |         lock.lock()
+40 |         let cached = memory[t.remoteId]
+41 |         lock.unlock()
+   |              `- warning: instance method 'unlock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+42 |         if cached != nil { return false }
+43 |         let disk = readDisk(t.remoteId)
+
+/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSLock.h:18:1: note: 'unlock()' declared here
+ 16 | 
+ 17 | /// Relinquishes a previously acquired lock.
+ 18 | - (void)unlock NS_SWIFT_UNAVAILABLE_FROM_ASYNC("Use async-safe scoped locking instead");
+    | `- note: 'unlock()' declared here
+ 19 | 
+ 20 | @end
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/RemoteBookNames.swift:45:18: warning: instance method 'lock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+43 |         let disk = readDisk(t.remoteId)
+44 |         if !disk.isEmpty {
+45 |             lock.lock(); memory[t.remoteId] = disk; revision &+= 1; lock.unlock()
+   |                  `- warning: instance method 'lock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+46 |             return true
+47 |         }
+
+/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSLock.h:15:1: note: 'lock()' declared here
+ 13 | 
+ 14 | /// Attempts to acquire a lock, blocking a thread's execution until the lock can be acquired.
+ 15 | - (void)lock NS_SWIFT_UNAVAILABLE_FROM_ASYNC("Use async-safe scoped locking instead");
+    | `- note: 'lock()' declared here
+ 16 | 
+ 17 | /// Relinquishes a previously acquired lock.
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/RemoteBookNames.swift:45:74: warning: instance method 'unlock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+43 |         let disk = readDisk(t.remoteId)
+44 |         if !disk.isEmpty {
+45 |             lock.lock(); memory[t.remoteId] = disk; revision &+= 1; lock.unlock()
+   |                                                                          `- warning: instance method 'unlock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+46 |             return true
+47 |         }
+
+/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSLock.h:18:1: note: 'unlock()' declared here
+ 16 | 
+ 17 | /// Relinquishes a previously acquired lock.
+ 18 | - (void)unlock NS_SWIFT_UNAVAILABLE_FROM_ASYNC("Use async-safe scoped locking instead");
+    | `- note: 'unlock()' declared here
+ 19 | 
+ 20 | @end
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/RemoteBookNames.swift:62:14: warning: instance method 'lock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+60 |         }
+61 |         guard !map.isEmpty else { return false }
+62 |         lock.lock(); memory[t.remoteId] = map; revision &+= 1; lock.unlock()
+   |              `- warning: instance method 'lock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+63 |         writeDisk(t.remoteId, map)
+64 |         return true
+
+/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSLock.h:15:1: note: 'lock()' declared here
+ 13 | 
+ 14 | /// Attempts to acquire a lock, blocking a thread's execution until the lock can be acquired.
+ 15 | - (void)lock NS_SWIFT_UNAVAILABLE_FROM_ASYNC("Use async-safe scoped locking instead");
+    | `- note: 'lock()' declared here
+ 16 | 
+ 17 | /// Relinquishes a previously acquired lock.
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/Model/RemoteBookNames.swift:62:69: warning: instance method 'unlock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+60 |         }
+61 |         guard !map.isEmpty else { return false }
+62 |         lock.lock(); memory[t.remoteId] = map; revision &+= 1; lock.unlock()
+   |                                                                     `- warning: instance method 'unlock' is unavailable from asynchronous contexts; Use async-safe scoped locking instead; this is an error in the Swift 6 language mode
+63 |         writeDisk(t.remoteId, map)
+64 |         return true
+
+/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSLock.h:18:1: note: 'unlock()' declared here
+ 16 | 
+ 17 | /// Relinquishes a previously acquired lock.
+ 18 | - (void)unlock NS_SWIFT_UNAVAILABLE_FROM_ASYNC("Use async-safe scoped locking instead");
+    | `- note: 'unlock()' declared here
+ 19 | 
+ 20 | @end
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/CatalogView.swift:142:18: warning: 'onChange(of:perform:)' was deprecated in iOS 17.0: Use `onChange` with a two or zero parameter action closure instead. [#DeprecatedDeclaration]
+140 |         .background(GeometryReader { g in
+141 |             Color.clear.onAppear { railBottom = g.frame(in: .global).maxY }
+142 |                 .onChange(of: g.frame(in: .global).maxY) { railBottom = $0 }
+    |                  `- warning: 'onChange(of:perform:)' was deprecated in iOS 17.0: Use `onChange` with a two or zero parameter action closure instead. [#DeprecatedDeclaration]
+143 |         })
+144 |     }
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/Read/CatalogView.swift:564:18: warning: 'onChange(of:perform:)' was deprecated in iOS 17.0: Use `onChange` with a two or zero parameter action closure instead. [#DeprecatedDeclaration]
+562 |             Color.clear
+563 |                 .onAppear { underRail = railBottom > 0 && g.frame(in: .global).minY < railBottom }
+564 |                 .onChange(of: g.frame(in: .global).minY) { y in
+    |                  `- warning: 'onChange(of:perform:)' was deprecated in iOS 17.0: Use `onChange` with a two or zero parameter action closure instead. [#DeprecatedDeclaration]
+565 |                     underRail = railBottom > 0 && y < railBottom
+566 |                 }
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/AskBibleApp.swift:34:17: warning: cannot use generic class 'Autoconnect' in a property declaration member of a type not marked '@_implementationOnly'; 'Combine' was not imported by this file
+ 32 |     @Environment(\.scenePhase) private var scenePhase
+ 33 |     /// 15 秒一跳：使用时长打点 + 记当天为读经日；每三跳（45 秒）轮询一次同步（RN AppUsageTimeBridge / useMemberReadingSync）
+ 34 |     private let usageTicker = Timer.publish(every: 15, on: .main, in: .common).autoconnect()
+    |                 `- warning: cannot use generic class 'Autoconnect' in a property declaration member of a type not marked '@_implementationOnly'; 'Combine' was not imported by this file
+ 35 |     @State private var usageTicks = 0
+ 36 |     /// 界面语言跟系统走；读经展示语言再跟主译本走（英文译本 → 英文面）
+
+Combine.Publishers.Autoconnect:2:14: note: generic class declared here
+ 1 | enum Publishers {
+ 2 | public class Autoconnect<Upstream> : Publisher where Upstream : ConnectablePublisher {
+   |              `- note: generic class declared here
+ 3 |     public typealias Output = Upstream.Output
+ 4 |     public typealias Failure = Upstream.Failure
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/AskBibleApp.swift:34:17: warning: cannot use enum 'Publishers' in a property declaration member of a type not marked '@_implementationOnly'; 'Combine' was not imported by this file
+ 32 |     @Environment(\.scenePhase) private var scenePhase
+ 33 |     /// 15 秒一跳：使用时长打点 + 记当天为读经日；每三跳（45 秒）轮询一次同步（RN AppUsageTimeBridge / useMemberReadingSync）
+ 34 |     private let usageTicker = Timer.publish(every: 15, on: .main, in: .common).autoconnect()
+    |                 `- warning: cannot use enum 'Publishers' in a property declaration member of a type not marked '@_implementationOnly'; 'Combine' was not imported by this file
+ 35 |     @State private var usageTicks = 0
+ 36 |     /// 界面语言跟系统走；读经展示语言再跟主译本走（英文译本 → 英文面）
+
+Combine.Publishers:2:13: note: enum declared here
+1 | @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+2 | public enum Publishers {
+  |             `- note: enum declared here
+3 | }
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/AskBibleApp.swift:442:44: warning: 'weak' ownership of capture 'activity' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+431 |                 if usageTicks % 3 == 0 { sync.schedule(reason: "poll") }
+432 |             }
+433 |             .onAppear {
+    |                       |- note: 'activity' implicitly strongly captured here
+    |                       `- note: add 'activity' as a capture list item to silence
+434 |                 Task { await store.refreshRemoteCatalog() }
+435 |                 home.setSource(store.translation)
+    :
+440 |                 activity.noteForeground(); activity.touchHabitDay()
+441 |                 activity.mergeRemoteHabit(Array(plans.listenedDates))
+442 |                 audio.onProgress = { [weak activity, weak achievements] t, playing in
+    |                                            |- warning: 'weak' ownership of capture 'activity' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+    |                                            `- note: explicitly assign the capture list item to silence
+443 |                     activity?.noteListenProgress(positionSec: t, isPlaying: playing)
+444 |                     // 每 listenTickSeconds 给一次 XP：读经的时候进度条肉眼在动
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/AskBibleApp.swift:442:59: warning: 'weak' ownership of capture 'achievements' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+431 |                 if usageTicks % 3 == 0 { sync.schedule(reason: "poll") }
+432 |             }
+433 |             .onAppear {
+    |                       |- note: 'achievements' implicitly strongly captured here
+    |                       `- note: add 'achievements' as a capture list item to silence
+434 |                 Task { await store.refreshRemoteCatalog() }
+435 |                 home.setSource(store.translation)
+    :
+440 |                 activity.noteForeground(); activity.touchHabitDay()
+441 |                 activity.mergeRemoteHabit(Array(plans.listenedDates))
+442 |                 audio.onProgress = { [weak activity, weak achievements] t, playing in
+    |                                                           |- warning: 'weak' ownership of capture 'achievements' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+    |                                                           `- note: explicitly assign the capture list item to silence
+443 |                     activity?.noteListenProgress(positionSec: t, isPlaying: playing)
+444 |                     // 每 listenTickSeconds 给一次 XP：读经的时候进度条肉眼在动
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/AskBibleApp.swift:462:44: warning: 'weak' ownership of capture 'music' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+431 |                 if usageTicks % 3 == 0 { sync.schedule(reason: "poll") }
+432 |             }
+433 |             .onAppear {
+    |                       |- note: 'music' implicitly strongly captured here
+    |                       `- note: add 'music' as a capture list item to silence
+434 |                 Task { await store.refreshRemoteCatalog() }
+435 |                 home.setSource(store.translation)
+    :
+460 |                 // 开音乐 / 开金句时另外两路都在 → 关环境音；开环境音时人声与音乐都在 → 停音乐。
+461 |                 // 读经朗读与音乐可以同时放：音乐压到 30%，不再直接暂停（Josh 2026-09-11）；金句人声仍然互斥
+462 |                 audio.onWillPlay = { [weak music, weak home] in music?.setDucked(true); home?.stopVoice() }
+    |                                            |- warning: 'weak' ownership of capture 'music' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+    |                                            `- note: explicitly assign the capture list item to silence
+463 |                 audio.onStopped = { [weak music] in music?.setDucked(false) }
+464 |                 music.onWillPlay = { [weak audio, weak home, weak ambient] in
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/AskBibleApp.swift:462:56: warning: 'weak' ownership of capture 'home' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+431 |                 if usageTicks % 3 == 0 { sync.schedule(reason: "poll") }
+432 |             }
+433 |             .onAppear {
+    |                       |- note: 'home' implicitly strongly captured here
+    |                       `- note: add 'home' as a capture list item to silence
+434 |                 Task { await store.refreshRemoteCatalog() }
+435 |                 home.setSource(store.translation)
+    :
+460 |                 // 开音乐 / 开金句时另外两路都在 → 关环境音；开环境音时人声与音乐都在 → 停音乐。
+461 |                 // 读经朗读与音乐可以同时放：音乐压到 30%，不再直接暂停（Josh 2026-09-11）；金句人声仍然互斥
+462 |                 audio.onWillPlay = { [weak music, weak home] in music?.setDucked(true); home?.stopVoice() }
+    |                                                        |- warning: 'weak' ownership of capture 'home' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+    |                                                        `- note: explicitly assign the capture list item to silence
+463 |                 audio.onStopped = { [weak music] in music?.setDucked(false) }
+464 |                 music.onWillPlay = { [weak audio, weak home, weak ambient] in
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/AskBibleApp.swift:463:43: warning: 'weak' ownership of capture 'music' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+431 |                 if usageTicks % 3 == 0 { sync.schedule(reason: "poll") }
+432 |             }
+433 |             .onAppear {
+    |                       |- note: 'music' implicitly strongly captured here
+    |                       `- note: add 'music' as a capture list item to silence
+434 |                 Task { await store.refreshRemoteCatalog() }
+435 |                 home.setSource(store.translation)
+    :
+461 |                 // 读经朗读与音乐可以同时放：音乐压到 30%，不再直接暂停（Josh 2026-09-11）；金句人声仍然互斥
+462 |                 audio.onWillPlay = { [weak music, weak home] in music?.setDucked(true); home?.stopVoice() }
+463 |                 audio.onStopped = { [weak music] in music?.setDucked(false) }
+    |                                           |- warning: 'weak' ownership of capture 'music' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+    |                                           `- note: explicitly assign the capture list item to silence
+464 |                 music.onWillPlay = { [weak audio, weak home, weak ambient] in
+465 |                     // 音乐起播时朗读在放 → 保持两路，音乐压低
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/AskBibleApp.swift:464:44: warning: 'weak' ownership of capture 'audio' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+431 |                 if usageTicks % 3 == 0 { sync.schedule(reason: "poll") }
+432 |             }
+433 |             .onAppear {
+    |                       |- note: 'audio' implicitly strongly captured here
+    |                       `- note: add 'audio' as a capture list item to silence
+434 |                 Task { await store.refreshRemoteCatalog() }
+435 |                 home.setSource(store.translation)
+    :
+462 |                 audio.onWillPlay = { [weak music, weak home] in music?.setDucked(true); home?.stopVoice() }
+463 |                 audio.onStopped = { [weak music] in music?.setDucked(false) }
+464 |                 music.onWillPlay = { [weak audio, weak home, weak ambient] in
+    |                                            |- warning: 'weak' ownership of capture 'audio' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+    |                                            `- note: explicitly assign the capture list item to silence
+465 |                     // 音乐起播时朗读在放 → 保持两路，音乐压低
+466 |                     music.setDucked(audio?.isPlaying ?? false)
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/AskBibleApp.swift:464:56: warning: 'weak' ownership of capture 'home' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+431 |                 if usageTicks % 3 == 0 { sync.schedule(reason: "poll") }
+432 |             }
+433 |             .onAppear {
+    |                       |- note: 'home' implicitly strongly captured here
+    |                       `- note: add 'home' as a capture list item to silence
+434 |                 Task { await store.refreshRemoteCatalog() }
+435 |                 home.setSource(store.translation)
+    :
+462 |                 audio.onWillPlay = { [weak music, weak home] in music?.setDucked(true); home?.stopVoice() }
+463 |                 audio.onStopped = { [weak music] in music?.setDucked(false) }
+464 |                 music.onWillPlay = { [weak audio, weak home, weak ambient] in
+    |                                                        |- warning: 'weak' ownership of capture 'home' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+    |                                                        `- note: explicitly assign the capture list item to silence
+465 |                     // 音乐起播时朗读在放 → 保持两路，音乐压低
+466 |                     music.setDucked(audio?.isPlaying ?? false)
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/AskBibleApp.swift:464:67: warning: 'weak' ownership of capture 'ambient' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+431 |                 if usageTicks % 3 == 0 { sync.schedule(reason: "poll") }
+432 |             }
+433 |             .onAppear {
+    |                       |- note: 'ambient' implicitly strongly captured here
+    |                       `- note: add 'ambient' as a capture list item to silence
+434 |                 Task { await store.refreshRemoteCatalog() }
+435 |                 home.setSource(store.translation)
+    :
+462 |                 audio.onWillPlay = { [weak music, weak home] in music?.setDucked(true); home?.stopVoice() }
+463 |                 audio.onStopped = { [weak music] in music?.setDucked(false) }
+464 |                 music.onWillPlay = { [weak audio, weak home, weak ambient] in
+    |                                                                   |- warning: 'weak' ownership of capture 'ambient' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+    |                                                                   `- note: explicitly assign the capture list item to silence
+465 |                     // 音乐起播时朗读在放 → 保持两路，音乐压低
+466 |                     music.setDucked(audio?.isPlaying ?? false)
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/AskBibleApp.swift:469:50: warning: 'weak' ownership of capture 'audio' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+431 |                 if usageTicks % 3 == 0 { sync.schedule(reason: "poll") }
+432 |             }
+433 |             .onAppear {
+    |                       |- note: 'audio' implicitly strongly captured here
+    |                       `- note: add 'audio' as a capture list item to silence
+434 |                 Task { await store.refreshRemoteCatalog() }
+435 |                 home.setSource(store.translation)
+    :
+467 |                     if home?.voiceOn == true, ambient?.isOn == true { ambient?.stop() }
+468 |                 }
+469 |                 home.player.onWillPlay = { [weak audio, weak music, weak ambient] in
+    |                                                  |- warning: 'weak' ownership of capture 'audio' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+    |                                                  `- note: explicitly assign the capture list item to silence
+470 |                     audio?.pause()
+471 |                     if music?.isPlaying == true, ambient?.isOn == true { ambient?.stop() }
+
+
+SwiftCompile normal arm64 (in target 'AskBible' from project 'AskBible')
+    cd /tmp/askbible-selection-release/apps/askbible-ios
+    
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/AskBibleApp.swift:469:62: warning: 'weak' ownership of capture 'music' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+431 |                 if usageTicks % 3 == 0 { sync.schedule(reason: "poll") }
+432 |             }
+433 |             .onAppear {
+    |                       |- note: 'music' implicitly strongly captured here
+    |                       `- note: add 'music' as a capture list item to silence
+434 |                 Task { await store.refreshRemoteCatalog() }
+435 |                 home.setSource(store.translation)
+    :
+467 |                     if home?.voiceOn == true, ambient?.isOn == true { ambient?.stop() }
+468 |                 }
+469 |                 home.player.onWillPlay = { [weak audio, weak music, weak ambient] in
+    |                                                              |- warning: 'weak' ownership of capture 'music' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+    |                                                              `- note: explicitly assign the capture list item to silence
+470 |                     audio?.pause()
+471 |                     if music?.isPlaying == true, ambient?.isOn == true { ambient?.stop() }
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/AskBibleApp.swift:469:74: warning: 'weak' ownership of capture 'ambient' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+431 |                 if usageTicks % 3 == 0 { sync.schedule(reason: "poll") }
+432 |             }
+433 |             .onAppear {
+    |                       |- note: 'ambient' implicitly strongly captured here
+    |                       `- note: add 'ambient' as a capture list item to silence
+434 |                 Task { await store.refreshRemoteCatalog() }
+435 |                 home.setSource(store.translation)
+    :
+467 |                     if home?.voiceOn == true, ambient?.isOn == true { ambient?.stop() }
+468 |                 }
+469 |                 home.player.onWillPlay = { [weak audio, weak music, weak ambient] in
+    |                                                                          |- warning: 'weak' ownership of capture 'ambient' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+    |                                                                          `- note: explicitly assign the capture list item to silence
+470 |                     audio?.pause()
+471 |                     if music?.isPlaying == true, ambient?.isOn == true { ambient?.stop() }
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/AskBibleApp.swift:473:46: warning: 'weak' ownership of capture 'audio' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+431 |                 if usageTicks % 3 == 0 { sync.schedule(reason: "poll") }
+432 |             }
+433 |             .onAppear {
+    |                       |- note: 'audio' implicitly strongly captured here
+    |                       `- note: add 'audio' as a capture list item to silence
+434 |                 Task { await store.refreshRemoteCatalog() }
+435 |                 home.setSource(store.translation)
+    :
+471 |                     if music?.isPlaying == true, ambient?.isOn == true { ambient?.stop() }
+472 |                 }
+473 |                 ambient.onWillPlay = { [weak audio, weak home, weak music] in
+    |                                              |- warning: 'weak' ownership of capture 'audio' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+    |                                              `- note: explicitly assign the capture list item to silence
+474 |                     let voice = (home?.voiceOn ?? false) || (audio?.isPlaying ?? false)
+475 |                     if voice, music?.isPlaying == true { music?.pause() }
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/AskBibleApp.swift:473:58: warning: 'weak' ownership of capture 'home' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+431 |                 if usageTicks % 3 == 0 { sync.schedule(reason: "poll") }
+432 |             }
+433 |             .onAppear {
+    |                       |- note: 'home' implicitly strongly captured here
+    |                       `- note: add 'home' as a capture list item to silence
+434 |                 Task { await store.refreshRemoteCatalog() }
+435 |                 home.setSource(store.translation)
+    :
+471 |                     if music?.isPlaying == true, ambient?.isOn == true { ambient?.stop() }
+472 |                 }
+473 |                 ambient.onWillPlay = { [weak audio, weak home, weak music] in
+    |                                                          |- warning: 'weak' ownership of capture 'home' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+    |                                                          `- note: explicitly assign the capture list item to silence
+474 |                     let voice = (home?.voiceOn ?? false) || (audio?.isPlaying ?? false)
+475 |                     if voice, music?.isPlaying == true { music?.pause() }
+
+/tmp/askbible-selection-release/apps/askbible-ios/AskBible/AskBibleApp.swift:473:69: warning: 'weak' ownership of capture 'music' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+431 |                 if usageTicks % 3 == 0 { sync.schedule(reason: "poll") }
+432 |             }
+433 |             .onAppear {
+    |                       |- note: 'music' implicitly strongly captured here
+    |                       `- note: add 'music' as a capture list item to silence
+434 |                 Task { await store.refreshRemoteCatalog() }
+435 |                 home.setSource(store.translation)
+    :
+471 |                     if music?.isPlaying == true, ambient?.isOn == true { ambient?.stop() }
+472 |                 }
+473 |                 ambient.onWillPlay = { [weak audio, weak home, weak music] in
+    |                                                                     |- warning: 'weak' ownership of capture 'music' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+    |                                                                     `- note: explicitly assign the capture list item to silence
+474 |                     let voice = (home?.voiceOn ?? false) || (audio?.isPlaying ?? false)
+475 |                     if voice, music?.isPlaying == true { music?.pause() }
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+[#ImplicitStrongCapture]: <https://docs.swift.org/compiler/documentation/diagnostics/implicit-strong-capture>
+SwiftDriver\ Compilation AskBible normal arm64 com.apple.xcode.tools.swift.compiler (in target 'AskBible' from project 'AskBible')
+    cd /tmp/askbible-selection-release/apps/askbible-ios
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name AskBible -O -whole-module-optimization @/tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.SwiftFileList -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk -target arm64-apple-ios17.0 -g -module-cache-path /tmp/askbible-selection-device-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -swift-version 5 -I /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos -F /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos -emit-localized-strings -emit-localized-strings-path /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64 -c -num-threads 18 -Xcc -ivfsstatcache -Xcc /tmp/askbible-selection-device-build/SDKStatCaches.noindex/iphoneos27.2-24B8118-6890c9e4970e00494a266ff652f095d9.sdkstatcache -output-file-map /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/askbible-selection-device-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/askbible-selection-device-build/ModuleCache.noindex -sdk-module-cache-path /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/askbible-selection-device-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/AskBible-generated-files.hmap -Xcc -I/tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/AskBible-own-target-headers.hmap -Xcc -I/tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/AskBible-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/AskBible-project-headers.hmap -Xcc -I/tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/include -Xcc -I/tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/DerivedSources-normal/arm64 -Xcc -I/tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/DerivedSources/arm64 -Xcc -I/tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/DerivedSources -emit-objc-header -emit-objc-header-path /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible-Swift.h -working-directory /tmp/askbible-selection-release/apps/askbible-ios -no-emit-module-separately-wmo
+
+SwiftDriverJobDiscovery normal arm64 Compiling AmbientPlayer.swift, AmbientScenes.swift, AudioSessionPolicy.swift, ChapterAudioPlayer.swift, ChapterAudioSource.swift, GoldenVerseAudioSource.swift, GoldenVersePlayer.swift, MusicAudioSource.swift, MusicPlayer.swift, MusicResumeState.swift, RemoteControlHub.swift, VerseTimings.swift, AuthViews.swift, SocialSignIn.swift, ExploreArticleView.swift, ExploreView.swift, MarkdownBody.swift, HomeSceneVideo.swift, HomeVerseController.swift, HomeVersePool.swift, HomeView.swift, NatureHomePrefs.swift, AchievementFeedback.swift, AchievementStore.swift, AppLocale.swift, BibleCatalog.swift, BiblePanorama.swift, ChapterSegments.swift, Endpoints.swift, ExploreArticleCatalog.swift, ExploreArticles.swift, InfoEditionDatabase.swift, InfoEditionDownloader.swift, InfoEditionFormat.swift, LanguageOrder.swift, LocaleTables.swift, MedalCatalog.swift, MemberAuth.swift, MemberAuthStore.swift, MemberOAuth.swift, MemberReadingSync.swift, MemberReadingSyncEngine.swift, MusicCatalog.swift, MusicVisuals.swift, NatureScenes.swift, PlanPlay.swift, ReadingActivityStore.swift, ReadingPlanCatalog.swift, ReadingPlans.swift, RemoteBookNames.swift, RemoteChapterStore.swift, RemoteTranslations.swift, ScriptureDatabase.swift, ScriptureModels.swift, ScriptureSearch.swift, ScriptureStore.swift, ScriptureTranslation.swift, SiteCopy.swift, TranslationCatalog.swift, TranslationDownloader.swift, TranslationPrefs.swift, VerseAnnotations.swift, VerseBookmarks.swift, VerseDisplayNotes.swift, VerseTextHighlights.swift, MusicSceneViews.swift, MusicView.swift, WelcomeView.swift, BiblePanoramaView.swift, AchievementsView.swift, AchievementViews.swift, CatalogView.swift, ChapterFlowParagraph.swift, ChapterView.swift, FavoritesView.swift, HighlightBar.swift, MedalDetailView.swift, NativeChapterText.swift, PlanDetailView.swift, PlanPlayView.swift, PlansListView.swift, PlanWidgets.swift, PlaybackDock.swift, PostReadingEditions.swift, ReadingPlanStore.swift, RoundedHighlightText.swift, SearchView.swift, VerseActionSheet.swift, VerseSentences.swift, VerseXrefSheet.swift, AppUpdateGate.swift, ConfirmSheet.swift, NavDrawer.swift, ParchmentBackground.swift, ParchmentFade.swift, ReadingReminder.swift, ShellTabBar.swift, SiblingAppsSection.swift, TimePickerSheet.swift, AppTextSizing.swift, AskGlass.swift, MaterialIcon.swift, ParchmentTheme.swift, ReadTypography.swift, TouchObserver.swift, AskBibleApp.swift, GeneratedAssetSymbols.swift (in target 'AskBible' from project 'AskBible')
+
+SwiftDriver\ Compilation\ Requirements AskBible normal arm64 com.apple.xcode.tools.swift.compiler (in target 'AskBible' from project 'AskBible')
+    cd /tmp/askbible-selection-release/apps/askbible-ios
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name AskBible -O -whole-module-optimization @/tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.SwiftFileList -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk -target arm64-apple-ios17.0 -g -module-cache-path /tmp/askbible-selection-device-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -swift-version 5 -I /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos -F /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos -emit-localized-strings -emit-localized-strings-path /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64 -c -num-threads 18 -Xcc -ivfsstatcache -Xcc /tmp/askbible-selection-device-build/SDKStatCaches.noindex/iphoneos27.2-24B8118-6890c9e4970e00494a266ff652f095d9.sdkstatcache -output-file-map /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/askbible-selection-device-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/askbible-selection-device-build/ModuleCache.noindex -sdk-module-cache-path /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/askbible-selection-device-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/AskBible-generated-files.hmap -Xcc -I/tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/AskBible-own-target-headers.hmap -Xcc -I/tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/AskBible-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/AskBible-project-headers.hmap -Xcc -I/tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/include -Xcc -I/tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/DerivedSources-normal/arm64 -Xcc -I/tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/DerivedSources/arm64 -Xcc -I/tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/DerivedSources -emit-objc-header -emit-objc-header-path /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible-Swift.h -working-directory /tmp/askbible-selection-release/apps/askbible-ios -no-emit-module-separately-wmo
+
+Copy /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.swiftsourceinfo (in target 'AskBible' from project 'AskBible')
+    cd /tmp/askbible-selection-release/apps/askbible-ios
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.swiftsourceinfo /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+Ld /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app/AskBible normal (in target 'AskBible' from project 'AskBible')
+    cd /tmp/askbible-selection-release/apps/askbible-ios
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios17.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk -Os -Xlinker -no_warn_duplicate_libraries -L/tmp/askbible-selection-device-build/Build/Intermediates.noindex/EagerLinkingTBDs/Release-iphoneos -L/tmp/askbible-selection-device-build/Build/Products/Release-iphoneos -F/tmp/askbible-selection-device-build/Build/Intermediates.noindex/EagerLinkingTBDs/Release-iphoneos -F/tmp/askbible-selection-device-build/Build/Products/Release-iphoneos -filelist /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.LinkFileList -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @executable_path/Frameworks -Xlinker -dead_strip -Xlinker -object_path_lto -Xlinker /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible_lto.o -Xlinker -dependency_info -Xlinker /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.swiftmodule -lsqlite3 -framework WidgetKit -Xlinker -no_adhoc_codesign -o /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app/AskBible
+
+Copy /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.swiftmodule/arm64-apple-ios.swiftmodule /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.swiftmodule (in target 'AskBible' from project 'AskBible')
+    cd /tmp/askbible-selection-release/apps/askbible-ios
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.swiftmodule /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.swiftmodule/arm64-apple-ios.swiftmodule
+
+Copy /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.swiftmodule/arm64-apple-ios.abi.json /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.abi.json (in target 'AskBible' from project 'AskBible')
+    cd /tmp/askbible-selection-release/apps/askbible-ios
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.abi.json /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.swiftmodule/arm64-apple-ios.abi.json
+
+Copy /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app/PlugIns/AskBibleWidget.appex /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBibleWidget.appex (in target 'AskBible' from project 'AskBible')
+    cd /tmp/askbible-selection-release/apps/askbible-ios
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks -remove-static-executable /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBibleWidget.appex /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app/PlugIns
+
+ExtractAppIntentsMetadata (in target 'AskBible' from project 'AskBible')
+    cd /tmp/askbible-selection-release/apps/askbible-ios
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name AskBible --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk --xcode-version 27B52 --platform-family iOS --deployment-target 17.0 --bundle-identifier me.askbible --output /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app --target-triple arm64-apple-ios17.0 --binary-file /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app/AskBible --dependency-file /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible_dependency_info.dat --stringsdata-file /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.SwiftFileList --metadata-file-list /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/AskBible.DependencyMetadataFileList --static-metadata-file-list /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/AskBible.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/Objects-normal/arm64/AskBible.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --no-app-shortcuts-localization
+2026-11-07 21:56:18.120 appintentsmetadataprocessor[90491:63542039] Starting App Intents metadata extraction
+2026-11-07 21:56:18.176 appintentsmetadataprocessor[90491:63542039] Extracted no relevant App Intents symbols, skipping writing output
+
+ProcessInfoPlistFile /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app/Info.plist /tmp/askbible-selection-release/apps/askbible-ios/Info.plist (in target 'AskBible' from project 'AskBible')
+    cd /tmp/askbible-selection-release/apps/askbible-ios
+    builtin-infoPlistUtility /tmp/askbible-selection-release/apps/askbible-ios/Info.plist -producttype com.apple.product-type.application -genpkginfo /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app/PkgInfo -expandbuildsettings -format binary -platform iphoneos -additionalcontentfile /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/assetcatalog_generated_info.plist -scanforprivacyfile /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app/PlugIns/AskBibleWidget.appex -requiredArchitecture arm64 -o /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app/Info.plist
+
+CopySwiftLibs /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app (in target 'AskBible' from project 'AskBible')
+    cd /tmp/askbible-selection-release/apps/askbible-ios
+    builtin-swiftStdLibTool --copy --verbose --sign 62305EB9041AC68F6350D9C56408DA30F92BDA17 --scan-executable /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app/AskBible --scan-folder /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app/Frameworks --scan-folder /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app/PlugIns --scan-folder /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app/SystemExtensions --scan-folder /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app/Extensions --scan-folder /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.2.sdk/System/Library/Frameworks/WidgetKit.framework --platform iphoneos --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os --back-deploy-swift-span
+
+GenerateDSYMFile /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app.dSYM /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app/AskBible (in target 'AskBible' from project 'AskBible')
+    cd /tmp/askbible-selection-release/apps/askbible-ios
+    export PATH\=/Applications/Xcode.app/Contents/SharedFrameworks/SwiftBuild.framework/Versions/A/PlugIns/SWBBuildService.bundle/Contents/PlugIns/SWBUniversalPlatformPlugin.bundle/Contents/Frameworks/SWBUniversalPlatform.framework/Resources:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/local/bin:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/usr/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/usr/local/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/local/bin:/Applications/Xcode.app/Contents/Developer/usr/bin:/Applications/Xcode.app/Contents/Developer/usr/local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/Applications/ChatGPT.app/Contents/Resources/codex-cli/codex-path:/Users/joshua/.codex/tmp/arg0-macos/codex-arg0ZCLvS3:/Users/joshua/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override:/Users/joshua/.local/bin:/Users/joshua/.grok/bin:/Users/joshua/Library/pnpm/bin:/opt/homebrew/opt/openjdk@17/bin:/Users/joshua/Library/Android/sdk/platform-tools:/Users/joshua/Library/Android/sdk/emulator:/Users/joshua/.cargo/bin:/Users/joshua/.lmstudio/bin:/Users/joshua/.maestro/bin:/Users/joshua/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/fallback:/Applications/ChatGPT.app/Contents/Resources:/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app/AskBible -o /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app.dSYM
+
+CodeSign /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app (in target 'AskBible' from project 'AskBible')
+    cd /tmp/askbible-selection-release/apps/askbible-ios
+    
+    Signing Identity:     "Apple Development: Created via API (9HDA27WY8C)"
+    Provisioning Profile: "iOS Team Provisioning Profile: me.askbible"
+                          (49c6e892-e156-40af-b45f-4ebedd004656)
+    
+    /usr/bin/codesign --force --sign 62305EB9041AC68F6350D9C56408DA30F92BDA17 --entitlements /tmp/askbible-selection-device-build/Build/Intermediates.noindex/AskBible.build/Release-iphoneos/AskBible.build/AskBible.app.xcent --timestamp\=none --generate-entitlement-der --strip-disallowed-xattrs /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app
+
+Validate /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app (in target 'AskBible' from project 'AskBible')
+    cd /tmp/askbible-selection-release/apps/askbible-ios
+    builtin-validationUtility /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app -validate-for-store -shallow-bundle -infoplist-subpath Info.plist
+
+ValidateEmbeddedBinary /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app/PlugIns/AskBibleWidget.appex (in target 'AskBible' from project 'AskBible')
+    cd /tmp/askbible-selection-release/apps/askbible-ios
+    /Applications/Xcode.app/Contents/Developer/usr/bin/embeddedBinaryValidationUtility /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app/PlugIns/AskBibleWidget.appex -signing-cert 62305EB9041AC68F6350D9C56408DA30F92BDA17 -info-plist-path /tmp/askbible-selection-device-build/Build/Products/Release-iphoneos/AskBible.app/Info.plist
+
+PruneExplicitPrecompiledModules /tmp/askbible-selection-device-build/SDKExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/askbible-selection-device-build/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/askbible-selection-device-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+** BUILD SUCCEEDED **
+

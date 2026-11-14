@@ -1,0 +1,11 @@
+appId: me.askbible
+---
+- launchApp
+- tapOn: "全景"
+- assertVisible: "圣经全景"
+- takeScreenshot: /tmp/askbible-panorama-fullscreen
+- tapOn: "圣经"
+- assertVisible: "旧约"
+- takeScreenshot: /tmp/askbible-catalog-fullscreen
+- tapOn: "全景"
+- assertVisible: "圣经全景"

@@ -1,0 +1,15 @@
+Swift music resume: round trip, stable IDs, missing song, malformed state, positions, paused state, sleep expiry passed
+> Task :core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:compileKotlin UP-TO-DATE
+> Task :core:compileJava NO-SOURCE
+> Task :core:processResources NO-SOURCE
+> Task :core:classes UP-TO-DATE
+> Task :core:jar UP-TO-DATE
+> Task :core:processTestResources NO-SOURCE
+> Task :core:compileTestKotlin
+> Task :core:compileTestJava NO-SOURCE
+> Task :core:testClasses UP-TO-DATE
+> Task :core:test
+
+BUILD SUCCESSFUL in 3s
+4 actionable tasks: 2 executed, 2 up-to-date

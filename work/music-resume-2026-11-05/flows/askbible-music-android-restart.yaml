@@ -1,0 +1,34 @@
+appId: me.askbible.musicqa
+---
+- launchApp:
+    clearState: false
+- tapOn: "选音乐"
+- assertVisible: "暂停音乐"
+- takeScreenshot: /tmp/askbible-music-android-resumed
+- tapOn: "暂停音乐"
+- assertVisible: "播放音乐"
+- takeScreenshot: /tmp/askbible-music-android-paused
+- stopApp
+- launchApp:
+    clearState: false
+- tapOn: "选音乐"
+- assertVisible: "播放音乐"
+- takeScreenshot: /tmp/askbible-music-android-paused-restart
+- tapOn: "下一首"
+- assertVisible: "播放音乐"
+- takeScreenshot: /tmp/askbible-music-android-next-paused
+- tapOn: "休闲"
+- tapOn: "播放音乐"
+- assertVisible: "暂停音乐"
+- tapOn:
+    text: "下一首"
+    repeat: 3
+    delay: 150
+- assertVisible: "暂停音乐"
+- takeScreenshot: /tmp/askbible-music-android-album-next
+- tapOn: "暂停音乐"
+- back
+- tapOn: "下一首"
+- tapOn: "选音乐"
+- assertVisible: "播放音乐"
+- takeScreenshot: /tmp/askbible-music-android-home-next

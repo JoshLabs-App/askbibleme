@@ -1,0 +1,36 @@
+{
+  "verifiedAt": "2026-11-05T17:11:19.052Z",
+  "version": [
+    {
+      "id": "515255df-2b4c-4976-a369-f387a1bb12d8",
+      "platform": "IOS",
+      "versionString": "1.1.8",
+      "appStoreState": "WAITING_FOR_REVIEW",
+      "appVersionState": "WAITING_FOR_REVIEW",
+      "copyright": "2026 AskBible.me",
+      "reviewType": "APP_STORE",
+      "releaseType": "AFTER_APPROVAL",
+      "earliestReleaseDate": null,
+      "usesIdfa": null,
+      "downloadable": true,
+      "createdDate": "2026-11-05T08:46:32-08:00",
+      "build": {
+        "type": "builds",
+        "id": "cd103ab6-d1fd-4f3d-b86c-55ca687c3e7b"
+      }
+    }
+  ],
+  "builds": [
+    {
+      "id": "cd103ab6-d1fd-4f3d-b86c-55ca687c3e7b",
+      "version": "141",
+      "processingState": "VALID"
+    }
+  ],
+  "review": {
+    "id": "fb9f5d4e-bd05-48d2-8965-9cb0c890abdd",
+    "platform": "IOS",
+    "submittedDate": "2026-11-05T16:47:27.353Z",
+    "state": "WAITING_FOR_REVIEW"
+  }
+}

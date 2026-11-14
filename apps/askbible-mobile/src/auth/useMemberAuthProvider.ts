@@ -9,6 +9,7 @@ import { getLocale } from "../i18n/locale-store";
 import { exchangeAppleNativeCredential } from "./appleSignInExchange";
 import { signInWithAppleNative } from "./appleSignIn";
 import { signInWithGoogleMobile } from "./googleSignIn";
+import { signInWithOtpInApp, verifyOtpInApp } from "./supabaseMemberAuth";
 import { commitMemberSession } from "./memberAuthSessionCommit";
 import {
   clearMemberSession,
@@ -50,6 +51,45 @@ export function useMemberAuthProvider() {
       return { ok: true as const };
     } catch {
       return { ok: false as const, error: "network" };
+    }
+  }, []);
+
+  const signInWithOtp = useCallback(async (email: string) => {
+    try {
+      const result = await signInWithOtpInApp(email);
+      if (!result.ok) {
+        return {
+          ok: false as const,
+          error: result.error || "send_otp_failed",
+          code: result.code,
+          status: result.status,
+        };
+      }
+      return { ok: true as const };
+    } catch {
+      return { ok: false as const, error: "network", code: "network" };
+    }
+  }, []);
+
+  const verifyOtp = useCallback(async (input: { email: string; token: string }) => {
+    try {
+      const result = await verifyOtpInApp({ ...input, locale: getLocale() });
+      if (!result.ok) {
+        return {
+          ok: false as const,
+          error: result.error,
+          code: result.code,
+        };
+      }
+      const nextUser = await commitMemberSession({
+        sessionToken: result.sessionToken,
+        expiresAt: result.expiresAt,
+        user: result.user,
+      });
+      setUser(nextUser);
+      return { ok: true as const };
+    } catch {
+      return { ok: false as const, error: "network", code: "network" };
     }
   }, []);
 
@@ -252,6 +292,8 @@ export function useMemberAuthProvider() {
       user,
       syncSessionFromStorage,
       signIn,
+      signInWithOtp,
+      verifyOtp,
       signInWithGoogle,
       signInWithApple,
       updateLocalDisplayName,
@@ -264,6 +306,8 @@ export function useMemberAuthProvider() {
       user,
       syncSessionFromStorage,
       signIn,
+      signInWithOtp,
+      verifyOtp,
       signInWithGoogle,
       signInWithApple,
       updateLocalDisplayName,

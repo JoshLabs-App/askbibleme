@@ -1,5 +1,10 @@
 package me.askbible.native_
 
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
+
 import me.askbible.native_.data.SiteCopy
 import me.askbible.native_.data.EndpointsStore
 import me.askbible.native_.data.TranslationDownloader
@@ -130,6 +135,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        applyDeviceWindow()
         // 防封换线：先同步读出上次探通的线路，后面拼地址才不会打到已经不通的域
         EndpointsStore.attach(this)
         // 全量在线译本目录先读盘：记住的远端译本要在 TranslationPrefs 解析之前就认得
@@ -140,11 +146,29 @@ class MainActivity : ComponentActivity() {
         // 记下「首次运行」时间，好评邀请要用（装机满 3 天才问）
         RatePrompt.noteLaunch(this)
         setContent {
+            me.askbible.native_.ui.AppTextSizingHost {
             RootScreen()
             // 站外分发版的自助更新弹窗；Play / sideload 变体里是空操作
             UpdateGate()
             // 商店版 → 站外版的迁移提示；默认关，开关在远端 migrate.json
             MigrateGate.Host()
+            }
+        }
+    }
+
+    /** 电视：横屏 + 隐藏系统栏全屏铺满；手机：保持竖屏 */
+    private fun applyDeviceWindow() {
+        val ui = getSystemService(android.content.Context.UI_MODE_SERVICE) as? android.app.UiModeManager
+        val isTv = ui?.currentModeType == android.content.res.Configuration.UI_MODE_TYPE_TELEVISION
+        if (!isTv) {
+            requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            return
+        }
+        requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(0xFFFFB101.toInt()))
+        androidx.core.view.WindowCompat.getInsetsController(window, window.decorView).apply {
+            hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
     }
 
@@ -178,6 +202,8 @@ private fun RootScreen() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var tab by remember { mutableStateOf(ShellTab.HOME) }
+    val tabState = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
+    var panoramaLocate by remember { mutableIntStateOf(0) }
     var size by remember { mutableStateOf(ReadSize.DEFAULT) }
     // 译本选择跨启动记住（RN selah_read_bible_translation_v1）
     val translationPrefs = remember { TranslationPrefs(context) }
@@ -282,6 +308,11 @@ private fun RootScreen() {
     // 计划 Tab（底栏中央键）里的子页：play / plans / detail
     var planRoute by remember { mutableStateOf("play") }
     // 每日灵修页正在看的那天（计划页卡片点进来时带入）
+    val devotionalPrefs = remember { context.getSharedPreferences("devotional", android.content.Context.MODE_PRIVATE) }
+    var autoReadDevotional by remember { mutableStateOf(devotionalPrefs.getBoolean("after-reading", false)) }
+    var planListeningDate by remember { mutableStateOf<LocalDate?>(null) }
+    val currentDevotionalAccess = androidx.compose.runtime.rememberUpdatedState(
+        me.askbible.native_.data.SolidJoys.availableFor(appLocale, auth.isAdmin))
     var devotionalDate by remember { mutableStateOf(java.time.LocalDate.now()) }
     var planDetailId by remember { mutableStateOf("") }
     // 播放页状态：日历上看的那天（相对系统今天）与选中的章
@@ -391,6 +422,28 @@ private fun RootScreen() {
         autoPlayPending = autoPlay
         listenBook = b; listenChapter = p.chapter
     }
+    // 装载某章的朗读音源（同一章重复调用是空操作）。章页 / 播放页换章时由 LaunchedEffect 调；
+    // 自动跳章时 skipNext 直接调——关屏后 Activity 停了，Compose 不重组、LaunchedEffect 不跑，
+    // 只改状态的话第一章播完就停，亮屏才接下一章（Josh 2026-10-13 每日读经关屏只读一章）。
+    suspend fun loadChapterAudio(b: BookRef, ch: Int, keepPlaying: Boolean = false) {
+        val url = ChapterAudioSource.resolve(translation.id, b.id, b.number, b.nameEn, ch) ?: return
+        val key = "${translation.id}.${b.id}.$ch"
+        val title = ReadChrome.chapterTitle(bookLabel(b), ch, readChromeLocale)
+        if (ChapterAudioSource.isResolverUrl(url)) {
+            // YouVersion 译本：先问网站代理拿 CDN mp3，再装载
+            audio.beginResolving(key, title, keepPlaying)
+            val src = withContext(Dispatchers.IO) { ChapterAudioSource.fetchResolved(url, key) }
+            if (src != null) audio.load(src, key, title, translation.id, b.id, ch, resolved = true, keepPlaying = keepPlaying)
+            else audio.failResolving(key)
+        } else {
+            audio.load(url, key, title, translation.id, b.id, ch, keepPlaying = keepPlaying)
+        }
+    }
+    // 自动跳章：不等重组，立刻装下一章并起播
+    fun playChapterNow(b: BookRef, ch: Int) {
+        autoPlayPending = false
+        scope.launch { loadChapterAudio(b, ch, keepPlaying = true); if (audio.errorMessage == null) audio.resume() }
+    }
     // 下一章：计划流里顺队列并记已读（播放页听着就只换音源，章页开着就开下一章页），否则本卷下一章
     val skipNext: () -> Unit = {
         val b = openedBook
@@ -405,7 +458,9 @@ private fun RootScreen() {
             val next = planQueueIndex + 1
             if (next < planQueue.size) {
                 planQueueIndex = next
-                if (planFlowListen && b == null) listenPlanChapter(planQueue[next], true) else openPlanChapter(planQueue[next], true)
+                val p = planQueue[next]
+                if (planFlowListen && b == null) listenPlanChapter(p, true) else openPlanChapter(p, true)
+                BibleCatalog.book(p.bookId)?.let { playChapterNow(it, p.chapter) }
             } else planFlowActive = false
         } else {
             // 本书循环：读到末章回本书第 1 章；继续往前：到末章就停
@@ -422,13 +477,20 @@ private fun RootScreen() {
                     audio.seekTo(0.0); audio.resume()
                 } else if (nextChapter > 0) {
                     // 自动跳章要接着播：交给音源变化后的 autoPlayPending 起播
-                    if (b != null) { autoPlayPending = true; chapter = nextChapter }
-                    else { listenChapter = nextChapter; audio.resume() }
+                    if (b != null) chapter = nextChapter else listenChapter = nextChapter
+                    playChapterNow(cur, nextChapter)
                 }
             }
         }
     }
     val music = remember { MusicPlayer(context, scope) }
+    DisposableEffect(lifecycle, music) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_PAUSE) music.saveResume()
+        }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer) }
+    }
     val home = remember { HomeVerseController(context, scope) }
     // 首页金句跟当前读经版本走：内置译本读本机库，在线译本（含法语等）取该版本的正文
     LaunchedEffect(translation.id) { home.setSource(translation) }
@@ -461,27 +523,38 @@ private fun RootScreen() {
     val setSleepTimerAll: (Int) -> Unit = { m ->
         sleepTimerMinutes = m
         val v = if (m > 0) m else null
-        audio.setSleepTimer(v); music.setSleepTimer(v); home.setSleepTimer(v); ambient.setSleepTimer(v)
+        audio.setSleepTimer(v); music.setSleepTimer(v); home.setSleepTimer(v); ambient.setSleepTimer(v); devotional.setSleepTimer(v)
     }
     DisposableEffect(Unit) {
         // 互斥：整章朗读 ↔ 音乐（RN shell 单一 playbackMode）；整章朗读 ↔ 金句（都是人声）。
         // 首页最多两路有声（homeGoldenVerseTwoSourceMutex）：开音乐时金句+环境音都在 → 关环境音；
         // 开金句时音乐+环境音都在 → 关环境音；开环境音时人声+音乐都在 → 停音乐。
         // 读经朗读与音乐可以同时放：音乐压到 30%，不再直接暂停（Josh 2026-09-11）；金句人声仍然互斥
-        audio.onWillPlay = { music.setDucked(true); home.stopVoice(); devotional.stop() }
+        audio.onWillPlay = { devotional.stop(); music.setDucked(true); home.stopVoice() }
         audio.onStopped = { music.setDucked(false) }
-        audio.onFinished = { if (planFlowActive) skipNext() }
-        music.onWillPlay = { music.setDucked(audio.isPlaying); if (home.voiceOn && ambient.isOn) ambient.stop() }
+        audio.onFinished = {
+            val handoff = me.askbible.native_.data.PlanDevotionalHandoff.shouldPlay(
+                naturalEnd = true, active = planFlowActive, count = planQueue.size, index = planQueueIndex,
+                listeningDay = planListeningDate?.toString(), today = LocalDate.now().toString(),
+                enabled = devotionalPrefs.getBoolean("after-reading", false), available = currentDevotionalAccess.value)
+            skipNext()
+            if (handoff) {
+                val day = me.askbible.native_.data.SolidJoys.day(LocalDate.now())
+                if (day?.audio != null) devotional.play(day.md, day.audio, "${day.dateLabel} ${day.title}")
+            }
+        }
+        music.onWillPlay = { music.setDucked(audio.isPlaying || devotional.isPlaying); if (home.voiceOn && ambient.isOn) ambient.stop() }
         home.player.onWillPlay = { audio.pause(); devotional.stop(); if (music.isPlaying && ambient.isOn) ambient.stop() }
         // 灵修朗读也是人声：和整章朗读 / 金句互斥，音乐压低
         devotional.onWillPlay = { audio.pause(); home.stopVoice(); music.setDucked(true) }
         devotional.onStopped = { music.setDucked(audio.isPlaying) }
-        ambient.onWillPlay = { if ((home.voiceOn || audio.isPlaying) && music.isPlaying) music.pause() }
+        ambient.onWillPlay = { if ((home.voiceOn || audio.isPlaying || devotional.isPlaying) && music.isPlaying) music.pause() }
+        music.restorePlaybackIfNeeded()
         onDispose { audio.release(); music.release(); home.release(); ambient.release(); devotional.release() }
     }
     // 整章朗读时环境音压半，停了恢复（「读经混播时继续播并压音量」）
     // 人声（整章 / 金句）或音乐在放时环境音压到 30%（AMBIENT_WHILE_VOICE_GAIN / AMBIENT_WHILE_MUSIC_GAIN）
-    LaunchedEffect(audio.isPlaying, music.isPlaying, home.voiceOn) { ambient.setDucked(audio.isPlaying || music.isPlaying || home.voiceOn) }
+    LaunchedEffect(audio.isPlaying, music.isPlaying, home.voiceOn, devotional.isPlaying) { ambient.setDucked(audio.isPlaying || music.isPlaying || home.voiceOn || devotional.isPlaying) }
 
     val book = openedBook
     // 音源目标：章页开着就是那一章；否则是播放页在听的章
@@ -520,20 +593,7 @@ private fun RootScreen() {
     }
 
     LaunchedEffect(audioUrl, targetChapter, translation.id) {
-        val b = targetBook ?: return@LaunchedEffect
-        audioUrl?.let {
-            val key = "${translation.id}.${b.id}.$targetChapter"
-            val title = ReadChrome.chapterTitle(bookLabel(b), targetChapter, readChromeLocale)
-            if (ChapterAudioSource.isResolverUrl(it)) {
-                // YouVersion 译本：先问网站代理拿 CDN mp3，再装载
-                audio.beginResolving(key, title)
-                val src = withContext(Dispatchers.IO) { ChapterAudioSource.fetchResolved(it, key) }
-                if (src != null) audio.load(src, key, title, translation.id, b.id, targetChapter, resolved = true)
-                else audio.failResolving(key)
-            } else {
-                audio.load(it, key, title, translation.id, b.id, targetChapter)
-            }
-        }
+        targetBook?.let { loadChapterAudio(it, targetChapter) }
         audio.onSkipNext = skipNext
         if (autoPlayPending) { autoPlayPending = false; audio.resume() }
     }
@@ -558,6 +618,8 @@ private fun RootScreen() {
             showAchievements -> showAchievements = false
             showFavorites -> showFavorites = false
             exploreArticle != null -> exploreArticle = null
+            tab == ShellTab.MAP -> tab = if (openedBook != null) ShellTab.READ else ShellTab.HOME
+            tab == ShellTab.MUSIC -> tab = ShellTab.HOME
             pickingBook != null -> pickingBook = null
             openedBook != null -> {
                 openedBook = null
@@ -593,7 +655,11 @@ private fun RootScreen() {
         BibleCatalog.book(p.bookId)?.let { b -> ChapterAudioSource.resolve(translation.id, b.id, b.number, b.nameEn, p.chapter) != null }
     } ?: false
     // 日历上看的那天算「听过」（月历标黄）
-    fun markPlanListened() = plans.markListened(PlanPlay.isoDate(LocalDate.now().plusDays(planViewAhead.toLong())))
+    fun markPlanListened() {
+        val date = LocalDate.now().plusDays(planViewAhead.toLong())
+        plans.markListened(PlanPlay.isoDate(date))
+        planListeningDate = date
+    }
     // 行点播 / 行尾「声音」：建池（或复用）从第 index 章起播
     fun planPlay(index: Int) {
         val q = planPageQueue
@@ -627,7 +693,20 @@ private fun RootScreen() {
     }
 
     Box(Modifier.fillMaxSize()) {
+        tabState.SaveableStateProvider(tab.name) {
         when (tab) {
+            ShellTab.MAP -> me.askbible.native_.ui.BiblePanoramaScreen(
+                locale = appLocale, currentBook = openedBook?.id, currentChapter = chapter,
+                locateRequest = panoramaLocate, onReturnReading = { tab = ShellTab.READ },
+                onRead = { id, ch -> BibleCatalog.book(id)?.let { b ->
+                    if (openedBook?.id != id || chapter != ch) {
+                        planFlowActive = false; listenBook = null; chapterFromPlan = false
+                        focusVerse = null; focusKeyword = null; chapter = ch; openedBook = b
+                    }
+                    pickingBook = null; showSearch = false; showFavorites = false; searchReturnQuery = null
+                    tab = ShellTab.READ
+                } }, musicPlaying = music.isPlaying, onToggleMusic = { music.toggle() },
+            )
             ShellTab.HOME -> HomeScreen(
                 verse = home.verse,
                 textScale = naturePrefs.textScale,
@@ -638,13 +717,18 @@ private fun RootScreen() {
                 voiceOn = home.voiceOn,
                 voiceAvailable = home.voiceAvailable,
                 playingAlbum = if (music.isPlaying) music.track?.album else null,
+                selectedAlbum = music.album,
+                ambientVolume = ambient.volume, onAmbientVolume = { ambient.volume = it },
+                onChooseAlbum = { music.selectAlbum(it) },
+                onOpenMusic = { homeChromeHidden = false; tab = ShellTab.MUSIC },
+                onNextMusic = { music.next() },
                 sleepTimerMinutes = sleepTimerMinutes,
                 // 点选场景：记次数、存档、跟场景默认环境音（RN selectScene source=user）
                 onSelectScene = { id ->
                     if (id != naturePrefs.sceneId) {
                         naturePrefs.bumpUsage(id)
                         naturePrefs.selectScene(id)
-                        NatureScenes.scene(id)?.defaultAmbient?.let { ambient.start(it) }
+                        if (ambient.isOn) NatureScenes.scene(id)?.defaultAmbient?.let { ambient.start(it) }
                     }
                 },
                 // 上下滑换场景：按固定顺序循环，不记点选次数（免得场景条跟着乱跳）；
@@ -673,6 +757,7 @@ private fun RootScreen() {
                 onChromeHidden = { homeChromeHidden = it },
             )
             ShellTab.MUSIC -> MusicScreen(player = music, onChromeHidden = { musicChromeHidden = it },
+                onBackHome = { musicChromeHidden = false; tab = ShellTab.HOME },
                 sleepActive = audio.sleepDeadlineMs != null || music.sleepDeadlineMs != null || home.sleepDeadlineMs != null || ambient.sleepDeadlineMs != null,
                 onSleepTimer = { showSleepSheet = true })
             ShellTab.EXPLORE -> ExploreScreen(
@@ -731,6 +816,8 @@ private fun RootScreen() {
                     bookLabel = bookLabel,
                     onConfirmDay = { plans.setAheadDays(planContentAhead); planViewAhead = 0 },
                     onStageSet = { planViewAhead = 0; planCursor = 0 }, habitDates = activity.completedDateSet,
+                    autoReadDevotional = autoReadDevotional,
+                    onAutoReadDevotional = { autoReadDevotional = it; devotionalPrefs.edit().putBoolean("after-reading", it).apply() },
                     showDevotional = me.askbible.native_.data.SolidJoys.availableFor(appLocale, auth.isAdmin), devotionalPlayer = devotional,
                     onOpenDevotional = { devotionalDate = it; planRoute = "devotional" },
                     onRetryDevotional = { me.askbible.native_.data.SolidJoys.ensureLoaded(context, appLocale) })
@@ -821,6 +908,7 @@ private fun RootScreen() {
                         // 从搜索结果进来的：回到搜索页，关键词和结果原样恢复
                         searchReturnQuery?.let { q -> searchReturnQuery = null; searchPrefs.resumeQuery = q; showSearch = true }
                     },
+                    onOpenPanorama = { panoramaLocate += 1; tab = ShellTab.MAP },
                     onOpenSettings = { showTranslationPanel = true },
                     onSizeUp = { size.next?.let { size = it } },
                     onSizeDown = { size.previous?.let { size = it } },
@@ -848,6 +936,8 @@ private fun RootScreen() {
                 )
             }
         }
+
+        } // retain each tab’s reading position and panorama expansion
 
         // RN：只有读经坞出现时才在坞 + 底栏后面铺羊皮（整屏图钉在屏幕底，与页面底图像素重合，看不出接缝）；
         // 其余羊皮页底栏透明，正文靠 parchmentFade 在底栏前渐隐 —— 之前整块铺一层会在坞顶露出一条硬边
@@ -889,6 +979,7 @@ private fun RootScreen() {
             Box {
             ShellTabBar(
                 selected = tab,
+                locale = appLocale,
                 onSelect = { tab = it },
                 // 中央键：切到读经计划 Tab（主页级页面，底栏照常；Josh「中间计划与旁边的圣经，要直接就切换过来」）
                 onCenterTap = { tab = ShellTab.PLAN; planFlowListen = true },
@@ -925,6 +1016,7 @@ private fun RootScreen() {
             onLogin = { showMenu = false; authRoute = "login" },
             onRegister = { showMenu = false; authRoute = "register" },
             onLogout = { showMenu = false; scope.launch { syncEngine.prepareSignOut(); auth.signOut() } },
+            onOpenMusic = { showMenu = false; tab = ShellTab.MUSIC },
             onFeedback = { showMenu = false; openSupportMail(context) },
             reminderEnabled = reminderOn,
             reminderTime = reminderTime,

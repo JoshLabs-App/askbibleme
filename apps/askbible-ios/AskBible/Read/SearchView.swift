@@ -38,15 +38,15 @@ struct SearchView: View {
                 // 结果最多 500 条（D-30），用 Lazy 只排可见的几行
                 LazyVStack(alignment: .leading, spacing: 0) {
                     Button(action: onBack) {
-                        Image(systemName: "chevron.left").font(.system(size: 22, weight: .semibold))
+                        Image(systemName: "chevron.left").askFont(size: 22, weight: .semibold)
                             .foregroundStyle(theme.ink).frame(width: 44, height: 44, alignment: .leading)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
 
-                    Text(SiteCopy.t("pages.read.scriptureSearchTitle", locale)).font(.system(size: sx(24), weight: .semibold)).foregroundStyle(theme.ink)
+                    Text(SiteCopy.t("pages.read.scriptureSearchTitle", locale)).askFont(size: sx(24), weight: .semibold).foregroundStyle(theme.ink)
                         .frame(maxWidth: .infinity).padding(.bottom, 8)
-                    Text(SiteCopy.t("pages.read.scriptureSearchLead", locale)).font(.system(size: sx(16))).lineSpacing(max(0, sx(24) - sx(16)))
+                    Text(SiteCopy.t("pages.read.scriptureSearchLead", locale)).askFont(size: sx(16)).lineSpacing(max(0, sx(24) - sx(16)))
                         .foregroundStyle(theme.muted).multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(.bottom, 12)
 
                     // 范围分段：surface 底、hairline 边、圆角 10、内边 3、间隔 2；选中 ink 底 surface 字
@@ -54,7 +54,7 @@ struct SearchView: View {
                         ForEach(Self.scopes, id: \.0) { scope, label in
                             let on = prefs.scope == scope
                             Button { prefs.scope = scope; rerun() } label: {
-                                Text(SiteCopy.t(label, locale)).font(.system(size: sx(15), weight: .medium))
+                                Text(SiteCopy.t(label, locale)).askFont(size: sx(15), weight: .medium)
                                     .foregroundStyle(on ? theme.surface : theme.muted)
                                     .padding(.horizontal, sx(12)).padding(.vertical, sx(8))
                                     .background(RoundedRectangle(cornerRadius: 8).fill(on ? theme.ink : Color.clear))
@@ -69,7 +69,7 @@ struct SearchView: View {
                     .padding(.bottom, 14)
 
                     TextField(SiteCopy.t("pages.read.scriptureSearchPlaceholder", locale), text: $query)
-                        .font(.system(size: size.metrics.verseFontSize))
+                        .askFont(size: size.metrics.verseFontSize)
                         .foregroundStyle(theme.ink)
                         .autocorrectionDisabled().textInputAutocapitalization(.never)
                         .submitLabel(.search)
@@ -82,14 +82,14 @@ struct SearchView: View {
                         .onSubmit { rerun() }
 
                     if !prefs.recent.isEmpty {
-                        Text(SiteCopy.t("pages.read.scriptureSearchRecentTitle", locale)).font(.system(size: sx(14), weight: .medium)).foregroundStyle(theme.muted)
+                        Text(SiteCopy.t("pages.read.scriptureSearchRecentTitle", locale)).askFont(size: sx(14), weight: .medium).foregroundStyle(theme.muted)
                             .padding(.top, 2).padding(.bottom, 6)
                         // 一行，左右滑：出血到屏幕边，首尾留 20 和正文对齐
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 6) {
                                 ForEach(prefs.recent, id: \.self) { term in
                                     Button { query = term; debounce?.cancel(); rerun() } label: {
-                                        Text(term).font(.system(size: sx(15), weight: .medium)).foregroundStyle(theme.ink)
+                                        Text(term).askFont(size: sx(15), weight: .medium).foregroundStyle(theme.ink)
                                             .lineLimit(1)
                                             .padding(.horizontal, sx(12)).padding(.vertical, sx(7))
                                             .background(Capsule().fill(theme.surface))
@@ -105,16 +105,16 @@ struct SearchView: View {
                     }
 
                     if let fallbackNote {
-                        Text(fallbackNote).font(.system(size: sx(13))).foregroundStyle(theme.faint)
+                        Text(fallbackNote).askFont(size: sx(13)).foregroundStyle(theme.faint)
                             .multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(.bottom, 8)
                     }
                     if prefs.scope == .chapter, chapterRef == nil {
-                        Text(SiteCopy.t("pages.read.scriptureSearchNoChapterHint", locale)).font(.system(size: sx(14))).foregroundStyle(theme.faint)
+                        Text(SiteCopy.t("pages.read.scriptureSearchNoChapterHint", locale)).askFont(size: sx(14)).foregroundStyle(theme.faint)
                             .frame(maxWidth: .infinity).padding(.bottom, 8)
                     }
                     if loading { ProgressView().tint(theme.muted).frame(maxWidth: .infinity).padding(.vertical, 20) }
                     if !loading, searched, results.isEmpty, !(prefs.scope == .chapter && chapterRef == nil) {
-                        Text(SiteCopy.t("pages.read.scriptureSearchEmpty", locale)).font(.system(size: sx(16))).lineSpacing(max(0, sx(24) - sx(16)))
+                        Text(SiteCopy.t("pages.read.scriptureSearchEmpty", locale)).askFont(size: sx(16)).lineSpacing(max(0, sx(24) - sx(16)))
                             .foregroundStyle(theme.muted).frame(maxWidth: .infinity).padding(.top, 24)
                     }
 
@@ -126,7 +126,7 @@ struct SearchView: View {
                                 Text(SiteCopy.f("pages.read.scriptureSearchTruncated", ["limit": "\(results.count)"], locale))
                             }
                         }
-                        .font(.system(size: sx(13))).foregroundStyle(theme.faint).padding(.bottom, 8)
+                        .askFont(size: sx(13)).foregroundStyle(theme.faint).padding(.bottom, 8)
                     }
 
                     ForEach(results) { hit in
@@ -138,7 +138,7 @@ struct SearchView: View {
                         } label: {
                             VStack(alignment: .leading, spacing: 3) {
                                 Text("\(BibleCatalog.book(id: hit.bookId)?.name(locale) ?? hit.bookName) \(hit.chapter):\(hit.verse)")
-                                    .font(.system(size: size.metrics.verseNumFontSize, weight: .semibold)).foregroundStyle(theme.faint)
+                                    .askFont(size: size.metrics.verseNumFontSize, weight: .semibold).foregroundStyle(theme.faint)
                                 let hitBuilt = hitText(hit.text)
                                 RoundedHighlightText(text: hitBuilt.text, highlightRanges: hitBuilt.ranges,
                                                      fill: UIColor(theme.verseBookmarkMarker))

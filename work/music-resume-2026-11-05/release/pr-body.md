@@ -1,0 +1,5 @@
+Reopening music now restores the last track and playback position across native iOS, Android, and Web while preserving pause and sleep timer choices. Home provides next-track and music-selection controls; Android's Home and timer controls share an aligned header with tighter left spacing.
+
+Isolated from the latest main so existing Home gestures and unrelated local edits are preserved. Includes iOS 1.1.8 (141) and Android 1.0.55 (252) release metadata.
+
+Validation: native signed archive/export and Android release AAB builds succeeded; full local Web production build, Swift/Kotlin resume checks, and 26 Vitest cases passed. Final iOS Simulator music flow passed. Earlier Samsung device playback and header flows passed; the final-source device rerun reached its lock screen, so no lock bypass was attempted. SHA-256 comparison confirms the release Android player, resume model and music-screen files exactly match the device-tested files. Silent Web checks passed: Home next/choose controls, paused next, album selection and reload persistence; no browser console errors. Playback test apps were stopped at the user’s request.

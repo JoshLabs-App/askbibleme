@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
@@ -100,7 +101,7 @@ fun PlaybackDock(
             ) {
                 Text(elapsed, color = theme.muted.toColor(), fontSize = ShellMetrics.timeFontSize.sp,
                      fontWeight = FontWeight.Medium,
-                     modifier = Modifier.width(ShellMetrics.timeLabelMinWidth.dp))
+                     softWrap = false, modifier = Modifier.widthIn(min = ShellMetrics.timeLabelMinWidth.dp * androidx.compose.ui.platform.LocalDensity.current.fontScale))
                 // MinimalProgressBar：轨 rgba(92,64,48,.22) / 填充 LOGO 黄，高 3 圆角 1.5
                 // 可拖动（Josh 2026-09-19「播放条需要可以拉动」）：轨道只有 3dp 点不中，
                 // 外面套一个 44dp 高的透明触控框；拖动中显示本地值，避免松手时先弹回旧位置。
@@ -141,7 +142,7 @@ fun PlaybackDock(
                 }
                 Text(total, color = theme.muted.toColor(), fontSize = ShellMetrics.timeFontSize.sp,
                      fontWeight = FontWeight.Medium, textAlign = TextAlign.End,
-                     modifier = Modifier.width(ShellMetrics.timeLabelMinWidth.dp))
+                     softWrap = false, modifier = Modifier.widthIn(min = ShellMetrics.timeLabelMinWidth.dp * androidx.compose.ui.platform.LocalDensity.current.fontScale))
             }
 
             // 传输控制（transportMarginTop 2）：左搜索 / 中间 gap 28 三件套 / 右下一章

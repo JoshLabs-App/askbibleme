@@ -1,0 +1,11 @@
+Source: ca1995810bc5291846ced759e2d653b54048823c
+PR: https://github.com/JoshLabs-App/askbibleme/pull/51
+Simulator: iOS 26.5 / iPhone 17 Pro, dedicated selection acceptance device
+Passed: native Debug build; native Release iPhoneOS build; full TypeScript check; single-verse clipboard; cross-screen clipboard; bookmark relaunch persistence; inspected screenshots
+Pending: physical installation (CoreDevice tunnel disconnect / timeout); no store submission
+Signed app: /tmp/askbible-selection-pending-device/AskBible.app
+Version: 1.1.8 (141)
+Executable SHA256: e740ab1ddb001752ee9a377e2a0d8baa2c097930e7ba89a4335280969a5d371c
+Additional verification: iPhone SE 375×667, dark appearance, whole-verse selection/menu/clipboard passed; screenshot inspected.
+Merged: 03015d2e0e2497ce1246c22a608dcc87e0c4355a; CI build/preflight green; fetched main and verified task sources equal the tested PR head.
+Rollback basis: previous main 66d16329dc3d0cda65f1f55430e64a180180e485.

@@ -28,6 +28,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -89,6 +93,8 @@ fun DevotionalCard(
     theme: Parchment,
     onOpen: () -> Unit,
     onRetry: () -> Unit,
+    autoRead: Boolean,
+    onAutoRead: (Boolean) -> Unit,
 ) {
     val state = SolidJoys.state
     val muted = theme.muted.toColor()
@@ -102,6 +108,17 @@ fun DevotionalCard(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(zh("今日灵修"), color = ACCENT, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             if (day != null) Text("  ·  ${day.dateLabel}", color = META, fontSize = 14.sp)
+        }
+        Row(
+            Modifier.fillMaxWidth().defaultMinSize(minHeight = 48.dp)
+                .toggleable(value = autoRead, role = Role.Switch, onValueChange = onAutoRead),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(zh("读经后接着听"), Modifier.weight(1f), color = theme.ink.toColor(), fontSize = 15.sp)
+            Switch(checked = autoRead, onCheckedChange = null, colors = SwitchDefaults.colors(
+                checkedThumbColor = theme.surface.toColor(), checkedTrackColor = theme.ink.toColor(),
+                uncheckedThumbColor = theme.muted.toColor(), uncheckedTrackColor = theme.surface.toColor(),
+                uncheckedBorderColor = theme.muted.toColor()))
         }
         when {
             day != null -> {

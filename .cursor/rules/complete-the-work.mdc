@@ -1,0 +1,8 @@
+---
+description: 完整交付入口，不以阶段进展代替完成
+alwaysApply: true
+---
+
+# 完整交付
+
+遵循 `AGENTS.md` 的「完成标准」和 JoshLabs Dev 的 `references/core-dev-principles.md`。修好、验收、已有授权发布和发布后验证构成完整任务；失败继续修复，真实阻塞如实说明，不等用户再次要求继续。

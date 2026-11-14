@@ -139,3 +139,6 @@ tools/.reading-plans.json
 *.bak
 *.bak-*
 .wrangler/
+
+# 私域：圣经故事解读的成品音频（Josh 自己听/自测，不进 App、不上 R2；稿子在 docs/story-scripts/ 入库）
+/private/bible-stories/audio/

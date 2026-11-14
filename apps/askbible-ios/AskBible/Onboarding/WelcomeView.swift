@@ -60,8 +60,8 @@ struct WelcomeView: View {
             } label: {
                 HStack(spacing: 4) {
                     Text(localeOverride?.settingLabel ?? SiteCopy.t("native.followSystem", locale))
-                        .font(.system(size: 15))
-                    Image(systemName: "chevron.down").font(.system(size: 11, weight: .semibold))
+                        .askFont(size: 15)
+                    Image(systemName: "chevron.down").askFont(size: 11, weight: .semibold)
                 }
                 .foregroundStyle(theme.muted)
                 .frame(minHeight: 40)
@@ -69,7 +69,7 @@ struct WelcomeView: View {
             }
             Button { showSignIn = true } label: {
                 Text(SiteCopy.t("native.welcomeSignIn", locale))
-                    .font(.system(size: 15, weight: .semibold))
+                    .askFont(size: 15, weight: .semibold)
                     .foregroundStyle(theme.muted)
                     .frame(minHeight: 40)
                     .contentShape(Rectangle())
@@ -82,14 +82,14 @@ struct WelcomeView: View {
     private var brand: some View {
         VStack(spacing: 10) {
             Text(SiteCopy.t("native.welcomeTitle", locale))
-                .font(.system(size: 30, weight: .bold))
+                .askFont(size: 30, weight: .bold)
                 .foregroundStyle(theme.ink)
                 .multilineTextAlignment(.center)
             Text(SiteCopy.t("native.welcomeTagline", locale))
-                .font(.system(size: 15, weight: .semibold))
+                .askFont(size: 15, weight: .semibold)
                 .foregroundStyle(theme.accentOt)
             Text(SiteCopy.t("native.welcomeLead", locale))
-                .font(.system(size: 14))
+                .askFont(size: 14)
                 .lineSpacing(4)
                 .foregroundStyle(theme.muted)
                 .multilineTextAlignment(.center)
@@ -101,7 +101,7 @@ struct WelcomeView: View {
         VStack(spacing: 14) {
             Button(action: onDone) {
                 Text(SiteCopy.t("native.welcomeStart", locale))
-                    .font(.system(size: 16, weight: .semibold))
+                    .askFont(size: 16, weight: .semibold)
                     .foregroundStyle(theme.ink)
                     .frame(maxWidth: .infinity).frame(minHeight: 52)
                     .background(RoundedRectangle(cornerRadius: 12).fill(Color(rgb: 0xffb101, opacity: 0.22)))
@@ -110,7 +110,7 @@ struct WelcomeView: View {
             }
             .buttonStyle(.plain)
             Text(SiteCopy.t("native.welcomeSyncHint", locale))
-                .font(.system(size: 12))
+                .askFont(size: 12)
                 .lineSpacing(3)
                 .foregroundStyle(theme.muted)
                 .multilineTextAlignment(.center)
@@ -144,7 +144,7 @@ struct WelcomeSignInSheet: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(SiteCopy.t("auth.pageTitle", locale))
-                        .font(.system(size: 24, weight: .bold))
+                        .askFont(size: 24, weight: .bold)
                         .foregroundStyle(theme.ink)
                         .padding(.bottom, 2)
                     SocialSignInButtons(auth: auth, locale: locale, state: social, onDone: onDone)
@@ -153,7 +153,7 @@ struct WelcomeSignInSheet: View {
                     } else {
                         Button { emailOpen = true } label: {
                             Text(SiteCopy.t("native.welcomeEmailSignIn", locale))
-                                .font(.system(size: 15, weight: .semibold))
+                                .askFont(size: 15, weight: .semibold)
                                 .foregroundStyle(theme.ink)
                                 .frame(maxWidth: .infinity).frame(minHeight: 48)
                                 .background(RoundedRectangle(cornerRadius: 12).fill(Color(parchment: 0xF8F1E3, opacity: 0.72)))

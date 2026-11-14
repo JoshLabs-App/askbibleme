@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -114,7 +115,11 @@ fun CatalogScreen(
 
             item {
                 // Josh 2026-09-10「让目录的左边距大一些」：只挪书卷两栏，标题那几行仍旧居中
-                Row(Modifier.padding(start = 10.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                if (density.fontScale >= 1.3f) Column(Modifier.padding(start=10.dp,end=RAIL_CLEARANCE.dp)) {
+                    CatalogColumn(BibleCatalog.oldTestament, size, theme, onOpenBook, Modifier.fillMaxWidth(), locale=locale, bookLabel=bookLabel)
+                    Spacer(Modifier.height(20.dp))
+                    CatalogColumn(BibleCatalog.newTestament, size, theme, onOpenBook, Modifier.fillMaxWidth(), locale=locale, bookLabel=bookLabel)
+                } else Row(Modifier.padding(start = 10.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     CatalogColumn(BibleCatalog.oldTestament, size, theme, onOpenBook, Modifier.weight(1f), locale = locale, bookLabel = bookLabel)
                     // 右列顶上那几行正好压在右侧竖排下面：不让开的话点书卷会点到设置 / + / − 上
                     // （Josh 2026-09-10 实测「点 Luc 右边字号变小了」）
@@ -149,8 +154,8 @@ private fun CatalogColumn(
     /** >0 时：纵向落在这个位置以上的行，右边留出图标栏的宽度 */
     railBottomPx: Float = 0f,
 ) {
-    // RN 的 catalogBookLine：行高跟着字号档走，放大字号时行距也跟着开，手指更好点
-    val rowHeight = size.metrics.catalogBookLine.dp
+    // 默认行距紧凑；较大字号仍按阅读设置扩展，文字换行可撑高。
+    val rowHeight = maxOf(40f, size.metrics.catalogBookLine.toFloat()).dp
     Column(modifier) {
         for (group in groups) {
             Text(
@@ -168,7 +173,7 @@ private fun CatalogColumn(
                     for (book in group.books) {
                         var underRail by remember(book.id) { mutableStateOf(false) }
                         Row(
-                            Modifier.fillMaxWidth().height(rowHeight)
+                            Modifier.fillMaxWidth().heightIn(min=rowHeight)
                                 .onGloballyPositioned { c ->
                                     underRail = railBottomPx > 0f &&
                                         c.positionInWindow().y < railBottomPx
@@ -186,7 +191,7 @@ private fun CatalogColumn(
                             // maxLines=1 只留下第一行的「1」。iOS 的 lineLimit(1) 默认就是截断加省略号。
                             Text(bookLabel(book), color = theme.ink.toColor(),
                                  fontSize = (size.metrics.catalogBookSize * 0.85f).sp,
-                                 maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
+                                 softWrap = true,
                                  modifier = Modifier.weight(1f))
                         }
                     }

@@ -1,0 +1,51 @@
+appId: me.askbible
+---
+- launchApp
+- assertNotVisible:
+    id: home.adjust
+- longPressOn:
+    id: home.music
+- assertVisible:
+    id: home.album.下午茶
+- assertVisible:
+    id: home.album.专注工作
+- assertVisible:
+    id: home.music
+    text: ".*关闭.*"
+- takeScreenshot: /tmp/askbible-longpress-menu
+- tapOn:
+    id: home.album.下午茶
+- assertNotVisible:
+    id: home.album.下午茶
+- assertVisible:
+    id: home.music
+    text: ".*下午茶.*关闭.*"
+- takeScreenshot: /tmp/askbible-coffee-icon
+- tapOn:
+    id: home.music
+- assertVisible:
+    id: home.music
+    text: ".*开启.*"
+- longPressOn:
+    id: home.music
+- assertVisible:
+    id: home.music
+    text: ".*开启.*"
+- tapOn:
+    id: home.album.安静
+- assertVisible:
+    id: home.music
+    text: ".*安静.*开启.*"
+- tapOn:
+    id: home.music
+- swipe:
+    start: 50%, 83%
+    end: 50%, 50%
+    duration: 500
+- assertVisible:
+    id: home.adjust.close
+- takeScreenshot: /tmp/askbible-no-handle-adjust
+- tapOn:
+    id: home.adjust.close
+- assertVisible:
+    id: home.music

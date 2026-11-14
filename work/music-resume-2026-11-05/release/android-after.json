@@ -1,0 +1,78 @@
+{
+  "kind": "androidpublisher#tracksListResponse",
+  "tracks": [
+    {
+      "track": "production",
+      "releases": [
+        {
+          "name": "1.0.55",
+          "versionCodes": [
+            "252"
+          ],
+          "releaseNotes": [
+            {
+              "language": "zh-CN",
+              "text": "背景音乐接着上次的歌曲和进度继续播放；首页可直接切换下一首或选择音乐。重新打开时保留暂停状态和睡眠定时。音乐页的首页与定时按钮已对齐，左侧间距更紧凑。\n"
+            },
+            {
+              "language": "en-US",
+              "text": "Continue background music from your last song and listening position. Skip to the next track or choose music directly from Home. Reopening respects pause and sleep timer choices. The music screen’s Home and timer controls now align with closer left spacing.\n"
+            }
+          ],
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "track": "beta",
+      "releases": [
+        {
+          "name": "1.0.46",
+          "versionCodes": [
+            "243"
+          ],
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "track": "alpha",
+      "releases": [
+        {
+          "name": "1.0.46",
+          "versionCodes": [
+            "243"
+          ],
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "track": "internal",
+      "releases": [
+        {
+          "name": "1.0.46",
+          "versionCodes": [
+            "243"
+          ],
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "track": "623"
+    },
+    {
+      "track": "TAIWAN",
+      "releases": [
+        {
+          "name": "1.0.46",
+          "versionCodes": [
+            "243"
+          ],
+          "status": "completed"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+Vercel CLI 65.8.0
+> Fetched deployment "askbibleme-qlazxn1z5-joshlabsapp.vercel.app" in joshlabsapp [579ms]
+
+  General
+
+    id		dpl_5zzmEptni5AjovpmCP43rTrspXn2
+    name	askbibleme
+    target	production
+    status	● Ready
+    url		https://askbibleme-qlazxn1z5-joshlabsapp.vercel.app
+    created	Wed Nov 04 2026 18:03:15 GMT-0500 (Eastern Standard Time) [17h ago]
+
+
+  Build Machine
+
+    requested build machine basic
+    actual assigned cores   2 vCPU (actual assignment)
+    memory                  8192 MiB
+    selection type          fixed
+    selection source        plan-default
+
+
+  Build Cache
+
+    not saved (prebuilt deployment)
+
+
+  Duration
+
+    build duration	1m 12s
+    post-build duration	5s
+    billable duration	2m
+    CPU Minutes Usage	4 minutes (2m x 2vCPU)
+
+
+  Aliases
+
+    ╶ https://askbible.me
+    ╶ https://askbible.joshlabs.app
+    ╶ https://askbibleme.vercel.app
+    ╶ https://askbibleme-joshlabsapp.vercel.app
+    
+
+  Builds
+
+    ┌ .        [0ms]
+    ├── λ index (2.6MB) [iad1]
+    ├── λ _not-found (2.6MB) [iad1]
+    ├── λ _not-found.rsc (2.6MB) [iad1]
+    ├── λ app (2.6MB) [iad1]
+    ├── λ app.rsc (2.6MB) [iad1]
+    └── 205 output items hidden
+    
+

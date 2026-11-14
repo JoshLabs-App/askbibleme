@@ -1,0 +1,10 @@
+Running altool at path '/Applications/Xcode.app/Contents/SharedFrameworks/ContentDelivery.framework/Resources/altool'...
+
+2026-11-05 11:39:58.363 ERROR: [ContentDelivery.Uploader.7711051300] Failed to create URL for 'CDUploaderStateInfoResumeFilePath'. The file doesn’t exist. (4) The file doesn’t exist.
+2026-11-05 11:39:58.363  INFO: [ContentDelivery.Uploader.7711051300] 
+==========================================
+UPLOAD SUCCEEDED with no errors
+Delivery UUID: cd103ab6-d1fd-4f3d-b86c-55ca687c3e7b
+Transferred 23720158 bytes in 23.579 seconds (1.0MB/s, 8.048Mbps)
+==========================================
+No errors uploading archive at '/tmp/askbible-music-release-evidence/ios-export/AskBible.ipa'.

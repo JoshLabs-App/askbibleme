@@ -28,18 +28,18 @@ struct CatalogView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 0) {
                         Text(ReadChrome.catalogTitle(locale))
-                            .font(.system(size: 30, weight: .bold))
+                            .askFont(size: 30, weight: .bold)
                             .foregroundStyle(theme.ink)
                             .padding(.top, safeTop + 42)
 
                         HStack(spacing: 14) {
                             Text(ReadChrome.testamentOld(locale))
-                                .font(.system(size: 20, weight: .bold))
+                                .askFont(size: 20, weight: .bold)
                                 .foregroundStyle(Color(parchment: 0x2F6291))
                             // RN BibleCatalogOutlineContent：MaterialIcons notes 22，未开时 faint
                             MaterialIcon(glyph: MI.notes, size: 22, color: theme.faint)
                             Text(ReadChrome.testamentNew(locale))
-                                .font(.system(size: 20, weight: .bold))
+                                .askFont(size: 20, weight: .bold)
                                 .foregroundStyle(Color(parchment: 0xC1660B))
                         }
                         .padding(.top, 18)
@@ -71,7 +71,7 @@ struct CatalogView: View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(groups) { group in
                 Text(group.title(locale))
-                    .font(.system(size: 16, weight: .bold))
+                    .askFont(size: 16, weight: .bold)
                     .foregroundStyle(group.color)
                     .padding(.top, 7)
                     .padding(.bottom, 3)
@@ -157,7 +157,7 @@ struct CatalogView: View {
     private func railLabel(_ text: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(text)
-                .font(.system(size: ShellMetrics.topChromeSizeLabel * 0.84, weight: .medium))
+                .askFont(size: ShellMetrics.topChromeSizeLabel * 0.84, weight: .medium)
                 .foregroundStyle(theme.ink.opacity(0.78))
                 .frame(width: ShellMetrics.topChromeButton, height: ShellMetrics.topChromeButton)
                 .contentShape(Rectangle())
@@ -193,20 +193,20 @@ struct ChapterPickerSheet: View {
                 HStack(spacing: 8) {
                     Button(action: onClose) {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 20, weight: .semibold))
+                            .askFont(size: 20, weight: .semibold)
                             .foregroundStyle(theme.ink)
                             .frame(width: 44, height: 44, alignment: .leading)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     Text(bookLabel(book))
-                        .font(.system(size: 17, weight: .semibold))
+                        .askFont(size: 17, weight: .semibold)
                         .foregroundStyle(theme.ink)
                         .lineLimit(1)
                         .frame(maxWidth: .infinity)
                     Button(action: onClose) {
                         Text("\u{00D7}")
-                            .font(.system(size: 28))
+                            .askFont(size: 28)
                             .foregroundStyle(theme.faint)
                             .frame(height: 28)
                             .padding(.horizontal, 4)
@@ -220,7 +220,7 @@ struct ChapterPickerSheet: View {
                         ForEach(1...max(1, chapterCount > 0 ? chapterCount : book.chapterCount), id: \.self) { n in
                             Button { onPick(n) } label: {
                                 Text("\(n)")
-                                    .font(.system(size: 19, weight: .semibold))
+                                    .askFont(size: 19, weight: .semibold)
                                     .foregroundStyle(theme.ink)
                                     .frame(maxWidth: .infinity)
                                     .frame(height: 46)
@@ -283,7 +283,7 @@ struct TranslationPanel: View {
             VStack(spacing: 12) {
                 HStack(spacing: 14) {
                     Image(systemName: "book.fill")
-                        .font(.system(size: 22))
+                        .askFont(size: 22)
                         .foregroundStyle(theme.ink)
                     Button {
                         expanded.toggle()
@@ -391,12 +391,12 @@ struct TranslationPanel: View {
             HStack(spacing: 7) {
                 MaterialIcon(glyph: MI.search, size: 15, color: theme.muted)
                 TextField(SiteCopy.t("native.searchTranslation", locale), text: query)
-                    .font(.system(size: 14))
+                    .askFont(size: 14)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                 if !q.isEmpty {
                     Button { query.wrappedValue = "" } label: {
-                        Image(systemName: "xmark.circle.fill").font(.system(size: 14)).foregroundStyle(theme.faint)
+                        Image(systemName: "xmark.circle.fill").askFont(size: 14).foregroundStyle(theme.faint)
                             .frame(width: 32, height: 32).contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -412,7 +412,7 @@ struct TranslationPanel: View {
                             let on = g.language == current
                             Button { lang.wrappedValue = g.language } label: {
                                 Text(ScriptureTranslation.languageName(g.language, locale: locale))
-                                    .font(.system(size: 13, weight: .semibold))
+                                    .askFont(size: 13, weight: .semibold)
                                     .foregroundStyle(theme.ink)
                                     .lineLimit(1)
                                     .padding(.horizontal, 12).padding(.vertical, 8)
@@ -441,7 +441,7 @@ struct TranslationPanel: View {
                     }
                     if items.isEmpty {
                         Text(SiteCopy.t("pages.read.scriptureSearchEmpty", locale))
-                            .font(.system(size: 13)).foregroundStyle(theme.faint)
+                            .askFont(size: 13).foregroundStyle(theme.faint)
                             .frame(maxWidth: .infinity).frame(height: 42)
                     }
                 }
@@ -461,11 +461,11 @@ struct TranslationPanel: View {
     private func row<Badges: View>(label: String, selected: Bool, badges: Badges, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                Text(label).font(.system(size: 16)).foregroundStyle(theme.ink).lineLimit(1)
+                Text(label).askFont(size: 16).foregroundStyle(theme.ink).lineLimit(1)
                 Spacer(minLength: 4)
                 badges
                 if selected {
-                    Image(systemName: "checkmark").font(.system(size: 14, weight: .semibold)).foregroundStyle(theme.parchmentAccent)
+                    Image(systemName: "checkmark").askFont(size: 14, weight: .semibold).foregroundStyle(theme.parchmentAccent)
                 }
             }
             .padding(.horizontal, 14)
@@ -493,7 +493,7 @@ struct TranslationPanel: View {
     }
 
     private func tag(_ text: String) -> some View {
-        Text(text).font(.system(size: 11, weight: .semibold)).foregroundStyle(theme.muted)
+        Text(text).askFont(size: 11, weight: .semibold).foregroundStyle(theme.muted)
             .padding(.horizontal, 6).padding(.vertical, 2)
             .overlay(Capsule().strokeBorder(theme.border, lineWidth: 1))
     }
@@ -501,12 +501,12 @@ struct TranslationPanel: View {
     private func dropdown(text: String, color: Color, open: Bool) -> some View {
         HStack {
             Text(text)
-                .font(.system(size: 18, weight: .semibold))
+                .askFont(size: 18, weight: .semibold)
                 .foregroundStyle(color)
                 .lineLimit(1)
             Spacer()
             Image(systemName: "chevron.down")
-                .font(.system(size: 14, weight: .semibold))
+                .askFont(size: 14, weight: .semibold)
                 .foregroundStyle(theme.muted.opacity(0.55))
                 .rotationEffect(.degrees(open ? 180 : 0))
         }
@@ -540,11 +540,11 @@ private struct CatalogBookRow: View {
         Button(action: onOpen) {
             HStack(spacing: 8) {
                 Text(book.displayNumber)
-                    .font(.system(size: 11, weight: .semibold))
+                    .askFont(size: 11, weight: .semibold)
                     .foregroundStyle(color)
                     .frame(minWidth: 15, alignment: .leading)
                 Text(label)
-                    .font(.system(size: fontSize))
+                    .askFont(size: fontSize)
                     .foregroundStyle(theme.ink)
                     .lineLimit(1)
                 Spacer(minLength: 2)

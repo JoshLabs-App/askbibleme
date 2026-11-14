@@ -1,0 +1,17 @@
+appId: me.askbible.musicqa
+---
+- launchApp:
+    clearState: false
+- tapOn: "选音乐"
+- assertVisible: "返回首页"
+- assertVisible: "定时停止音乐"
+- takeScreenshot: /tmp/askbible-music-android-header-aligned
+- tapOn: "定时停止音乐"
+- takeScreenshot: /tmp/askbible-music-android-header-timer
+- back
+- tapOn: "返回首页"
+- assertVisible: "选音乐"
+- tapOn: "选音乐"
+- assertVisible: "返回首页"
+- assertVisible: "播放音乐"
+- takeScreenshot: /tmp/askbible-music-android-header-final

@@ -1,0 +1,191 @@
+[
+  {
+    "route": "/app-build.json",
+    "status": 200,
+    "expected": 200,
+    "bytes": 46,
+    "appBuild": {
+      "id": "a3df7dc5-a0d4-43db-ae19-fc062323e2a3"
+    }
+  },
+  {
+    "route": "/music",
+    "status": 200,
+    "expected": 200,
+    "bytes": 110237,
+    "hasHtml": true
+  },
+  {
+    "route": "/web",
+    "status": 200,
+    "expected": 200,
+    "bytes": 53910,
+    "hasHtml": true
+  },
+  {
+    "route": "/scripture/cuv-simp/GEN.json",
+    "status": 200,
+    "expected": 200,
+    "bytes": 178193
+  },
+  {
+    "route": "/xrefs/GEN.json",
+    "status": 200,
+    "expected": 200,
+    "bytes": 67610
+  },
+  {
+    "route": "/admin",
+    "status": 404,
+    "expected": 404,
+    "bytes": 31105
+  },
+  {
+    "route": "/studio",
+    "status": 404,
+    "expected": 404,
+    "bytes": 0
+  },
+  {
+    "route": "/api/music/companion",
+    "status": 307,
+    "expected": 307,
+    "bytes": 0,
+    "location": "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/api/music/companion"
+  },
+  {
+    "asset": "/_next/static/chunks/4bd1b696-100b9d70ed4e49c1.js",
+    "status": 200,
+    "bytes": 173025
+  },
+  {
+    "asset": "/_next/static/chunks/1255-eae4096fb21f1304.js",
+    "status": 200,
+    "bytes": 173892
+  },
+  {
+    "asset": "/_next/static/chunks/main-app-2329138eebb49e2b.js",
+    "status": 200,
+    "bytes": 572
+  },
+  {
+    "asset": "/_next/static/chunks/44530001-e46938d124f12a5a.js",
+    "status": 200,
+    "bytes": 61750
+  },
+  {
+    "asset": "/_next/static/chunks/2619-04bc32f026a0d946.js",
+    "status": 200,
+    "bytes": 8564
+  },
+  {
+    "asset": "/_next/static/chunks/1613-7eb3ed986ea9c551.js",
+    "status": 200,
+    "bytes": 184857
+  },
+  {
+    "asset": "/_next/static/chunks/7320-03ff6df0a85ae5d0.js",
+    "status": 200,
+    "bytes": 187038
+  },
+  {
+    "asset": "/_next/static/chunks/223-2874b235491c68df.js",
+    "status": 200,
+    "bytes": 12627
+  },
+  {
+    "asset": "/_next/static/chunks/9995-fe0f07e1d2aa31e2.js",
+    "status": 200,
+    "bytes": 190065
+  },
+  {
+    "asset": "/_next/static/chunks/3759-a02e2ecfcccf0d3a.js",
+    "status": 200,
+    "bytes": 9459
+  },
+  {
+    "asset": "/_next/static/chunks/7806-d79dc75914d136df.js",
+    "status": 200,
+    "bytes": 54452
+  },
+  {
+    "asset": "/_next/static/chunks/3108-e00e0c8136afe6b5.js",
+    "status": 200,
+    "bytes": 35463
+  },
+  {
+    "asset": "/_next/static/chunks/114-f37eb7c01d613478.js",
+    "status": 200,
+    "bytes": 5817931
+  },
+  {
+    "asset": "/_next/static/chunks/7170-5096baf61019a1bf.js",
+    "status": 200,
+    "bytes": 52722
+  },
+  {
+    "asset": "/_next/static/chunks/4099-77a798772cbcb193.js",
+    "status": 200,
+    "bytes": 23145
+  },
+  {
+    "asset": "/_next/static/chunks/app/(app-shell)/layout-62e9d29582f343d5.js",
+    "status": 200,
+    "bytes": 11394
+  },
+  {
+    "asset": "/_next/static/chunks/367-4031f5072eff5e16.js",
+    "status": 200,
+    "bytes": 33667
+  },
+  {
+    "asset": "/_next/static/chunks/app/(app-shell)/music/page-c389751623387323.js",
+    "status": 200,
+    "bytes": 45401
+  },
+  {
+    "asset": "/_next/static/chunks/6191-519f2afe52bdf37d.js",
+    "status": 200,
+    "bytes": 18374
+  },
+  {
+    "asset": "/_next/static/chunks/app/layout-20cb36d113e3026b.js",
+    "status": 200,
+    "bytes": 33095
+  },
+  {
+    "asset": "/_next/static/chunks/app/error-4365975488a5e899.js",
+    "status": 200,
+    "bytes": 1851
+  },
+  {
+    "asset": "/_next/static/chunks/app/not-found-a7ed71e63e0b0457.js",
+    "status": 200,
+    "bytes": 191
+  },
+  {
+    "asset": "/_next/static/chunks/polyfills-42372ed130431b0a.js",
+    "status": 200,
+    "bytes": 112594
+  },
+  {
+    "asset": "/_next/static/chunks/webpack-0e88b160850db8c0.js",
+    "status": 200,
+    "bytes": 3803
+  },
+  {
+    "asset": "/_next/static/chunks/7858-1494be09e904c316.js",
+    "status": 200,
+    "bytes": 25079
+  },
+  {
+    "asset": "/_next/static/chunks/4323-a75af28e84e2048d.js",
+    "status": 200,
+    "bytes": 44698
+  },
+  {
+    "asset": "/_next/static/chunks/app/(app-shell)/web/page-640e835c3a3c3737.js",
+    "status": 200,
+    "bytes": 206
+  }
+]

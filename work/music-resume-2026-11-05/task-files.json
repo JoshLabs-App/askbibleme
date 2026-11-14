@@ -1,0 +1,23 @@
+[
+  "apps/askbible-ios/AskBible/Audio/MusicResumeState.swift",
+  "apps/askbible-ios/AskBible/Audio/MusicPlayer.swift",
+  "apps/askbible-ios/AskBible/AskBibleApp.swift",
+  "apps/askbible-ios/AskBible/Home/HomeView.swift",
+  "apps/askbible-ios/AskBible/Music/MusicView.swift",
+  "apps/askbible-android/core/src/main/kotlin/me/askbible/native_/data/MusicResumeState.kt",
+  "apps/askbible-android/core/src/test/kotlin/me/askbible/native_/data/MusicResumeStateTest.kt",
+  "apps/askbible-android/core/build.gradle.kts",
+  "apps/askbible-android/app/src/main/java/me/askbible/native_/audio/MusicPlayer.kt",
+  "apps/askbible-android/app/src/main/java/me/askbible/native_/MainActivity.kt",
+  "apps/askbible-android/app/src/main/java/me/askbible/native_/ui/HomeScreen.kt",
+  "apps/askbible-android/app/src/main/java/me/askbible/native_/ui/MusicScreen.kt",
+  "components/music/MusicShellPlaybackContext.tsx",
+  "components/music/MusicHomeClient.tsx",
+  "components/nature/NatureHomeAlbumStrip.tsx",
+  "lib/music-companion/shell-default-audio-src.ts",
+  "lib/music-companion/shell-default-audio-src.test.ts",
+  "lib/home/home-nature-album-press.ts",
+  "lib/home/home-nature-album-press.test.ts",
+  "tools/music-resume-check.mjs",
+  "tools/swift-harness/music-resume/main.swift"
+]

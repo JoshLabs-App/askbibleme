@@ -7,6 +7,7 @@ struct AskBibleApp: App {
             // 不再锁浅色（2026-09-16 起支持深色模式）：主题跟随系统，由 ParchmentSchemeInjector 注入
             RootView()
                 .modifier(ParchmentSchemeInjector())
+                .modifier(AppTextSizeHost())
         }
     }
 }
@@ -14,6 +15,9 @@ struct AskBibleApp: App {
 struct RootView: View {
     @Environment(\.parchment) private var parchmentTheme
     @StateObject private var store = ScriptureStore()
+    @StateObject private var devotionals = SolidJoys()
+    @StateObject private var devotional = DevotionalPlayer()
+    @State private var planListeningDate: String?
     @StateObject private var audio = ChapterAudioPlayer()
     @StateObject private var music = MusicPlayer()
     @StateObject private var home = HomeVerseController()
@@ -34,6 +38,8 @@ struct RootView: View {
     @State private var usageTicks = 0
     /// 界面语言跟系统走；读经展示语言再跟主译本走（英文译本 → 英文面）
     // 界面语言：手动设置（探索页）优先，否则跟系统
+    @State private var showHomeMusic = false
+    @State private var panoramaLocate = 0
     @State private var deviceLocale = AppLocale.device
     @State private var localeOverride = AppLocale.storedOverride
     private var appLocale: AppLocale { localeOverride ?? deviceLocale }
@@ -128,8 +134,6 @@ struct RootView: View {
     @State private var focusKeyword: String?
     /// 长按弹出操作单的那节；收藏 / 复制后的轻提示
     @State private var actionVerse: LoadedVerse?
-    /// 多节选择（章页底部条），空集合 = 不在选择态
-    @State private var selectedVerses: Set<Int> = []
     /// 划重点：开关 + 当前颜色 + 擦除态
     @StateObject private var highlights = VerseHighlightStore()
     /// 成就 / XP（DECISIONS「成就系统」「XP 要一直在涨」）
@@ -161,6 +165,38 @@ struct RootView: View {
         )
     }
 
+    /// 装载某章的朗读音源（同一章重复调用是空操作）。换章时由 audioURL 的 onChange 调；
+    /// 自动跳章时 skipToNextChapter 直接调——后台 / 锁屏时 SwiftUI 不保证跑视图更新，
+    /// 只改状态的话可能一章播完就停、回前台才接下一章（安卓 2026-10-13 实测如此，iOS 同步加固）。
+    private func loadChapterAudio(_ book: BookRef, _ chapter: Int) {
+        guard let url = ChapterAudioSource.resolve(
+            translationId: store.translation.id, bookId: book.id, bookNumber: book.number,
+            bookName: book.name, chapter: chapter) else { return }
+        let key = "\(store.translation.id).\(book.id).\(chapter)"
+        let title = ReadChrome.chapterTitle(bookName: bookLabel(book), chapter: chapter, locale: titleLocale)
+        let tid = store.translation.id
+        if ChapterAudioSource.isResolverURL(url) {
+            // YouVersion 译本：先问网站代理拿 CDN mp3，再装载
+            audio.beginResolving(key: key, title: title)
+            Task {
+                if let src = await ChapterAudioSource.fetchResolved(url, cacheKey: key) {
+                    audio.load(url: src, key: key, title: title, translationId: tid, bookId: book.id, chapter: chapter, resolved: true)
+                } else {
+                    audio.failResolving(key: key)
+                }
+            }
+        } else {
+            audio.load(url: url, key: key, title: title, translationId: tid, bookId: book.id, chapter: chapter)
+        }
+    }
+
+    /// 自动跳章：不等视图更新，立刻装下一章并起播（取地址期间 resume 只记意图，拿到后自动起播）
+    private func playChapterNow(_ book: BookRef, _ chapter: Int) {
+        autoPlayPending = false
+        loadChapterAudio(book, chapter)
+        audio.resume()
+    }
+
     private func skipToNextChapter() {
         if planFlowActive {
             if let cur = audioTarget {
@@ -172,8 +208,10 @@ struct RootView: View {
             if next < planQueue.count {
                 planQueueIndex = next
                 // 在播放页听（章页没开）→ 只换音源不开章页；在章页 → 顺到下一章页
-                if planFlowHost == .listen, openedChapter == nil { listenPlanChapter(planQueue[next], autoPlay: true) }
-                else { openPlanChapter(planQueue[next], autoPlay: true) }
+                let p = planQueue[next]
+                if planFlowHost == .listen, openedChapter == nil { listenPlanChapter(p, autoPlay: true) }
+                else { openPlanChapter(p, autoPlay: true) }
+                if let b = BibleCatalog.book(id: p.bookId) { playChapterNow(b, p.chapter) }
             } else {
                 planFlowActive = false
             }
@@ -190,12 +228,11 @@ struct RootView: View {
         if nextChapter == opened.chapter {
             // 单章书循环：音源没变，onChange 不会触发，直接回开头续播
             audio.seek(to: 0); audio.resume()
-        } else if openedChapter != nil {
-            // 自动跳章要接着播：交给 audioURL 的 onChange 起播
-            autoPlayPending = true
-            openedChapter = (opened.book, nextChapter)
+        } else {
+            if openedChapter != nil { openedChapter = (opened.book, nextChapter) }
+            else { listenChapter = (opened.book, nextChapter) }
+            playChapterNow(opened.book, nextChapter)
         }
-        else { listenChapter = (opened.book, nextChapter); audio.resume() }
     }
 
     /// 睡眠定时：首页定时角标与音乐页睡眠单同一份分钟数，四路播放器一起设（0 = 关）
@@ -206,6 +243,7 @@ struct RootView: View {
         music.setSleepTimer(minutes: m)
         home.setSleepTimer(minutes: m)
         ambient.setSleepTimer(minutes: m)
+        devotional.setSleepTimer(minutes: m)
     }
 
     /// 双击 / 操作单收藏：新加时顺手复制（RN「已收藏，经文已复制」）
@@ -230,59 +268,6 @@ struct RootView: View {
             if let verse = Int(key.dropFirst(prefix.count)), !byIndex.isEmpty { out[verse] = byIndex }
         }
         return out
-    }
-
-    /// 多节选择底部条：渲染在顶层 ZStack，浮在底栏之上（ChapterView 内渲染会被底栏盖住）
-    @ViewBuilder private var verseSelectionBar: some View {
-        if let opened = openedChapter {
-            let theme = parchmentTheme
-            VStack(spacing: 0) {
-                HStack(alignment: .top, spacing: 12) {
-                    Text(SiteCopy.f("pages.read.verseSelectionPicked", ["count": "\(selectedVerses.count)"], appLocale))
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(theme.ink)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Button { selectedVerses = [] } label: {
-                        Text(SiteCopy.t("pages.read.verseSelectionClear", appLocale))
-                            .font(.system(size: 14))
-                            .foregroundStyle(theme.muted)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(.bottom, 10)
-                Button { copySelectedVerses(in: opened) } label: {
-                    HStack(spacing: 8) {
-                        MaterialIcon(glyph: MI.contentCopy, size: 22, color: theme.ink)
-                        Text(SiteCopy.t("pages.read.verseSelectionCopy", appLocale))
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(theme.ink)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.horizontal, 18).padding(.top, 14).padding(.bottom, 28)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .parchmentCard(cornerRadius: AskCorner.card)
-            .ignoresSafeArea(edges: .bottom)
-        }
-    }
-
-    /// 多节复制：按节号顺序，每节一行「书名 章:节 正文」（RN copySelectedVerses）
-    private func copySelectedVerses(in opened: (book: BookRef, chapter: Int)) {
-        guard !selectedVerses.isEmpty else { return }
-        let name = bookLabel(opened.book)
-        let lines = selectedVerses.sorted().compactMap { v -> String? in
-            guard let text = store.verseText(translationId: store.translation.id, bookId: opened.book.id,
-                                             chapter: opened.chapter, verse: v) else { return nil }
-            return "\(name) \(opened.chapter):\(v) \(displayLocale.zh(text))"
-        }
-        UIPasteboard.general.string = lines.joined(separator: "\n")
-        showToast(SiteCopy.f("pages.read.verseSelectionCopied", ["count": "\(selectedVerses.count)"], appLocale))
-        selectedVerses = []
     }
 
     private func shareVerse(_ v: LoadedVerse, in opened: (book: BookRef, chapter: Int)) {
@@ -365,7 +350,11 @@ struct RootView: View {
     private var planDockActive: Bool { tab == .plan && planRoute == .play && !showSearch && !planPageQueue.isEmpty }
 
     /// 日历上看的那天算「听过」（月历标黄）
-    private func markPlanListened() { plans.markListened(PlanPlay.isoDate(PlanDates.addDays(Date(), planViewAhead))) }
+    private func markPlanListened() {
+        let date = PlanDates.addDays(Date(), planViewAhead)
+        plans.markListened(PlanPlay.isoDate(date))
+        planListeningDate = PlanDates.localDateString(date)
+    }
 
     /// 行点播 / 行尾「声音」：建池（或复用）从第 index 章起播
     private func planPlay(at index: Int) {
@@ -429,30 +418,20 @@ struct RootView: View {
                 home.setSource(store.translation)
             }
             .onChange(of: audioURL) { _, url in
-                guard let url, let opened = audioTarget else { return }
-                let key = "\(store.translation.id).\(opened.book.id).\(opened.chapter)"
-                let title = ReadChrome.chapterTitle(bookName: bookLabel(opened.book), chapter: opened.chapter, locale: titleLocale)
-                if ChapterAudioSource.isResolverURL(url) {
-                    // YouVersion 译本：先问网站代理拿 CDN mp3，再装载
-                    let tid = store.translation.id, bookId = opened.book.id, chapter = opened.chapter
-                    audio.beginResolving(key: key, title: title)
-                    Task {
-                        if let src = await ChapterAudioSource.fetchResolved(url, cacheKey: key) {
-                            audio.load(url: src, key: key, title: title, translationId: tid, bookId: bookId, chapter: chapter, resolved: true)
-                        } else {
-                            audio.failResolving(key: key)
-                        }
-                    }
-                } else {
-                    audio.load(url: url, key: key, title: title, translationId: store.translation.id, bookId: opened.book.id, chapter: opened.chapter)
-                }
+                guard url != nil, let opened = audioTarget else { return }
+                loadChapterAudio(opened.book, opened.chapter)
                 if autoPlayPending {
                     autoPlayPending = false
                     audio.resume()
                 }
             }
             // 整章朗读时环境音压半音量继续放，停了恢复
-            .onChange(of: audio.isPlaying) { _, playing in ambient.setDucked(playing) }
+            .onChange(of: audio.isPlaying) { _, playing in ambient.setDucked(playing || devotional.isPlaying) }
+            .onChange(of: devotional.isPlaying) { _, playing in ambient.setDucked(playing || audio.isPlaying) }
+            .task(id: "\(appLocale.rawValue).\(auth.user?.id ?? "").\(auth.isAdmin)") {
+                await auth.refreshAdminFlag()
+                if SolidJoys.available(locale: appLocale, isAdmin: auth.isAdmin) { await devotionals.load(locale: appLocale) }
+            }
             .task {
                 // 防封换线：先挑线路，后面的登录校验 / 同步才不会打到已经不通的域
                 await Endpoints.refresh()
@@ -467,6 +446,7 @@ struct RootView: View {
                     activity.noteForeground(); activity.touchHabitDay(); naturePrefs.rotateIfNewDay()
                     Task { await Endpoints.refresh(); await sync.flushNow(reason: "foreground") }
                 } else {
+                    music.saveResume()
                     activity.noteBackground()
                 }
             }
@@ -505,26 +485,38 @@ struct RootView: View {
                     if t < lastListenTickAt { lastListenTickAt = t }   // 拖回去了重新起算
                 }
                 audio.onSkipNext = skipToNextChapter
-                audio.onFinished = { if planFlowActive { skipToNextChapter() } }
+                audio.onFinished = {
+                    let handoff = PlanDevotionalHandoff.shouldPlay(naturalEnd: true, active: planFlowActive,
+                        count: planQueue.count, index: planQueueIndex, listeningDay: planListeningDate,
+                        today: PlanDates.localDateString(Date()), enabled: UserDefaults.standard.bool(forKey: "devotional.after-reading"),
+                        available: SolidJoys.available(locale: appLocale, isAdmin: auth.isAdmin))
+                    skipToNextChapter()
+                    if handoff, let day = devotionals.day(Date()) {
+                        devotional.play(day)
+                    }
+                }
+                devotional.onWillPlay = { audio.pause(); home.stopVoice(); music.setDucked(true) }
+                devotional.onStopped = { music.setDucked(audio.isPlaying) }
                 // 互斥：整章朗读 ↔ 音乐（RN shell 单一 playbackMode）；整章朗读 ↔ 金句（都是人声）。
                 // 首页最多两路同时出声（RN homeGoldenVerseTwoSourceMutex）：
                 // 开音乐 / 开金句时另外两路都在 → 关环境音；开环境音时人声与音乐都在 → 停音乐。
                 // 读经朗读与音乐可以同时放：音乐压到 30%，不再直接暂停（Josh 2026-09-11）；金句人声仍然互斥
-                audio.onWillPlay = { [weak music, weak home] in music?.setDucked(true); home?.stopVoice() }
+                audio.onWillPlay = { [weak music, weak home] in devotional.stop(); music?.setDucked(true); home?.stopVoice() }
                 audio.onStopped = { [weak music] in music?.setDucked(false) }
                 music.onWillPlay = { [weak audio, weak home, weak ambient] in
                     // 音乐起播时朗读在放 → 保持两路，音乐压低
-                    music.setDucked(audio?.isPlaying ?? false)
+                    music.setDucked((audio?.isPlaying ?? false) || devotional.isPlaying)
                     if home?.voiceOn == true, ambient?.isOn == true { ambient?.stop() }
                 }
                 home.player.onWillPlay = { [weak audio, weak music, weak ambient] in
-                    audio?.pause()
+                    audio?.pause(); devotional.stop()
                     if music?.isPlaying == true, ambient?.isOn == true { ambient?.stop() }
                 }
                 ambient.onWillPlay = { [weak audio, weak home, weak music] in
-                    let voice = (home?.voiceOn ?? false) || (audio?.isPlaying ?? false)
+                    let voice = (home?.voiceOn ?? false) || (audio?.isPlaying ?? false) || devotional.isPlaying
                     if voice, music?.isPlaying == true { music?.pause() }
                 }
+                music.restorePlaybackIfNeeded()
             }
     }
 
@@ -562,7 +554,9 @@ struct RootView: View {
                 screen(for: which)
             } dock: {
                 // 搜索 / 收藏页盖在上面时藏坞（RN 非章页只在播放中才出坞）
-                if readDockActive {
+                if (tab == .plan || tab == .read), let key = devotional.currentKey, let day = devotionals.days[key] {
+                    DevotionalControls(day: day, player: devotional, locale: appLocale).padding(.horizontal, 20)
+                } else if readDockActive {
                     // 读经 / 圣经 / 计划播放三处共用同一个坞：同骨架、同占位、同间距，
                     // 只有底色跟页面走（Josh 2026-09-23）
                     compactDock(PlaybackDock(
@@ -645,7 +639,6 @@ struct RootView: View {
                     onCopy: { copyVerse(v, in: opened); actionVerse = nil },
                     onBookmark: { toggleBookmark(v, in: opened); actionVerse = nil },
                     onShare: { shareVerse(v, in: opened); actionVerse = nil },
-                    onMultiCopy: { selectedVerses = [v.number]; actionVerse = nil },
                     onHighlight: { highlighting = true; erasing = false; actionVerse = nil },
                     onClose: { actionVerse = nil }
                 )
@@ -672,6 +665,7 @@ struct RootView: View {
                     onRegister: { showMenu = false; authRoute = .register },
                     onLogout: { showMenu = false; Task { await sync.prepareSignOut(); auth.signOut() } },
                     onFeedback: { showMenu = false; openSupportMail() },
+                    onOpenMusic: { showMenu = false; showHomeMusic = true; homeChromeHidden = false; tab = .home },
                     reminderEnabled: reminder.enabled,
                     reminderTime: reminder.timeLabel,
                     onToggleReminder: {
@@ -756,10 +750,6 @@ struct RootView: View {
                     onClose: { showSleepSheet = false })
             }
         }
-        // 多选条浮在底栏之上：用 overlay 不用全屏 frame，避免透明区域拦截点击
-        .overlay(alignment: .bottom) {
-            if !selectedVerses.isEmpty { verseSelectionBar }
-        }
         // +XP 飘字：读 / 听的时候几秒跳一次（Josh 2026-09-18「要感觉到 XP 一直在增加」）
         .overlay(alignment: .top) {
             XPFloater().environmentObject(achievements).padding(.top, 90)
@@ -784,16 +774,44 @@ struct RootView: View {
     @ViewBuilder
     private func screen(for which: ShellTab) -> some View {
         switch which {
+        case .panorama:
+            BiblePanoramaView(locale: appLocale, currentBook: openedChapter?.book.id, currentChapter: openedChapter?.chapter ?? 1, locateRequest: panoramaLocate, onResume: { tab = .read }, onRead: { bookId, chapter in
+                guard let b = BibleCatalog.book(id: bookId) else { return }
+                planFlowActive = false; listenChapter = nil; chapterFromPlan = false; openedBook = nil
+                showSearch = false; showFavorites = false; focusVerse = nil; focusKeyword = nil; searchReturnQuery = nil
+                if openedChapter?.book.id != bookId || openedChapter?.chapter != chapter { openedChapter = (b,chapter) }
+                tab = .read
+            })
         case .home:
+            if showHomeMusic {
+                MusicView(player: music, sleepActive: audio.sleepDeadline != nil || music.sleepDeadline != nil || home.sleepDeadline != nil || ambient.sleepDeadline != nil, onSleepTimer: { showSleepSheet = true })
+                    .overlay(alignment: .topLeading) {
+                        Button {
+                            showHomeMusic = false; homeChromeHidden = false
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "chevron.left")
+                                Text(AppLocale.pick("首页", "Home", appLocale))
+                            }
+                            .askFont(size: 17, weight: .semibold)
+                            .foregroundStyle(.white).shellIconShadow()
+                            .frame(width: 120, height: 56, alignment: .leading)
+                            .padding(.leading, 16)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain).padding(.top, 12)
+                        .accessibilityIdentifier("home.music.back")
+                    }
+            } else {
             HomeView(
                 home: home, music: music, ambient: ambient, prefs: naturePrefs,
                 sleepTimerMinutes: sleepTimerMinutes,
-                // 点选场景：记次数、存档、跟场景默认环境音（RN selectScene source=user）
+                // 环境音关闭时换景保持静音；用户开启后才跟随场景。
                 onSelectScene: { id in
                     guard id != naturePrefs.sceneId else { return }
                     naturePrefs.bumpUsage(id)
                     naturePrefs.selectScene(id)
-                    if let slot = NatureScenes.scene(id: id)?.defaultAmbient { ambient.start(slotId: slot) }
+                    if ambient.isOn, let slot = NatureScenes.scene(id: id)?.defaultAmbient { ambient.start(slotId: slot) }
                 },
                 onToggleAmbient: { id in ambient.slotId == id ? ambient.stop() : ambient.start(slotId: id) },
                 onCycleSleepTimer: { setSleepTimerAll(NatureScenes.cycleSleepTimer(sleepTimerMinutes)) },
@@ -808,8 +826,10 @@ struct RootView: View {
                     }
                 },
                 onOpenMenu: { showMenu = true },
+                onOpenMusic: { homeChromeHidden = false; showHomeMusic = true },
                 onChromeHidden: { hidden in withAnimation(.easeInOut(duration: 0.3)) { homeChromeHidden = hidden } }
             )
+            }
         case .music:
             MusicView(player: music,
                       sleepActive: audio.sleepDeadline != nil || music.sleepDeadline != nil || home.sleepDeadline != nil || ambient.sleepDeadline != nil,
@@ -849,7 +869,6 @@ struct RootView: View {
                     chapter: opened.chapter,
                     size: $readSize,
                     onBack: {
-                        selectedVerses = []
                         highlighting = false
                         openedChapter = nil
                         // 从计划页进来的章页：回计划 Tab、不停播（RN 返回上一页仍在放）
@@ -867,6 +886,7 @@ struct RootView: View {
                         }
                     },
                     onOpenSettings: { showTranslationPanel = true },
+                    onOpenPanorama: { panoramaLocate += 1; tab = .panorama },
                     audio: audio,
                     bookmarks: bookmarks,
                     focusVerse: focusVerse,
@@ -876,7 +896,7 @@ struct RootView: View {
                     onOpenFavorites: { showFavorites = true },
                     onDoubleTapVerse: { v in toggleBookmark(v, in: opened) },
                     onLongPressVerse: { v in actionVerse = v },
-                    selectedVerses: $selectedVerses,
+                    onStartHighlight: { highlighting = true; erasing = false },
                     highlights: chapterHighlights(opened),
                     paintColor: highlighting && !erasing ? highlightColor : nil,
                     eraseMode: highlighting && erasing,
@@ -885,11 +905,6 @@ struct RootView: View {
                                          chapter: opened.chapter, verse: verse, range: range,
                                          color: erasing ? nil : highlightColor)
                     },
-                    onToggleSelection: { v in
-                        if selectedVerses.contains(v) { selectedVerses.remove(v) } else { selectedVerses.insert(v) }
-                    },
-                    onCopySelection: { copySelectedVerses(in: opened) },
-                    onClearSelection: { selectedVerses = [] },
                     onOpenCatalog: { searchReturnQuery = nil; openedChapter = nil; openedBook = nil; planFlowActive = false; listenChapter = nil; chapterFromPlan = false },
                     onNavigate: { id, ch in
                         // 结尾的上一章 / 下一章：手动翻页就退出计划流
@@ -949,7 +964,8 @@ struct RootView: View {
             } else {
                 switch planRoute {
                 case .play:
-                    PlanPlayView(store: plans, audio: audio, locale: appLocale, queue: planPageQueue,
+                    PlanPlayView(store: plans, devotionals: devotionals, devotionalPlayer: devotional,
+                                 showDevotional: SolidJoys.available(locale: appLocale, isAdmin: auth.isAdmin), audio: audio, locale: appLocale, queue: planPageQueue,
                                  activeIndex: planActiveIndex, activePlaying: planActivePlaying,
                                  viewAhead: $planViewAhead, cursor: $planCursor,
                                  onPlayChapter: { planPlay(at: $0) }, onReadChapter: { planRead(at: $0) },

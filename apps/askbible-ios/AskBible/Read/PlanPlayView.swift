@@ -6,6 +6,9 @@ import SwiftUI
 /// 队列 / 正在播的下标由 shell 算好传进来：本页只管「看哪天」（viewAhead）和「选中哪章」（cursor）。
 struct PlanPlayView: View {
     @ObservedObject var store: ReadingPlanStore
+    @ObservedObject var devotionals: SolidJoys
+    @ObservedObject var devotionalPlayer: DevotionalPlayer
+    var showDevotional: Bool
     @ObservedObject var audio: ChapterAudioPlayer
     let locale: AppLocale
     /// 正在看的那天的逐章队列（shell 按 viewAhead 算）
@@ -49,7 +52,7 @@ struct PlanPlayView: View {
                     topBar.padding(.top, 8)
                     if queue.isEmpty && !browsingAway {
                         Text(locale.zh(PlanCopy.t("pages.read.todayPlanEmpty")))
-                            .font(.system(size: 16)).foregroundStyle(theme.muted)
+                            .askFont(size: 16).foregroundStyle(theme.muted)
                             .frame(maxWidth: .infinity).padding(.top, 48)
                     } else {
                         PlanMonthCalendar(locale: locale, prefs: prefs, dayCount: dayCount, viewAhead: viewAhead,
@@ -63,7 +66,7 @@ struct PlanPlayView: View {
                                 confirmBusy = false
                             } label: {
                                 Text(locale.zh(PlanCopy.t(confirmBusy ? "pages.read.todayPlanLoading" : "pages.read.planPlayConfirmDay")))
-                                    .font(.system(size: 16, weight: .semibold)).foregroundStyle(Color(parchment: 0xF5EFE4))
+                                    .askFont(size: 16, weight: .semibold).foregroundStyle(Color(parchment: 0xF5EFE4))
                                     .frame(maxWidth: .infinity).frame(height: 46)
                                     .background(RoundedRectangle(cornerRadius: 12).fill(theme.ink))
                             }
@@ -72,7 +75,7 @@ struct PlanPlayView: View {
                         queueHeader.padding(.top, 18)
                         if queue.isEmpty {
                             Text(locale.zh(PlanCopy.t("pages.read.todayPlanEmpty")))
-                                .font(.system(size: 15)).foregroundStyle(theme.muted).frame(maxWidth: .infinity).padding(.vertical, 20)
+                                .askFont(size: 15).foregroundStyle(theme.muted).frame(maxWidth: .infinity).padding(.vertical, 20)
                         } else {
                             VStack(spacing: 4) {
                                 ForEach(Array(queue.enumerated()), id: \.offset) { i, p in
@@ -81,6 +84,10 @@ struct PlanPlayView: View {
                             }
                             .padding(.top, 8)
                         }
+                    }
+                    if showDevotional {
+                        DevotionalCard(content: devotionals, player: devotionalPlayer,
+                                       date: PlanDates.addDays(Date(), viewAhead), locale: locale).padding(.top, 24)
                     }
                     if prefs.isNtDeepRepeat {
                         ntStages.padding(.top, 30)
@@ -110,7 +117,7 @@ struct PlanPlayView: View {
     private var topBar: some View {
         ZStack {
             Text(planName)
-                .font(.system(size: 20, weight: .bold)).foregroundStyle(theme.ink)
+                .askFont(size: 20, weight: .bold).foregroundStyle(theme.ink)
                 .multilineTextAlignment(.center).lineLimit(2)
                 .frame(maxWidth: .infinity).padding(.horizontal, 44)
             HStack {
@@ -130,12 +137,12 @@ struct PlanPlayView: View {
 
     private var queueHeader: some View {
         HStack(alignment: .firstTextBaseline) {
-            Text(dayMeta).font(.system(size: 14, weight: .medium)).foregroundStyle(theme.muted)
+            Text(dayMeta).askFont(size: 14, weight: .medium).foregroundStyle(theme.muted)
             Spacer()
-            Text(locale.zh(PlanCopy.t("pages.read.todayPlanTitle"))).font(.system(size: 16, weight: .semibold)).foregroundStyle(theme.ink)
+            Text(locale.zh(PlanCopy.t("pages.read.todayPlanTitle"))).askFont(size: 16, weight: .semibold).foregroundStyle(theme.ink)
             Spacer()
             Text(queue.isEmpty ? " " : PlanCopy.f("pages.read.planPlayTrackMeta", ["current": "\(activeIndex + 1)", "total": "\(queue.count)"]))
-                .font(.system(size: 14, weight: .medium)).monospacedDigit().foregroundStyle(theme.muted)
+                .askFont(size: 14, weight: .medium).monospacedDigit().foregroundStyle(theme.muted)
         }
     }
 
@@ -161,11 +168,11 @@ struct PlanPlayView: View {
         let busy = audio.isLoading && audio.wantsPlayback
         return HStack(spacing: 12) {
             Text(String(format: "%02d", index + 1))
-                .font(.system(size: 13, weight: active ? .bold : .medium)).monospacedDigit()
+                .askFont(size: 13, weight: active ? .bold : .medium).monospacedDigit()
                 .foregroundStyle(active ? theme.ink : theme.faint)
                 .frame(width: 26, alignment: .trailing)
             Text(chapterTitle(p))
-                .font(.system(size: 17, weight: active ? .bold : .medium))
+                .askFont(size: 17, weight: active ? .bold : .medium)
                 .foregroundStyle(active ? theme.ink : theme.inkSoft)
                 .lineLimit(1)
             Spacer(minLength: 8)
@@ -197,10 +204,10 @@ struct PlanPlayView: View {
         let s = store.nt
         let stages = NtDeepRepeat.curriculum
         return VStack(alignment: .leading, spacing: 0) {
-            Text(locale.zh(PlanCopy.t("pages.read.ntDeepRepeatLadderTitle"))).font(.system(size: 18, weight: .bold)).foregroundStyle(theme.ink)
+            Text(locale.zh(PlanCopy.t("pages.read.ntDeepRepeatLadderTitle"))).askFont(size: 18, weight: .bold).foregroundStyle(theme.ink)
             Text(locale.zh(PlanCopy.f("pages.read.ntDeepRepeatLadderLead", ["stages": "\(stages.count)", "days": "\(s.pace)", "cycle": "\(NtDeepRepeat.oneCycleDays(s.pace))"])))
-                .font(.system(size: 15)).lineSpacing(4).foregroundStyle(theme.muted).padding(.top, 6)
-            Text(locale.zh(PlanCopy.t("pages.read.ntDeepRepeatStagesBelowHint"))).font(.system(size: 14)).foregroundStyle(theme.faint).padding(.top, 4)
+                .askFont(size: 15).lineSpacing(4).foregroundStyle(theme.muted).padding(.top, 6)
+            Text(locale.zh(PlanCopy.t("pages.read.ntDeepRepeatStagesBelowHint"))).askFont(size: 14).foregroundStyle(theme.faint).padding(.top, 4)
             VStack(spacing: 6) {
                 ForEach(Array(stages.enumerated()), id: \.offset) { i, seg in
                     let isCurrent = i == s.curriculumIndex
@@ -211,16 +218,16 @@ struct PlanPlayView: View {
                     } label: {
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
                             Text(locale.zh(PlanCopy.f("pages.read.ntDeepRepeatStageLabel", ["n": "\(i + 1)"])))
-                                .font(.system(size: 13, weight: .semibold)).foregroundStyle(isCurrent ? Color(parchment: 0x8A5A00) : theme.faint)
+                                .askFont(size: 13, weight: .semibold).foregroundStyle(isCurrent ? Color(parchment: 0x8A5A00) : theme.faint)
                                 .frame(width: 58, alignment: .leading)
                             Text(NtDeepRepeat.stageRange(seg))
-                                .font(.system(size: 16, weight: isCurrent ? .semibold : .regular)).foregroundStyle(isCurrent ? theme.ink : theme.inkSoft)
+                                .askFont(size: 16, weight: isCurrent ? .semibold : .regular).foregroundStyle(isCurrent ? theme.ink : theme.inkSoft)
                             Spacer(minLength: 6)
                             if isCurrent {
                                 Text(locale.zh(PlanCopy.f("pages.read.ntDeepRepeatStageCurrent", ["day": "\(s.dayInSegment)", "total": "\(s.segmentDayTarget)"])))
-                                    .font(.system(size: 12, weight: .semibold)).foregroundStyle(Color(parchment: 0x8A5A00))
+                                    .askFont(size: 12, weight: .semibold).foregroundStyle(Color(parchment: 0x8A5A00))
                             } else if done {
-                                Text(locale.zh(PlanCopy.t("pages.read.ntDeepRepeatStageDone"))).font(.system(size: 12)).foregroundStyle(theme.faint)
+                                Text(locale.zh(PlanCopy.t("pages.read.ntDeepRepeatStageDone"))).askFont(size: 12).foregroundStyle(theme.faint)
                             }
                         }
                         .padding(.horizontal, 12).padding(.vertical, 9)
@@ -268,13 +275,13 @@ struct PlanMonthCalendar: View {
             HStack {
                 navButton(MI.chevronLeft, label: "pages.read.planPlayCalendarPrevMonth") { move(y, m, -1) }
                 Spacer()
-                Text(PlanPlay.monthLabel(locale: locale, year: y, month: m)).font(.system(size: 20, weight: .bold)).foregroundStyle(theme.ink)
+                Text(PlanPlay.monthLabel(locale: locale, year: y, month: m)).askFont(size: 20, weight: .bold).foregroundStyle(theme.ink)
                 Spacer()
                 navButton(MI.chevronRight, label: "pages.read.planPlayCalendarNextMonth") { move(y, m, 1) }
             }
             HStack(spacing: 0) {
                 ForEach(weekdays, id: \.self) { w in
-                    Text(w).font(.system(size: 15, weight: .medium)).foregroundStyle(theme.muted).frame(maxWidth: .infinity)
+                    Text(w).askFont(size: 15, weight: .medium).foregroundStyle(theme.muted).frame(maxWidth: .infinity)
                 }
             }
             .padding(.top, 8)
@@ -313,7 +320,7 @@ struct PlanMonthCalendar: View {
                 let fadeDisabled = disabled && !cell.isListened
                 Button { onSelectAhead(cell.ahead) } label: {
                     Text("\(day)")
-                        .font(.system(size: 18, weight: todayFill || accentFill ? .bold : .medium)).monospacedDigit()
+                        .askFont(size: 18, weight: todayFill || accentFill ? .bold : .medium).monospacedDigit()
                         .foregroundStyle(todayFill ? theme.surfaceSolid : (fadeDisabled ? theme.faint : theme.ink))
                         .frame(maxWidth: .infinity).frame(height: 40)
                         .background(RoundedRectangle(cornerRadius: 7).fill(todayFill ? theme.ink : (accentFill ? Brand.logo : Color.clear)))

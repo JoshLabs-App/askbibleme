@@ -1,14 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { isSelahOnlineEditorSurfaceAllowed } from "@/lib/selah-online-editor-surface";
-import { SELAH_REQUEST_PATHNAME_HEADER } from "@/lib/read/request-pathname";
 import { isBackupEntryHost } from "@/lib/auth/public-auth-origin";
-
-function nextWithRequestPathname(request: NextRequest, init?: ResponseInit) {
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set(SELAH_REQUEST_PATHNAME_HEADER, request.nextUrl.pathname);
-  return NextResponse.next({ ...init, request: { headers: requestHeaders } });
-}
 
 function isPrivilegedEditorPath(pathname: string): boolean {
   return (
@@ -33,7 +26,7 @@ export async function middleware(request: NextRequest) {
     return new NextResponse(null, { status: 404 });
   }
 
-  const response = nextWithRequestPathname(request);
+  const response = NextResponse.next();
   // 备用入口和主站内容一样，别让搜索引擎收成重复站
   if (isBackupEntryHost(request.headers.get("host"))) {
     response.headers.set("X-Robots-Tag", "noindex, nofollow");

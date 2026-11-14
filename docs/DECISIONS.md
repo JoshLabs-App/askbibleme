@@ -1587,3 +1587,16 @@ Play 要求**所有轨道**（正式 / 测试）上的包都不能再声明 `USE
   5. **先后**：先在 AskBible iOS 做出来给 JOSHUA 看效果（2026-10-21 模拟器截图已给），定了再做安卓，再推到听到、查到、TovCore 各自 App。
 - **为什么**：几个圣经软件互相带量；清单放远程是因为几个 App 都在变（TovCore iOS 还在审），写死就得每次几端一起发版。
 - **日期**：2026-10-21
+
+## D-43 网页读经章页改成静态壳；迁 Cloudflare 的体检结论（2026-11-14）
+
+- **决定了什么**（JOSHUA「askbible 可以不使用 Vercel，换到 Cloudflare」「你直接开始」「全部继续，自己决定」）：先把网页里最慢的读经章页变成静态页，再逐步清掉迁 Cloudflare 的障碍。已做：
+  1. `(app-shell)/layout` 不再读 `cookies()`/`headers()`，首屏兜底金句改为带全部语言（每种只有 bootstrap 的 40 句）。此前这一处让壳下所有页面被迫动态渲染。
+  2. `/read/[bookId]/[chapter]` 服务端只做校验 + 静态壳：`generateStaticParams` 预渲染全部 1189 章，`dynamicParams=false`（越界章 404）。语言、主译本、对照译本、`?verse=` `?q=` 全由浏览器处理（`components/bible/ReadChapterPageClient.tsx`、`lib/read/read-chapter-client.ts`）：经文与交叉引用取按卷静态 JSON，远程译本回落 `/api/read/chapter`。
+  3. 抽出共用纯函数：`lib/bible/static-scripture-verses.ts`、`local-substitute-translation-ids.ts`、`lib/read/read-chapter-format.ts`；删除 `load-read-chapter-for-read-page.ts`。`/welcome` 补 Suspense。
+  4. 删掉中间件里无人读取的 `x-selah-pathname` 请求头注入；`/api/home/bible-translations-catalog` 固定为构建期静态（每个页面都会取一次）。
+- **实测**：线上 `/read/GEN/1` 首字节 1.67s → 0.44–0.60s（缓存预热后更低），`private, no-store` → `PRERENDER`，HTML 111KB → 55KB。
+- **已知变化**：章页经文不再出现在服务端 HTML（产品定位是安静入口，不做 SEO 页）；首屏是先出壳再出经文。
+- **迁 Cloudflare 现状**：`vinext check` 兼容度 93%（20 项支持、1 项部分、1 项问题：`next.config.mjs` 与一批脚本用了 `__dirname`，vinext 只在服务端代码里定义它）。按 `nextjs-on-cloudflare` 技能，迁移走 vinext（`npx vinext init --platform=cloudflare`），且必须由 JOSHUA 选定缓存与图片方案（`--cdn-cache`、`--data-cache`、`--image-optimization`），Agent 不替他选。**还没做**：vinext 试迁、清理其余仍读 `fs` 的线上接口（见 `chapter-segments`、`verse-snippets`、`mobile/auth/*`、`mobile/content/flags`、`resource-pack/*/manifest`、`golden-verses/backgrounds` 等）、`askbible.me` 的 DNS 切换（现在 Porkbun）、Supabase 保活 Cron 迁 Worker。
+- **提醒**：本页缓存头是 `s-maxage=一年`，Vercel 随部署自动失效；换到 Cloudflare 后每次部署要清缓存。
+- **日期**：2026-11-14

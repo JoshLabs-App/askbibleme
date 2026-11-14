@@ -1600,3 +1600,10 @@ Play 要求**所有轨道**（正式 / 测试）上的包都不能再声明 `USE
 - **迁 Cloudflare 现状**：`vinext check` 兼容度 93%（20 项支持、1 项部分、1 项问题：`next.config.mjs` 与一批脚本用了 `__dirname`，vinext 只在服务端代码里定义它）。按 `nextjs-on-cloudflare` 技能，迁移走 vinext（`npx vinext init --platform=cloudflare`），且必须由 JOSHUA 选定缓存与图片方案（`--cdn-cache`、`--data-cache`、`--image-optimization`），Agent 不替他选。**还没做**：vinext 试迁、清理其余仍读 `fs` 的线上接口（见 `chapter-segments`、`verse-snippets`、`mobile/auth/*`、`mobile/content/flags`、`resource-pack/*/manifest`、`golden-verses/backgrounds` 等）、`askbible.me` 的 DNS 切换（现在 Porkbun）、Supabase 保活 Cron 迁 Worker。
 - **提醒**：本页缓存头是 `s-maxage=一年`，Vercel 随部署自动失效；换到 Cloudflare 后每次部署要清缓存。
 - **日期**：2026-11-14
+
+- **D-43 追记（2026-11-14，vinext 本机试迁）**：JOSHUA 同意「缓存/图片全选 none、只本机试迁、不上线」。试验分支 `claude/cf-vinext-trial`（WIP，不合入、不部署）。
+  - **结论 1，应用本身能跑 vinext**：`vite build` 通过；`vinext start`（Node）下 24 条页面与 API 探测与 Next 一致（只有 `/api/mobile/auth/session` 在无环境变量时 503，预期内）。
+  - **结论 2，体积够用**：Worker 包 gzip 约 2.3MB（免费档上限 3MB，余量不大；付费档 10MB）；静态文件 6119 个（免费档上限 20000）；无超 25MB 的单文件。
+  - **结论 3，没验证到**：本机 workerd（`vite dev` / `vite preview`）对所有页面与 API 返回空 404，只有静态资源 200；清缓存、调兼容日期、去掉中间件都没变化，原因未查清。**所以 Workers 运行时下 `fs` 读 `data/*.json` 的接口到底会不会失败，仍没有实测结果。**
+  - **结论 4，依赖冲突**：现有 vitest 2.x 要 vite 5，与 vinext 要的 vite 8 冲突（试验用 `--legacy-peer-deps`）；`vinext init` 还会把 react 升到 ^19.3.1 并加 `"type": "module"`，正式迁移要单独评估这两项对 App 页面的影响。
+  - **下一步要 JOSHUA 同意的事**：用 `vinext-cloudflare deploy --preview` 在 Cloudflare 上部署一个**预览 Worker**（新增云端资源、用 `~/.config/cloudflare/token`，该 token 的权限说明里没有 Workers，可能需要补权限）来拿到真实运行时结果。

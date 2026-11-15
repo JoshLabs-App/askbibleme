@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { readPublicAssetJson } from "@/lib/read-public-asset";
 import { SCRIPTURE_BOOK_NAME_EN } from "@/lib/bible/scripture-book-names-en";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
 
@@ -248,14 +249,21 @@ export async function loadChapterSegmentsFromOpenUsfm(
   return null;
 }
 
-export function loadChapterSegmentsFromLocalDataset(
+export async function loadChapterSegmentsFromLocalDataset(
   cwd: string,
   bookId: string,
   chapter: number,
-): ChapterSegment[] | null {
+): Promise<ChapterSegment[] | null> {
   const id = String(bookId || "").trim().toUpperCase();
   const ch = Number(chapter);
   if (!id || !Number.isInteger(ch) || ch < 1) return null;
+  const staticBook = await readPublicAssetJson<{ chapters?: Record<string, ChapterSegment[]> }>(
+    `/data/chapter-segments/${id}.json`,
+    cwd,
+  );
+  const staticRows = staticBook?.chapters?.[String(ch)];
+  if (Array.isArray(staticRows) && staticRows.length > 0) return staticRows;
+
   const dataset = readLocalSegmentsDataset(cwd);
   const rows = dataset?.books?.[id]?.[String(ch)];
   if (!Array.isArray(rows) || rows.length === 0) return null;

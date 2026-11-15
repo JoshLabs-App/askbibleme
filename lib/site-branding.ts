@@ -1,6 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { MetadataRoute } from "next";
+import staticBrandingData from "@/data/branding.json";
+import generatedBrandingAssets from "@/lib/generated/branding-assets.json";
 import { SITE_METADATA_DEFAULT_TITLE } from "@/lib/site-metadata-defaults";
 import type { BrandColors, BrandPresetId, SiteBrandingState } from "@/lib/site-branding-colors";
 import {
@@ -33,9 +35,8 @@ function coerceLogoKind(v: unknown): "svg" | "raster" {
 
 export async function readBrandingState(): Promise<SiteBrandingState | null> {
   try {
-    const raw = await fs.readFile(BRANDING_STATE_PATH, "utf-8");
-    const j = JSON.parse(raw) as Partial<SiteBrandingState>;
-    if (typeof j.updatedAt !== "string" || typeof j.originalName !== "string") return null;
+    const j = staticBrandingData as Partial<SiteBrandingState>;
+    if (!j || typeof j.updatedAt !== "string" || typeof j.originalName !== "string") return null;
     const base: SiteBrandingState = {
       updatedAt: j.updatedAt,
       originalName: j.originalName,
@@ -93,13 +94,7 @@ export async function getResolvedLogoTextAccent(): Promise<string> {
 }
 
 export async function brandingAssetsExist(): Promise<boolean> {
-  try {
-    await fs.access(path.join(BRANDING_PUBLIC_DIR, "icon-192.png"));
-    await fs.access(path.join(BRANDING_PUBLIC_DIR, "icon-512.png"));
-    return true;
-  } catch {
-    return false;
-  }
+  return Boolean(generatedBrandingAssets?.iconsExist);
 }
 
 /** 启动屏预览：`public/branding/splash-icon.png` */

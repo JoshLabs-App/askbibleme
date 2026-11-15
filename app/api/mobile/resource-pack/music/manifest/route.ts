@@ -3,6 +3,7 @@ import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { readPublicAssetJson } from "@/lib/read-public-asset";
 import { mergeMusicCompanionTrackDisplay } from "@/lib/music-companion/merge-track-display";
 import { filterPublicMusicCompanionStore } from "@/lib/music-companion/public-store";
 import { readMusicCompanionStore } from "@/lib/music-companion/store-file";
@@ -48,6 +49,10 @@ async function collectAssets(cwd: string, store: MusicCompanionStore): Promise<M
     }
   }
 
+  const precomputed = await readPublicAssetJson<{ assets?: Record<string, ManifestAsset> }>(
+    "/data/resource-packs/asset-stats.json",
+    cwd,
+  );
   const assets: ManifestAsset[] = [];
   for (const relPath of picked) {
     const absPath = path.resolve(cwd, "public", relPath.slice(1));
@@ -59,7 +64,8 @@ async function collectAssets(cwd: string, store: MusicCompanionStore): Promise<M
       const md5 = await md5ForFile(absPath);
       assets.push({ path: relPath, size: stat.size, md5 });
     } catch {
-      // Missing file should not break sync manifest.
+      const cached = precomputed?.assets?.[relPath];
+      if (cached) assets.push(cached);
     }
   }
   return assets.sort((a, b) => a.path.localeCompare(b.path));

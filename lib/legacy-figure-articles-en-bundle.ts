@@ -1,6 +1,5 @@
 import { createHash } from "crypto";
-import { readFileSync } from "fs";
-import path from "path";
+import staticFigureArticlesEnBundle from "@/data/legacy-figure-articles/bundle.json";
 import type { LegacyFigureArticle } from "@/lib/legacy-figure-preview";
 
 export type LegacyFigureEnProfileBlock = {
@@ -21,15 +20,10 @@ type LegacyFigureArticlesEnBundle = {
 
 let cache: LegacyFigureArticlesEnBundle | null = null;
 
-function readBundle(cwd = process.cwd()): LegacyFigureArticlesEnBundle | null {
+function readBundle(_cwd = process.cwd()): LegacyFigureArticlesEnBundle | null {
   if (cache) return cache;
-  const filePath = path.join(cwd, "data", "legacy-figure-articles", "bundle.json");
-  try {
-    cache = JSON.parse(readFileSync(filePath, "utf8")) as LegacyFigureArticlesEnBundle;
-    return cache;
-  } catch {
-    return null;
-  }
+  cache = staticFigureArticlesEnBundle as LegacyFigureArticlesEnBundle;
+  return cache;
 }
 
 export function readLegacyFigureEnBlockById(

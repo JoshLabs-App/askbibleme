@@ -9,6 +9,6 @@ export async function GET(req: Request) {
   if (!bookId || !Number.isInteger(chapter) || chapter < 1) {
     return Response.json({ segments: [] as const }, { status: 400 });
   }
-  const segments = loadBundledChapterSegments(process.cwd(), bookId, chapter, mode);
+  const segments = await loadBundledChapterSegments(process.cwd(), bookId, chapter, mode);
   return Response.json({ segments: segments ?? [] });
 }

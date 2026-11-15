@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { readPublicAssetJson } from "@/lib/read-public-asset";
 import {
   generationToPublishedChapter,
   infoEditionChapterKey,
@@ -247,13 +248,46 @@ function resolveReaderTargetRoleId(
   return readerVariantToRoleId(variant, roles);
 }
 
+let asyncAssetCache: InfoEditionV1PublishedFile | null = null;
+
+export async function readInfoEditionV1PublishedAsync(cwd: string): Promise<InfoEditionV1PublishedFile> {
+  const syncFile = readInfoEditionV1PublishedSync(cwd);
+  if (Object.keys(syncFile.chapters).length > 0) return syncFile;
+  if (asyncAssetCache) return asyncAssetCache;
+  const raw = await readPublicAssetJson<unknown>("/read/info-edition-v1-published.json", cwd);
+  if (raw) {
+    asyncAssetCache = normalizeFile(raw);
+    return asyncAssetCache;
+  }
+  return syncFile;
+}
+
+export async function loadPublishedInfoEditionChapterAsync(
+  cwd: string,
+  bookId: string,
+  chapter: number,
+  opts?: { roleId?: string; variant?: InfoEditionReaderVariant | null },
+): Promise<InfoEditionV1PublishedChapter | null> {
+  const file = await readInfoEditionV1PublishedAsync(cwd);
+  return pickChapterFromPublishedFile(file, cwd, bookId, chapter, opts);
+}
+
 export function loadPublishedInfoEditionChapter(
   cwd: string,
   bookId: string,
   chapter: number,
   opts?: { roleId?: string; variant?: InfoEditionReaderVariant | null },
 ): InfoEditionV1PublishedChapter | null {
-  const file = readInfoEditionV1PublishedSync(cwd);
+  return pickChapterFromPublishedFile(readInfoEditionV1PublishedSync(cwd), cwd, bookId, chapter, opts);
+}
+
+function pickChapterFromPublishedFile(
+  file: InfoEditionV1PublishedFile,
+  cwd: string,
+  bookId: string,
+  chapter: number,
+  opts?: { roleId?: string; variant?: InfoEditionReaderVariant | null },
+): InfoEditionV1PublishedChapter | null {
   const variant = opts?.variant ?? null;
   const targetRoleId = resolveReaderTargetRoleId(cwd, opts?.roleId, variant);
   if (!targetRoleId) {

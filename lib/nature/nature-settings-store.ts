@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import staticNatureSettings from "@/data/nature-settings.json";
 import { parseNatureSceneCategory } from "./scene-categories";
 import type {
   NatureAmbientClipEntry,
@@ -265,6 +266,9 @@ export function assertValidNatureSettingsForWrite(raw: unknown): NatureSettingsV
 }
 
 export async function readNatureSettings(cwd: string): Promise<NatureSettingsV2> {
+  if (cwd === process.cwd()) {
+    return parseRawNatureSettings(staticNatureSettings as unknown);
+  }
   const target = path.resolve(cwd, "data", DATA_FILE);
   try {
     const rawText = await fs.readFile(target, "utf-8");

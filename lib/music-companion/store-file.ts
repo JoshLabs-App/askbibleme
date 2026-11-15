@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import staticMusicCompanion from "@/data/music-companion.json";
 import type { LocalizedField } from "@/lib/i18n/localized-text";
 import type {
   AudioTrack,
@@ -274,6 +275,9 @@ export function musicCompanionDataPath(cwd: string): string {
 }
 
 export async function readMusicCompanionStore(cwd: string): Promise<MusicCompanionStore> {
+  if (cwd === process.cwd()) {
+    return parseAndValidateMusicStore(staticMusicCompanion as unknown);
+  }
   const target = musicCompanionDataPath(cwd);
   let raw: string;
   try {

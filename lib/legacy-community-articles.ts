@@ -1,5 +1,4 @@
-import { readFileSync } from "fs";
-import path from "path";
+import staticCommunityArticles from "@/data/legacy-community-articles.json";
 
 export type LegacyCommunityArticle = {
   id: string;
@@ -23,10 +22,9 @@ type LegacyCommunityArticlesRoot = {
 
 let cache: LegacyCommunityArticle[] | null = null;
 
-export function readLegacyCommunityArticles(cwd = process.cwd()): LegacyCommunityArticle[] {
+export function readLegacyCommunityArticles(_cwd = process.cwd()): LegacyCommunityArticle[] {
   if (cache) return cache;
-  const filePath = path.join(cwd, "data", "legacy-community-articles.json");
-  const raw = JSON.parse(readFileSync(filePath, "utf8")) as LegacyCommunityArticlesRoot;
+  const raw = staticCommunityArticles as LegacyCommunityArticlesRoot;
   cache = [...(raw.items ?? [])].sort((a, b) => a.order - b.order);
   return cache;
 }

@@ -24,4 +24,7 @@ const id = isDev
 
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(outPath, `${JSON.stringify({ id })}\n`, "utf8");
+const genOutPath = path.join(root, "lib", "generated", "app-build-meta.json");
+fs.mkdirSync(path.dirname(genOutPath), { recursive: true });
+fs.writeFileSync(genOutPath, `${JSON.stringify({ id })}\n`, "utf8");
 console.log(`[write-app-build-meta] wrote ${outPath} id=${id}`);

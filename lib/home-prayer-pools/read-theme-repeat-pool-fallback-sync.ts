@@ -1,18 +1,9 @@
-import fs from "node:fs";
-import path from "node:path";
 import type { AppLocale } from "@/lib/i18n/config";
 import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 import { normalizeVerseTextForHomeDisplay } from "@/lib/bible/normalize-verse-text-for-home-display";
-import type { HomePrayerChunkV1, HomePrayerManifestV1 } from "@/lib/home-prayer-pools/types";
-import {
-  EXPLORE_CURATED_700_POOL_SCOPE_ID,
-} from "@/lib/scripture/explore-curated-pool-scope-id";
-
-const FALLBACK_KEY_LIMIT = 40;
-
-function poolDir(cwd: string, scopeId: string): string {
-  return path.join(cwd, "public", "data", "home-prayer-pools", scopeId);
-}
+import type { HomePrayerChunkV1 } from "@/lib/home-prayer-pools/types";
+import { EXPLORE_CURATED_700_POOL_SCOPE_ID } from "@/lib/scripture/explore-curated-pool-scope-id";
+import generatedBootstrap from "@/lib/generated/home-verse-bootstrap.json";
 
 function normalizeEntry(e: HomeVerseEntry): HomeVerseEntry {
   return {
@@ -22,61 +13,20 @@ function normalizeEntry(e: HomeVerseEntry): HomeVerseEntry {
 }
 
 /**
- * RSC / 池未就绪时：从已提交的默认静态 chunk 取 bootstrap 经文（与客户端祷告池同源）。
+ * RSC / 池未就绪时：从构建期抽取的 bootstrap 经文取首屏兜底（与客户端祷告池同源，零 fs）。
  */
 export function readThemeRepeatPoolFallbackSync(
-  cwd: string,
+  _cwd: string,
   locales: ReadonlyArray<AppLocale>,
   scopeId: string = EXPLORE_CURATED_700_POOL_SCOPE_ID,
 ): Record<AppLocale, HomeVerseEntry[]> {
   const want = new Set(locales);
-  const empty: Record<AppLocale, HomeVerseEntry[]> = { "zh-CN": [], "zh-TW": [], en: [] };
-  const manifestPath = path.join(poolDir(cwd, scopeId), "manifest.json");
-  if (!fs.existsSync(manifestPath)) return empty;
-
-  let manifest: HomePrayerManifestV1;
-  try {
-    manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8")) as HomePrayerManifestV1;
-  } catch {
-    return empty;
-  }
-  if (manifest.version !== 1 || !Array.isArray(manifest.entries) || manifest.entries.length === 0) {
-    return empty;
-  }
-
-  const bootstrap = manifest.bootstrapVerseKeys;
-  const keys =
-    bootstrap && bootstrap.length > 0
-      ? bootstrap.slice(0, FALLBACK_KEY_LIMIT)
-      : manifest.entries.slice(0, FALLBACK_KEY_LIMIT).map((e) => e.verseKey);
-
-  const chunkCache = new Map<number, HomePrayerChunkV1>();
-  const bodies = new Map<string, HomePrayerChunkV1["verses"][number]>();
-
-  for (const key of keys) {
-    if (bodies.has(key)) continue;
-    const row = manifest.entries.find((e) => e.verseKey === key);
-    if (!row) continue;
-    const ci = row.chunkIndex;
-    if (!chunkCache.has(ci)) {
-      const chunkPath = path.join(poolDir(cwd, scopeId), `chunk-${ci}.json`);
-      if (!fs.existsSync(chunkPath)) continue;
-      try {
-        chunkCache.set(ci, JSON.parse(fs.readFileSync(chunkPath, "utf8")) as HomePrayerChunkV1);
-      } catch {
-        continue;
-      }
-    }
-    const verse = chunkCache.get(ci)?.verses.find((v) => v.verseKey === key);
-    if (verse) bodies.set(key, verse);
-  }
+  const rows = (generatedBootstrap as Record<string, HomePrayerChunkV1["verses"]>)[scopeId] ?? [];
 
   const zh: HomeVerseEntry[] = [];
   const zhTw: HomeVerseEntry[] = [];
   const en: HomeVerseEntry[] = [];
-  for (const key of keys) {
-    const row = bodies.get(key);
-    if (!row) continue;
+  for (const row of rows) {
     if (want.has("zh-CN") && row.locales["zh-CN"]?.lines?.length) {
       zh.push(normalizeEntry(row.locales["zh-CN"]));
     }
@@ -89,6 +39,5 @@ export function readThemeRepeatPoolFallbackSync(
       en.push(normalizeEntry(row.locales.en));
     }
   }
-
-  return { "zh-CN": zh, "zh-TW": zhTw.length ? zhTw : zh, en: en };
+  return { "zh-CN": zh, "zh-TW": zhTw, en };
 }

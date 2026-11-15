@@ -8,7 +8,11 @@ export default defineConfig({
     compatibilityFlags: ["nodejs_compat"],
     routes: [
       {
-        pattern: "askbible.joshlabs.app",
+        pattern: "askbible.me",
+        customDomain: true,
+      },
+      {
+        pattern: "bible.joshlabs.app",
         customDomain: true,
       },
     ],

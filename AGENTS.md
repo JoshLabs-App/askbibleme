@@ -78,7 +78,7 @@
 - 小任务：直接做，尽量不展开讨论。
 - 中任务：先给一句话计划，再开始执行。
 - 大任务：先简短对齐目标，再推进。
-- **改完直接发布（2026-10-31 用户明确授权）**：本项目任务完成并验证通过后，由 Agent 自行提交本次改动、推送并直接部署正式站，不再询问发布许可，也不把发布操作交回 Josh。网页只使用 `scripts/deploy-direct.sh` 从已推送的干净提交本机构建并直发 Vercel；发布后核对 `/app-build.json` 和相关实际页面，保留可回滚的上一部署。只发布本任务内容，保护其它会话的未提交改动。
+- **改完直接发布（2026-10-31 用户明确授权，2026-11-14 切换至 Cloudflare Workers）**：本项目任务完成并验证通过后，由 Agent 自行提交本次改动、推送并直接部署正式站，不再询问发布许可，也不把发布操作交回 Josh。网页只使用 `scripts/deploy-direct.sh`（或本机 `npx cf build && npx cf deploy`）从已推送的干净提交本机构建并直发 Cloudflare Workers（`askbible-web`）；发布后核对 `/api/app-build`（及 `/app-build.json`）和相关实际页面。只发布本任务内容，保护其它会话的未提交改动。
 - 上述授权不包含新费用、生产数据迁移、真实用户数据改写或不可逆删除；这些操作仍须单独确认。应用商店提审若不在当前任务授权范围内，另行确认。
 - 非高风险改动：默认不反复确认。
 
@@ -249,17 +249,17 @@ play scripture …/GEN-2.mp3 q=0 -> audible=[SCRIPTURE]
 
 | 层级 | 选型 |
 |------|------|
-| **Frontend（前台 + Studio）** | Next.js **App Router** + **TypeScript** + **Tailwind CSS** |
-| **Backend（后端）** | **本地数据优先**：`auth.sqlite` + `data/` 配置文件 + Render Persistent Disk |
-| **Deploy（部署）** | **Render Web Service + Persistent Disk** |
-| **Mobile App（以后）** | 先 **PWA**；后期再评估 **Expo / React Native** |
+| **Frontend（前台 + Studio）** | Next.js **App Router**（`vinext` 构建）+ **TypeScript** + **Tailwind CSS** |
+| **Backend（后端）** | 本地静态/打包数据（`public/data/` + `env.ASSETS`）+ Supabase |
+| **Deploy（部署）** | **Cloudflare Workers**（Worker：`askbible-web`，主域 `askbible.me`，测试域 `bible.joshlabs.app`） |
+| **Mobile App** | 原生 iOS：`apps/askbible-ios`；原生 Android：`apps/askbible-android` |
 
-说明：Studio 当前可有 **localStorage** 过渡；账号与正式数据写入以仓库与挂载磁盘为准逐步实现。
+说明：Studio 仅在本地 `npm run dev` 下使用；线上生产环境已迁移至 Cloudflare Workers，不再使用 Vercel 作为常规构建与发布目标。
 
 ### 内容与发布（本机优先）
 
 - **真源**：产品文字与原则类内容以 **本机编辑 + Git（含 `docs/`）** 为准；Studio 的生成与整理也在可信环境完成。
-- **线上**：站点以 **构建 / 静态分发** 为主，**默认不在生产环境提供「在线管理或在线生成整站内容」**（减小攻击面；当前单人单机时尤其合适）。实现上：在 **Vercel Production**（`VERCEL_ENV=production`）对 `/admin`、`/studio`、`/api/ai` 及 `/api/admin`、`/api/studio` 中间件 **默认 404**；本机 `npm run dev` 不受影响。临时开放线上后台（不推荐）设 `SELAH_ALLOW_ADMIN_IN_PRODUCTION=1`；任意非 development 强制关掉设 `SELAH_DISABLE_PUBLIC_ADMIN=1`（见 `.env.example`）。
+- **线上**：站点以 **构建 / 静态分发** 为主，**默认不在生产环境提供「在线管理或在线生成整站内容」**（减小攻击面；当前单人单机时尤其合适）。实现上：在任意生产环境（`NODE_ENV=production`，含 Cloudflare Workers）对 `/admin`、`/studio`、`/api/ai` 及 `/api/admin`、`/api/studio` 中间件 **默认 404**；本机 `npm run dev` 不受影响。临时开放线上后台（不推荐）设 `SELAH_ALLOW_ADMIN_IN_PRODUCTION=1`；任意非 development 强制关掉设 `SELAH_DISABLE_PUBLIC_ADMIN=1`（见 `.env.example`）。
 - **习惯**：定期将仓库 **push 到远程**，降低单设备丢失风险。
 - **凭据**：部署与 CI 用密钥 **权限最小**；不把「随意改站或写生产库」的能力长期铺在多环境或可被公网滥用的入口上。若日后必须开放线上写入口，再在 `docs/` 里单独记录威胁模型与权限设计，**不默认扩功能**。
 
@@ -280,4 +280,4 @@ play scripture …/GEN-2.mp3 q=0 -> audible=[SCRIPTURE]
 - 本文件供人类与 AI Agent 阅读；Agent 改动代码前应核对上述边界。
 - 若用户明确要求“快一点、少解释”，优先遵守本节的执行节奏，但不得突破产品边界与高风险确认要求。
 
-**网页只在本机构建（2026-10-31 用户明确要求）**：Agent 在本机完成生产构建，只上传 `.vercel/output` 产物（`vercel deploy --prebuilt --prod`）。禁止 Vercel 云端构建、`--remote` 回退和通过 Git 自动构建发布；`vercel.json` 关闭 Git 自动部署。缺失本地构建配置时先补齐，不得改用云端构建。服务端运行时配置继续由 Vercel 正式环境提供。
+**网页只在本机构建并直发 Cloudflare Workers（2026-11-14 更新）**：Agent 在本机完成生产构建（`scripts/deploy-direct.sh` 或 `npx cf build && npx cf deploy`），直发 Cloudflare Worker `askbible-web`。禁止云端自动构建、`--remote` 回退和通过 Git 自动构建发布。服务端运行时密钥通过 Cloudflare Worker Secrets（`wrangler secret`）管理，不再依赖 Vercel 环境变量。

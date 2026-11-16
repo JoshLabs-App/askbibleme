@@ -3,6 +3,14 @@ package me.askbible.native_.data
 import android.content.Context
 import android.net.Uri
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialException
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import me.askbible.native_.BuildConfig
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -113,8 +121,47 @@ class MemberAuthStore(context: Context) {
     private var callbackHandled = false
     private val scope = CoroutineScope(Dispatchers.Main)
 
-    /** 开 Custom Tab 到 Supabase /authorize（PKCE）；verifier 落盘，进程被杀后回调回来也能换 */
+    /** 正在走系统账号选择（不是浏览器）：选择框是另一个 Activity，关掉回来时别被 onResumedFromBrowser 当成取消 */
+    private var nativeGooglePending = false
+
+    /**
+     * Google 登录（Josh 2026-10-17「学 CABINEX 一样，直接用谷歌登录，不需要通过 SUPABASE.CO」）：
+     * 先用系统的 Google 账号选择拿 id_token，再交给 Supabase signInWithIdToken 换会话，全程不开 supabase.co 网页。
+     * 没配 Web client ID，或 Google Play 服务 / 控制台配置出错，退回浏览器 OAuth；用户自己关掉选择框就算取消。
+     * context 要是 Activity（选择框挂在它上面）。
+     */
     fun startGoogleSignIn(context: Context, locale: String) {
+        if (oauthPending) return
+        val clientId = BuildConfig.GOOGLE_WEB_CLIENT_ID
+        if (clientId.isBlank()) { startBrowserGoogleSignIn(context, locale); return }
+        oauthPending = true; oauthResult = null; nativeGooglePending = true
+        scope.launch {
+            val outcome: SocialOutcome? = try {
+                val request = GetCredentialRequest.Builder()
+                    .addCredentialOption(GetSignInWithGoogleOption.Builder(clientId).build())
+                    .build()
+                val credential = CredentialManager.create(context).getCredential(context, request).credential
+                if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                    val google = GoogleIdTokenCredential.createFrom(credential.data)
+                    finishSocial(withContext(Dispatchers.IO) {
+                        SupabaseAuthClient.signInWithIdToken("google", google.idToken, null, google.displayName, locale)
+                    }, "google")
+                } else SocialOutcome.Failed(MemberOAuthRules.GOOGLE_FAILED_TEXT)
+            } catch (_: GetCredentialCancellationException) {
+                SocialOutcome.Cancelled
+            } catch (_: GetCredentialException) {
+                null
+            } catch (_: Exception) {
+                null
+            }
+            nativeGooglePending = false
+            oauthPending = false
+            if (outcome != null) oauthResult = outcome else startBrowserGoogleSignIn(context, locale)
+        }
+    }
+
+    /** 开 Custom Tab 到 Supabase /authorize（PKCE）；verifier 落盘，进程被杀后回调回来也能换 */
+    private fun startBrowserGoogleSignIn(context: Context, locale: String) {
         if (oauthPending) return
         val verifier = MemberOAuthRules.randomVerifier()
         sp.edit().putString(KEY_VERIFIER, verifier).putString(KEY_LOCALE, locale).apply()
@@ -160,7 +207,7 @@ class MemberAuthStore(context: Context) {
 
     /** 回到前台却一直没回调（用户关了浏览器）：1.5 秒后仍没有就算取消 */
     fun onResumedFromBrowser() {
-        if (!oauthPending || callbackHandled) return
+        if (!oauthPending || callbackHandled || nativeGooglePending) return
         scope.launch {
             delay(1500)
             if (oauthPending && !callbackHandled) { oauthPending = false; oauthResult = SocialOutcome.Cancelled }

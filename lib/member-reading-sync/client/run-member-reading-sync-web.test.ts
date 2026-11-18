@@ -65,6 +65,30 @@ beforeEach(() => {
 });
 
 describe("web member account isolation", () => {
+  it("still isolates accounts and can recover A when its archive hits the browser storage quota", async () => {
+    storage.set(META, JSON.stringify({ boundUserId: "A" }));
+    vi.spyOn(localStorage, "setItem").mockImplementation((key, value) => {
+      if (key.includes("owner-archive")) throw new Error("QuotaExceededError");
+      storage.set(key, value);
+    });
+    const sync = await import("./run-member-reading-sync-web");
+    expect(() => sync.handleMemberReadingAuthChangeWeb(null)).not.toThrow();
+    expect(mocks.clear).toHaveBeenCalledOnce();
+    sync.handleMemberReadingAuthChangeWeb("A");
+    mocks.read.mockResolvedValue({ data: null, error: new Error("offline") });
+    expect(await sync.runMemberReadingSyncWeb()).toBe("skipped");
+    expect(mocks.apply).toHaveBeenCalledWith({ bookmarks: blob }, expect.any(Function));
+  });
+
+  it("clears personal data even when writing sign-out metadata is denied", async () => {
+    storage.set(META, JSON.stringify({ boundUserId: "A" }));
+    vi.spyOn(localStorage, "setItem").mockImplementation(() => { throw new Error("QuotaExceededError"); });
+    const sync = await import("./run-member-reading-sync-web");
+    expect(() => sync.handleMemberReadingAuthChangeWeb(null)).not.toThrow();
+    expect(mocks.clear).toHaveBeenCalledOnce();
+    expect(await sync.readMemberReadingSyncMetaWeb()).toMatchObject({ boundUserId: null, requirePullOnly: true });
+  });
+
   it("discards getUser that completes after sign-out", async () => {
     const waiting = deferred<unknown>();
     mocks.getUser.mockReturnValue(waiting.promise);

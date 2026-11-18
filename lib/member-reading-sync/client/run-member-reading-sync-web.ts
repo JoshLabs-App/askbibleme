@@ -47,12 +47,13 @@ const MIN_SYNC_INTERVAL_MS = 30_000;
 const ARCHIVE_PREFIX = "askbible.member-reading-sync-owner-archive.v1:";
 let ownerPreparation: Promise<void> = Promise.resolve();
 let activeAuthOwner: string | null = null;
+// Storage failure must never interrupt account isolation. Retry archives after personal data frees space.
+const pendingArchives = new Map<string, string>();
+let pendingMeta: MemberReadingSyncMeta | null = null;
 
 export async function readMemberReadingSyncMetaWeb(): Promise<MemberReadingSyncMeta> {
   try {
-    const raw = localStorage.getItem(MEMBER_READING_SYNC_META_KEY);
-    if (!raw) return { revision: null, lastSyncedAt: null };
-    const parsed = JSON.parse(raw) as Partial<MemberReadingSyncMeta>;
+    const parsed = readMetaNow();
     return {
       revision: typeof parsed.revision === "string" ? parsed.revision : null,
       lastSyncedAt: typeof parsed.lastSyncedAt === "string" ? parsed.lastSyncedAt : null,
@@ -67,19 +68,42 @@ export async function readMemberReadingSyncMetaWeb(): Promise<MemberReadingSyncM
 export const MEMBER_READING_SYNC_META_UPDATED_EVENT = "askbible:member-reading-sync-meta-updated";
 
 function writeMemberReadingSyncMetaWeb(meta: MemberReadingSyncMeta): void {
-  localStorage.setItem(MEMBER_READING_SYNC_META_KEY, JSON.stringify(meta));
+  pendingMeta = meta;
+  try {
+    localStorage.setItem(MEMBER_READING_SYNC_META_KEY, JSON.stringify(meta));
+    pendingMeta = null;
+  } catch { /* Keep the current owner in memory when browser storage is unavailable. */ }
+  for (const [owner, archive] of pendingArchives) {
+    try {
+      localStorage.setItem(ARCHIVE_PREFIX + owner, archive);
+      pendingArchives.delete(owner);
+    } catch { /* Retain it for this tab and retry at the next metadata write. */ }
+  }
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent(MEMBER_READING_SYNC_META_UPDATED_EVENT));
   }
 }
 
 function readMetaNow(): MemberReadingSyncMeta {
+  if (pendingMeta) return pendingMeta;
   try { return JSON.parse(localStorage.getItem(MEMBER_READING_SYNC_META_KEY) ?? "null") ?? {}; }
   catch { return { revision: null, lastSyncedAt: null }; }
 }
 
 function archiveOwner(userId: string): void {
-  localStorage.setItem(ARCHIVE_PREFIX + userId, JSON.stringify(exportLocalReadingBlobsWebSnapshot()));
+  const archive = JSON.stringify(exportLocalReadingBlobsWebSnapshot());
+  pendingArchives.set(userId, archive);
+  try {
+    localStorage.setItem(ARCHIVE_PREFIX + userId, archive);
+    pendingArchives.delete(userId);
+  } catch { /* Isolation continues; the archive remains available to its owner in this tab. */ }
+}
+
+function readOwnerArchive(userId: string): string | null {
+  const pending = pendingArchives.get(userId);
+  if (pending) return pending;
+  try { return localStorage.getItem(ARCHIVE_PREFIX + userId); }
+  catch { return null; }
 }
 
 async function prepareOwner(userId: string, isCurrent: () => boolean): Promise<void> {
@@ -87,7 +111,7 @@ async function prepareOwner(userId: string, isCurrent: () => boolean): Promise<v
   activeAuthOwner = userId;
   const meta = readMetaNow();
   if (meta.boundUserId === userId) return;
-  const rawArchive = localStorage.getItem(ARCHIVE_PREFIX + userId);
+  const rawArchive = readOwnerArchive(userId);
   // Do this before any catalog/network await: B must never display A's progress when offline.
   if (meta.boundUserId || meta.requirePullOnly || rawArchive) {
     if (meta.boundUserId) archiveOwner(meta.boundUserId);
@@ -121,6 +145,7 @@ export function handleMemberReadingAuthChangeWeb(userId: string | null, initial 
 }
 
 export function discardMemberReadingOwnerArchiveWeb(userId: string): void {
+  pendingArchives.delete(userId);
   localStorage.removeItem(ARCHIVE_PREFIX + userId);
 }
 
@@ -362,7 +387,7 @@ export function clearMemberReadingAfterSignOutWeb(): void {
   const meta = readMetaNow();
   const owner = meta.boundUserId ?? activeAuthOwner;
   if (owner) archiveOwner(owner);
-  markMemberReadingSyncPullOnlyWeb();
   clearMemberReadingLocalDataWeb();
+  markMemberReadingSyncPullOnlyWeb();
   activeAuthOwner = null;
 }

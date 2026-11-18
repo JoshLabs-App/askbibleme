@@ -17,14 +17,13 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { AuthParchmentChrome } from "@/components/shell/AuthParchmentChrome";
 import { isMemberRegisterEnabledClient } from "@/lib/member-register-enabled";
 import { WEB_APP_HOME_PATH } from "@/lib/web-app-home-path";
+import { sanitizeAuthNextPath } from "@/lib/auth/safe-auth-redirect";
 
 function LoginPageInner() {
   const { t } = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextRaw = searchParams.get("next")?.trim() || WEB_APP_HOME_PATH;
-  const safeNext =
-    nextRaw.startsWith("/") && !nextRaw.startsWith("//") && nextRaw !== "/login" ? nextRaw : "/";
+  const safeNext = sanitizeAuthNextPath(searchParams.get("next"));
 
   const { bootstrapped, configured, user, refresh } = useAskbibleUser();
   const registerOpen = isMemberRegisterEnabledClient();

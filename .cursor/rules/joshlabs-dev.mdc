@@ -16,8 +16,8 @@ alwaysApply: true
 
 OAuth 回调先确认终点：从 App 发起的登录默认必须回到 App；网页 HTTPS 回调只能在明确要求网页完成登录时启用。修改 OAuth 前先确认登录承载端、回调终点与参考实现，不得盲目替换 App 回调。
 
-## 发布（2026-10-31 用户授权）
+## 发布（2026-10-31 用户授权；2026-11-17 确认沿用 Cloudflare 正式站）
 
-改完并验证通过后，由 Agent 自己直接发布正式站；提交、推送、构建、部署与线上验证都由 Agent 完成，不再问「是否发布」，不要求 Josh 手动发布。遵循 `AGENTS.md` 的发布范围和回滚要求；网页只使用 `scripts/deploy-direct.sh`，从已推送的干净提交直接部署 Vercel。
+改完并验证通过后，由 Agent 自己直接发布正式站；提交、推送、构建、部署与线上验证都由 Agent 完成，不再问「是否发布」，不要求 Josh 手动发布。遵循 `AGENTS.md` 的发布范围和回滚要求；网页只使用 `scripts/deploy-direct.sh`，从已推送的干净提交直接部署 Cloudflare Worker `askbible-web`。
 
-**网页只在本机构建（2026-10-31 用户明确要求）**：Agent 在本机完成生产构建，只上传 `.vercel/output` 产物（`vercel deploy --prebuilt --prod`）。禁止 Vercel 云端构建、`--remote` 回退和通过 Git 自动构建发布；`vercel.json` 关闭 Git 自动部署。缺失本地构建配置时先补齐，不得改用云端构建。服务端运行时配置继续由 Vercel 正式环境提供。
+**网页只在本机构建并直发（2026-11-17 用户确认）**：脚本在本机执行 `cf build`，再用 `cf deploy --prebuilt` 直发产物。禁止云端自动构建、`--remote` 回退和通过 Git 自动构建发布。服务端密钥保留在 Cloudflare Worker Secrets；保留现有域名、workers.dev、版本预览地址与可回滚的上一 Worker 版本。

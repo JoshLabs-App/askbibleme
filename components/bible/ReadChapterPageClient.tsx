@@ -37,8 +37,8 @@ type Props = {
 
 type LoadState =
   | { status: "loading" }
-  | { status: "missing" }
-  | { status: "ready"; key: string; data: ReadChapterClientData; xrefs: ScriptureVerseXrefs[] | null };
+  | { status: "missing"; key: string }
+  | { status: "ready"; key: string; data: ReadChapterClientData };
 
 /**
  * 读经章页主体（浏览器端）。
@@ -53,6 +53,10 @@ function ReadChapterPageBody({ bookId, chapter }: Props) {
   const searchParams = useSearchParams();
   const { translation, translationCatalog, translationCatalogReady } = useReadBibleTranslationSettings();
   const [state, setState] = useState<LoadState>({ status: "loading" });
+  const [xrefState, setXrefState] = useState<{
+    key: string;
+    data: ScriptureVerseXrefs[] | null;
+  } | null>(null);
 
   const index = useMemo(
     () => ({ translations: translationCatalog, defaultTranslationId: null }),
@@ -65,29 +69,38 @@ function ReadChapterPageBody({ bookId, chapter }: Props) {
   );
   const contrastKey = translation?.contrastTranslationIds.join(",") ?? "";
   const loadKey = `${primaryTranslationId ?? ""}|${contrastKey}|${bookId}|${chapter}|${locale}`;
+  const xrefKey = `${bookId}|${chapter}`;
 
   useEffect(() => {
     if (!primaryTranslationId) return;
     let cancelled = false;
     void (async () => {
-      const [data, xrefs] = await Promise.all([
-        loadReadChapterClient({
-          index,
-          primaryTranslationId,
-          contrastTranslationIds: contrastKey ? contrastKey.split(",") : [],
-          bookId,
-          chapter,
-          locale,
-        }),
-        loadReadChapterXrefsClient(bookId, chapter),
-      ]);
+      const data = await loadReadChapterClient({
+        index,
+        primaryTranslationId,
+        contrastTranslationIds: contrastKey ? contrastKey.split(",") : [],
+        bookId,
+        chapter,
+        locale,
+      });
       if (cancelled) return;
-      setState(data ? { status: "ready", key: loadKey, data, xrefs } : { status: "missing" });
+      setState(data ? { status: "ready", key: loadKey, data } : { status: "missing", key: loadKey });
     })();
     return () => {
       cancelled = true;
     };
   }, [primaryTranslationId, contrastKey, index, bookId, chapter, locale, loadKey]);
+
+  /** 交叉引用是辅助内容，不能让慢响应阻塞经文正文。 */
+  useEffect(() => {
+    let cancelled = false;
+    void loadReadChapterXrefsClient(bookId, chapter).then((data) => {
+      if (!cancelled) setXrefState({ key: xrefKey, data });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [bookId, chapter, xrefKey]);
 
   const displayBookName = getScriptureBookDisplayName(bookId, locale);
 
@@ -101,6 +114,7 @@ function ReadChapterPageBody({ bookId, chapter }: Props) {
 
   /** 切章 / 切译本后，旧数据（key 对不上）不当作新章渲染，避免闪一下上一章的经文。 */
   const loaded = state.status === "ready" && state.key === loadKey ? state : null;
+  const missing = state.status === "missing" && state.key === loadKey;
 
   return (
     <ScriptureChrome hideTypographyControl parchmentColumnClassName="read-bible-parchment-column--read-chapter">
@@ -125,13 +139,22 @@ function ReadChapterPageBody({ bookId, chapter }: Props) {
                     {formatReadChapterFallbackNotice(loaded.data.fallbackFrom, loaded.data.primary, locale)}
                   </p>
                 ) : null}
-                {state.status === "missing" ? (
+                {missing ? (
                   <p className="read-chapter-fallback-notice" role="status">
                     {locale === "en" ? "This chapter isn't available right now." : "暂时无法取得本章经文。"}
                   </p>
                 ) : null}
               </header>
-              <div className="read-chapter-scripture">
+              <div className="read-chapter-scripture" aria-busy={!loaded && !missing}>
+                {!loaded && !missing ? (
+                  <p className="read-chapter-fallback-notice min-h-48" role="status">
+                    {locale === "en"
+                      ? "Loading this chapter…"
+                      : locale === "zh-TW"
+                        ? "正在載入本章經文…"
+                        : "正在载入本章经文…"}
+                  </p>
+                ) : null}
                 {loaded ? (
                   <Suspense fallback={null}>
                     <ReadChapterVersesClient
@@ -145,7 +168,7 @@ function ReadChapterPageBody({ bookId, chapter }: Props) {
                         translationId: c.translationId,
                         verses: c.chapter.verses,
                       }))}
-                      chapterXrefs={loaded.xrefs}
+                      chapterXrefs={xrefState?.key === xrefKey ? xrefState.data : null}
                       initialFocusVerse={initialFocusVerse}
                       initialSearchQuery={initialSearchQuery || null}
                     />

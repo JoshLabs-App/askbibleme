@@ -6,6 +6,7 @@ import { AppleBrandIcon } from "@/components/auth/OAuthBrandIcons";
 import { OAuthButtonLabel } from "@/components/auth/OAuthButtonLabel";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/config";
+import { sanitizeAuthNextPath } from "@/lib/auth/safe-auth-redirect";
 
 type Props = {
   nextPath?: string;
@@ -32,10 +33,7 @@ export function AppleSignInButton({ nextPath = "/" }: Props) {
     setPending(true);
     setError(null);
     try {
-      const safeNext =
-        nextPath.startsWith("/") && !nextPath.startsWith("//") && nextPath !== "/login" && nextPath !== "/register"
-          ? nextPath
-          : "/";
+      const safeNext = sanitizeAuthNextPath(nextPath);
       const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeNext)}`;
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "apple",

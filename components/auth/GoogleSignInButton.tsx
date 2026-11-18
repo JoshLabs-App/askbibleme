@@ -7,6 +7,7 @@ import { OAuthButtonLabel } from "@/components/auth/OAuthButtonLabel";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/config";
 import { WEB_APP_HOME_PATH } from "@/lib/web-app-home-path";
+import { sanitizeAuthNextPath } from "@/lib/auth/safe-auth-redirect";
 
 type Props = {
   nextPath?: string;
@@ -34,10 +35,7 @@ export function GoogleSignInButton({ nextPath = WEB_APP_HOME_PATH, className }: 
     setPending(true);
     setError(null);
     try {
-      const safeNext =
-        nextPath.startsWith("/") && !nextPath.startsWith("//") && nextPath !== "/login" && nextPath !== "/register"
-          ? nextPath
-          : "/";
+      const safeNext = sanitizeAuthNextPath(nextPath);
       const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeNext)}`;
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",

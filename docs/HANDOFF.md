@@ -13,17 +13,17 @@
 
 | 步 | 文件 | 用途 |
 |----|------|------|
-| 1 | 本文 `docs/HANDOFF.md` | 边界、地图、命令、当前状态 |
-| 2 | `AGENTS.md`（仓库根） | 产品哲学与工作方式真源 |
-| 3 | `/Users/joshua/Desktop/APP/skills/joshlabs-dev/SKILL.md` | 通用开发流程（最小闭环、不擅自扩功能） |
-| 4 | `.cursor/rules/*.mdc` | 领域硬规则（按任务只读相关条） |
-| 5 | 任务相关文档（见下文索引） | 进屏 / 媒体 / OAuth / 发版 / parking lot |
+| 1 | `/Users/joshua/Desktop/APP/skills/joshlabs-dev/SKILL.md` | 通用开发流程与完成标准 |
+| 2 | 上述 skill 的 `references/core-dev-principles.md` | 通用开发原则 |
+| 3 | `AGENTS.md` 与 `.cursor/rules/joshlabs-dev.mdc` | 产品哲学、当前授权与项目覆盖层 |
+| 4 | 本文 `docs/HANDOFF.md` | 边界、地图、命令、当前状态 |
+| 5 | 任务相关文档与 `.cursor/rules/*.mdc` | 进屏 / 媒体 / OAuth / 发版 / parking lot，按需阅读 |
 
 任务点名 AskBible 时，人类记忆卡（可选）：`/Users/joshua/Documents/Cursor-Memory/项目/01AskBible.md`。
 
-用户说 **`DD`** = 在质疑后继续执行。
+用户说 **`DD`** = 在已授权范围内继续执行到验收与发布完成。
 
-本轮三端审查、账号隔离修复与发布目标冲突的当前证据见 [2026-11-17 审查记录](releases/2026-11-17-app-audit.md)。该记录区分已验收代码、既有未解决项与实际发布状态。
+本轮三端审查、账号隔离修复及 Cloudflare 正式站发布证据见 [2026-11-17 审查记录](releases/2026-11-17-app-audit.md)。该记录区分已验收代码、既有未解决项与实际发布状态。
 
 ---
 

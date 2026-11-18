@@ -1,13 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { GoldenVerseBackgroundItem } from "@/lib/golden-verses/background-uploads";
 
-async function fetchGoldenVersePageBackgrounds(): Promise<GoldenVerseBackgroundItem[]> {
-  const res = await fetch("/api/golden-verses/backgrounds", { cache: "no-store" });
-  const j = (await res.json()) as { backgrounds?: GoldenVerseBackgroundItem[] };
-  if (!res.ok) return [];
-  return Array.isArray(j.backgrounds) ? j.backgrounds : [];
+async function fetchGoldenVersePageBackgrounds(): Promise<GoldenVerseBackgroundItem[] | null> {
+  try {
+    const res = await fetch("/api/golden-verses/backgrounds", { cache: "no-store" });
+    if (!res.ok) return null;
+    const j = (await res.json()) as { backgrounds?: GoldenVerseBackgroundItem[] };
+    return Array.isArray(j.backgrounds) ? j.backgrounds : null;
+  } catch {
+    // A failed refresh is not an empty catalog. Keep the last usable backgrounds.
+    return null;
+  }
 }
 
 function sameCatalog(
@@ -28,19 +33,32 @@ export function useGoldenVersePageBackgrounds(
   const [backgrounds, setBackgrounds] = useState<GoldenVerseBackgroundItem[]>(() => [
     ...initialFromServer,
   ]);
+  const backgroundsRef = useRef(backgrounds);
+  const requestRef = useRef(0);
 
   const refresh = useCallback(async () => {
+    const request = ++requestRef.current;
     const next = await fetchGoldenVersePageBackgrounds();
-    setBackgrounds((prev) => (sameCatalog(prev, next) ? prev : next));
-    return next;
+    if (request === requestRef.current && next !== null) {
+      if (!sameCatalog(backgroundsRef.current, next)) {
+        backgroundsRef.current = next;
+        setBackgrounds(next);
+      }
+    }
+    return backgroundsRef.current;
   }, []);
 
   useEffect(() => {
-    setBackgrounds((prev) => (sameCatalog(prev, initialFromServer) ? prev : [...initialFromServer]));
+    requestRef.current += 1;
+    if (!sameCatalog(backgroundsRef.current, initialFromServer)) {
+      backgroundsRef.current = [...initialFromServer];
+      setBackgrounds(backgroundsRef.current);
+    }
   }, [initialFromServer]);
 
   useEffect(() => {
     void refresh();
+    return () => { requestRef.current += 1; };
   }, [refresh]);
 
   useEffect(() => {

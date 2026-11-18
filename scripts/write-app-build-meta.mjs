@@ -1,6 +1,6 @@
 /**
  * 构建/开发启动前写入 `public/app-build.json`，供静态 CDN 与 `getAppBuildId()` 对齐。
- * - 生产构建：VERCEL_DEPLOYMENT_ID / VERCEL_GIT_COMMIT_SHA / 随机 UUID
+ * - 正式发布使用发布脚本传入的提交 SHA，其他构建回退到部署标识或随机 UUID
  * - `--dev`：固定 `development`（与 AppUpdateNotifier 跳过逻辑一致）
  */
 import crypto from "node:crypto";
@@ -17,6 +17,7 @@ const isDev = process.argv.includes("--dev");
 const id = isDev
   ? "development"
   : (
+      process.env.NEXT_PUBLIC_APP_BUILD_ID?.trim() ||
       process.env.VERCEL_DEPLOYMENT_ID?.trim() ||
       process.env.VERCEL_GIT_COMMIT_SHA?.trim() ||
       crypto.randomUUID()
@@ -24,4 +25,7 @@ const id = isDev
 
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(outPath, `${JSON.stringify({ id })}\n`, "utf8");
+const genOutPath = path.join(root, "lib", "generated", "app-build-meta.json");
+fs.mkdirSync(path.dirname(genOutPath), { recursive: true });
+fs.writeFileSync(genOutPath, `${JSON.stringify({ id })}\n`, "utf8");
 console.log(`[write-app-build-meta] wrote ${outPath} id=${id}`);

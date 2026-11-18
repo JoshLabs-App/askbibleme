@@ -32,6 +32,7 @@ function parseExternalHomeVerseRotation(raw: unknown): ExternalHomeVerseRotation
  * Missing/invalid file should not break runtime boot.
  */
 export function readExternalHomeVerseRotationSync(cwd: string): ExternalHomeVerseRotationFile | null {
+  if (cwd === process.cwd()) return null;
   const abs = path.join(cwd, REL);
   let raw: unknown;
   try {

@@ -2,6 +2,8 @@ import { MediaLinkRebaser } from "@/components/install/MediaLinkRebaser";
 import { APP_INSTALL_ANDROID_VERSION_PATH, DEFAULT_APP_INSTALL_ANDROID_APK_URL } from "@/lib/app-install-urls";
 import { endpointCandidates } from "@/lib/endpoints";
 import type { Metadata } from "next";
+import { sitePageTitle } from "@/lib/site-metadata-defaults";
+import { ASKBIBLE_PRODUCT_NAME } from "@/lib/askbible-product-name";
 
 /**
  * 下载页：`askbible.me/app`。
@@ -14,12 +16,11 @@ import type { Metadata } from "next";
  * 所以发安卓版**不需要**重新部署网站。
  */
 export const metadata: Metadata = {
-  title: "下载 AskBible",
-  description: "AskBible 安卓版下载。iPhone / iPad 请到 App Store。",
+  title: sitePageTitle("下载"),
+  description: `${ASKBIBLE_PRODUCT_NAME} 安卓版下载。iPhone / iPad 请到 App Store。`,
 };
 
-/** 一小时新鲜期：发版后最多一小时页面上的版本号就跟上了 */
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 /** 版本信息和安装包都在 R2 桶里，域名走 `media` 角色（防封换线，lib/endpoints）——不再单独写死一个域 */
 const APK_URL = DEFAULT_APP_INSTALL_ANDROID_APK_URL;
@@ -30,7 +31,7 @@ async function loadVersion(): Promise<VersionInfo | null> {
   // 两条 media 线路是同一个桶，挨个试；都取不到就退回静态直链 —— 页面照常能下，只是不显示版本号
   for (const host of endpointCandidates("media")) {
     try {
-      const res = await fetch(host + APP_INSTALL_ANDROID_VERSION_PATH, { next: { revalidate: 3600 } });
+      const res = await fetch(host + APP_INSTALL_ANDROID_VERSION_PATH, { cache: "no-store" });
       if (res.ok) return (await res.json()) as VersionInfo;
     } catch {
       /* 试下一条 */
@@ -63,15 +64,15 @@ export default async function AppDownloadPage() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/branding/icon-512.png"
-        alt="AskBible"
+        alt={ASKBIBLE_PRODUCT_NAME}
         width={104}
         height={104}
         style={{ borderRadius: 24, boxShadow: "0 8px 28px rgba(92,64,48,.22)" }}
       />
 
-      <h1 style={{ fontSize: 30, fontWeight: 700, margin: 0 }}>AskBible</h1>
+      <h1 style={{ fontSize: 30, fontWeight: 700, margin: 0 }}>{ASKBIBLE_PRODUCT_NAME}</h1>
       <p style={{ margin: 0, fontSize: 15, color: "#5C4030", maxWidth: 420, lineHeight: 1.7 }}>
-        读经、听读、按计划跟进度，遇到不懂的地方随时问。
+        读经、听读，在安静中重新进入圣经。
       </p>
 
       <a

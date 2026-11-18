@@ -13,8 +13,8 @@ export function MemberReadingSyncBridge() {
 
   useEffect(() => {
     if (!enabled) return;
-    scheduleMemberReadingSyncWeb();
-  }, [enabled]);
+    scheduleMemberReadingSyncWeb("auth-change");
+  }, [enabled, user?.id]);
 
   // 成就账本改了就防抖推一次（原生那边是 AchievementStore.onLocalChange → 1.5 秒防抖）
   useEffect(() => {

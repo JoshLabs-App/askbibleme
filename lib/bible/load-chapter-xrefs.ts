@@ -1,4 +1,5 @@
 import type { ScriptureVerseXrefs, ScriptureXrefTarget } from "@/lib/bible/scripture-xref-types";
+import { readPublicAssetText } from "@/lib/read-public-asset";
 import { getScriptureXrefDatabase } from "@/lib/bible/scripture-xref-db";
 import {
   isSafeStaticXrefBookId,
@@ -61,16 +62,7 @@ async function loadStaticChapterXrefs(
 
   let file = xrefBookCache.get(bookId);
   if (file === undefined) {
-    let raw: string | null = null;
-    try {
-      const [{ default: fsp }, { default: nodePath }] = await Promise.all([
-        import("node:fs/promises"),
-        import("node:path"),
-      ]);
-      raw = await fsp.readFile(nodePath.join(cwd, staticXrefsBookRelPath(bookId)), "utf8");
-    } catch {
-      raw = null;
-    }
+    let raw = await readPublicAssetText(staticXrefsBookUrlPath(bookId), cwd);
     if (raw === null) {
       const origin =
         process.env.STATIC_SCRIPTURE_BASE_URL?.trim() || process.env.NEXT_PUBLIC_SITE_URL?.trim();

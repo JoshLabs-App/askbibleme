@@ -29,6 +29,20 @@ export type TodayReadingChapterFractionRecord = {
 };
 
 const listeners = new Set<() => void>();
+let accountGeneration = 0;
+
+export function clearTodayReadingChapterFractionForAccountSwitch(): void {
+  accountGeneration += 1;
+  try {
+    if (typeof localStorage !== "undefined") {
+      localStorage.removeItem(TODAY_READING_CHAPTER_FRACTION_KEY);
+      localStorage.removeItem(TODAY_READING_CHAPTER_FRACTION_KEY_LEGACY);
+    }
+  } catch {
+    /* storage can be disabled */
+  }
+  emit();
+}
 
 function emit() {
   listeners.forEach((l) => {
@@ -176,6 +190,7 @@ export async function recordTodayReadingChapterFraction(
   fraction: number,
   opts?: { dayCount?: number },
 ): Promise<void> {
+  const generation = accountGeneration;
   const prefs = readEffectiveReadingPlanPrefs();
   const isTripleLoop = isTripleLoopPlanId(prefs.planId);
   const dayCount = opts?.dayCount ?? prefs.dayCount ?? 365;
@@ -188,6 +203,7 @@ export async function recordTodayReadingChapterFraction(
   }
 
   const payload = await loadTodayReadingPlanPayload(prefs, { dayCount: opts?.dayCount });
+  if (generation !== accountGeneration) return;
   const reading = payload?.day?.readings.find((r) => readingIncludesChapter(r, bookId, chapter));
   if (!reading) return;
 

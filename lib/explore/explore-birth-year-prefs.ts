@@ -129,6 +129,16 @@ export function readExploreDisplayName(): string | null {
   return readExploreYearDayProfile().displayName;
 }
 
+export function clearExploreYearDayProfile(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_KEY_LEGACY);
+  } catch {
+    /* storage can be disabled */
+  }
+}
+
 /** 仅更新称呼；已有生日则保留其它字段。 */
 export function writeExploreDisplayName(raw: string): boolean {
   const name = normalizeExploreDisplayName(raw);

@@ -8,6 +8,7 @@ type RecordV1 = {
 const listeners = new Set<() => void>();
 let cachedDates = new Set<string>();
 let hydrated = false;
+let accountGeneration = 0;
 
 const EMPTY_LISTENED_DATES: ReadonlySet<string> = new Set();
 
@@ -64,8 +65,21 @@ export function getEmptyPlanPlayListenedDates(): ReadonlySet<string> {
   return EMPTY_LISTENED_DATES;
 }
 
+export function clearPlanPlayListenedDates(): void {
+  accountGeneration += 1;
+  cachedDates = new Set();
+  hydrated = true;
+  try {
+    if (typeof window !== "undefined") window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* storage can be disabled */
+  }
+  emit();
+}
+
 export function markPlanPlayListenedDate(isoDate: string): void {
   if (typeof window === "undefined") return;
+  const generation = accountGeneration;
   hydrate();
   const date = isoDate.trim();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
@@ -84,6 +98,7 @@ export function markPlanPlayListenedDate(isoDate: string): void {
     }
   }
   void import("@/lib/read/reading-habit-stats").then(({ touchReadingHabitDay }) => {
+    if (generation !== accountGeneration) return;
     touchReadingHabitDay(date);
   });
 }

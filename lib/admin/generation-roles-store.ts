@@ -2,6 +2,7 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import staticGenerationRoles from "@/data/admin/generation-roles.json";
 import {
   GENERATION_ROLE_BUILTIN_INFO_V1,
   GENERATION_ROLES_VERSION,
@@ -106,6 +107,9 @@ export function newGenerationRoleId(): string {
 }
 
 export function readGenerationRolesSync(cwd: string): GenerationRolesFile {
+  if (cwd === process.cwd()) {
+    return normalizeFile(staticGenerationRoles as unknown);
+  }
   const p = absPath(cwd);
   if (!fs.existsSync(p)) return defaultFile();
   try {

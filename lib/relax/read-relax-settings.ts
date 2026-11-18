@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import staticRelaxSettings from "@/data/relax-settings.json";
 import type { RelaxSettingsV1 } from "./types";
 
 const DATA_FILE = "relax-settings.json";
@@ -38,6 +39,9 @@ export function parseRelaxSettings(raw: unknown): RelaxSettingsV1 {
 }
 
 export async function readRelaxSettings(cwd: string): Promise<RelaxSettingsV1> {
+  if (cwd === process.cwd()) {
+    return parseRelaxSettings(staticRelaxSettings as unknown);
+  }
   const target = path.resolve(cwd, "data", DATA_FILE);
   try {
     const raw = await fs.readFile(target, "utf-8");

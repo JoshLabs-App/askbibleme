@@ -682,6 +682,18 @@ export function clearAchievementsForAccountSwitch(): void {
   suppressChangeNotify = true;
   ledger = emptyLedger();
   pending = [];
-  suppressChangeNotify = false;
-  refreshAchievements();
+  try {
+    try {
+      if (typeof localStorage !== "undefined") {
+        localStorage.removeItem(MONTH_TAG_KEY);
+        localStorage.removeItem(MONTH_ANCHOR_KEY);
+        localStorage.removeItem(BACKFILL_FLAG_KEY);
+      }
+    } catch {
+      /* Continue refreshing the empty ledger when storage is disabled. */
+    }
+    refreshAchievements();
+  } finally {
+    suppressChangeNotify = false;
+  }
 }

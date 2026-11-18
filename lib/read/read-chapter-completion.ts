@@ -9,6 +9,12 @@ export type ReadChapterCompletionRecord = {
 };
 
 const listeners = new Set<() => void>();
+let accountGeneration = 0;
+
+export function clearReadChapterCompletionForAccountSwitch(): void {
+  accountGeneration += 1;
+  writeCompletionSet(new Set());
+}
 
 function emit() {
   listeners.forEach((listener) => {
@@ -81,6 +87,7 @@ export function isReadChapterCompleted(bookId: string, chapter: number): boolean
 }
 
 export function markReadChapterCompleted(bookId: string, chapter: number): boolean {
+  const generation = accountGeneration;
   const key = chapterKey(bookId, chapter);
   if (!key) return false;
   const done = readCompletionSet();
@@ -90,6 +97,7 @@ export function markReadChapterCompleted(bookId: string, chapter: number): boole
   touchReadingHabitDay();
   // 成就账本：读完一章是点亮书卷印章的唯一入口（与原生 onReachedEnd 同一口径）
   void import("@/lib/achievements/achievement-store-web").then((m) => {
+    if (generation !== accountGeneration) return;
     m.noteChapterRead(bookId, chapter);
   });
   return true;

@@ -5,7 +5,7 @@ import { ReadTripleLoopPlanDetailClient } from "@/components/bible/ReadTripleLoo
 import { ScriptureChrome } from "@/components/scripture/ScriptureChrome";
 import { isNtDeepRepeatPlanId } from "@/lib/bible/reading-plans/nt-deep-repeat-plan";
 import { isTripleLoopPlanId } from "@/lib/bible/reading-plans/triple-loop-plan";
-import { readReadingPlanBundleSync, readReadingPlanRegistrySync } from "@/lib/bible/reading-plans/reading-plans-store";
+import { readReadingPlanBundle, readReadingPlanRegistrySync } from "@/lib/bible/reading-plans/reading-plans-store";
 import { sitePageTitle } from "@/lib/site-metadata-defaults";
 
 type Props = { params: Promise<{ planId: string }> };
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props) {
   const decoded = decodeURIComponent(planId);
   if (isTripleLoopPlanId(decoded)) return { title: sitePageTitle("新旧约循环读经计划") };
   if (isNtDeepRepeatPlanId(decoded)) return { title: sitePageTitle("新约深读 · 旧约通读") };
-  const bundle = readReadingPlanBundleSync(process.cwd(), decoded);
+  const bundle = await readReadingPlanBundle(process.cwd(), decoded);
   if (!bundle) return { title: sitePageTitle("读经计划") };
   return { title: sitePageTitle(bundle.name) };
 }
@@ -47,7 +47,7 @@ export default async function ReadPlanDetailPage({ params }: Props) {
     );
   }
 
-  const bundle = readReadingPlanBundleSync(process.cwd(), planId);
+  const bundle = await readReadingPlanBundle(process.cwd(), planId);
   if (!bundle) notFound();
 
   return (

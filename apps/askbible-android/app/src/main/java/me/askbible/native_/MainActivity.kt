@@ -1045,8 +1045,10 @@ private fun RootScreen() {
                 onConfirm = {
                     confirmDeleteAccount = false
                     scope.launch {
-                        syncEngine.prepareSignOut()
                         val err = auth.deleteAccount()
+                        // A rejected/offline deletion must preserve local reading
+                        // data. Do not clear a new account signed in during DELETE.
+                        if (err == null && auth.user == null) syncEngine.prepareSignOut()
                         toast = if (err != null) SiteCopy.localizeKnown(err, appLocale)
                                 else SiteCopy.t("native.deleteAccountDone", appLocale)
                     }

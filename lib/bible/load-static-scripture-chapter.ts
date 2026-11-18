@@ -1,4 +1,5 @@
 import type { LoadedChapterVerse } from "@/lib/bible/loaded-chapter-verse";
+import { readPublicAssetText } from "@/lib/read-public-asset";
 import { staticScriptureEntriesToLoadedVerses } from "@/lib/bible/static-scripture-verses";
 import {
   isSafeStaticScriptureIds,
@@ -90,7 +91,9 @@ async function loadBookFile(
   const cached = bookCache.get(key);
   if (cached) return cached;
 
-  const raw = (await readViaFs(cwd, translationId, bookId)) ?? (await readViaFetch(translationId, bookId));
+  const raw =
+    (await readPublicAssetText(staticScriptureBookUrlPath(translationId, bookId), cwd)) ??
+    (await readViaFetch(translationId, bookId));
   if (!raw) return null;
   const parsed = parseBookFile(raw);
   if (!parsed) return null;

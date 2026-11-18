@@ -17,6 +17,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run mobile:release:preflight
-      - run: npm run build
+      - name: Build the Cloudflare Worker locally
+        run: |
+          npm run prebuild
+          npx --no-install tsc --noEmit
+          npx --no-install cf build
         env:
           NODE_ENV: production

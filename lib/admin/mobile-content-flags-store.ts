@@ -1,6 +1,7 @@
 import "server-only";
 import fs from "node:fs";
 import path from "node:path";
+import staticMobileContentFlags from "@/data/admin/mobile-content-flags.json";
 
 export type MobileContentFlags = {
   memberRegisterEnabled: boolean;
@@ -113,6 +114,9 @@ function normalize(raw: unknown): MobileContentFlagsFile {
 }
 
 export function readMobileContentFlagsSync(cwd: string): MobileContentFlagsFile {
+  if (cwd === process.cwd()) {
+    return normalize(staticMobileContentFlags as unknown);
+  }
   const file = filePath(cwd);
   if (!fs.existsSync(file)) {
     return { version: 1, flags: defaultsFromEnv(), announcement: null, updatedAt: new Date(0).toISOString() };

@@ -109,6 +109,10 @@ export function replaceReadingHabitStatsRecord(record: ReadingHabitStatsRecord):
   writeReadingHabitStats(mergeReadingHabitStatsRecords(local, record));
 }
 
+export function clearReadingHabitStatsForAccountSwitch(): void {
+  writeReadingHabitStats({ version: 1, completedDates: [] });
+}
+
 export function mergeReadingHabitStatsRecords(
   a: ReadingHabitStatsRecord,
   b: ReadingHabitStatsRecord,

@@ -1,6 +1,7 @@
 import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
+import staticTranslationsIndex from "@/data/bible/translations.json";
 import { invalidateScriptureSqliteCache, scriptureSqlitePath } from "@/lib/bible/scripture-sqlite-db";
 import type { BibleTranslationMeta, BibleTranslationsIndex } from "@/lib/bible/translations-types";
 
@@ -47,6 +48,9 @@ function parseTranslationsIndexJson(raw: string): BibleTranslationsIndex {
 
 /** 同步读索引（供 RSC / 服务端同步加载经文用）。 */
 export function readTranslationsIndexSync(cwd: string): BibleTranslationsIndex {
+  if (cwd === process.cwd()) {
+    return parseTranslationsIndexJson(JSON.stringify(staticTranslationsIndex));
+  }
   const p = indexPath(cwd);
   try {
     const raw = fsSync.readFileSync(p, "utf-8");
@@ -57,6 +61,9 @@ export function readTranslationsIndexSync(cwd: string): BibleTranslationsIndex {
 }
 
 export async function readTranslationsIndex(cwd: string): Promise<BibleTranslationsIndex> {
+  if (cwd === process.cwd()) {
+    return parseTranslationsIndexJson(JSON.stringify(staticTranslationsIndex));
+  }
   const p = indexPath(cwd);
   try {
     const raw = await fs.readFile(p, "utf-8");

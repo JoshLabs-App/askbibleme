@@ -1,5 +1,7 @@
 "use client";
 
+import type { AuthChangeEvent } from "@supabase/supabase-js";
+
 import {
   MEMBER_READING_SYNC_META_KEY,
   MEMBER_READING_SYNC_SCHEMA_VERSION,
@@ -17,7 +19,9 @@ import {
 } from "@/lib/member-reading-sync/member-reading-sync-owner-policy";
 import {
   applyMemberReadingSyncBlobsWeb,
+  clearMemberReadingLocalDataWeb,
   exportLocalReadingBlobsWeb,
+  exportLocalReadingBlobsWebSnapshot,
   localHasMemberReadingProgressWeb,
 } from "@/lib/member-reading-sync/client/reading-sync-local-web";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -38,7 +42,11 @@ type SyncRow = {
 let syncInFlight: Promise<MemberReadingSyncOutcome> | null = null;
 let pendingFlushReason: string | undefined;
 let lastSyncStartedAt = 0;
+let accountGeneration = 0;
 const MIN_SYNC_INTERVAL_MS = 30_000;
+const ARCHIVE_PREFIX = "askbible.member-reading-sync-owner-archive.v1:";
+let ownerPreparation: Promise<void> = Promise.resolve();
+let activeAuthOwner: string | null = null;
 
 export async function readMemberReadingSyncMetaWeb(): Promise<MemberReadingSyncMeta> {
   try {
@@ -58,20 +66,62 @@ export async function readMemberReadingSyncMetaWeb(): Promise<MemberReadingSyncM
 
 export const MEMBER_READING_SYNC_META_UPDATED_EVENT = "askbible:member-reading-sync-meta-updated";
 
-async function writeMemberReadingSyncMetaWeb(meta: MemberReadingSyncMeta): Promise<void> {
+function writeMemberReadingSyncMetaWeb(meta: MemberReadingSyncMeta): void {
   localStorage.setItem(MEMBER_READING_SYNC_META_KEY, JSON.stringify(meta));
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent(MEMBER_READING_SYNC_META_UPDATED_EVENT));
   }
 }
 
-async function resolveAuthed() {
-  if (!isSupabaseAuthConfigured()) return null;
-  const supabase = createSupabaseBrowserClient();
-  if (!supabase) return null;
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user?.id) return null;
-  return { supabase, userId: data.user.id };
+function readMetaNow(): MemberReadingSyncMeta {
+  try { return JSON.parse(localStorage.getItem(MEMBER_READING_SYNC_META_KEY) ?? "null") ?? {}; }
+  catch { return { revision: null, lastSyncedAt: null }; }
+}
+
+function archiveOwner(userId: string): void {
+  localStorage.setItem(ARCHIVE_PREFIX + userId, JSON.stringify(exportLocalReadingBlobsWebSnapshot()));
+}
+
+async function prepareOwner(userId: string, isCurrent: () => boolean): Promise<void> {
+  if (!isCurrent()) return;
+  activeAuthOwner = userId;
+  const meta = readMetaNow();
+  if (meta.boundUserId === userId) return;
+  const rawArchive = localStorage.getItem(ARCHIVE_PREFIX + userId);
+  // Do this before any catalog/network await: B must never display A's progress when offline.
+  if (meta.boundUserId || meta.requirePullOnly || rawArchive) {
+    if (meta.boundUserId) archiveOwner(meta.boundUserId);
+    clearMemberReadingLocalDataWeb();
+    writeMemberReadingSyncMetaWeb({ revision: null, lastSyncedAt: null, boundUserId: userId, requirePullOnly: false });
+    if (rawArchive) {
+      let archived: MemberReadingSyncPushV1 | null = null;
+      try { archived = JSON.parse(rawArchive) as MemberReadingSyncPushV1; } catch { /* Keep corrupt archives for recovery. */ }
+      if (archived?.schemaVersion === 1 && archived.blobs) {
+        await applyMemberReadingSyncBlobsWeb(archived.blobs, isCurrent);
+      }
+    }
+  }
+}
+
+/** Called synchronously by the auth listener; never calls Supabase under its auth lock. */
+export function handleMemberReadingAuthChangeWeb(userId: string | null, initial = false): void {
+  // A first anonymous visit owns its guest progress; an expired member session does not.
+  if (initial && userId == null && !readMetaNow().boundUserId) return;
+  accountGeneration += 1;
+  pendingFlushReason = undefined;
+  const generation = accountGeneration;
+  if (userId == null) {
+    clearMemberReadingAfterSignOutWeb();
+    ownerPreparation = Promise.resolve();
+  } else {
+    ownerPreparation = prepareOwner(userId, () => generation === accountGeneration);
+    // The sync runner also awaits this promise and reports a skipped sync on storage failure.
+    void ownerPreparation.catch(() => undefined);
+  }
+}
+
+export function discardMemberReadingOwnerArchiveWeb(userId: string): void {
+  localStorage.removeItem(ARCHIVE_PREFIX + userId);
 }
 
 async function readRemote(
@@ -121,42 +171,52 @@ async function upsertRemote(
 async function mergeAndApplyWeb(
   remoteBlobs: MemberReadingSyncPushV1["blobs"] | undefined,
   localPush: MemberReadingSyncPushV1,
+  isCurrent: () => boolean,
 ): Promise<MemberReadingSyncPushV1["blobs"]> {
   const freshLocal = await exportLocalReadingBlobsWeb();
   const merged = mergeMemberReadingSyncPush(
     mergeMemberReadingSyncPush(remoteBlobs, localPush),
     freshLocal,
   );
-  await applyMemberReadingSyncBlobsWeb(merged);
+  await applyMemberReadingSyncBlobsWeb(merged, isCurrent);
   return merged;
-}
-
-async function prepareMemberReadingSyncOwnerWeb(userId: string): Promise<"continue" | "replace"> {
-  const meta = await readMemberReadingSyncMetaWeb();
-  if (meta.boundUserId === userId && !meta.requirePullOnly) return "continue";
-  if (meta.boundUserId != null && meta.boundUserId !== userId) {
-    await writeMemberReadingSyncMetaWeb({
-      revision: null,
-      lastSyncedAt: null,
-      boundUserId: null,
-      requirePullOnly: true,
-    });
-    return "replace";
-  }
-  if (meta.requirePullOnly) return "replace";
-  return "continue";
 }
 
 export async function runMemberReadingSyncWeb(reason?: string): Promise<MemberReadingSyncOutcome> {
   if (typeof window === "undefined" || !navigator.onLine) return "offline";
+  if (!isSupabaseAuthConfigured()) return "unauthorized";
+  const supabase = createSupabaseBrowserClient();
+  if (!supabase) return "unauthorized";
+  const generation = accountGeneration;
+  let accountChanged = false;
+  // Subscribe before the first network call: a delayed getUser must not resurrect a signed-out owner.
+  const { data: listener } = supabase.auth.onAuthStateChange((event: AuthChangeEvent) => {
+    if (event === "SIGNED_OUT" || event === "SIGNED_IN") accountChanged = true;
+  });
+  const isCurrent = () => !accountChanged && generation === accountGeneration;
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    if (!isCurrent() || error || !data.user?.id) return "unauthorized";
+    return await runForOwner({ supabase, userId: data.user.id }, reason, isCurrent);
+  } finally {
+    listener.subscription.unsubscribe();
+  }
+}
 
-  const auth = await resolveAuthed();
-  if (!auth) return "unauthorized";
-
-  const ownerMode = await prepareMemberReadingSyncOwnerWeb(auth.userId);
+async function runForOwner(
+  auth: { supabase: NonNullable<ReturnType<typeof createSupabaseBrowserClient>>; userId: string },
+  reason: string | undefined,
+  isCurrent: () => boolean,
+): Promise<MemberReadingSyncOutcome> {
+  await ownerPreparation;
+  if (!isCurrent()) return "unauthorized";
+  await prepareOwner(auth.userId, isCurrent);
+  if (!isCurrent()) return "unauthorized";
   const meta = await readMemberReadingSyncMetaWeb();
   const localPush = await exportLocalReadingBlobsWeb();
+  if (!isCurrent()) return "unauthorized";
   const remote = await readRemote(auth.supabase, auth.userId);
+  if (!isCurrent()) return "unauthorized";
   if (!remote.ok) return "skipped";
 
   const existing = remote.doc;
@@ -165,7 +225,7 @@ export async function runMemberReadingSyncWeb(reason?: string): Promise<MemberRe
   const forcePush = shouldForcePushMemberReadingSync(reason);
   const path = decideMemberReadingSyncPath({
     boundUserId: meta.boundUserId ?? null,
-    requirePullOnly: meta.requirePullOnly === true || ownerMode === "replace",
+    requirePullOnly: meta.requirePullOnly === true,
     userId: auth.userId,
     remoteHasProgress,
     localHasProgress,
@@ -173,34 +233,47 @@ export async function runMemberReadingSyncWeb(reason?: string): Promise<MemberRe
   });
 
   if (path === "pull-only-reinstall" || path === "pull-only-empty" || path === "replace") {
+    if (path === "replace" || path === "pull-only-reinstall") clearMemberReadingLocalDataWeb();
     if (existing?.blobs) {
-      await applyMemberReadingSyncBlobsWeb(existing.blobs);
+      await applyMemberReadingSyncBlobsWeb(existing.blobs, isCurrent);
     }
+    if (!isCurrent()) return "unauthorized";
     await writeMemberReadingSyncMetaWeb({
       revision: existing?.revision ?? null,
       lastSyncedAt: new Date().toISOString(),
       boundUserId: auth.userId,
       requirePullOnly: false,
     });
-    if (path !== "replace" || !localHasProgress || forcePush) {
-      return "ok";
-    }
+    // Replacement never falls through to upload the snapshot captured under the previous owner.
+    return "ok";
   }
 
   const pushedDoc = mergeMemberReadingSyncDocuments(auth.userId, existing, localPush);
   const pushedOk = await upsertRemote(auth.supabase, pushedDoc);
+  if (!isCurrent()) return "unauthorized";
   if (pushedOk) {
-    const needsReconcile = await applyMemberReadingSyncBlobsWeb(pushedDoc.blobs);
+    // Preserve reading activity made while the upload was in flight.
+    const freshLocal = await exportLocalReadingBlobsWeb();
+    if (!isCurrent()) return "unauthorized";
+    const merged = mergeMemberReadingSyncPush(pushedDoc.blobs, freshLocal);
+    const localChanged = Object.entries(merged).some(([key, blob]) =>
+      JSON.stringify(blob?.value) !== JSON.stringify(pushedDoc.blobs[key as keyof typeof pushedDoc.blobs]?.value),
+    );
+    const needsReconcile = await applyMemberReadingSyncBlobsWeb(merged, isCurrent);
+    if (!isCurrent()) return "unauthorized";
     await writeMemberReadingSyncMetaWeb({
       revision: pushedDoc.revision,
       lastSyncedAt: new Date().toISOString(),
       boundUserId: auth.userId,
       requirePullOnly: false,
     });
-    if (needsReconcile) {
+    if (needsReconcile || localChanged) {
       const retryLocal = await exportLocalReadingBlobsWeb();
+      if (!isCurrent()) return "unauthorized";
       const confirmDoc = mergeMemberReadingSyncDocuments(auth.userId, pushedDoc, retryLocal);
-      await upsertRemote(auth.supabase, confirmDoc);
+      const confirmed = await upsertRemote(auth.supabase, confirmDoc);
+      if (!isCurrent()) return "unauthorized";
+      if (!confirmed) return "skipped";
       await writeMemberReadingSyncMetaWeb({
         revision: confirmDoc.revision,
         lastSyncedAt: new Date().toISOString(),
@@ -212,14 +285,17 @@ export async function runMemberReadingSyncWeb(reason?: string): Promise<MemberRe
   }
 
   const pulledRemote = existing ? { ok: true as const, doc: existing } : await readRemote(auth.supabase, auth.userId);
+  if (!isCurrent()) return "unauthorized";
   if (!pulledRemote.ok || !pulledRemote.doc) return "skipped";
   const pulled = pulledRemote.doc;
-  const merged = await mergeAndApplyWeb(pulled.blobs, localPush);
+  const merged = await mergeAndApplyWeb(pulled.blobs, localPush, isCurrent);
+  if (!isCurrent()) return "unauthorized";
   const confirmDoc = mergeMemberReadingSyncDocuments(auth.userId, pulled, {
     schemaVersion: 1,
     blobs: merged,
   });
   const confirmed = await upsertRemote(auth.supabase, confirmDoc);
+  if (!isCurrent()) return "unauthorized";
   await writeMemberReadingSyncMetaWeb({
     revision: confirmed ? confirmDoc.revision : pulled.revision,
     lastSyncedAt: new Date().toISOString(),
@@ -231,7 +307,7 @@ export async function runMemberReadingSyncWeb(reason?: string): Promise<MemberRe
 
 export function scheduleMemberReadingSyncWeb(reason?: string): Promise<MemberReadingSyncOutcome> {
   const now = Date.now();
-  const bypassThrottle = shouldForcePushMemberReadingSync(reason);
+  const bypassThrottle = reason === "auth-change" || shouldForcePushMemberReadingSync(reason);
   if (syncInFlight) {
     if (bypassThrottle) pendingFlushReason = reason;
     return syncInFlight;
@@ -240,16 +316,16 @@ export function scheduleMemberReadingSyncWeb(reason?: string): Promise<MemberRea
     return Promise.resolve("skipped");
   }
   lastSyncStartedAt = now;
-  syncInFlight = runMemberReadingSyncWeb(reason)
-    .catch(() => "skipped" as const)
-    .finally(() => {
-      syncInFlight = null;
-      if (pendingFlushReason) {
-        const next = pendingFlushReason;
-        pendingFlushReason = undefined;
-        scheduleMemberReadingSyncWeb(next);
-      }
-    });
+  syncInFlight = (async () => {
+    let nextReason = reason;
+    let outcome: MemberReadingSyncOutcome;
+    do {
+      pendingFlushReason = undefined;
+      outcome = await runMemberReadingSyncWeb(nextReason).catch(() => "skipped" as const);
+      nextReason = pendingFlushReason;
+    } while (nextReason !== undefined);
+    return outcome;
+  })().finally(() => { syncInFlight = null; });
   return syncInFlight;
 }
 
@@ -260,22 +336,33 @@ export function scheduleMemberReadingSyncWeb(reason?: string): Promise<MemberRea
  * this instead of the fire-and-forget schedule call.
  */
 export function flushMemberReadingSyncWebNow(reason?: string): Promise<MemberReadingSyncOutcome> {
-  pendingFlushReason = reason;
   lastSyncStartedAt = 0;
-  return scheduleMemberReadingSyncWeb(reason);
+  return scheduleMemberReadingSyncWeb(reason ?? "local-change");
 }
 
 export function syncMemberReadingAfterLoginWeb(): void {
   scheduleMemberReadingSyncWeb();
 }
 
-export async function markMemberReadingSyncPullOnlyWeb(): Promise<void> {
-  const meta = await readMemberReadingSyncMetaWeb();
-  await writeMemberReadingSyncMetaWeb({
+export function markMemberReadingSyncPullOnlyWeb(): void {
+  accountGeneration += 1;
+  pendingFlushReason = undefined;
+  const meta = readMetaNow();
+  writeMemberReadingSyncMetaWeb({
     ...meta,
     boundUserId: null,
     requirePullOnly: true,
     revision: null,
     lastSyncedAt: null,
   });
+}
+
+/** Called only after a successful sign-out or account deletion. */
+export function clearMemberReadingAfterSignOutWeb(): void {
+  const meta = readMetaNow();
+  const owner = meta.boundUserId ?? activeAuthOwner;
+  if (owner) archiveOwner(owner);
+  markMemberReadingSyncPullOnlyWeb();
+  clearMemberReadingLocalDataWeb();
+  activeAuthOwner = null;
 }

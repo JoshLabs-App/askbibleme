@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ReadingPlanRegistryEntry } from "@/lib/bible/reading-plans/types";
 import { isTripleLoopPlanId } from "@/lib/bible/reading-plans/triple-loop-plan";
 import { getReadingPlanDaySinceEpoch } from "@/lib/read/reading-plan-epoch";
@@ -41,7 +41,11 @@ export function useTodayReadingPlan(registryPlans: ReadingPlanRegistryEntry[]) {
 
   const registryById = useMemo(() => new Map(registryPlans.map((p) => [p.planId, p])), [registryPlans]);
 
-  const [payload, setPayload] = useState<TodayReadingPlanPayload | null>(null);
+  const [loaded, setLoaded] = useState<{
+    prefs: typeof prefs;
+    progressKey: string;
+    payload: TodayReadingPlanPayload | null;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
 
   const isTripleLoop = isTripleLoopPlanId(prefs.planId);
@@ -53,30 +57,36 @@ export function useTodayReadingPlan(registryPlans: ReadingPlanRegistryEntry[]) {
   const effectiveDayIndex =
     !isTripleLoop && dayCount ? resolveEffectiveReadingPlanDayIndex(prefs, dayCount) : null;
 
-  const loadToday = useCallback(async () => {
-    if (!isTripleLoop && effectiveDayIndex == null) {
-      setPayload(null);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    try {
-      const j = await loadTodayReadingPlanPayload(prefs, { dayCount: dayCount ?? undefined });
-      setPayload(j);
-    } catch {
-      setPayload(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [prefs, effectiveDayIndex, dayCount, isTripleLoop]);
-
   const tripleProgressKey = isTripleLoop
     ? `${progress.ot.bookId}:${progress.ot.chapter}|${progress.nt.bookId}:${progress.nt.chapter}|${progress.wisdom.bookId}:${progress.wisdom.chapter}|a:${aheadDays}|r:${progress.chaptersRead?.ot ?? 0},${progress.chaptersRead?.nt ?? 0},${progress.chaptersRead?.wisdom ?? 0}`
     : `ahead:${aheadDays}`;
 
   useEffect(() => {
-    void loadToday();
-  }, [loadToday, tripleProgressKey]);
+    let cancelled = false;
+    if (!isTripleLoop && effectiveDayIndex == null) {
+      setLoaded(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    void loadTodayReadingPlanPayload(prefs, { dayCount: dayCount ?? undefined })
+      .then((payload) => {
+        if (!cancelled) setLoaded({ prefs, progressKey: tripleProgressKey, payload });
+      })
+      .catch(() => {
+        if (!cancelled) setLoaded(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [prefs, effectiveDayIndex, dayCount, isTripleLoop, tripleProgressKey]);
+
+  // A new plan must not hand the previous plan's queue to the playback effects,
+  // even during the render before the new request's effect starts.
+  const payload = loaded?.prefs === prefs && loaded.progressKey === tripleProgressKey
+    ? loaded.payload
+    : null;
 
   return {
     prefs,

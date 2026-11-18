@@ -1,5 +1,4 @@
-import { readFileSync } from "fs";
-import path from "path";
+import staticLegacyFigurePreview from "@/data/legacy-figure-preview.json";
 import {
   formatBibleBookHistoryEraAriaZh,
   formatBibleBookHistoryEraCompact,
@@ -61,10 +60,9 @@ type LegacyFigurePreviewRoot = {
 
 let cache: LegacyFigurePreviewRoot | null = null;
 
-function readRoot(cwd = process.cwd()): LegacyFigurePreviewRoot {
+function readRoot(_cwd = process.cwd()): LegacyFigurePreviewRoot {
   if (cache) return cache;
-  const filePath = path.join(cwd, "data", "legacy-figure-preview.json");
-  cache = JSON.parse(readFileSync(filePath, "utf8")) as LegacyFigurePreviewRoot;
+  cache = staticLegacyFigurePreview as LegacyFigurePreviewRoot;
   return cache;
 }
 

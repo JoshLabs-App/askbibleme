@@ -1,5 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import staticGoldenVersesSettings from "@/data/golden-verses-settings.json";
+import generatedGoldenVerseBgUploads from "@/lib/generated/golden-verse-bg-uploads.json";
 import {
   deleteGoldenVerseBackgroundFile,
   goldenVerseBackgroundIdFromFilename,
@@ -124,6 +126,20 @@ export async function readGoldenVersesSettings(
   cwd: string,
   opts?: { syncDisk?: boolean },
 ): Promise<GoldenVersesSettingsV2> {
+  if (cwd === process.cwd()) {
+    const parsed = parseGoldenVersesSettings(staticGoldenVersesSettings as unknown);
+    if (!opts?.syncDisk) return parsed;
+    const byId = new Map(parsed.backgrounds.map((b) => [b.id, b]));
+    for (const name of generatedGoldenVerseBgUploads.files ?? []) {
+      const url = goldenVerseBackgroundUrlFromFilename(name);
+      if (!isAllowedGoldenVerseBackgroundUrl(url)) continue;
+      const id = goldenVerseBackgroundIdFromFilename(name);
+      if (!byId.has(id)) {
+        byId.set(id, { id, url, filename: name });
+      }
+    }
+    return { v: 2, backgrounds: [...byId.values()] };
+  }
   const p = path.resolve(cwd, REL);
   let parsed: GoldenVersesSettingsV2;
   try {

@@ -25,8 +25,8 @@ export function decideMemberReadingSyncPath(input: {
   forcePush?: boolean;
 }): MemberReadingSyncPath {
   if (input.boundUserId != null && input.boundUserId !== input.userId) return "replace";
-  if (input.forcePush && input.localHasProgress) return "continue";
   if (input.requirePullOnly) return "replace";
+  if (input.forcePush && input.localHasProgress) return "continue";
 
   if (input.boundUserId == null) {
     if (input.remoteHasProgress) return "pull-only-reinstall";

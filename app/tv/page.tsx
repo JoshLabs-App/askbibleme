@@ -2,9 +2,10 @@ import { readBibleTranslationRegistry } from "@/lib/bible/providers/registry";
 import type { Metadata } from "next";
 import { TvScreen } from "@/components/tvscreen/TvScreen";
 import { readNatureSettings } from "@/lib/nature/read-nature-settings";
+import { sitePageTitle } from "@/lib/site-metadata-defaults";
 
 export const metadata: Metadata = {
-  title: { absolute: "AskBible 电视" },
+  title: sitePageTitle("电视"),
   description: "电视专用：全屏自然影像、金句与音乐，遥控器数字键操作。",
 };
 

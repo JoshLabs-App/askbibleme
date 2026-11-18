@@ -74,6 +74,23 @@ export function hasUserNtDeepRepeatProgress(): boolean {
   }
 }
 
+/** 清除账户进度；与「重新开始计划」不同，不保存一份新的个人进度。 */
+export function clearNtDeepRepeatProgressForAccountSwitch(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(NT_DEEP_REPEAT_PROGRESS_STORAGE_KEY);
+    localStorage.removeItem(NT_DEEP_REPEAT_PROGRESS_STORAGE_KEY_V4);
+    localStorage.removeItem(NT_DEEP_REPEAT_PROGRESS_STORAGE_KEY_V3);
+  } catch {
+    /* Continue clearing the hydrated snapshot when storage is disabled. */
+  }
+  snapshotRaw = "";
+  snapshotStored = createDefaultNtDeepRepeatReadingState();
+  snapshotHasSaved = false;
+  snapshotEffective = null;
+  emit();
+}
+
 export function createFreshNtDeepRepeatProgress(
   now = new Date(),
   pace: NtDeepRepeatPace = NT_DEEP_REPEAT_DEFAULT_PACE,

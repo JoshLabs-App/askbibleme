@@ -72,6 +72,21 @@ export function getAppUsageTotalSec(): number {
   return Math.floor(cachedTotalSec + liveSessionSec());
 }
 
+export function clearAppUsageTimeForAccountSwitch(): void {
+  if (persistTimer) clearTimeout(persistTimer);
+  persistTimer = null;
+  dirty = false;
+  cachedTotalSec = 0;
+  hydrated = true;
+  if (sessionStartedAtMs != null) sessionStartedAtMs = Date.now();
+  try {
+    if (typeof localStorage !== "undefined") localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* storage can be disabled */
+  }
+  emit();
+}
+
 export function noteAppUsageForeground(): void {
   hydrate();
   if (sessionStartedAtMs != null) return;

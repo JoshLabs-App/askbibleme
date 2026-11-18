@@ -434,7 +434,8 @@ struct RootView: View {
             }
             .onChange(of: auth.user?.id) { old, new in
                 // 刚登录：立即拉云端进度（RN syncMemberReadingAfterLogin）
-                if old == nil, new != nil { Task { await sync.flushNow(reason: "login") } }
+                if old != nil, old != new { sync.resetForAccountChange() }
+                if new != nil, old != new { Task { await sync.flushNow(reason: "login") } }
             }
             .onChange(of: plans.listenedDates) { _, dates in activity.mergeRemoteHabit(Array(dates)) }
             .onReceive(usageTicker) { _ in
@@ -645,7 +646,7 @@ struct RootView: View {
                     onOpenTranslations: { showMenu = false; showTranslationPanel = true },
                     onLogin: { showMenu = false; authRoute = .login },
                     onRegister: { showMenu = false; authRoute = .register },
-                    onLogout: { showMenu = false; Task { await sync.prepareSignOut(); auth.signOut() } },
+                    onLogout: { showMenu = false; Task { if await sync.prepareSignOut() { auth.signOut() } } },
                     onFeedback: { showMenu = false; openSupportMail() },
                     onOpenMusic: { showMenu = false; showHomeMusic = true; homeChromeHidden = false; tab = .home },
                     reminderEnabled: reminder.enabled,
@@ -695,10 +696,11 @@ struct RootView: View {
                     onConfirm: {
                         confirmDeleteAccount = false
                         Task {
-                            await sync.prepareSignOut()
+                            sync.cancelPendingWork()
                             if let err = await auth.deleteAccount() {
                                 showToast(SiteCopy.localizeKnown(err, appLocale))
                             } else {
+                                sync.resetForAccountChange()
                                 showToast(SiteCopy.t("native.deleteAccountDone", appLocale))
                             }
                         }
@@ -973,7 +975,7 @@ struct RootView: View {
             }
         case .explore:
             ExploreView(article: $exploreArticle, auth: auth, activity: activity, locale: appLocale, onOpenLogin: { authRoute = .login },
-                        onSignOut: { Task { await sync.prepareSignOut(); auth.signOut() } },
+                        onSignOut: { Task { if await sync.prepareSignOut() { auth.signOut() } } },
                         onOpenSettings: { showMenu = true },
                         size: readSize,
                         bookmarks: bookmarks,

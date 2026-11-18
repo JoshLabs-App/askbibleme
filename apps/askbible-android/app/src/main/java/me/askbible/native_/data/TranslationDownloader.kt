@@ -6,8 +6,6 @@ import androidx.compose.runtime.mutableStateMapOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.net.HttpURLConnection
-import java.net.URL
 
 /**
  * 下载型译本（KJV）：从 R2 拉整本 sqlite 到 filesDir/scripture/<id>.sqlite，装好后离线可读
@@ -33,23 +31,9 @@ class TranslationDownloader(private val context: Context) {
         states[t.id] = State.Downloading(0.0)
         val ok = withContext(Dispatchers.IO) {
             try {
-                val conn = URL(Endpoints.rebasedMedia(t.downloadUrl)).openConnection() as HttpURLConnection
-                conn.connectTimeout = 20_000; conn.readTimeout = 60_000
-                if (conn.responseCode !in 200..299) throw IllegalStateException("HTTP ${conn.responseCode}")
-                val total = conn.contentLengthLong
-                val dest = localFile(context, t.id); dest.parentFile?.mkdirs()
-                val tmp = File(dest.path + ".part")
-                conn.inputStream.use { input ->
-                    tmp.outputStream().use { out ->
-                        val buf = ByteArray(1 shl 16); var read = 0L
-                        while (true) {
-                            val n = input.read(buf); if (n < 0) break
-                            out.write(buf, 0, n); read += n
-                            if (total > 0) states[t.id] = State.Downloading(read.toDouble() / total)
-                        }
-                    }
+                SQLiteDownload.install(Endpoints.rebasedMedia(t.downloadUrl), localFile(context, t.id)) { progress ->
+                    states[t.id] = State.Downloading(progress)
                 }
-                if (!tmp.renameTo(dest)) { tmp.copyTo(dest, overwrite = true); tmp.delete() }
                 // 完成状态在 IO 块里写：调用方被取消时 withContext 会丢掉返回值，写在外面就永远卡「下载中」
                 states[t.id] = State.Done
                 true
@@ -62,6 +46,6 @@ class TranslationDownloader(private val context: Context) {
 
     companion object {
         fun localFile(context: Context, id: String) = File(File(context.filesDir, "scripture"), "$id.sqlite")
-        fun isInstalled(context: Context, id: String) = localFile(context, id).let { it.exists() && it.length() > 0 }
+        fun isInstalled(context: Context, id: String) = SQLiteDownload.isComplete(localFile(context, id))
     }
 }

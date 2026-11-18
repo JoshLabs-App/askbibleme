@@ -14,7 +14,7 @@ import {
   writeStoredCuvChapterAudioVoice,
 } from "@/lib/bible/cuv-chapter-audio-voices";
 import type { BibleTranslationsIndex } from "@/lib/bible/translations-types";
-import { readExploreYearDayProfile, writeExploreYearDayProfile } from "@/lib/explore/explore-birth-year-prefs";
+import { clearExploreYearDayProfile, readExploreYearDayProfile, writeExploreYearDayProfile } from "@/lib/explore/explore-birth-year-prefs";
 import type { ExploreYearDayProfile } from "@/lib/explore/explore-birth-year-prefs";
 import {
   getHomeVersePoolScope,
@@ -41,6 +41,7 @@ import {
 } from "@/lib/member-reading-sync/nature-scene-ui-sync-web";
 import {
   localHasAchievementsProgressWeb,
+  clearAchievementsForAccountSwitch,
   mergeRemoteAchievements,
   readAchievementsSyncValue,
 } from "@/lib/achievements/achievement-store-web";
@@ -50,9 +51,16 @@ import {
   type MemberReadingSyncBlobKey,
   type MemberReadingSyncPushV1,
 } from "@/lib/member-reading-sync/schema";
-import { readLastReadPosition, writeLastReadPosition, type ReadLastPosition } from "@/lib/read/read-last-position";
+import { clearLastReadPosition, readLastReadPosition, writeLastReadPosition, type ReadLastPosition } from "@/lib/read/read-last-position";
+import { clearReadRecentChapters } from "@/lib/read/read-recent-chapters-web";
+import { clearPlanPlayListenedDates } from "@/lib/read/plan-play-listened-dates-web";
+import { clearTodayPlanScriptureResume } from "@/lib/read/today-plan-scripture-resume";
+import { writeReadingPlanAudioSession } from "@/lib/read/reading-plan-audio-session";
+import { setPlanFlowActive } from "@/lib/read/plan-flow-session";
+import { clearAppUsageTimeForAccountSwitch } from "@/lib/shell/app-usage-time-web";
 import {
   readReadChapterCompletionRecord,
+  clearReadChapterCompletionForAccountSwitch,
   replaceReadChapterCompletionRecord,
   type ReadChapterCompletionRecord,
 } from "@/lib/read/read-chapter-completion";
@@ -83,11 +91,13 @@ import {
 } from "@/lib/read/reading-plan-prefs";
 import {
   hasUserNtDeepRepeatProgress,
+  clearNtDeepRepeatProgressForAccountSwitch,
   readNtDeepRepeatProgress,
   writeNtDeepRepeatProgress,
 } from "@/lib/read/nt-deep-repeat-progress";
 import {
   hasUserTripleLoopProgress,
+  resetTripleLoopProgressToEpochDefault,
   readTripleLoopProgress,
   writeTripleLoopProgress,
 } from "@/lib/read/triple-loop-progress";
@@ -97,12 +107,14 @@ import { HOME_PRAYER_PREFS_STORAGE_KEY } from "@/lib/home-prayer-pools/constants
 import { HOME_VERSE_POOL_SCOPE_STORAGE_KEY } from "@/lib/home/home-verse-pool-scope-prefs";
 import {
   mergeReadingHabitStatsRecords,
+  clearReadingHabitStatsForAccountSwitch,
   readReadingHabitStats,
   replaceReadingHabitStatsRecord,
   type ReadingHabitStatsRecord,
 } from "@/lib/read/reading-habit-stats";
 import {
   readScriptureListenTotalsWeb,
+  writeScriptureListenTotalsWeb,
   replaceScriptureListenTotalsWeb,
   type ScriptureListenTotalsRecord,
 } from "@/lib/read/scripture-listen-totals-web";
@@ -131,11 +143,13 @@ import { normalizeTripleLoopChaptersReadKeys } from "@/lib/bible/reading-plans/t
 import { toLocalDateString } from "@/lib/read/reading-plan-prefs";
 import {
   readTodayReadingChapterFractionRecord,
+  clearTodayReadingChapterFractionForAccountSwitch,
   replaceTodayReadingChapterFractionRecord,
   type TodayReadingChapterFractionRecord,
 } from "@/lib/read/today-reading-chapter-fraction";
 import {
   readTodayReadingDoneRecord,
+  clearTodayReadingDoneForAccountSwitch,
   replaceTodayReadingDoneRecord,
   type TodayReadingDoneRecord,
 } from "@/lib/read/today-reading-done";
@@ -146,6 +160,32 @@ import {
 } from "@/lib/read/scripture-recent-searches";
 
 let translationsIndexCache: BibleTranslationsIndex | null = null;
+
+/** 账户切换时同时清除持久数据与各 store 的内存快照，保留设备语言、字号等显示偏好。 */
+export function clearMemberReadingLocalDataWeb(): void {
+  if (typeof window === "undefined") return;
+  writeReadingPlanPrefs(null);
+  resetTripleLoopProgressToEpochDefault();
+  clearNtDeepRepeatProgressForAccountSwitch();
+  clearTodayReadingDoneForAccountSwitch();
+  clearTodayReadingChapterFractionForAccountSwitch();
+  replaceScriptureVerseBookmarkStore({});
+  replaceVerseTextHighlightStore({});
+  clearLastReadPosition();
+  clearReadRecentChapters();
+  clearReadChapterCompletionForAccountSwitch();
+  clearPlanPlayListenedDates();
+  clearReadingHabitStatsForAccountSwitch();
+  writeScriptureListenTotalsWeb({ version: 1, totalSec: 0 });
+  replaceScriptureRecentSearches({ version: 1, terms: [] });
+  clearExploreYearDayProfile();
+  clearTodayPlanScriptureResume();
+  writeReadingPlanAudioSession(null);
+  setPlanFlowActive(false);
+  clearAppUsageTimeForAccountSwitch();
+  // 成就会读取上面的进度重新计算，必须最后清除。
+  clearAchievementsForAccountSwitch();
+}
 
 async function loadTranslationsIndex(): Promise<BibleTranslationsIndex> {
   if (translationsIndexCache) return translationsIndexCache;
@@ -221,6 +261,16 @@ export function localHasMemberReadingProgressWeb(): boolean {
 }
 
 export async function exportLocalReadingBlobsWeb(): Promise<MemberReadingSyncPushV1> {
+  const index = hasStoredKeys([READ_BIBLE_TRANSLATION_STORAGE_KEY]) ? await loadTranslationsIndex() : null;
+  return collectLocalReadingBlobsWeb(index);
+}
+
+/** Account isolation must snapshot progress synchronously, even when the catalog is offline. */
+export function exportLocalReadingBlobsWebSnapshot(): MemberReadingSyncPushV1 {
+  return collectLocalReadingBlobsWeb(null);
+}
+
+function collectLocalReadingBlobsWeb(index: BibleTranslationsIndex | null): MemberReadingSyncPushV1 {
   if (typeof window === "undefined") return { schemaVersion: 1, blobs: {} };
 
   const hasTypography = hasStoredKeys([READ_BIBLE_TYPOGRAPHY_STORAGE_KEY]);
@@ -243,7 +293,6 @@ export async function exportLocalReadingBlobsWeb(): Promise<MemberReadingSyncPus
   ]);
   const hasLocale = hasStoredKeys([LOCALE_STORAGE_KEY, "selah-locale-v1"]);
 
-  const index = await loadTranslationsIndex();
   hydrateHomeVersePoolScope();
 
   const now = blobNow();
@@ -262,7 +311,7 @@ export async function exportLocalReadingBlobsWeb(): Promise<MemberReadingSyncPus
   const todayReadingFraction = readTodayReadingChapterFractionRecord();
   const habitStats = readReadingHabitStats();
   const readTypography = readReadBibleTypographyPrefsFromStorage();
-  const readTranslation = readReadBibleTranslationSyncBundle(index);
+  const readTranslation = index ? readReadBibleTranslationSyncBundle(index) : null;
   const recentSearches = readScriptureRecentSearches();
   const homeNatureUi = readNatureHomeUiSyncBundle();
   const homePrayerVerse = readHomePrayerVersePrefs();
@@ -297,7 +346,7 @@ export async function exportLocalReadingBlobsWeb(): Promise<MemberReadingSyncPus
   }
 
   if (hasTypography) blobs.readTypography = wrapBlob(readTypography, now);
-  if (hasTranslation) blobs.readTranslation = wrapBlob(readTranslation, now);
+  if (hasTranslation && index) blobs.readTranslation = wrapBlob(readTranslation, now);
   if (recentSearches.terms.length) blobs.recentSearches = wrapBlob(recentSearches, now);
   if (hasHomeNature) blobs.homeNatureUi = wrapBlob(homeNatureUi, now);
   if (hasHomePrayer) blobs.homePrayerVerse = wrapBlob(homePrayerVerse, now);
@@ -314,8 +363,8 @@ export async function exportLocalReadingBlobsWeb(): Promise<MemberReadingSyncPus
   return { schemaVersion: 1, blobs };
 }
 
-async function applyBlob(key: MemberReadingSyncBlobKey, value: unknown): Promise<void> {
-  const index = await loadTranslationsIndex();
+async function applyBlob(key: MemberReadingSyncBlobKey, value: unknown, isCurrent: () => boolean): Promise<void> {
+  if (!isCurrent()) return;
   switch (key) {
     case "bookmarks":
       if (value && typeof value === "object" && !Array.isArray(value)) {
@@ -380,6 +429,8 @@ async function applyBlob(key: MemberReadingSyncBlobKey, value: unknown): Promise
       break;
     case "readTranslation":
       if (value && typeof value === "object") {
+        const index = await loadTranslationsIndex();
+        if (!isCurrent()) return;
         applyReadBibleTranslationSyncBundle(value as ReadBibleTranslationSyncBundle, index);
       }
       break;
@@ -440,7 +491,8 @@ async function applyBlob(key: MemberReadingSyncBlobKey, value: unknown): Promise
   }
 }
 
-async function reconcileTripleLoopReadingPlanAfterSyncWeb(): Promise<boolean> {
+function reconcileTripleLoopReadingPlanAfterSyncWeb(isCurrent: () => boolean): boolean {
+  if (!isCurrent()) return false;
   const prefs = readEffectiveReadingPlanPrefs();
   if (!isTripleLoopPlanId(prefs.planId)) return false;
 
@@ -448,6 +500,7 @@ async function reconcileTripleLoopReadingPlanAfterSyncWeb(): Promise<boolean> {
   const prefsAhead = readAheadDays(prefs);
   const inferred = inferTripleLoopAheadDays(stored);
   if (inferred <= prefsAhead) return false;
+  if (!isCurrent()) return false;
 
   if (prefs.chosen !== true) {
     writeReadingPlanPrefs({ ...prefs, aheadDays: inferred, chosen: true });
@@ -465,7 +518,8 @@ async function reconcileTripleLoopReadingPlanAfterSyncWeb(): Promise<boolean> {
   return false;
 }
 
-async function reconcileNtDeepRepeatReadingPlanAfterSyncWeb(): Promise<boolean> {
+function reconcileNtDeepRepeatReadingPlanAfterSyncWeb(isCurrent: () => boolean): boolean {
+  if (!isCurrent()) return false;
   const prefs = readEffectiveReadingPlanPrefs();
   if (!isNtDeepRepeatPlanId(prefs.planId)) return false;
 
@@ -473,6 +527,7 @@ async function reconcileNtDeepRepeatReadingPlanAfterSyncWeb(): Promise<boolean> 
   const prefsAhead = readAheadDays(prefs);
   const inferred = inferNtDeepRepeatAheadDays(stored, prefs);
   if (inferred <= prefsAhead) return false;
+  if (!isCurrent()) return false;
 
   if (prefs.chosen !== true) {
     writeReadingPlanPrefs({ ...prefs, aheadDays: inferred, chosen: true });
@@ -495,24 +550,26 @@ async function reconcileNtDeepRepeatReadingPlanAfterSyncWeb(): Promise<boolean> 
 
 export async function applyMemberReadingSyncBlobsWeb(
   blobs: Partial<Record<MemberReadingSyncBlobKey, MemberReadingSyncBlob>> | undefined,
+  isCurrent: () => boolean = () => true,
 ): Promise<boolean> {
-  if (!blobs || typeof window === "undefined") return false;
+  if (!blobs || typeof window === "undefined" || !isCurrent()) return false;
 
   const sidecarPlan = readingPlanFromAppLocale(blobs.appLocale?.value);
   if (!blobs.readingPlanPrefs && isReadingPlanPrefs(sidecarPlan)) {
     const current = readReadingPlanPrefs();
     const merged = current ? mergeReadingPlanPrefsValue(sidecarPlan, current) : sidecarPlan;
-    if (isReadingPlanPrefs(merged)) {
+    if (isReadingPlanPrefs(merged) && isCurrent()) {
       writeReadingPlanPrefs(merged);
     }
   }
 
   for (const key of MEMBER_READING_SYNC_BLOB_KEYS) {
+    if (!isCurrent()) return false;
     const blob = blobs[key];
     if (!blob) continue;
-    await applyBlob(key, blob.value);
+    await applyBlob(key, blob.value, isCurrent);
   }
-  const triple = await reconcileTripleLoopReadingPlanAfterSyncWeb();
-  const ndr = await reconcileNtDeepRepeatReadingPlanAfterSyncWeb();
+  const triple = reconcileTripleLoopReadingPlanAfterSyncWeb(isCurrent);
+  const ndr = reconcileNtDeepRepeatReadingPlanAfterSyncWeb(isCurrent);
   return triple || ndr;
 }

@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 /// 会员登录状态（RN useMemberAuthProvider + useMemberAuthBootstrap）：本机会话 + 启动时后台校验。
 /// 登录 / 注册成功即写会话；退出清会话（服务端 logout 尽力而为）。
@@ -8,11 +9,17 @@ final class MemberAuthStore: ObservableObject {
     @Published private(set) var isAdmin = false
     @Published private(set) var bootstrapped = false
     private var session: MemberSession?
-    private let defaults = UserDefaults.standard
+    private let defaults: UserDefaults
+    /// Changes on authentication attempts/logout, including a new login to the same account.
+    /// A response from an older generation must never restore a signed-out session.
+    private(set) var sessionGeneration: UInt64 = 0
+    private var refreshTask: Task<MemberAuthResult, Never>?
+    private var refreshSource: MemberSession?
     /// 当前会话 token（读经同步用；没登录为 nil）
     var sessionToken: String? { session?.sessionToken }
 
-    init() {
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
         // 过期但带 refresh_token 的也先算登着（启动后 verifyRemote 会先续期）；RN 是一过期就登出
         if let data = defaults.data(forKey: MemberAuthRules.sessionKey), let s = MemberAuthRules.parseSession(data, allowExpired: true) {
             session = s
@@ -25,8 +32,10 @@ final class MemberAuthStore: ObservableObject {
     }
 
     func refreshAdminFlag() async {
-        guard let id = user?.id, let token = await ensureFreshToken(),
-              let remote = await SupabaseAuthClient.fetchIsAdmin(token: token, userId: id), user?.id == id else { return }
+        let generation = sessionGeneration
+        guard let id = user?.id, let token = await ensureFreshToken(), generation == sessionGeneration,
+              let remote = await SupabaseAuthClient.fetchIsAdmin(token: token, userId: id),
+              generation == sessionGeneration, user?.id == id, !Task.isCancelled else { return }
         isAdmin = remote
         defaults.set(remote, forKey: "is-admin.\(id)")
     }
@@ -39,20 +48,59 @@ final class MemberAuthStore: ObservableObject {
             if MemberAuthRules.secondsUntilExpiry(s) <= 0 { persist(nil); return nil }
             return s.sessionToken
         }
-        switch await SupabaseAuthClient.refresh(refreshToken: rt, locale: s.user.locale) {
-        case .ok(let next):
-            var merged = next
-            merged.user.createdAt = next.user.createdAt ?? s.user.createdAt
-            persist(merged)
-            return merged.sessionToken
+        return await refreshSession(s, refreshToken: rt)
+    }
+
+    private func refreshSession(_ s: MemberSession, refreshToken: String) async -> String? {
+        let generation = sessionGeneration
+        let task: Task<MemberAuthResult, Never>
+        let source: MemberSession
+        if let existing = refreshTask, let original = refreshSource, sameCredentials(original, s) {
+            task = existing
+            source = original
+        } else {
+            refreshTask?.cancel()
+            task = Task { await SupabaseAuthClient.refresh(refreshToken: refreshToken, locale: s.user.locale) }
+            source = s
+            refreshSource = s
+            refreshTask = task
+        }
+        let result = await task.value
+        if refreshTask == task { refreshTask = nil; refreshSource = nil }
+        // A cancelled waiter may still have consumed a rotated refresh token on the server.
+        // Keep the replacement credentials for the same session; logout/new login changes the generation.
+        guard generation == sessionGeneration else { return nil }
+        // Another caller may already have committed this shared refresh.
+        guard let current = session, sameCredentials(current, source) else { return session?.sessionToken }
+        switch result {
+        case .ok(var next):
+            guard next.user.id == source.user.id else { return nil }
+            // A local profile edit must neither abandon rotated tokens nor be overwritten by an older profile response.
+            if current.user.name != source.user.name { next.user.name = current.user.name }
+            if current.user.locale != source.user.locale { next.user.locale = current.user.locale }
+            next.user.createdAt = next.user.createdAt ?? current.user.createdAt
+            persist(next)
+            return next.sessionToken
         case .failed(_, let code):
-            if code == "network" { return MemberAuthRules.secondsUntilExpiry(s) > 0 ? s.sessionToken : nil }
+            if code == "network" { return MemberAuthRules.secondsUntilExpiry(current) > 0 ? current.sessionToken : nil }
             persist(nil)
             return nil
         }
     }
 
+    private func sameCredentials(_ lhs: MemberSession, _ rhs: MemberSession) -> Bool {
+        lhs.user.id == rhs.user.id && lhs.sessionToken == rhs.sessionToken && lhs.refreshToken == rhs.refreshToken
+    }
+
+    @discardableResult
+    private func invalidatePendingAuthentication() -> UInt64 {
+        sessionGeneration &+= 1
+        refreshTask?.cancel(); refreshTask = nil; refreshSource = nil
+        return sessionGeneration
+    }
+
     private func persist(_ s: MemberSession?) {
+        if session?.user.id != s?.user.id { invalidatePendingAuthentication() }
         session = s
         user = s?.user
         isAdmin = s.map { defaults.bool(forKey: "is-admin.\($0.user.id)") } ?? false
@@ -62,15 +110,18 @@ final class MemberAuthStore: ObservableObject {
 
     /// 启动后校验会话：token 作废就清掉；网络不通保留本机会话（RN 同）
     func verifyRemote() async {
-        guard session != nil, let token = await ensureFreshToken(), let s = session else { return }
+        let generation = sessionGeneration
+        guard session != nil, let token = await ensureFreshToken(), generation == sessionGeneration, let s = session else { return }
         do {
-            if let remote = try await SupabaseAuthClient.verify(token: token) {
-                var merged = remote
-                merged.createdAt = remote.createdAt ?? s.user.createdAt
-                persist(MemberSession(sessionToken: token, expiresAt: s.expiresAt, user: merged, refreshToken: s.refreshToken))
-            } else if let rt = s.refreshToken, case .ok(let next) = await SupabaseAuthClient.refresh(refreshToken: rt, locale: s.user.locale) {
-                // access token 被服务端作废但 refresh_token 还在：续一次
-                persist(next)
+            let remote = try await SupabaseAuthClient.verify(token: token)
+            guard generation == sessionGeneration, session == s, !Task.isCancelled else { return }
+            if var remote {
+                guard remote.id == s.user.id else { return }
+                remote.createdAt = remote.createdAt ?? s.user.createdAt
+                persist(MemberSession(sessionToken: token, expiresAt: s.expiresAt, user: remote, refreshToken: s.refreshToken))
+            } else if let rt = s.refreshToken {
+                // A temporary refresh failure must retain the current session.
+                _ = await refreshSession(s, refreshToken: rt)
             } else {
                 persist(nil)
             }
@@ -80,14 +131,20 @@ final class MemberAuthStore: ObservableObject {
     }
 
     func signIn(email: String, password: String, locale: String) async -> String? {
-        switch await SupabaseAuthClient.signIn(email: email, password: password, locale: locale) {
+        let generation = invalidatePendingAuthentication()
+        let result = await SupabaseAuthClient.signIn(email: email, password: password, locale: locale)
+        guard generation == sessionGeneration, !Task.isCancelled else { return "cancelled" }
+        switch result {
         case .ok(let s): persist(s); return nil
         case .failed(let error, _): return error
         }
     }
 
     func register(email: String, password: String, name: String, locale: String) async -> String? {
-        switch await SupabaseAuthClient.signUp(email: email, password: password, name: name, locale: locale) {
+        let generation = invalidatePendingAuthentication()
+        let result = await SupabaseAuthClient.signUp(email: email, password: password, name: name, locale: locale)
+        guard generation == sessionGeneration, !Task.isCancelled else { return "cancelled" }
+        switch result {
         case .ok(let s): persist(s); return nil
         case .failed(let error, _): return error
         }
@@ -98,10 +155,12 @@ final class MemberAuthStore: ObservableObject {
 
     /// RN signInWithGoogleMobile 的浏览器分支（Supabase PKCE OAuth）：Safari 登 Google → 回 askbible://auth/callback → code 换会话
     func signInWithGoogle(locale: String) async -> SocialOutcome {
+        let generation = invalidatePendingAuthentication()
         let verifier = MemberOAuthRules.randomVerifier()
         let url = MemberOAuthRules.authorizeURL(provider: "google", redirectTo: MemberOAuthRules.appRedirect,
                                                 challenge: MemberOAuthRules.pkceChallenge(verifier))
         guard let callback = await WebAuthSession.run(url: url, callbackScheme: MemberOAuthRules.callbackScheme) else { return .cancelled }
+        guard generation == sessionGeneration, !Task.isCancelled else { return .cancelled }
         let p = MemberOAuthRules.parseCallback(callback)
         if let e = p.errorCode { return .failed(MemberOAuthRules.resolveError(provider: "google", code: e, error: e) ?? MemberOAuthRules.googleFailedText) }
         let result: MemberAuthResult
@@ -112,11 +171,13 @@ final class MemberAuthStore: ObservableObject {
         } else {
             result = .failed(error: "missing_code", code: "google_failed")
         }
+        guard generation == sessionGeneration, !Task.isCancelled else { return .cancelled }
         return finishSocial(result, provider: "google")
     }
 
     /// RN signInWithAppleNative + exchangeAppleNativeCredential：系统 Apple 登录 → identityToken → Supabase id_token
     func signInWithApple(locale: String) async -> SocialOutcome {
+        let generation = invalidatePendingAuthentication()
         let rawNonce = MemberOAuthRules.randomNonce()
         switch await AppleSignInCoordinator.shared.signIn(hashedNonce: MemberOAuthRules.sha256Hex(rawNonce)) {
         case .cancelled:
@@ -124,7 +185,9 @@ final class MemberAuthStore: ObservableObject {
         case .failed(let code):
             return .failed(MemberOAuthRules.resolveError(provider: "apple", code: code, error: code) ?? MemberOAuthRules.appleFailedText)
         case .ok(let idToken, let name):
+            guard generation == sessionGeneration, !Task.isCancelled else { return .cancelled }
             let r = await SupabaseAuthClient.signInWithIdToken(provider: "apple", idToken: idToken, nonce: rawNonce, fallbackName: name, locale: locale)
+            guard generation == sessionGeneration, !Task.isCancelled else { return .cancelled }
             return finishSocial(r, provider: "apple")
         }
     }
@@ -139,15 +202,17 @@ final class MemberAuthStore: ObservableObject {
     }
 
     func signOut() {
+        invalidatePendingAuthentication()
         let token = session?.sessionToken
         persist(nil)
         if let token { Task { await SupabaseAuthClient.signOut(token: token) } }
     }
 
     /// 删除账户（RN deleteAccount → DELETE /api/mobile/auth/account）：服务端删掉会员，本机再登出。
-    /// 返回 nil 表示成功，否则是错误码。调用方负责先把本机进度推上云（其实删了也就没了）并清本机数据。
+    /// 返回 nil 表示成功，否则是错误码。调用方只在确认成功后清本机数据。
     func deleteAccount() async -> String? {
-        guard let token = await ensureFreshToken() else { return "unauthorized" }
+        let generation = sessionGeneration
+        guard let token = await ensureFreshToken(), generation == sessionGeneration else { return "unauthorized" }
         var req = URLRequest(url: URL(string: Endpoints.siteBase + "/api/mobile/auth/account")!)
         req.httpMethod = "DELETE"
         req.timeoutInterval = 20
@@ -155,6 +220,7 @@ final class MemberAuthStore: ObservableObject {
         req.setValue("application/json", forHTTPHeaderField: "Accept")
         do {
             let (data, resp) = try await URLSession.shared.data(for: req)
+            guard generation == sessionGeneration, !Task.isCancelled else { return "unauthorized" }
             let status = (resp as? HTTPURLResponse)?.statusCode ?? 0
             let json = data.isEmpty ? nil : (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
             if status == 200, (json?["ok"] as? Bool) != false {

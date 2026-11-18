@@ -189,6 +189,8 @@ enum SupabaseAuthClient {
     static func refresh(refreshToken: String, locale: String?) async -> MemberAuthResult {
         do {
             let (status, json) = try await request("/auth/v1/token?grant_type=refresh_token", method: "POST", body: ["refresh_token": refreshToken], timeout: 30)
+            // Rate limiting or a service outage does not revoke the user's refresh token.
+            if status == 429 || status >= 500 { return .failed(error: "network", code: "network") }
             if status >= 200, status < 300, let o = json as? [String: Any], let s = await session(from: o, fallbackName: nil, locale: locale) { return .ok(s) }
             let msg = errorMessage(json, status: status)
             if MemberOAuthRules.isNetworkMessage(msg) { return .failed(error: "network", code: "network") }

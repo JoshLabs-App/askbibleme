@@ -3,6 +3,7 @@ import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { readPublicAssetJson } from "@/lib/read-public-asset";
 
 type ManifestAsset = {
   scope: string;
@@ -56,6 +57,18 @@ async function collectAssets(cwd: string): Promise<ManifestAsset[]> {
         assets.push({ scope, path: urlPath, size: stat.size, md5 });
       } catch {
         /* missing file should not break manifest */
+      }
+    }
+  }
+  if (assets.length === 0) {
+    const precomputed = await readPublicAssetJson<{ assets?: Record<string, { path: string; size: number; md5: string }> }>(
+      "/data/resource-packs/asset-stats.json",
+      cwd,
+    );
+    for (const entry of Object.values(precomputed?.assets ?? {})) {
+      const m = entry.path.match(/^\/audio\/([^/]+)\/[^/]+\.mp3$/);
+      if (m && (SCOPES as readonly string[]).includes(m[1])) {
+        assets.push({ scope: m[1], path: entry.path, size: entry.size, md5: entry.md5 });
       }
     }
   }

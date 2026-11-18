@@ -86,6 +86,10 @@ export function getReadRecentChapters(): readonly ReadRecentChapter[] {
   return cached ?? EMPTY_RECENT;
 }
 
+export function clearReadRecentChapters(): void {
+  persist([]);
+}
+
 /** 打开某章时写入：同章去重置顶，最多保留 3 条。 */
 export function pushReadRecentChapter(pos: ReadLastPosition): void {
   hydrate();

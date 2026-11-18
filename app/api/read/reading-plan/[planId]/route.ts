@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { buildTripleLoopReadingPlanDay, isTripleLoopPlanId, TRIPLE_LOOP_PLAN_DAY_COUNT } from "@/lib/bible/reading-plans/triple-loop-plan";
 import { tripleLoopStateForPlanDay } from "@/lib/bible/reading-plans/triple-loop-reading";
 import { getReadingPlanDaySinceEpoch } from "@/lib/read/reading-plan-epoch";
-import { readReadingPlanBundleSync } from "@/lib/bible/reading-plans/reading-plans-store";
+import { readReadingPlanBundle } from "@/lib/bible/reading-plans/reading-plans-store";
 
 type Params = { params: Promise<{ planId: string }> };
 
@@ -33,7 +33,7 @@ export async function GET(req: Request, { params }: Params) {
     });
   }
 
-  const bundle = readReadingPlanBundleSync(process.cwd(), planId);
+  const bundle = await readReadingPlanBundle(process.cwd(), planId);
   if (!bundle) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }

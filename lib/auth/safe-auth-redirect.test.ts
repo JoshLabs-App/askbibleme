@@ -21,4 +21,18 @@ describe("sanitizeAuthNextPath", () => {
     expect(sanitizeAuthNextPath("/login")).toBe("/web");
     expect(sanitizeAuthNextPath("/auth/callback?code=x")).toBe("/web");
   });
+
+  it.each(["/\\evil.example", "/\t/evil.example", "/\n/evil.example", "/\r/evil.example"])(
+    "拒绝浏览器规范化后会跳到站外的路径 %j",
+    (next) => expect(sanitizeAuthNextPath(next)).toBe("/web"),
+  );
+
+  it.each(["/login?next=/web", "/register#signup", "/read/../login?next=/web", "/auth/callback/other"])(
+    "规范化路径后拒绝登录回路 %j",
+    (next) => expect(sanitizeAuthNextPath(next)).toBe("/web"),
+  );
+
+  it("保留合法站内深链的查询与片段", () => {
+    expect(sanitizeAuthNextPath(" /read/JHN/3?verse=16#verse-16 ")).toBe("/read/JHN/3?verse=16#verse-16");
+  });
 });

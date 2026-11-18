@@ -30,3 +30,12 @@ export function writeLastReadPosition(pos: ReadLastPosition): void {
     /* ignore */
   }
 }
+
+export function clearLastReadPosition(): void {
+  if (typeof localStorage === "undefined") return;
+  try {
+    localStorage.removeItem(READ_LAST_POSITION_KEY);
+  } catch {
+    /* storage can be disabled */
+  }
+}

@@ -1,12 +1,12 @@
 import { ASKBIBLE_PRODUCT_NAME } from "./askbible-product-name";
 
 /**
- * 与 `app/layout.tsx` 中 `generateMetadata().title` 保持一致（单一事实来源）。
- * 改站点默认标题 / 模板时请改 `lib/askbible-product-name.ts` 并保留与 metadata 同步。
+ * 默认标题用于根布局；子页与客户端通过 sitePageTitle 生成完整标题。
+ * 根布局不重复套模板，避免品牌后缀出现两次。
  */
 export const SITE_METADATA_DEFAULT_TITLE = ASKBIBLE_PRODUCT_NAME;
 /** 前台子页 `<title>`：`音乐` → `音乐 | AskBible.me` */
-export const SITE_METADATA_TITLE_TEMPLATE = "%s | AskBible.me" as const;
+export const SITE_METADATA_TITLE_TEMPLATE = `%s | ${ASKBIBLE_PRODUCT_NAME}` as const;
 
 /** 浏览器标签标题：`音乐` → `音乐 | AskBible.me` */
 export function sitePageTitle(segment: string): string {

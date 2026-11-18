@@ -10,8 +10,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.io.File
-import java.net.HttpURLConnection
-import java.net.URL
 
 /**
  * 「读后两版」内容库（info-edition.sqlite）按需下载器。
@@ -32,12 +30,8 @@ object InfoEditionDownloader {
 
     fun localFile(context: Context) = File(context.filesDir, "info-edition.sqlite")
 
-    /** 文件头必须是 "SQLite format 3\0"，挡住 404 页面、截断文件（对齐 iOS isValidSQLite） */
-    fun isInstalled(context: Context) = isValidSQLite(localFile(context))
-
-    private fun isValidSQLite(f: File): Boolean = runCatching {
-        f.length() >= 16 && f.inputStream().use { i -> ByteArray(16).also { i.read(it) } }.contentEquals("SQLite format 3\u0000".toByteArray())
-    }.getOrDefault(false)
+    /** Validate complete SQLite pages, including chunked transfers without Content-Length. */
+    fun isInstalled(context: Context) = SQLiteDownload.isComplete(localFile(context))
 
     fun initState(context: Context) {
         if (state !is State.Done && isInstalled(context)) state = State.Done
@@ -62,32 +56,13 @@ object InfoEditionDownloader {
         state = State.Downloading(0.0)
         job = scope.launch {
             val dest = localFile(app)
-            val tmp = File(dest.path + ".part")
             try {
-                val conn = URL(R2_URL).openConnection() as HttpURLConnection
-                conn.connectTimeout = 20_000; conn.readTimeout = 120_000
-                if (conn.responseCode !in 200..299)
-                    throw IllegalStateException("HTTP ${conn.responseCode}")
-                val total = conn.contentLengthLong
-                var read = 0L
-                conn.inputStream.use { input ->
-                    tmp.outputStream().use { out ->
-                        val buf = ByteArray(1 shl 16); var lastPct = -1
-                        while (true) {
-                            val n = input.read(buf); if (n < 0) break
-                            out.write(buf, 0, n); read += n
-                            val pct = if (total > 0) (read * 100 / total).toInt() else -1
-                            if (pct != lastPct) { lastPct = pct; state = State.Downloading(pct / 100.0) }
-                        }
-                    }
+                SQLiteDownload.install(R2_URL, dest) { progress ->
+                    state = State.Downloading(progress)
                 }
-                if (total > 0 && read != total) throw IllegalStateException("truncated $read/$total")
-                if (!isValidSQLite(tmp)) throw IllegalStateException("invalid sqlite")
-                if (!tmp.renameTo(dest)) { tmp.copyTo(dest, overwrite = true); tmp.delete() }
                 InfoEditionDatabase.resetShared()
                 state = State.Done
             } catch (e: Exception) {
-                tmp.delete()
                 state = State.Failed(e.message ?: "download failed")
             }
         }

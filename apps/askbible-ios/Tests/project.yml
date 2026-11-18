@@ -1,0 +1,36 @@
+name: AskBibleAccountIsolation
+options:
+  deploymentTarget:
+    iOS: "18.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    GENERATE_INFOPLIST_FILE: YES
+    CODE_SIGNING_ALLOWED: NO
+    SWIFT_EMIT_LOC_STRINGS: NO
+targets:
+  AccountIsolationTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: ../AskBible
+        excludes:
+          - AskBibleApp.swift
+          - Resources
+          - Assets.xcassets
+          - AskBible.entitlements
+      - path: AccountIsolationTests.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: me.askbible.account-isolation-tests
+    dependencies:
+      - sdk: libsqlite3.tbd
+schemes:
+  AccountIsolationTests:
+    build:
+      targets:
+        AccountIsolationTests: all
+    test:
+      targets:
+        - AccountIsolationTests
+      gatherCoverageData: false

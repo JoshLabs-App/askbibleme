@@ -24,13 +24,41 @@ final class MemberReadingSyncEngine: ObservableObject {
     /// 当前界面语言（appLocale 侧车的 locale）
     var localeTag: () -> String = { "zh-CN" }
 
-    private let defaults = UserDefaults.standard
+    private let defaults: UserDefaults
     private var inFlight: Task<Outcome, Never>?
     private var pendingFlushReason: String?
     private var lastSyncStartedAt: TimeInterval = 0
     private var debounceTask: Task<Void, Never>?
     private var pendingLocalReason: String?
     private var applyingRemote = false
+    private var syncGeneration: UInt64 = 0
+
+    private struct RunContext {
+        let userId: String
+        let sessionGeneration: UInt64
+        let syncGeneration: UInt64
+    }
+
+    init(defaults: UserDefaults = .standard) { self.defaults = defaults }
+
+    private func isCurrent(_ context: RunContext) -> Bool {
+        !Task.isCancelled && context.syncGeneration == syncGeneration
+            && context.sessionGeneration == auth?.sessionGeneration && context.userId == auth?.user?.id
+    }
+
+    /// Invalidate before clearing local data, so even a transport that ignores cancellation cannot write it back.
+    func cancelPendingWork() {
+        syncGeneration &+= 1
+        inFlight?.cancel(); inFlight = nil
+        debounceTask?.cancel(); debounceTask = nil
+        pendingFlushReason = nil; pendingLocalReason = nil; lastSyncStartedAt = 0
+    }
+
+    func resetForAccountChange() {
+        cancelPendingWork()
+        clearLocalBlobs()
+        meta = Rules.Meta(revision: nil, lastSyncedAt: nil, boundUserId: nil, requirePullOnly: true, lastError: nil)
+    }
 
     func attach(auth: MemberAuthStore, plans: ReadingPlanStore, bookmarks: VerseBookmarkStore, activity: ReadingActivityStore,
                 search: SearchPrefs, highlights: VerseHighlightStore, achievements: AchievementStore) {
@@ -90,7 +118,7 @@ final class MemberReadingSyncEngine: ObservableObject {
     }
 
     func localHasProgress() -> Bool {
-        if !bookmarks.store.isEmpty { return true }
+        if !bookmarks.store.isEmpty || !highlights.store.isEmpty || achievements.hasProgress { return true }
         if activity.lastPosition != nil { return true }
         if activity.listenTotalSec > 0 { return true }
         if !plans.completed.isEmpty { return true }
@@ -183,7 +211,7 @@ final class MemberReadingSyncEngine: ObservableObject {
     private func clearLocalBlobs() {
         beginApplying()
         plans.clearForAccountSwitch(); bookmarks.clearForAccountSwitch(); activity.clearForAccountSwitch(); search.clearRecentForAccountSwitch()
-        achievements.clearForAccountSwitch()
+        highlights.clearForAccountSwitch(); achievements.clearForAccountSwitch()
         endApplying()
     }
 
@@ -206,8 +234,11 @@ final class MemberReadingSyncEngine: ObservableObject {
         return .ok
     }
 
-    private func pullAndApplyRemoteOnly(token: String, userId: String, label: String) async -> Outcome {
-        switch await SupabaseAuthClient.fetchSyncDocument(token: token, userId: userId) {
+    private func pullAndApplyRemoteOnly(token: String, context: RunContext, label: String) async -> Outcome {
+        let userId = context.userId
+        let result = await SupabaseAuthClient.fetchSyncDocument(token: token, userId: userId)
+        guard isCurrent(context) else { return .skipped }
+        switch result {
         case .ok(let doc): return applyPulled(doc, userId: userId)
         case .unauthorized: remember(SiteCopy.t("native.syncUnauthorized")); return .unauthorized
         case .failed(let m): remember("\(label)：\(m)"); return .skipped
@@ -216,8 +247,11 @@ final class MemberReadingSyncEngine: ObservableObject {
     }
 
     /// RN memberReadingSyncPushSupabase：读云端 → 合并 → upsert，回合并后的文档
-    private func pushMerged(token: String, userId: String, blobs: [String: Any]) async -> SupabaseAuthClient.SyncFetch {
+    private func pushMerged(token: String, context: RunContext, blobs: [String: Any]) async -> SupabaseAuthClient.SyncFetch {
+        let userId = context.userId
+        guard isCurrent(context) else { return .network }
         let existing = await SupabaseAuthClient.fetchSyncDocument(token: token, userId: userId)
+        guard isCurrent(context) else { return .network }
         guard case .ok(let doc) = existing else { return existing }
         let now = Date()
         let merged = Rules.mergePush(base: doc?.blobs, incoming: blobs, now: now)
@@ -234,9 +268,12 @@ final class MemberReadingSyncEngine: ObservableObject {
     }
 
     func run(reason: String?) async -> Outcome {
-        guard let auth, let token = await auth.ensureFreshToken(), let userId = auth.user?.id.trimmingCharacters(in: .whitespaces), !userId.isEmpty else {
+        guard let auth, let userId = auth.user?.id, !userId.trimmingCharacters(in: .whitespaces).isEmpty else {
             remember(SiteCopy.t("native.syncNoSession")); return .skipped
         }
+        let context = RunContext(userId: userId, sessionGeneration: auth.sessionGeneration, syncGeneration: syncGeneration)
+        let token = await auth.ensureFreshToken()
+        guard isCurrent(context), let token else { return .skipped }
         var m = meta
         let ownerMode: String
         if m.boundUserId == userId, !m.requirePullOnly { ownerMode = "continue" }
@@ -253,10 +290,12 @@ final class MemberReadingSyncEngine: ObservableObject {
         let forcePushPlan = forcePush && (Rules.str(storedPlan?["planId"])?.isEmpty == false)
 
         if ownerMode == "replace", !(forcePush && (localHas || forcePushPlan)) {
-            return await pullAndApplyRemoteOnly(token: token, userId: userId, label: SiteCopy.t("native.syncPullFailedAfterSwitch"))
+            return await pullAndApplyRemoteOnly(token: token, context: context, label: SiteCopy.t("native.syncPullFailedAfterSwitch"))
         }
         if ownerMode == "unbound" {
-            switch await SupabaseAuthClient.fetchSyncDocument(token: token, userId: userId) {
+            let initial = await SupabaseAuthClient.fetchSyncDocument(token: token, userId: userId)
+            guard isCurrent(context) else { return .skipped }
+            switch initial {
             case .unauthorized: remember(SiteCopy.t("native.syncUnauthorized")); return .unauthorized
             case .failed(let msg): remember(SiteCopy.f("native.syncPullFailedFirst", ["message": msg])); return .skipped
             case .network: remember(SiteCopy.t("native.syncOffline")); return .offline
@@ -268,7 +307,7 @@ final class MemberReadingSyncEngine: ObservableObject {
                 meta = Rules.Meta(revision: doc?.revision, lastSyncedAt: nil, boundUserId: userId, requirePullOnly: false, lastError: nil)
             }
         } else if !localHas, !forcePushPlan {
-            return await pullAndApplyRemoteOnly(token: token, userId: userId, label: SiteCopy.t("native.syncPullFailed"))
+            return await pullAndApplyRemoteOnly(token: token, context: context, label: SiteCopy.t("native.syncPullFailed"))
         }
 
         var localPush = exportLocal()
@@ -277,11 +316,15 @@ final class MemberReadingSyncEngine: ObservableObject {
             localPush["readingPlanPrefs"] = stamped.plan
             localPush["appLocale"] = stamped.locale
         }
-        switch await pushMerged(token: token, userId: userId, blobs: localPush) {
+        let pushed = await pushMerged(token: token, context: context, blobs: localPush)
+        guard isCurrent(context) else { return .skipped }
+        switch pushed {
         case .ok(let doc):
             let merged = mergeAndApply(remote: doc?.blobs, localPush: localPush)
             // 首推成功后再确认一次：同步期间本地又改过的，把合并结果再推上去
-            switch await pushMerged(token: token, userId: userId, blobs: merged) {
+            let confirmed = await pushMerged(token: token, context: context, blobs: merged)
+            guard isCurrent(context) else { return .skipped }
+            switch confirmed {
             case .ok(let confirm):
                 var mm = meta
                 mm.revision = confirm?.revision ?? doc?.revision; mm.lastSyncedAt = Rules.isoString(ms: Date().timeIntervalSince1970 * 1000)
@@ -329,10 +372,16 @@ final class MemberReadingSyncEngine: ObservableObject {
     func flushNow(reason: String) async -> Outcome {
         guard loggedIn else { return .skipped }
         var reason = reason
+        let generation = syncGeneration
+        let sessionGeneration = auth?.sessionGeneration
         while true {
+            guard !Task.isCancelled, generation == syncGeneration,
+                  sessionGeneration == auth?.sessionGeneration, loggedIn else { return .skipped }
             if let t = inFlight {
                 pendingFlushReason = reason
-                let o = await t.value
+                let o = await withTaskCancellationHandler(operation: { await t.value }, onCancel: { t.cancel() })
+                guard !Task.isCancelled, generation == syncGeneration,
+                      sessionGeneration == auth?.sessionGeneration else { return .skipped }
                 // t 已经结束了。别等它那条异步清理 —— 就地清，否则下一轮又 await 一个完成态 task 空转
                 if inFlight == t { inFlight = nil }
                 guard let again = pendingFlushReason else { return o }
@@ -346,7 +395,9 @@ final class MemberReadingSyncEngine: ObservableObject {
                 return await self.run(reason: reason)
             }
             inFlight = task
-            let o = await task.value
+            let o = await withTaskCancellationHandler(operation: { await task.value }, onCancel: { task.cancel() })
+            guard !Task.isCancelled, generation == syncGeneration,
+                  sessionGeneration == auth?.sessionGeneration else { return .skipped }
             if inFlight == task { inFlight = nil }
             lastSyncStartedAt = Date().timeIntervalSince1970
             return o
@@ -368,7 +419,8 @@ final class MemberReadingSyncEngine: ObservableObject {
     }
 
     /// 退出登录前（RN signOut）：把没发出去的本地改动推上去（最多等 12 秒），再清本机、标记下次只拉云端
-    func prepareSignOut() async {
+    func prepareSignOut() async -> Bool {
+        let generation = auth?.sessionGeneration
         debounceTask?.cancel(); debounceTask = nil; pendingLocalReason = nil
         if loggedIn {
             await withTaskGroup(of: Void.self) { group in
@@ -378,7 +430,8 @@ final class MemberReadingSyncEngine: ObservableObject {
                 group.cancelAll()
             }
         }
-        clearLocalBlobs()
-        meta = Rules.Meta(revision: nil, lastSyncedAt: nil, boundUserId: nil, requirePullOnly: true, lastError: nil)
+        guard generation == auth?.sessionGeneration else { return false }
+        resetForAccountChange()
+        return true
     }
 }

@@ -180,7 +180,7 @@ object SupabaseAuthClient {
         val s = if (r.status in 200..299 && o != null) session(o, null, locale) else null
         if (s != null) MemberAuthResult.Ok(s) else {
             val msg = errorMessage(o, r.status)
-            if (MemberOAuthRules.isNetworkMessage(msg)) MemberAuthResult.Failed("network", "network") else MemberAuthResult.Failed(msg, "refresh_failed")
+            if (r.status == 429 || r.status >= 500 || MemberOAuthRules.isNetworkMessage(msg)) MemberAuthResult.Failed("network", "network") else MemberAuthResult.Failed(msg, "refresh_failed")
         }
     } catch (_: Exception) { MemberAuthResult.Failed("network", "network") }
 

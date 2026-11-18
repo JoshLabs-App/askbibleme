@@ -31,3 +31,5 @@ export async function flushMemberReadingSyncWebNow(): Promise<MemberReadingSyncO
 export function syncMemberReadingAfterLoginWeb(): void {}
 
 export async function markMemberReadingSyncPullOnlyWeb(): Promise<void> {}
+
+export async function clearMemberReadingAfterSignOutWeb(): Promise<void> {}

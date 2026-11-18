@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -48,6 +49,14 @@ class MemberReadingSyncEngine(context: Context) {
     private var debounceJob: Job? = null
     private var pendingLocalReason: String? = null
     private var applyingRemote = false
+    private var syncGeneration = 0L
+    private data class Attempt(val userId: String, val accountRevision: Long, val generation: Long)
+    private class StaleAttempt : CancellationException("Account changed during reading sync")
+
+    private fun requireCurrent(attempt: Attempt) {
+        if (auth.user?.id != attempt.userId || auth.accountRevision != attempt.accountRevision ||
+            syncGeneration != attempt.generation) throw StaleAttempt()
+    }
 
     private var highlights: VerseHighlightStore? = null
     private var achievements: AchievementStore? = null
@@ -207,7 +216,7 @@ class MemberReadingSyncEngine(context: Context) {
     /** 换帐号 / 退出：清空本机同步数据（RN clearLocalMemberReadingSyncBlobs） */
     private fun clearLocalBlobs() {
         beginApplying()
-        try { plans.clearForAccountSwitch(); bookmarks.clearForAccountSwitch(); activity.clearForAccountSwitch(); search.clearRecentForAccountSwitch(); achievements?.clearForAccountSwitch() }
+        try { plans.clearForAccountSwitch(); bookmarks.clearForAccountSwitch(); highlights?.clearForAccountSwitch(); activity.clearForAccountSwitch(); search.clearRecentForAccountSwitch(); achievements?.clearForAccountSwitch() }
         finally { endApplying() }
     }
 
@@ -228,28 +237,36 @@ class MemberReadingSyncEngine(context: Context) {
         return Outcome.OK
     }
 
-    private suspend fun fetch(token: String, userId: String): SyncFetch = withContext(Dispatchers.IO) { SupabaseAuthClient.fetchSyncDocument(token, userId) }
+    private suspend fun fetch(token: String, attempt: Attempt): SyncFetch {
+        requireCurrent(attempt)
+        val result = withContext(Dispatchers.IO) { SupabaseAuthClient.fetchSyncDocument(token, attempt.userId) }
+        requireCurrent(attempt)
+        return result
+    }
 
-    private suspend fun pullAndApplyRemoteOnly(token: String, userId: String, label: String): Outcome = when (val r = fetch(token, userId)) {
-        is SyncFetch.Ok -> applyPulled(r.doc, userId)
+    private suspend fun pullAndApplyRemoteOnly(token: String, attempt: Attempt, label: String): Outcome = when (val r = fetch(token, attempt)) {
+        is SyncFetch.Ok -> applyPulled(r.doc, attempt.userId)
         SyncFetch.Unauthorized -> { remember(SiteCopy.t("native.syncUnauthorized")); Outcome.UNAUTHORIZED }
         is SyncFetch.Failed -> { remember("$label：${r.message}"); Outcome.SKIPPED }
         SyncFetch.Network -> { remember(SiteCopy.t("native.syncOffline")); Outcome.OFFLINE }
     }
 
     /** RN memberReadingSyncPushSupabase：读云端 → 合并 → upsert，回合并后的文档 */
-    private suspend fun pushMerged(token: String, userId: String, blobs: JSONObject): SyncFetch {
-        val existing = fetch(token, userId)
-        val doc = (existing as? SyncFetch.Ok)?.doc ?: return if (existing is SyncFetch.Ok) upsertNow(token, userId, null, blobs) else existing
-        return upsertNow(token, userId, doc, blobs)
+    private suspend fun pushMerged(token: String, attempt: Attempt, blobs: JSONObject): SyncFetch {
+        val existing = fetch(token, attempt)
+        val doc = (existing as? SyncFetch.Ok)?.doc ?: return if (existing is SyncFetch.Ok) upsertNow(token, attempt, null, blobs) else existing
+        return upsertNow(token, attempt, doc, blobs)
     }
 
-    private suspend fun upsertNow(token: String, userId: String, doc: SupabaseAuthClient.SyncDocument?, blobs: JSONObject): SyncFetch {
+    private suspend fun upsertNow(token: String, attempt: Attempt, doc: SupabaseAuthClient.SyncDocument?, blobs: JSONObject): SyncFetch {
+        requireCurrent(attempt)
         val nowMs = System.currentTimeMillis()
         val merged = R.mergePush(doc?.blobs, blobs, LocalDate.now())
-        return withContext(Dispatchers.IO) {
-            SupabaseAuthClient.upsertSyncDocument(token, userId, R.newRevision(nowMs), R.isoString(nowMs.toDouble()), merged)
+        val result = withContext(Dispatchers.IO) {
+            SupabaseAuthClient.upsertSyncDocument(token, attempt.userId, R.newRevision(nowMs), R.isoString(nowMs.toDouble()), merged)
         }
+        requireCurrent(attempt)
+        return result
     }
 
     /** RN mergeAndApply：网络往返期间本地可能又改了，用最新本地再合并一次再落盘 */
@@ -261,9 +278,19 @@ class MemberReadingSyncEngine(context: Context) {
     }
 
     suspend fun run(reason: String?): Outcome {
+        val accountRevision = auth.accountRevision
+        val generation = syncGeneration
         val token = auth.ensureFreshToken()
         val userId = auth.user?.id?.trim().orEmpty()
+        if (accountRevision != auth.accountRevision || generation != syncGeneration) return Outcome.SKIPPED
         if (token == null || userId.isEmpty()) { remember(SiteCopy.t("native.syncNoSession")); return Outcome.SKIPPED }
+        val attempt = Attempt(userId, accountRevision, generation)
+        return try { runCurrent(reason, token, attempt) } catch (_: StaleAttempt) { Outcome.SKIPPED }
+    }
+
+    private suspend fun runCurrent(reason: String?, token: String, attempt: Attempt): Outcome {
+        requireCurrent(attempt)
+        val userId = attempt.userId
         var m = meta
         val ownerMode = when {
             m.boundUserId == userId && !m.requirePullOnly -> "continue"
@@ -276,9 +303,9 @@ class MemberReadingSyncEngine(context: Context) {
         val forcePush = R.shouldForcePush(reason)
         val forcePushPlan = forcePush && !R.str(storedPlan?.opt("planId")).isNullOrEmpty()
 
-        if (ownerMode == "replace" && !(forcePush && (localHas || forcePushPlan))) return pullAndApplyRemoteOnly(token, userId, SiteCopy.t("native.syncPullFailedAfterSwitch"))
+        if (ownerMode == "replace" && !(forcePush && (localHas || forcePushPlan))) return pullAndApplyRemoteOnly(token, attempt, SiteCopy.t("native.syncPullFailedAfterSwitch"))
         if (ownerMode == "unbound") {
-            when (val r = fetch(token, userId)) {
+            when (val r = fetch(token, attempt)) {
                 SyncFetch.Unauthorized -> { remember(SiteCopy.t("native.syncUnauthorized")); return Outcome.UNAUTHORIZED }
                 is SyncFetch.Failed -> { remember(SiteCopy.f("native.syncPullFailedFirst", mapOf("message" to r.message))); return Outcome.SKIPPED }
                 SyncFetch.Network -> { remember(SiteCopy.t("native.syncOffline")); return Outcome.OFFLINE }
@@ -290,7 +317,7 @@ class MemberReadingSyncEngine(context: Context) {
                 }
             }
         } else if (!localHas && !forcePushPlan) {
-            return pullAndApplyRemoteOnly(token, userId, SiteCopy.t("native.syncPullFailed"))
+            return pullAndApplyRemoteOnly(token, attempt, SiteCopy.t("native.syncPullFailed"))
         }
 
         val localPush = exportLocal()
@@ -301,11 +328,11 @@ class MemberReadingSyncEngine(context: Context) {
                 localPush.put("readingPlanPrefs", plan); localPush.put("appLocale", locale)
             }
         }
-        return when (val pushed = pushMerged(token, userId, localPush)) {
+        return when (val pushed = pushMerged(token, attempt, localPush)) {
             is SyncFetch.Ok -> {
                 val merged = mergeAndApply(pushed.doc?.blobs, localPush)
                 // 首推成功后再确认一次：同步期间本地又改过的，把合并结果再推上去
-                when (val confirm = pushMerged(token, userId, merged)) {
+                when (val confirm = pushMerged(token, attempt, merged)) {
                     is SyncFetch.Ok -> {
                         highlights?.markSynced()
                         meta = meta.copy(revision = confirm.doc?.revision ?: pushed.doc?.revision, lastSyncedAt = R.isoString(System.currentTimeMillis().toDouble()),
@@ -393,6 +420,14 @@ class MemberReadingSyncEngine(context: Context) {
     suspend fun prepareSignOut() {
         debounceJob?.cancel(); debounceJob = null; pendingLocalReason = null
         if (loggedIn) withTimeoutOrNull(12_000) { flushNow("sign-out") }
+        // flushNow runs in this engine's scope; timing out its waiter does not stop
+        // that request. Invalidate it before clearing stores so a late response
+        // cannot repopulate the previous account's data or mark new edits synced.
+        syncGeneration++
+        inFlight?.cancel()
+        inFlight = null
+        pendingFlushReason = null
+        lastSyncStartedAt = 0L
         clearLocalBlobs()
         meta = R.Meta(revision = null, lastSyncedAt = null, boundUserId = null, requirePullOnly = true, lastError = null)
     }

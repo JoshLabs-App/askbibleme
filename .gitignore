@@ -17,6 +17,7 @@
 
 # 构建时由 scripts/write-app-build-meta.mjs 生成（与 data-app-build 对齐）
 /public/app-build.json
+/lib/generated/app-build-meta.json
 
 # production
 /build
@@ -141,3 +142,12 @@ tools/.reading-plans.json
 *.bak
 *.bak-*
 .wrangler/
+
+# Cloudflare / vinext 构建期按书卷/按包拆出的静态数据（prebuild 自动生成）
+/public/data/chapter-segments/
+/public/data/bible-reading-plans/
+/public/data/static-bundles/
+/public/data/resource-packs/
+.cloudflare/
+.vinext/
+/dist/

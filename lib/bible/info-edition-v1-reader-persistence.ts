@@ -1,6 +1,6 @@
 import "server-only";
 import {
-  loadPublishedInfoEditionChapter,
+  loadPublishedInfoEditionChapterAsync,
   publishInfoEditionFromGenerations,
 } from "@/lib/bible/info-edition-v1-published-store";
 import type { InfoEditionV1Generation } from "@/lib/bible/info-edition-v1-types";
@@ -141,7 +141,7 @@ export async function getInfoEditionReaderCacheAsync(
   chapter: number,
   target: ResolvedInfoEditionReaderTarget,
 ): Promise<InfoEditionV1ReaderCacheResponse> {
-  const bundled = loadPublishedInfoEditionChapter(cwd, bookId, chapter, {
+  const bundled = await loadPublishedInfoEditionChapterAsync(cwd, bookId, chapter, {
     roleId: target.roleId,
     variant: target.variant,
   });

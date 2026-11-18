@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -15,6 +16,9 @@ import {
   signOutAskbibleWeb,
   type AskbibleWebUser,
 } from "@/lib/askbible-web-auth-client";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
+import { discardMemberReadingOwnerArchiveWeb, handleMemberReadingAuthChangeWeb } from "@/lib/member-reading-sync/client/run-member-reading-sync-web";
 
 export type AskbibleAppUser = {
   id: string;
@@ -53,45 +57,85 @@ export function AskbibleUserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AskbibleAppUser | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const refreshGeneration = useRef(0);
+  const authGeneration = useRef(0);
 
   const refresh = useCallback(async () => {
+    const generation = ++refreshGeneration.current;
     try {
       const session = await fetchAskbibleWebSessionUser();
+      if (generation !== refreshGeneration.current) return;
       setConfigured(session.configured);
       setUser(toAppUser(session.user));
       setIsAdmin(Boolean(session.user?.isAdmin));
     } catch {
+      if (generation !== refreshGeneration.current) return;
       setConfigured(false);
       setUser(null);
       setIsAdmin(false);
     } finally {
-      setLoading(false);
-      setBootstrapped(true);
+      if (generation === refreshGeneration.current) {
+        setLoading(false);
+        setBootstrapped(true);
+      }
     }
   }, []);
 
   useEffect(() => {
+    let mounted = true;
+    const listener = createSupabaseBrowserClient()?.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
+      refreshGeneration.current += 1;
+      if (event === "SIGNED_OUT" || event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+        authGeneration.current += 1;
+        handleMemberReadingAuthChangeWeb(session?.user.id ?? null, event === "INITIAL_SESSION");
+      }
+      if (event === "SIGNED_OUT") {
+        setUser(null);
+        setIsAdmin(false);
+      }
+      // Supabase holds an auth lock inside this callback; refresh after it returns.
+      queueMicrotask(() => { if (mounted) void refresh(); });
+    });
     void refresh();
+    return () => {
+      mounted = false;
+      refreshGeneration.current += 1;
+      listener?.data.subscription.unsubscribe();
+    };
   }, [refresh]);
 
   const logout = useCallback(async () => {
+    const generation = authGeneration.current;
     try {
-      const { flushMemberReadingSyncWebNow, markMemberReadingSyncPullOnlyWeb } = await import(
+      const { flushMemberReadingSyncWebNow } = await import(
         "@/lib/member-reading-sync/client/run-member-reading-sync-web"
       );
-      await flushMemberReadingSyncWebNow("sign-out");
-      await markMemberReadingSyncPullOnlyWeb();
-      await signOutAskbibleWeb();
+      // An unavailable sync service must not trap the user in a signed-in state.
+      let timeout: ReturnType<typeof setTimeout> | undefined;
+      try {
+        await Promise.race([
+          flushMemberReadingSyncWebNow("sign-out"),
+          new Promise<void>((resolve) => { timeout = setTimeout(resolve, 12_000); }),
+        ]);
+      } finally {
+        clearTimeout(timeout);
+      }
+      const current = await createSupabaseBrowserClient()?.auth.getSession();
+      if (generation !== authGeneration.current || current?.data.session?.user.id !== user?.id) return;
+      await signOutAskbibleWeb(user?.id);
     } finally {
       await refresh();
     }
-  }, [refresh]);
+  }, [refresh, user?.id]);
 
   const deleteAccount = useCallback(async () => {
     const result = await deleteAskbibleWebAccount();
-    if (result.ok) await refresh();
+    if (result.ok) {
+      if (user?.id) discardMemberReadingOwnerArchiveWeb(user.id);
+      await refresh();
+    }
     return result;
-  }, [refresh]);
+  }, [refresh, user?.id]);
 
   const value = useMemo(
     () => ({ bootstrapped, configured, user, isAdmin, loading, refresh, logout, deleteAccount }),

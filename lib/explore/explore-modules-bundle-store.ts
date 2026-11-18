@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import staticExploreModulesBundle from "@/data/explore-modules/bundle.json";
 
 import {
   isExploreModulesBundle,
@@ -13,6 +14,9 @@ export function exploreModulesBundlePath(cwd: string): string {
 }
 
 export function readExploreModulesBundleSync(cwd: string): ExploreModulesBundle | null {
+  if (cwd === process.cwd()) {
+    return isExploreModulesBundle(staticExploreModulesBundle) ? staticExploreModulesBundle : null;
+  }
   const p = exploreModulesBundlePath(cwd);
   try {
     const raw = fs.readFileSync(p, "utf-8");

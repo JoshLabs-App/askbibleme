@@ -33,7 +33,7 @@ export async function GET(req: Request) {
 
   const maxVerse = chapterData.verses.reduce((max, row) => Math.max(max, row.verse), 0) || null;
   const segments =
-    loadChapterSegmentsFromLocalDataset(cwd, bookId, chapter) ??
+    (await loadChapterSegmentsFromLocalDataset(cwd, bookId, chapter)) ??
     (await loadChapterSegmentsFromOpenUsfm(bookId, chapter, maxVerse));
 
   return NextResponse.json({

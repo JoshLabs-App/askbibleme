@@ -1,9 +1,6 @@
-import fs from "node:fs";
-import path from "node:path";
+import rawCanonCatalog from "@/data/bible/scripture_canon_catalog.json";
 import { scriptureBookNotes } from "@/lib/bible/scripture-book-notes";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
-
-const REL_PATH = path.join("data", "bible", "scripture_canon_catalog.json");
 
 export type ScriptureCanonCatalogBook = {
   bookId: string;
@@ -125,7 +122,5 @@ function parseRoot(parsed: RawRoot | null | undefined): ScriptureCanonCatalogRoo
 
 /** 读 `data/bible/scripture_canon_catalog.json` 并与 66 卷 / 书卷注释对齐（服务端）。 */
 export function readScriptureCanonCatalog(): ScriptureCanonCatalogRoot {
-  const filePath = path.join(process.cwd(), REL_PATH);
-  const raw = JSON.parse(fs.readFileSync(filePath, "utf8")) as RawRoot;
-  return parseRoot(raw);
+  return parseRoot(rawCanonCatalog as RawRoot);
 }

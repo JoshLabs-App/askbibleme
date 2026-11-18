@@ -27,6 +27,20 @@ export type TodayReadingDoneRecord = {
 };
 
 const listeners = new Set<() => void>();
+let accountGeneration = 0;
+
+export function clearTodayReadingDoneForAccountSwitch(): void {
+  accountGeneration += 1;
+  try {
+    if (typeof localStorage !== "undefined") {
+      localStorage.removeItem(TODAY_READING_DONE_STORAGE_KEY);
+      localStorage.removeItem(TODAY_READING_DONE_STORAGE_KEY_LEGACY);
+    }
+  } catch {
+    /* storage can be disabled */
+  }
+  emit();
+}
 
 function emit() {
   listeners.forEach((l) => {
@@ -242,6 +256,7 @@ export async function markTodayReadingChapterVisit(
   chapter: number,
   opts?: { dayCount?: number },
 ): Promise<void> {
+  const generation = accountGeneration;
   const prefs = readEffectiveReadingPlanPrefs();
   const isPointerPlan = isPointerReadingPlanId(prefs.planId);
   const dayCount = opts?.dayCount ?? prefs.dayCount ?? 365;
@@ -250,6 +265,7 @@ export async function markTodayReadingChapterVisit(
   if (!isPointerPlan && dayIndex == null) return;
 
   const payload = await loadTodayReadingPlanPayload(prefs, { dayCount: opts?.dayCount });
+  if (generation !== accountGeneration) return;
   const reading = payload?.day?.readings.find((r) => readingIncludesChapter(r, bookId, chapter));
   if (!reading) return;
 
@@ -262,6 +278,7 @@ export async function markTodayReadingChapterVisit(
   const itemKey = todayReadingItemKey(reading, prefs.planId);
   const { readingPlanRangeUnitCount, recordTodayReadingChapterFraction, TODAY_READING_AUTO_DONE_FRACTION } =
     await import("@/lib/read/today-reading-chapter-fraction");
+  if (generation !== accountGeneration) return;
   if (readingPlanRangeUnitCount(reading) > 1) {
     await recordTodayReadingChapterFraction(bookId, chapter, TODAY_READING_AUTO_DONE_FRACTION, opts);
     return;

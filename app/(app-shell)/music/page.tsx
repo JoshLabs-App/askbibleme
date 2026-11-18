@@ -5,8 +5,6 @@ import { readMusicCompanionStore } from "@/lib/music-companion/store-file";
 import { sitePageTitle } from "@/lib/site-metadata-defaults";
 import "./music-home.css";
 
-/** 曲库 JSON 变更不必秒级反映：略长缓存减轻每次打开音乐页的 RSC 读盘 */
-export const revalidate = 45;
 
 export const metadata = {
   title: sitePageTitle("音乐"),

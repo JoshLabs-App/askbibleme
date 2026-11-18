@@ -29,10 +29,7 @@ import {
   brandColorsToCssVars,
   logoBackgroundToCssVars,
 } from "@/lib/site-branding-colors";
-import {
-  SITE_METADATA_DEFAULT_TITLE,
-  SITE_METADATA_TITLE_TEMPLATE,
-} from "@/lib/site-metadata-defaults";
+import { SITE_METADATA_DEFAULT_TITLE } from "@/lib/site-metadata-defaults";
 
 export async function generateMetadata(): Promise<Metadata> {
   const brandingReady = await brandingAssetsExist();
@@ -43,10 +40,8 @@ export async function generateMetadata(): Promise<Metadata> {
     manifest: "/manifest.webmanifest",
     /** 安卓 Chrome「添加到主屏幕」等 */
     applicationName: appTitle,
-    title: {
-      default: appTitle,
-      template: SITE_METADATA_TITLE_TEMPLATE,
-    },
+    // Page metadata already uses sitePageTitle; a parent template repeats the brand.
+    title: appTitle,
     description: "一个安静回到经文的入口。",
     appleWebApp: {
       capable: true,

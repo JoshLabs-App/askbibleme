@@ -1,6 +1,6 @@
 "use client";
 
-import type { User } from "@supabase/supabase-js";
+import type { AuthChangeEvent, User } from "@supabase/supabase-js";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { getSupabaseAnonKey, getSupabaseUrl, isSupabaseAuthConfigured } from "@/lib/supabase/config";
 
@@ -186,10 +186,21 @@ export async function signUpAskbibleWebWithPassword(input: {
   return { ok: false, error: "register_failed" };
 }
 
-export async function signOutAskbibleWeb(): Promise<void> {
+export async function signOutAskbibleWeb(expectedUserId?: string): Promise<void> {
   const supabase = createSupabaseBrowserClient();
   if (!supabase) return;
-  await supabase.auth.signOut();
+  let changed = false;
+  const listener = supabase.auth.onAuthStateChange((event: AuthChangeEvent) => {
+    if (event === "SIGNED_IN" || event === "SIGNED_OUT") changed = true;
+  });
+  try {
+    if (expectedUserId) {
+      const current = await supabase.auth.getSession();
+      if (changed || current.data.session?.user.id !== expectedUserId) return;
+    }
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  } finally { listener.data.subscription.unsubscribe(); }
 }
 
 export async function deleteAskbibleWebAccount(): Promise<
@@ -209,6 +220,10 @@ export async function deleteAskbibleWebAccount(): Promise<
   }
 
   const url = `${getSupabaseUrl().replace(/\/$/, "")}/functions/v1/delete-account`;
+  let changed = false;
+  const listener = supabase.auth.onAuthStateChange((event: AuthChangeEvent) => {
+    if (event === "SIGNED_IN" || event === "SIGNED_OUT") changed = true;
+  });
   try {
     const res = await fetch(url, {
       method: "DELETE",
@@ -230,9 +245,12 @@ export async function deleteAskbibleWebAccount(): Promise<
         code: typeof data?.code === "string" ? data.code : undefined,
       };
     }
-    await supabase.auth.signOut();
+    const current = await supabase.auth.getSession();
+    if (!changed && current.data.session?.user.id === sessionData.session?.user.id) {
+      await supabase.auth.signOut();
+    }
     return { ok: true };
   } catch {
     return { ok: false, error: "network", code: "network" };
-  }
+  } finally { listener.data.subscription.unsubscribe(); }
 }

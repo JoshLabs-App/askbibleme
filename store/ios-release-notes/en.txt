@@ -1,3 +1,3 @@
-• Swipe up or down on the home screen to change the nature scene
-• New "More Apps" section on the Explore page with our other Bible apps
+• Added English Standard Version (ESV) Bible text and chapter audio
+• Bilingual parallel reading now interleaves verse by verse
 • Stability improvements

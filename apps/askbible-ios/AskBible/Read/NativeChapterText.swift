@@ -112,40 +112,59 @@ struct NativeChapterText: UIViewRepresentable {
                     .foregroundColor: UIColor(theme.ink), .paragraphStyle: style
                 ]))
             }
-            let built = ChapterFlowParagraph(verses: group, metrics: metrics, theme: theme, xrefVerses: xrefs, activeVerse: nil).build(scale: textScale)
-            let text = NSMutableAttributedString(attributedString: built.text)
-            for (number, range) in built.ranges where bookmarked.contains(number) {
-                text.addAttribute(.backgroundColor, value: UIColor(theme.verseBookmarkMarker), range: range)
-            }
-            for run in ChapterFlowParagraph.runs(highlights: highlights, textRanges: built.textRanges, fullRanges: built.ranges) {
-                text.addAttribute(.backgroundColor, value: run.color, range: run.range)
-            }
-            if let activeVerse, !bookmarked.contains(activeVerse),
-               let verse = group.first(where: { $0.number == activeVerse }),
-               let body = built.textRanges.first(where: { $0.verse == activeVerse })?.range,
-               let sentence = VerseSentences.sentence(at: activeProgress, in: verse.text),
-               sentence.upperBound < body.length {
-                text.addAttribute(.backgroundColor, value: ChapterFlowParagraph.FlowTextView.activeFill,
-                                  range: NSRange(location: body.location + sentence.lowerBound, length: sentence.count))
-            }
-            if let focusVerse {
-                let matches = ChapterFlowParagraph.keywordRanges(verse: focusVerse, keyword: focusKeyword, verses: group, textRanges: built.textRanges)
-                let marks = matches.isEmpty ? built.ranges.filter { $0.verse == focusVerse }.map(\.range) : matches
-                for range in marks { text.addAttribute(.backgroundColor, value: UIColor(theme.verseSearchFocusBg), range: range) }
-            }
-            let start = out.length
-            ranges += built.ranges.map { ($0.verse, NSRange(location: start + $0.range.location, length: $0.range.length)) }
-            numbers += built.numberRanges.map { ($0.verse, NSRange(location: start + $0.range.location, length: $0.range.length)) }
-            out.append(text)
-            out.append(NSAttributedString(string: "\n", attributes: [
-                .font: UIFont.systemFont(ofSize: metrics.verseFontSize * textScale),
-                .paragraphStyle: { let p = NSMutableParagraphStyle(); p.paragraphSpacing = 16; return p }()
-            ]))
-            for verse in group {
-                if let secondary = contrast[verse.number] {
+            let hasContrast = group.contains { contrast[$0.number] != nil }
+            let units: [[LoadedVerse]] = hasContrast ? group.map { [$0] } : [group]
+            for (unitIdx, unit) in units.enumerated() {
+                let built = ChapterFlowParagraph(verses: unit, metrics: metrics, theme: theme, xrefVerses: xrefs, activeVerse: nil).build(scale: textScale)
+                let text = NSMutableAttributedString(attributedString: built.text)
+                for (number, range) in built.ranges where bookmarked.contains(number) {
+                    text.addAttribute(.backgroundColor, value: UIColor(theme.verseBookmarkMarker), range: range)
+                }
+                for run in ChapterFlowParagraph.runs(highlights: highlights, textRanges: built.textRanges, fullRanges: built.ranges) {
+                    text.addAttribute(.backgroundColor, value: run.color, range: run.range)
+                }
+                if let activeVerse, !bookmarked.contains(activeVerse),
+                   let verse = unit.first(where: { $0.number == activeVerse }),
+                   let body = built.textRanges.first(where: { $0.verse == activeVerse })?.range,
+                   let sentence = VerseSentences.sentence(at: activeProgress, in: verse.text),
+                   sentence.upperBound < body.length {
+                    text.addAttribute(.backgroundColor, value: ChapterFlowParagraph.FlowTextView.activeFill,
+                                      range: NSRange(location: body.location + sentence.lowerBound, length: sentence.count))
+                }
+                if let focusVerse {
+                    let matches = ChapterFlowParagraph.keywordRanges(verse: focusVerse, keyword: focusKeyword, verses: unit, textRanges: built.textRanges)
+                    let marks = matches.isEmpty ? built.ranges.filter { $0.verse == focusVerse }.map(\.range) : matches
+                    for range in marks { text.addAttribute(.backgroundColor, value: UIColor(theme.verseSearchFocusBg), range: range) }
+                }
+                let start = out.length
+                ranges += built.ranges.map { ($0.verse, NSRange(location: start + $0.range.location, length: $0.range.length)) }
+                numbers += built.numberRanges.map { ($0.verse, NSRange(location: start + $0.range.location, length: $0.range.length)) }
+                out.append(text)
+                let isLastUnit = unitIdx == units.count - 1
+                let secondary = hasContrast ? unit.first.flatMap { contrast[$0.number] } : nil
+                if let secondary, let verse = unit.first {
+                    let mainBreak = NSMutableParagraphStyle()
+                    mainBreak.paragraphSpacing = 6
+                    out.append(NSAttributedString(string: "\n", attributes: [
+                        .font: UIFont.systemFont(ofSize: metrics.verseFontSize * textScale),
+                        .paragraphStyle: mainBreak
+                    ]))
+                    let secFontSize = metrics.verseFontSize * 0.82 * textScale
+                    let secLineHeight = max(metrics.verseLineHeight * 0.78 * textScale, secFontSize * 1.2)
+                    let secStyle = NSMutableParagraphStyle()
+                    secStyle.minimumLineHeight = secLineHeight
+                    secStyle.maximumLineHeight = secLineHeight
+                    secStyle.paragraphSpacing = isLastUnit ? 16 : 10
                     out.append(NSAttributedString(string: "\(verse.number)\u{2002}\(secondary)\n", attributes: [
-                        .font: UIFont.systemFont(ofSize: metrics.verseFontSize * 0.82 * textScale),
-                        .foregroundColor: UIColor(theme.muted)
+                        .font: UIFont.systemFont(ofSize: secFontSize),
+                        .foregroundColor: UIColor(theme.muted),
+                        .paragraphStyle: secStyle
+                    ]))
+                } else {
+                    let spacing: CGFloat = isLastUnit ? 16 : 10
+                    out.append(NSAttributedString(string: "\n", attributes: [
+                        .font: UIFont.systemFont(ofSize: metrics.verseFontSize * textScale),
+                        .paragraphStyle: { let p = NSMutableParagraphStyle(); p.paragraphSpacing = spacing; return p }()
                     ]))
                 }
             }

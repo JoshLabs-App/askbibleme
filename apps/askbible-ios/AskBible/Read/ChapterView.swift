@@ -427,11 +427,19 @@ struct ChapterView: View {
                     .padding(.top, 18)
                     .padding(.bottom, 16)
             }
-            flowParagraph(group, metrics: m)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            // 副译本对照行：0.82× 字号，muted（verseContrast）
-            ForEach(group.filter { contrast[$0.number] != nil }) { v in
-                contrastLine(v, metrics: m)
+            if group.allSatisfy({ contrast[$0.number] == nil }) {
+                flowParagraph(group, metrics: m)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                // 开了对照：逐节交错（主译本一节 → 对照一节），对齐 Android ChapterScreen
+                ForEach(Array(group.enumerated()), id: \.element.id) { i, v in
+                    if i > 0 { Color.clear.frame(height: 10) }
+                    flowParagraph([v], metrics: m)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    if contrast[v.number] != nil {
+                        contrastLine(v, metrics: m)
+                    }
+                }
             }
         }
         .padding(.bottom, 14)  // verseParagraphBlock.marginBottom

@@ -1,7 +1,7 @@
 {
   "_note": "android_dir 相对于此文件所在目录（01AskBible/）",
   "app_name": "AskBible",
-  "version": "1.0.51",
+  "version": "1.0.57",
   "apk_prefix": "AskBible",
   "bucket": "askbible-media",
   "android_dir": "apps/askbible-android",
@@ -12,10 +12,9 @@
   "min_android": "Android 8.0+",
   "gradle_task": "assembleWeb",
   "apk_rel_path": "app/build/outputs/apk/web/app-web.apk",
-  "notes": "首页上下滑动就能换场景；探索页新增「更多 App」。",
+  "notes": "新增 ESV 英文标准版圣经译本及整章朗读。",
   "changelog": [
-    "首页上下滑动就能换场景：上滑下一个，下滑上一个",
-    "探索页新增「更多 App」，可以找到同系列的听到、查到、诗歌"
+    "新增 ESV 英文标准版圣经译本，支持正文阅读与整章朗读"
   ],
   "intro": "AskBible 是一本能问问题的圣经：读经、听读、按计划跟进度，遇到不懂的地方随时问。",
   "icon_image": "apps/askbible-ios/AskBible/Assets.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png"

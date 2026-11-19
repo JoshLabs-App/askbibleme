@@ -68,6 +68,9 @@ object RemoteTranslations {
      * 内置译本不是 YouVersion 来的，返回 null
      */
     fun attribution(translationId: String, locale: AppLocale = AppLocale.current): String? {
+        if (translationId == "esv") {
+            return "Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), © 2001 Crossway."
+        }
         val hit = entries.firstOrNull { it.translation.id == translationId } ?: return null
         if (hit.copyright.isNotEmpty()) return hit.copyright
         return SiteCopy.f("native.remoteTextAttribution", mapOf("name" to hit.translation.label(locale)), locale)

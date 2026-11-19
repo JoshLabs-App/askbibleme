@@ -18,6 +18,15 @@ actor RemoteChapterStore {
         let key = "\(t.id):\(book):\(chapter)"
         if let hit = memory[key] { return hit }
         if let cached = Self.readDisk(t.id, book, chapter) { memory[key] = cached; return cached }
+        // ESV 密钥留在服务端，直接走主站 /api/read/chapter 代理，不抓 bible.com
+        if t.provider == "esv" {
+            if let rows = await Self.fetchEsvViaSite(t, book: book, chapter: chapter), !rows.isEmpty {
+                memory[key] = rows
+                Self.writeDisk(t.id, book, chapter, rows)
+                return rows
+            }
+            return nil
+        }
         // 先问网站接口（服务端走 YouVersion 官方平台接口，带密钥、稳定）；拿不到再退回抓 bible.com 公开页
         if let rows = await Self.fetchViaSite(t, book: book, chapter: chapter), !rows.isEmpty {
             memory[key] = rows
@@ -41,7 +50,20 @@ actor RemoteChapterStore {
         readDisk(translationId, bookId.uppercased(), chapter)
     }
 
-    // MARK: 网站接口（/api/mobile/bible/youversion/chapter → {ok, verses:[{verse,text}]}）
+    // MARK: 网站接口（/api/mobile/bible/youversion/chapter 与 /api/read/chapter）
+
+    static func fetchEsvViaSite(_ t: ScriptureTranslation, book: String, chapter: Int) async -> [Row]? {
+        guard chapter >= 1,
+              let url = URL(string: "\(Endpoints.siteBase)/api/read/chapter?translationId=\(t.id)&bookId=\(book)&chapter=\(chapter)") else { return nil }
+        var req = URLRequest(url: url, timeoutInterval: 25)
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+        guard let (data, resp) = try? await URLSession.shared.data(for: req),
+              (resp as? HTTPURLResponse)?.statusCode == 200,
+              let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+              let payload = root["data"] as? [String: Any],
+              let list = payload["verses"] as? [[String: Any]] else { return nil }
+        return parseVerseRows(list)
+    }
 
     static func fetchViaSite(_ t: ScriptureTranslation, book: String, chapter: Int) async -> [Row]? {
         guard !t.remoteId.isEmpty, chapter >= 1,
@@ -52,6 +74,10 @@ actor RemoteChapterStore {
               (resp as? HTTPURLResponse)?.statusCode == 200,
               let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
               let list = root["verses"] as? [[String: Any]] else { return nil }
+        return parseVerseRows(list)
+    }
+
+    private static func parseVerseRows(_ list: [[String: Any]]) -> [Row]? {
         let rows: [Row] = list.compactMap { item in
             guard let v = item["verse"] as? Int,
                   let text = (item["text"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),

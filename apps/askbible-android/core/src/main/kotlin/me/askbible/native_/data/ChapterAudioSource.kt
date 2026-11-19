@@ -123,11 +123,11 @@ object ChapterAudioSource {
         // 认全部 site 候选域：地址拼好之后线路可能换过
         Endpoints.allHosts(Endpoints.Role.SITE).any { url.startsWith(it.trimEnd('/') + CHAPTER_AUDIO_PROXY_PATH) }
 
-    /** 代理返回的 JSON → mp3 地址（只认 youversionapi.com 的 https 直链） */
+    /** 代理返回的 JSON → mp3 地址（只认 youversionapi.com 与 audio.esv.org 的 https 直链） */
     fun parseResolverResponse(text: String): String? {
         val m = Regex("\"src\"\\s*:\\s*\"([^\"]+)\"").find(text) ?: return null
         val src = m.groupValues[1].replace("\\/", "/").trim()
-        return if (src.startsWith("https://") && src.contains("youversionapi.com")) src else null
+        return if (src.startsWith("https://") && (src.contains("youversionapi.com") || src.contains("audio.esv.org"))) src else null
     }
 
     private val resolvedCache = HashMap<String, String>()

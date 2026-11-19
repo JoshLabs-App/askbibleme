@@ -61,18 +61,21 @@ object TranslationCatalog {
         ScriptureTranslation("niv", "NIV 英文新国际版", "New International Version (NIV)", "en", TranslationDelivery.ONLINE,
             "youversion", "111", "", "NIV", "",
             true, "NIV", "NIV", "NIV"),
+        ScriptureTranslation("esv", "ESV 英文标准版", "English Standard Version (ESV)", "en", TranslationDelivery.ONLINE,
+            "esv", "59", "", "ESV", "",
+            true, "ESV", "ESV", "ESV"),
         ScriptureTranslation("kjv", "KJV 英文钦定本", "King James Version (KJV)", "en", TranslationDelivery.DOWNLOAD,
             "", "1", "", "KJV", "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/bible/kjv.sqlite",
             true, "KJV", "KJV", "KJV"),
     )
     /** 选择器顺序（RN sortPickerTranslations，按界面语言） */
     val pickerOrder: Map<String, List<String>> = mapOf(
-        "zh-CN" to listOf("cuv-simp", "cuv-trad", "ccb-zh-hans", "cnvs-zh-hans", "rcuvss-zh-hans", "rcuv-zh-hant", "rcv-zh-hant", "csbs-zh-hans", "cunpss-zh-hans", "cunpss-zh-hant", "cunp-zh-hant", "cunp-zh-hant-god", "csbt-zh-hant", "cnv-zh-hant", "mandarin-zh-hans", "niv", "kjv", "web-en", "ust-en", "ccb-zh-hant"),
-        "zh-TW" to listOf("cuv-trad", "cuv-simp", "ccb-zh-hant", "rcuv-zh-hant", "rcuvss-zh-hans", "cnv-zh-hant", "rcv-zh-hant", "csbt-zh-hant", "cunp-zh-hant", "cunp-zh-hant-god", "cunpss-zh-hans", "cunpss-zh-hant", "csbs-zh-hans", "cnvs-zh-hans", "mandarin-zh-hans", "niv", "kjv", "web-en", "ust-en", "ccb-zh-hans"),
-        "en" to listOf("niv", "kjv", "web-en", "ust-en", "cuv-simp", "cuv-trad", "ccb-zh-hans", "ccb-zh-hant", "cnv-zh-hant", "cnvs-zh-hans", "csbs-zh-hans", "csbt-zh-hant", "rcuv-zh-hant", "rcuvss-zh-hans", "cunp-zh-hant", "cunp-zh-hant-god", "cunpss-zh-hant", "cunpss-zh-hans", "mandarin-zh-hans", "rcv-zh-hant"),
+        "zh-CN" to listOf("cuv-simp", "cuv-trad", "ccb-zh-hans", "cnvs-zh-hans", "rcuvss-zh-hans", "rcuv-zh-hant", "rcv-zh-hant", "csbs-zh-hans", "cunpss-zh-hans", "cunpss-zh-hant", "cunp-zh-hant", "cunp-zh-hant-god", "csbt-zh-hant", "cnv-zh-hant", "mandarin-zh-hans", "niv", "esv", "kjv", "web-en", "ust-en", "ccb-zh-hant"),
+        "zh-TW" to listOf("cuv-trad", "cuv-simp", "ccb-zh-hant", "rcuv-zh-hant", "rcuvss-zh-hans", "cnv-zh-hant", "rcv-zh-hant", "csbt-zh-hant", "cunp-zh-hant", "cunp-zh-hant-god", "cunpss-zh-hans", "cunpss-zh-hant", "csbs-zh-hans", "cnvs-zh-hans", "mandarin-zh-hans", "niv", "esv", "kjv", "web-en", "ust-en", "ccb-zh-hans"),
+        "en" to listOf("niv", "esv", "kjv", "web-en", "ust-en", "cuv-simp", "cuv-trad", "ccb-zh-hans", "ccb-zh-hant", "cnv-zh-hant", "cnvs-zh-hans", "csbs-zh-hans", "csbt-zh-hant", "rcuv-zh-hant", "rcuvss-zh-hans", "cunp-zh-hant", "cunp-zh-hant-god", "cunpss-zh-hant", "cunpss-zh-hans", "mandarin-zh-hans", "rcv-zh-hant"),
     )
     /** 抓 bible.com 页面第二次尝试用的浏览器 UA（RN BROWSER_UA） */
     const val BROWSER_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     /** 生产包里 RN 自己也拿不到正文的译本，没列进来 */
-    val notListed: List<String> = listOf("esv", "nlt", "nkjv")
+    val notListed: List<String> = listOf("nlt", "nkjv")
 }

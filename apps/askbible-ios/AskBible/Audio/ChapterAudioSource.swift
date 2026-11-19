@@ -120,12 +120,12 @@ enum ChapterAudioSource {
         return Endpoints.allHosts(.site).contains { s.hasPrefix($0.dropLast() + chapterAudioProxyPath) }
     }
 
-    /// 代理返回的 JSON → mp3 地址（只认 youversionapi.com 的 https 直链）
+    /// 代理返回的 JSON → mp3 地址（只认 youversionapi.com 与 audio.esv.org 的 https 直链）
     static func parseResolverResponse(_ text: String) -> URL? {
         guard let data = text.data(using: .utf8),
               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let src = (obj["src"] as? String)?.trimmingCharacters(in: .whitespaces),
-              src.hasPrefix("https://"), src.contains("youversionapi.com"),
+              src.hasPrefix("https://"), (src.contains("youversionapi.com") || src.contains("audio.esv.org")),
               let url = URL(string: src) else { return nil }
         return url
     }

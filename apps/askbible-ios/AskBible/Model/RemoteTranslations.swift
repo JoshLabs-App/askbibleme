@@ -55,6 +55,9 @@ enum RemoteTranslations {
     /// 版权 / 来源声明（YouVersion 条款要求展示）：目录给了版权文本就用它，否则「版本名 · 经文由 YouVersion 提供」；
     /// 内置译本不是 YouVersion 来的，返回 nil
     static func attribution(_ translationId: String, _ locale: AppLocale = AppLocale.current) -> String? {
+        if translationId == "esv" {
+            return "Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), © 2001 Crossway."
+        }
         ensureLoaded()
         lock.lock()
         let hit = entries.first { $0.translation.id == translationId }

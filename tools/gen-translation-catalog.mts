@@ -5,8 +5,8 @@
 //   · lib/bible/mobile-scripture-r2-downloads.ts（KJV 按需从 R2 下载整本 sqlite）
 //   · 朗读：RN translationSupportsChapterAudio = cuv* | web-en / kjv / blm-es | esv | YouVersion 已验证集（目前为空）
 //   · 选择器排序 sortPickerTranslations、短标签 shortLabel（readBibleTranslationPickerOrderModel / readBibleSettingsPanelConstants）
-// 原生只收「拿得到正文」的：内置 4 本、YouVersion 在线（14 中文 + NIV）、KJV（下载）；
-// ESV / NLT / NKJV 要带密钥的 API，生产包里 RN 自己也拉不到，先不列。
+// 原生只收「拿得到正文」的：内置 4 本、YouVersion 在线（14 中文 + NIV）、ESV（走主站 /api/read/chapter 代理，密钥留在服务端）、KJV（下载）；
+// NLT / NKJV 要带密钥的 API 且暂无主站原生接入，先不列。
 //   node node_modules/tsx/dist/cli.mjs tools/gen-translation-catalog.mts [--check]
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -83,7 +83,7 @@ for (const t of index.translations as any[]) {
   const download = r2Url(id);
   if (t.bundled && ["cuv-simp", "cuv-trad", "web-en", "ust-en"].includes(id)) delivery = "bundled";
   else if (download) delivery = "download";
-  else if (t.provider === "youversion" && (t.remoteId || versionInfo[id])) delivery = "online";
+  else if ((t.provider === "youversion" && (t.remoteId || versionInfo[id])) || t.provider === "esv") delivery = "online";
   if (!delivery) { skipped.push(id); continue; }
   const info = versionInfo[id];
   entries.push({

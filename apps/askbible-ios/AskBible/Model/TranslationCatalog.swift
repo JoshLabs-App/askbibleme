@@ -60,18 +60,21 @@ enum TranslationCatalog {
         ScriptureTranslation(id: "niv", labelZh: "NIV 英文新国际版", labelEn: "New International Version (NIV)", language: "en", delivery: .online,
             provider: "youversion", remoteId: "111", pageLocale: "", abbreviation: "NIV", downloadUrl: "",
             hasChapterAudio: true, shortZh: "NIV", shortZhTw: "NIV", shortEn: "NIV"),
+        ScriptureTranslation(id: "esv", labelZh: "ESV 英文标准版", labelEn: "English Standard Version (ESV)", language: "en", delivery: .online,
+            provider: "esv", remoteId: "59", pageLocale: "", abbreviation: "ESV", downloadUrl: "",
+            hasChapterAudio: true, shortZh: "ESV", shortZhTw: "ESV", shortEn: "ESV"),
         ScriptureTranslation(id: "kjv", labelZh: "KJV 英文钦定本", labelEn: "King James Version (KJV)", language: "en", delivery: .download,
             provider: "", remoteId: "1", pageLocale: "", abbreviation: "KJV", downloadUrl: "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/bible/kjv.sqlite",
             hasChapterAudio: true, shortZh: "KJV", shortZhTw: "KJV", shortEn: "KJV"),
     ]
     /// 选择器顺序（RN sortPickerTranslations，按界面语言）
     static let pickerOrder: [String: [String]] = [
-        "zh-CN": ["cuv-simp", "cuv-trad", "ccb-zh-hans", "cnvs-zh-hans", "rcuvss-zh-hans", "rcuv-zh-hant", "rcv-zh-hant", "csbs-zh-hans", "cunpss-zh-hans", "cunpss-zh-hant", "cunp-zh-hant", "cunp-zh-hant-god", "csbt-zh-hant", "cnv-zh-hant", "mandarin-zh-hans", "niv", "kjv", "web-en", "ust-en", "ccb-zh-hant"],
-        "zh-TW": ["cuv-trad", "cuv-simp", "ccb-zh-hant", "rcuv-zh-hant", "rcuvss-zh-hans", "cnv-zh-hant", "rcv-zh-hant", "csbt-zh-hant", "cunp-zh-hant", "cunp-zh-hant-god", "cunpss-zh-hans", "cunpss-zh-hant", "csbs-zh-hans", "cnvs-zh-hans", "mandarin-zh-hans", "niv", "kjv", "web-en", "ust-en", "ccb-zh-hans"],
-        "en": ["niv", "kjv", "web-en", "ust-en", "cuv-simp", "cuv-trad", "ccb-zh-hans", "ccb-zh-hant", "cnv-zh-hant", "cnvs-zh-hans", "csbs-zh-hans", "csbt-zh-hant", "rcuv-zh-hant", "rcuvss-zh-hans", "cunp-zh-hant", "cunp-zh-hant-god", "cunpss-zh-hant", "cunpss-zh-hans", "mandarin-zh-hans", "rcv-zh-hant"],
+        "zh-CN": ["cuv-simp", "cuv-trad", "ccb-zh-hans", "cnvs-zh-hans", "rcuvss-zh-hans", "rcuv-zh-hant", "rcv-zh-hant", "csbs-zh-hans", "cunpss-zh-hans", "cunpss-zh-hant", "cunp-zh-hant", "cunp-zh-hant-god", "csbt-zh-hant", "cnv-zh-hant", "mandarin-zh-hans", "niv", "esv", "kjv", "web-en", "ust-en", "ccb-zh-hant"],
+        "zh-TW": ["cuv-trad", "cuv-simp", "ccb-zh-hant", "rcuv-zh-hant", "rcuvss-zh-hans", "cnv-zh-hant", "rcv-zh-hant", "csbt-zh-hant", "cunp-zh-hant", "cunp-zh-hant-god", "cunpss-zh-hans", "cunpss-zh-hant", "csbs-zh-hans", "cnvs-zh-hans", "mandarin-zh-hans", "niv", "esv", "kjv", "web-en", "ust-en", "ccb-zh-hans"],
+        "en": ["niv", "esv", "kjv", "web-en", "ust-en", "cuv-simp", "cuv-trad", "ccb-zh-hans", "ccb-zh-hant", "cnv-zh-hant", "cnvs-zh-hans", "csbs-zh-hans", "csbt-zh-hant", "rcuv-zh-hant", "rcuvss-zh-hans", "cunp-zh-hant", "cunp-zh-hant-god", "cunpss-zh-hant", "cunpss-zh-hans", "mandarin-zh-hans", "rcv-zh-hant"],
     ]
     /// 抓 bible.com 页面第二次尝试用的浏览器 UA（RN BROWSER_UA）
     static let browserUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     /// 生产包里 RN 自己也拿不到正文的译本，没列进来
-    static let notListed: [String] = ["esv", "nlt", "nkjv"]
+    static let notListed: [String] = ["nlt", "nkjv"]
 }

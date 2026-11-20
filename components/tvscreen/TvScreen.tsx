@@ -15,6 +15,8 @@ import { readLastReadPosition } from "@/lib/read/read-last-position";
 import { shippedPublicMusicCompanionStore } from "@/lib/music-companion/shipped-store";
 import { inferTrackAlbumFromCompanionTrack } from "@/lib/music/album-playback";
 import { resolveMediaPlaybackPolicyTier } from "@/lib/media/media-playback-policy";
+import { useTvRelayReceiver } from "@/lib/tv-relay/useTvRelayReceiver";
+import type { TvCommand } from "@/lib/tv-relay/protocol";
 
 type Video = { id: string; src: string; title: string; posterSrc?: string };
 
@@ -54,6 +56,8 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   const [planLoading, setPlanLoading] = useState(false);
   const planRequestRef = useRef(0);
   const resumeAtRef = useRef(0);
+  const musicSeekRef = useRef(0);
+  const sendStateRef = useRef<(s: Omit<import("@/lib/tv-relay/protocol").TvPlaybackState, "op">) => void>(() => {});
   const { entriesByLocale, verseKeys, activeIndex } = useHomePrayerVerseFeedContext();
   const [sceneIdx, setSceneIdx] = useState(0);
   const [legendOn, setLegendOn] = useState(true);
@@ -137,10 +141,10 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   }, []);
 
   const playAlbum = useCallback(
-    (album: string, label: string, avoid?: string) => {
+    (album: string, label: string, avoid?: string, explicitSrc?: string, startSec?: number, ackCmdId?: string) => {
       const a = musicRef.current;
       if (!a) return;
-      const src = pickTrack(album, avoid);
+      const src = explicitSrc || pickTrack(album, avoid);
       if (!src) {
         say(`${label}：没有曲目`);
         return;
@@ -152,12 +156,32 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       setPlanView(null);
       albumRef.current = album;
       a.volume = 1;
+      musicSeekRef.current = startSec && startSec > 0 ? startSec : 0;
       a.src = src;
       void playAudio(a).then(
-        () => say(`正在播放：${label}`),
+        () => {
+          say(`正在播放：${label}`);
+          sendStateRef.current({
+            kind: "music",
+            title: label,
+            playing: true,
+            positionSec: a.currentTime || startSec || 0,
+            durationSec: a.duration || 0,
+            ackCmdId,
+          });
+        },
         (err) => {
           say("按遥控器任意键开始播放");
           beacon({ what: "music-play-rejected", name: err?.name, msg: String(err?.message ?? "").slice(0, 120), src });
+          sendStateRef.current({
+            kind: "music",
+            title: label,
+            playing: false,
+            positionSec: startSec || 0,
+            durationSec: 0,
+            ackCmdId,
+            error: "autoplay-blocked",
+          });
         },
       );
     },
@@ -177,9 +201,10 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     if (m) void playAudio(m).catch(() => {});
   }, [playAudio]);
 
-  const loadPlanChapterText = useCallback(async (bookId: string, chapter: number, title: string) => {
+  const loadPlanChapterText = useCallback(async (bookId: string, chapter: number, title: string, initialVerse?: number) => {
     planTimingsRef.current = null;
-    setPlanView({ title, verses: [], cur: 0 });
+    const initCur = initialVerse && initialVerse > 0 ? initialVerse - 1 : 0;
+    setPlanView({ title, verses: [], cur: initCur });
     try {
       let book = bookCacheRef.current[bookId];
       if (!book) {
@@ -188,7 +213,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
         bookCacheRef.current[bookId] = book;
       }
       const verses = (book[String(chapter)] ?? []).map((v) => v.t);
-      setPlanView({ title, verses, cur: 0 });
+      setPlanView({ title, verses, cur: Math.max(0, Math.min(verses.length - 1, initCur)) });
       for (const u of [`/verse-timings/cuv-v20/${bookId}-${chapter}.json`, `/verse-timings/${bookId}-${chapter}.json`]) {
         try {
           const r = await fetch(u);
@@ -257,7 +282,7 @@ export function TvScreen({ videos }: { videos: Video[] }) {
   }, [planActive, onPlanTime]);
 
   const playPlanChapter = useCallback(
-    (i: number) => {
+    (i: number, ackCmdId?: string) => {
       const st = planRef.current;
       const a = planAudioRef.current;
       if (!st || !a) return;
@@ -266,12 +291,14 @@ export function TvScreen({ videos }: { videos: Video[] }) {
         planRef.current = null;
         setPlanView(null);
         say("今日读经读完了");
+        sendStateRef.current({ kind: "idle", title: "今日读经读完了", playing: false, positionSec: 0, durationSec: 0 });
         if (musicRef.current) void playAudio(musicRef.current).catch(() => {});
         return;
       }
       const src = buildExternalCuvChapterAudioUrl(ch.bookId, ch.chapter);
       if (!src) {
         say("这一章暂无朗读");
+        sendStateRef.current({ kind: "plan", title: `${ch.bookId} ${ch.chapter}`, playing: false, positionSec: 0, durationSec: 0, bookId: ch.bookId, chapter: ch.chapter, ackCmdId, error: "load-failed" });
         return;
       }
       st.i = i;
@@ -281,8 +308,33 @@ export function TvScreen({ videos }: { videos: Video[] }) {
       const name = `${getScriptureBookDisplayName(ch.bookId, "zh-CN")} ${ch.chapter} 章`;
       void loadPlanChapterText(ch.bookId, ch.chapter, name);
       void playAudio(a).then(
-        () => say(`今日读经：${name}（${i + 1}/${st.chapters.length}）`),
-        () => say("读经播放失败"),
+        () => {
+          say(`今日读经：${name}（${i + 1}/${st.chapters.length}）`);
+          sendStateRef.current({
+            kind: "plan",
+            title: name,
+            playing: true,
+            positionSec: a.currentTime || resumeAtRef.current || 0,
+            durationSec: a.duration || 0,
+            bookId: ch.bookId,
+            chapter: ch.chapter,
+            ackCmdId,
+          });
+        },
+        () => {
+          say("按遥控器任意键开始播放");
+          sendStateRef.current({
+            kind: "plan",
+            title: name,
+            playing: false,
+            positionSec: resumeAtRef.current || 0,
+            durationSec: 0,
+            bookId: ch.bookId,
+            chapter: ch.chapter,
+            ackCmdId,
+            error: "autoplay-blocked",
+          });
+        },
       );
     },
     [say, loadPlanChapterText, playAudio],
@@ -319,12 +371,13 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     if (st) playPlanChapter(st.i + 1);
   }, [playPlanChapter]);
 
-  const playVerseAudio = useCallback(() => {
-    const key = verseKeys?.[activeIndex];
+  const playVerseAudio = useCallback((explicitKey?: string, ackCmdId?: string) => {
+    const key = explicitKey || verseKeys?.[activeIndex];
     const src = key ? buildGoldenVerseAudioRemoteSrc(key, locale === "en" ? "web-en" : "cuv-simp") : null;
     const v = verseAudioRef.current;
     if (!v || !src) {
       say("这句暂无朗读");
+      sendStateRef.current({ kind: "verse", title: "金句朗读", playing: false, positionSec: 0, durationSec: 0, ackCmdId, error: "load-failed" });
       return;
     }
     // 音乐不停，压低音量，和金句朗读同时出声
@@ -335,10 +388,14 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     setPlanView(null);
     v.src = src;
     void playAudio(v).then(
-      () => say("金句朗读"),
+      () => {
+        say("金句朗读");
+        sendStateRef.current({ kind: "verse", title: "金句朗读", playing: true, positionSec: 0, durationSec: v.duration || 0, ackCmdId });
+      },
       () => {
         if (m) m.volume = 1;
-        say("朗读失败");
+        say("按遥控器任意键开始播放");
+        sendStateRef.current({ kind: "verse", title: "金句朗读", playing: false, positionSec: 0, durationSec: 0, ackCmdId, error: "autoplay-blocked" });
       },
     );
   }, [activeIndex, locale, say, verseKeys, playAudio]);
@@ -398,6 +455,146 @@ export function TvScreen({ videos }: { videos: Video[] }) {
     const t = window.setTimeout(() => reportVideo(videoRef.current?.paused ? "paused-after-3s" : "playing-after-3s"), 3000);
     return () => window.clearTimeout(t);
   }, [video?.id, showVideo, kickVideo, reportVideo]);
+
+  const handleRemoteCommand = useCallback(
+    (cmd: TvCommand) => {
+      if (cmd.op === "stop") {
+        musicRef.current?.pause();
+        verseAudioRef.current?.pause();
+        planAudioRef.current?.pause();
+        planRef.current = null;
+        setPlanView(null);
+        say("已停止播放");
+        sendStateRef.current({ kind: "idle", title: "", playing: false, positionSec: 0, durationSec: 0, ackCmdId: cmd.cmdId });
+        return;
+      }
+
+      if (cmd.op === "control") {
+        if (cmd.action === "play" || cmd.action === "pause") {
+          const m = musicRef.current;
+          const cur =
+            [planAudioRef.current, verseAudioRef.current, m].find((x) => x && !x.paused) ??
+            (planRef.current ? planAudioRef.current : m);
+          if (cmd.action === "pause") {
+            cur?.pause();
+            sendStateRef.current({
+              kind: planRef.current ? "plan" : "music",
+              title: planView?.title || albumRef.current,
+              playing: false,
+              positionSec: cur?.currentTime || 0,
+              durationSec: cur?.duration || 0,
+              ackCmdId: cmd.cmdId,
+            });
+          } else if (cur?.getAttribute("src")) {
+            void playAudio(cur).then(
+              () =>
+                sendStateRef.current({
+                  kind: planRef.current ? "plan" : "music",
+                  title: planView?.title || albumRef.current,
+                  playing: true,
+                  positionSec: cur.currentTime || 0,
+                  durationSec: cur.duration || 0,
+                  ackCmdId: cmd.cmdId,
+                }),
+              () => {
+                say("按遥控器任意键开始播放");
+                sendStateRef.current({
+                  kind: planRef.current ? "plan" : "music",
+                  title: planView?.title || albumRef.current,
+                  playing: false,
+                  positionSec: cur.currentTime || 0,
+                  durationSec: cur.duration || 0,
+                  ackCmdId: cmd.cmdId,
+                  error: "autoplay-blocked",
+                });
+              },
+            );
+          } else {
+            playAlbum(albumRef.current, "轻音乐", undefined, undefined, undefined, cmd.cmdId);
+          }
+          return;
+        }
+        if (cmd.action === "next") {
+          if (planRef.current) playPlanChapter(planRef.current.i + 1, cmd.cmdId);
+          else playAlbum(albumRef.current, "下一首", musicRef.current?.getAttribute("src") ?? undefined, undefined, undefined, cmd.cmdId);
+          return;
+        }
+        if (cmd.action === "prev") {
+          if (planRef.current) playPlanChapter(Math.max(0, planRef.current.i - 1), cmd.cmdId);
+          else playAlbum(albumRef.current, "上一首", musicRef.current?.getAttribute("src") ?? undefined, undefined, undefined, cmd.cmdId);
+          return;
+        }
+        if (cmd.action === "seek" && typeof cmd.value === "number") {
+          const cur = [planAudioRef.current, musicRef.current].find((x) => x && x.getAttribute("src"));
+          if (cur) cur.currentTime = Math.max(0, cmd.value);
+          return;
+        }
+        if (cmd.action === "sceneNext") {
+          setSceneIdx((i) => i + 1);
+          return;
+        }
+        if (cmd.action === "scenePrev") {
+          setSceneIdx((i) => i - 1);
+          return;
+        }
+        return;
+      }
+
+      if (cmd.op === "handoff") {
+        const transitSec = Math.max(0, Math.min(5, (Date.now() - (cmd.sentAt || Date.now())) / 1000));
+        const media = cmd.media;
+        if (media.kind === "music") {
+          const targetSec = (media.positionSec || 0) + transitSec;
+          playAlbum(media.album || "安静", media.trackTitle || media.album || "轻音乐", undefined, media.trackSrc, targetSec, cmd.cmdId);
+          return;
+        }
+        if (media.kind === "plan") {
+          if (!media.queue?.length) return;
+          const idx = Math.max(0, Math.min(media.queue.length - 1, media.index || 0));
+          planRequestRef.current += 1;
+          planRef.current = { chapters: media.queue, i: idx };
+          resumeAtRef.current = (media.positionSec || 0) + transitSec;
+          playPlanChapter(idx, cmd.cmdId);
+          return;
+        }
+        if (media.kind === "scripture") {
+          const name = `${getScriptureBookDisplayName(media.bookId, "zh-CN")} ${media.chapter} 章`;
+          musicRef.current?.pause();
+          verseAudioRef.current?.pause();
+          planRequestRef.current += 1;
+          if (media.audioPlaying) {
+            planRef.current = { chapters: [{ bookId: media.bookId, chapter: media.chapter }], i: 0 };
+            resumeAtRef.current = (media.positionSec || 0) + transitSec;
+            playPlanChapter(0, cmd.cmdId);
+          } else {
+            planAudioRef.current?.pause();
+            planRef.current = null;
+            void loadPlanChapterText(media.bookId, media.chapter, name, media.verse);
+            say(`正在同步读经：${name}`);
+            sendStateRef.current({
+              kind: "scripture",
+              title: name,
+              playing: false,
+              positionSec: 0,
+              durationSec: 0,
+              bookId: media.bookId,
+              chapter: media.chapter,
+              verse: media.verse,
+              ackCmdId: cmd.cmdId,
+            });
+          }
+          return;
+        }
+        if (media.kind === "verse") {
+          playVerseAudio(media.verseKey, cmd.cmdId);
+        }
+      }
+    },
+    [playAlbum, playAudio, playPlanChapter, playVerseAudio, loadPlanChapterText, planView?.title, say],
+  );
+
+  const relay = useTvRelayReceiver(handleRemoteCommand);
+  sendStateRef.current = relay.sendState;
 
   const runAction = useCallback((k: string) => {
     showLegend();
@@ -522,11 +719,78 @@ export function TvScreen({ videos }: { videos: Video[] }) {
               <li key={l}><button type="button" onClick={() => runAction(l.startsWith("↑") ? "ArrowUp" : l.startsWith("←") ? "ArrowRight" : l[0])} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", padding: "0.5vh 0", cursor: "pointer", textShadow: "inherit" }}>{l === "8 今日读经" && planLoading ? "8 同步进度中…" : l}</button></li>
             ))}
             <li>{user ? <button type="button" onClick={() => void logout().catch(() => say("退出失败，请重试"))} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", cursor: "pointer" }}>已登录 · {user.name || "我的账号"}（退出）</button> : <a href="/login?next=/tv" style={{ color: "inherit" }}>登录</a>}</li>
+            <li>
+              {relay.pairing ? (
+                <button type="button" onClick={() => relay.unpairLocal()} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", cursor: "pointer" }}>
+                  {relay.connected ? `已连手机 · ${relay.pairing.tvName}` : `重连手机中 · ${relay.pairing.tvName}`}（解绑）
+                </button>
+              ) : (
+                <button type="button" onClick={() => void relay.startPairing()} style={{ color: "inherit", background: "transparent", border: 0, font: "inherit", cursor: "pointer" }}>
+                  连接手机控制
+                </button>
+              )}
+            </li>
             <li><a href="/tv-check.html" style={{ color: "inherit" }}>检查页</a></li>
           </ul>
         ) : null}
       </div>
-      <audio onPlay={syncAudioBackground} onPause={syncAudioBackground} ref={musicRef} onEnded={() => { syncAudioBackground(); onMusicEnded(); }} onError={reportAudio("音乐")} preload="none" />
+      {relay.pairing && !legendOn ? (
+        <div style={{ position: "absolute", right: "3vw", top: "3vh", fontSize: "min(1.2vw, 2vh)", opacity: 0.72, textShadow: "0 1px 6px rgba(0,0,0,0.8)" }}>
+          {relay.connected ? `● 已连手机 · ${relay.pairing.tvName}` : "○ 等待手机连接…"}
+        </div>
+      ) : null}
+      {relay.pairSession ? (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "rgba(18, 16, 14, 0.82)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 20,
+          }}
+        >
+          <div style={{ background: "rgba(38, 32, 26, 0.96)", borderRadius: 24, padding: "4vh 4vw", maxWidth: "60vw", textAlign: "center", boxShadow: "0 12px 48px rgba(0,0,0,0.5)" }}>
+            <p style={{ margin: 0, fontSize: "min(2.2vw, 3.6vh)", fontWeight: 700 }}>连接手机控制这台电视</p>
+            <p style={{ margin: "2vh 0 0", fontSize: "min(1.4vw, 2.4vh)", opacity: 0.85 }}>
+              在 AskBible 手机 App 侧边栏点「连接电视」，或手机浏览器打开 <strong>askbible.me/tv/pair</strong>，输入下方 6 位配对码：
+            </p>
+            <p style={{ margin: "3vh 0", fontSize: "min(5.2vw, 8.4vh)", fontWeight: 800, letterSpacing: "0.28em", color: "#ffd36b" }}>
+              {relay.pairSession.code}
+            </p>
+            <p style={{ margin: "0 0 3vh", fontSize: "min(1.2vw, 2vh)", opacity: 0.7 }}>
+              授权一次后，这台电视开机即自动上线，手机播放的音乐、读经页和读经计划可直接投到电视接续播放。
+            </p>
+            <button
+              type="button"
+              onClick={() => relay.cancelPairing()}
+              style={{ padding: "1.2vh 3vw", fontSize: "min(1.4vw, 2.3vh)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.3)", background: "transparent", color: "#fff", cursor: "pointer" }}
+            >
+              关闭
+            </button>
+          </div>
+        </div>
+      ) : null}
+      {relay.pairError ? (
+        <div style={{ position: "absolute", right: "3vw", bottom: "3vh", background: "rgba(180,35,24,0.88)", padding: "1vh 1.6vw", borderRadius: 10, fontSize: "min(1.3vw, 2.1vh)" }}>
+          {relay.pairError}
+        </div>
+      ) : null}
+      <audio
+        onPlay={syncAudioBackground}
+        onPause={syncAudioBackground}
+        onLoadedMetadata={(e) => {
+          if (musicSeekRef.current > 0) {
+            e.currentTarget.currentTime = musicSeekRef.current;
+            musicSeekRef.current = 0;
+          }
+        }}
+        ref={musicRef}
+        onEnded={() => { syncAudioBackground(); onMusicEnded(); }}
+        onError={reportAudio("音乐")}
+        preload="none"
+      />
       <audio onPlay={syncAudioBackground} onPause={syncAudioBackground} ref={planAudioRef} onLoadedMetadata={(e) => { if (resumeAtRef.current > 0) { e.currentTarget.currentTime = resumeAtRef.current; resumeAtRef.current = 0; } }} onEnded={() => { syncAudioBackground(); onPlanEnded(); }} onTimeUpdate={onPlanTime} onPlaying={onPlanTime} onError={reportAudio("读经")} preload="none" />
       <audio onPlay={syncAudioBackground} onPause={syncAudioBackground} ref={verseAudioRef} onEnded={() => { syncAudioBackground(); onVerseAudioEnded(); }} onError={reportAudio("金句")} preload="none" />
     </div>

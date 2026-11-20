@@ -1,0 +1,35 @@
+{
+  "$schema": "https://developers.cloudflare.com/workers/wrangler/config-schema.json",
+  "name": "askbible-tv-relay",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-04-01",
+  "account_id": "652050e08d4a384c7cbe975ea02fb52c",
+  "routes": [
+    {
+      "pattern": "tv-relay.joshlabs.app",
+      "custom_domain": true
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "PAIR_ROOM",
+        "class_name": "PairRoom"
+      },
+      {
+        "name": "USER_RELAY",
+        "class_name": "UserRelayRoom"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["PairRoom", "UserRelayRoom"]
+    }
+  ],
+  "vars": {
+    "SUPABASE_URL": "https://tgobadhdylarhssudplc.supabase.co",
+    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnb2JhZGhkeWxhcmhzc3VkcGxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyMTMwMDAsImV4cCI6MjA5Njc4OTAwMH0.5EqC5hJFmydZaVBmpXJk1ddJNGX_fY2hN83k5IzAO3I"
+  }
+}

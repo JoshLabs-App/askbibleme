@@ -20,12 +20,17 @@ android {
         versionName = "1.0.56"
     }
 
-    // 与 RN 同一把 upload key：凭据只在本机 apps/askbible-mobile/android/keystore.properties（gitignore）
-    val uploadProps = rootProject.file("../askbible-mobile/android/keystore.properties")
+    // 上传签名凭据：优先读本目录 keystore.properties，回退 00 保险箱（gitignore，不入库）
+    val localKeystoreProps = rootProject.file("keystore.properties")
+    val vaultDir = File(System.getProperty("user.home"), "Desktop/APP/00/projects/01AskBible/apps/askbible-mobile/android")
+    val vaultKeystoreProps = File(vaultDir, "keystore.properties")
+    val uploadProps = if (localKeystoreProps.exists()) localKeystoreProps else vaultKeystoreProps
     signingConfigs {
         if (uploadProps.exists()) create("upload") {
             val p = Properties().apply { uploadProps.inputStream().use { load(it) } }
-            storeFile = rootProject.file("../askbible-mobile/android/app/" + p.getProperty("MYAPP_UPLOAD_STORE_FILE"))
+            val storeName = p.getProperty("MYAPP_UPLOAD_STORE_FILE") ?: "upload.keystore"
+            val localStore = rootProject.file(storeName)
+            storeFile = if (localStore.exists()) localStore else File(vaultDir, "app/$storeName")
             storePassword = p.getProperty("MYAPP_UPLOAD_STORE_PASSWORD")
             keyAlias = p.getProperty("MYAPP_UPLOAD_KEY_ALIAS")
             keyPassword = p.getProperty("MYAPP_UPLOAD_KEY_PASSWORD")
@@ -93,8 +98,6 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.activity:activity-compose:1.9.3")
-    // Google 登录走 Supabase 浏览器 OAuth（RN expo-web-browser.openAuthSessionAsync = Custom Tabs）
-    implementation("androidx.browser:browser:1.8.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.media3:media3-exoplayer:1.5.1")
     implementation("androidx.media3:media3-session:1.5.1")

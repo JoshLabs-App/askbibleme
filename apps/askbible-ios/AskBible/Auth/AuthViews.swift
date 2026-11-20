@@ -1,91 +1,179 @@
 import SwiftUI
 
-/// 登录 / 注册页（RN MemberLoginScreen / MemberRegisterScreen + AuthParchmentScreen + authFormSurface）：
-/// 全屏羊皮卷底、窄栏版心，返回链接 → 标题 → 引言 → Google / Apple 按钮 → 「或」分隔 → 邮箱 / 密码（注册多一个昵称）→ 提交 → 切换链接。
-/// Google 走 Supabase 浏览器 OAuth（RN googleOAuthBrowser 分支），Apple 走系统登录（RN expo-apple-authentication）。
+/// 登录页（DECISIONS D-44：全屏羊皮卷底、窄栏版心，Apple 原生一键登录 + 6 位邮箱验证码无密码登录/自动建号）。
 struct LoginView: View {
     @ObservedObject var auth: MemberAuthStore
     let locale: AppLocale
     var onBack: () -> Void
-    var onRegister: () -> Void
+    var onRegister: () -> Void = {}
     var onDone: () -> Void
 
-    @State private var email = ""
-    @State private var password = ""
-    @State private var pending = false
-    @State private var error: String?
     @StateObject private var social = SocialSignInState()
 
     var body: some View {
         AuthPage(locale: locale, title: SiteCopy.t("auth.pageTitle", locale), onBack: onBack) {
             SocialSignInButtons(auth: auth, locale: locale, state: social, onDone: onDone)
-            AuthField(label: SiteCopy.t("auth.email", locale), text: $email, locale: locale, keyboard: .emailAddress, contentType: .emailAddress)
-            AuthField(label: SiteCopy.t("auth.password", locale), text: $password, locale: locale, secure: true, contentType: .password)
-            if let error { AuthErrorText(error, locale: locale) }
-            AuthSubmit(title: SiteCopy.t("auth.submit", locale), pending: pending, locale: locale) { submit() }
-            AuthLink(title: SiteCopy.t("auth.loginFooterRegister", locale), locale: locale, action: onRegister)
-        }
-    }
-
-    private func submit() {
-        guard !pending, !social.busy else { return }
-        pending = true; error = nil; social.clearErrors()
-        Task {
-            let err = await auth.signIn(email: email, password: password, locale: locale.rawValue)
-            pending = false
-            if let err { error = err == "network" ? SiteCopy.t("auth.errorNetwork", locale) : SiteCopy.localizeKnown(err, locale) } else { onDone() }
+            EmailOtpForm(auth: auth, locale: locale, externalBusy: social.busy, onBeforeSubmit: { social.clearErrors() }, onDone: onDone)
         }
     }
 }
 
+/// 兼容旧路由入口：无密码 6 位验证码已合并登录与新账号自动创建，保持同一低认知负荷页面
 struct RegisterView: View {
     @ObservedObject var auth: MemberAuthStore
     let locale: AppLocale
     var onBack: () -> Void
-    var onLogin: () -> Void
+    var onLogin: () -> Void = {}
+    var onDone: () -> Void
+
+    var body: some View {
+        LoginView(auth: auth, locale: locale, onBack: onBack, onRegister: onLogin, onDone: onDone)
+    }
+}
+
+/// 登录页与欢迎页共用的 6 位邮箱验证码表单（支持 iOS 系统 `.oneTimeCode` 短信/邮件自动填充与 45 秒重发倒计时）
+struct EmailOtpForm: View {
+    @ObservedObject var auth: MemberAuthStore
+    let locale: AppLocale
+    var externalBusy: Bool = false
+    var onBeforeSubmit: () -> Void = {}
     var onDone: () -> Void
 
     @State private var email = ""
-    @State private var password = ""
-    @State private var name = ""
+    @State private var code = ""
+    @State private var stepSent = false
     @State private var pending = false
     @State private var error: String?
-    @StateObject private var social = SocialSignInState()
+    @State private var cooldown = 0
+    @Environment(\.parchment) private var theme
+
+    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        AuthPage(locale: locale, title: SiteCopy.t("auth.registerPageTitle", locale), onBack: onBack) {
-            SocialSignInButtons(auth: auth, locale: locale, state: social, onDone: onDone)
-            AuthField(label: SiteCopy.t("auth.email", locale), text: $email, locale: locale, keyboard: .emailAddress, contentType: .emailAddress)
-            AuthField(label: SiteCopy.t("auth.password", locale), text: $password, locale: locale, secure: true, contentType: .newPassword)
-            AuthField(label: SiteCopy.t("auth.registerName", locale), text: $name, locale: locale, contentType: .nickname)
-            if let error { AuthErrorText(error, locale: locale) }
-            AuthSubmit(title: SiteCopy.t("auth.registerSubmit", locale), pending: pending, locale: locale) { submit() }
-            AuthLink(title: SiteCopy.t("auth.registerGoLogin", locale), locale: locale, action: onLogin)
+        VStack(alignment: .leading, spacing: 10) {
+            if !stepSent {
+                AuthField(
+                    label: SiteCopy.t("auth.email", locale),
+                    text: $email,
+                    locale: locale,
+                    keyboard: .emailAddress,
+                    contentType: .emailAddress
+                )
+                if let error { AuthErrorText(error, locale: locale) }
+                AuthSubmit(title: SiteCopy.t("native.otpSendCode", locale), pending: pending, locale: locale) {
+                    sendCode()
+                }
+            } else {
+                Text(SiteCopy.f("native.otpSentTo", ["email": email.trimmingCharacters(in: .whitespacesAndNewlines)], locale))
+                    .askFont(size: 13)
+                    .lineSpacing(4)
+                    .foregroundStyle(theme.muted)
+                    .padding(.top, 6)
+                AuthField(
+                    label: SiteCopy.t("native.otpCodeLabel", locale),
+                    text: Binding(
+                        get: { code },
+                        set: { next in
+                            let digits = String(next.filter(\.isNumber).prefix(6))
+                            code = digits
+                        }
+                    ),
+                    locale: locale,
+                    keyboard: .numberPad,
+                    contentType: .oneTimeCode
+                )
+                if let error { AuthErrorText(error, locale: locale) }
+                AuthSubmit(title: SiteCopy.t("native.otpVerifySubmit", locale), pending: pending, locale: locale) {
+                    verifyCode()
+                }
+                HStack {
+                    Button {
+                        guard !pending, cooldown == 0 else { return }
+                        sendCode()
+                    } label: {
+                        Text(cooldown > 0
+                             ? SiteCopy.f("native.otpResendIn", ["n": "\(cooldown)"], locale)
+                             : SiteCopy.t("native.otpResend", locale))
+                            .askFont(size: 13, weight: .medium)
+                            .foregroundStyle(cooldown > 0 ? theme.faint : theme.muted)
+                            .padding(.vertical, 8)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(pending || cooldown > 0)
+
+                    Spacer()
+
+                    Button {
+                        guard !pending else { return }
+                        stepSent = false
+                        code = ""
+                        error = nil
+                    } label: {
+                        Text(SiteCopy.t("native.otpChangeEmail", locale))
+                            .askFont(size: 13, weight: .medium)
+                            .underline()
+                            .foregroundStyle(theme.muted)
+                            .padding(.vertical, 8)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.top, 4)
+            }
+        }
+        .onReceive(timer) { _ in
+            if cooldown > 0 { cooldown -= 1 }
         }
     }
 
-    private func submit() {
-        guard !pending, !social.busy else { return }
-        pending = true; error = nil; social.clearErrors()
+    private func sendCode() {
+        guard !pending, !externalBusy else { return }
+        let clean = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard clean.contains("@"), clean.contains(".") else {
+            error = SiteCopy.t("native.otpInvalidEmail", locale)
+            return
+        }
+        pending = true; error = nil; onBeforeSubmit()
         Task {
-            let err = await auth.register(email: email, password: password, name: name, locale: locale.rawValue)
+            let err = await auth.sendOtp(email: clean, locale: locale.rawValue)
             pending = false
-            if let err { error = err == "network" ? SiteCopy.t("auth.errorNetwork", locale) : SiteCopy.localizeKnown(err, locale) } else { onDone() }
+            if let err {
+                error = err == "network" ? SiteCopy.t("auth.errorNetwork", locale) : SiteCopy.localizeKnown(err, locale)
+            } else {
+                email = clean
+                stepSent = true
+                cooldown = 45
+            }
+        }
+    }
+
+    private func verifyCode() {
+        guard !pending, !externalBusy else { return }
+        let digits = code.filter(\.isNumber)
+        guard digits.count == 6 else {
+            error = SiteCopy.t("native.otpInvalidCode", locale)
+            return
+        }
+        pending = true; error = nil; onBeforeSubmit()
+        Task {
+            let err = await auth.verifyOtp(email: email, code: digits, locale: locale.rawValue)
+            pending = false
+            if let err {
+                error = err == "network" ? SiteCopy.t("auth.errorNetwork", locale) : SiteCopy.localizeKnown(err, locale)
+            } else {
+                onDone()
+            }
         }
     }
 }
 
-/// 两个第三方按钮各自的 pending / 错误（RN MemberLoginScreen 的 googlePending / appleError 等）
 final class SocialSignInState: ObservableObject {
-    @Published var googlePending = false
     @Published var applePending = false
-    @Published var googleError: String?
     @Published var appleError: String?
-    var busy: Bool { googlePending || applePending }
-    func clearErrors() { googleError = nil; appleError = nil }
+    var busy: Bool { applePending }
+    func clearErrors() { appleError = nil }
 }
 
-/// RN MemberGoogleSignInButton + MemberAppleSignInButton + MemberAuthMethodDivider（登录 / 注册页共用）
+/// 系统原生 Apple 一键登录 + 「或」分隔线
 struct SocialSignInButtons: View {
     @ObservedObject var auth: MemberAuthStore
     let locale: AppLocale
@@ -94,28 +182,15 @@ struct SocialSignInButtons: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            AuthProviderButton(variant: .apple, label: SiteCopy.t("auth.continueWithApple", locale), pending: state.applePending, disabled: state.busy, locale: locale) { apple() }
+            AuthProviderButton(
+                label: SiteCopy.t("auth.continueWithApple", locale),
+                pending: state.applePending,
+                disabled: state.busy,
+                locale: locale
+            ) { apple() }
             if let e = state.appleError { AuthOAuthError(e, locale: locale) }
         }
-        VStack(spacing: 6) {
-            AuthProviderButton(variant: .google, label: SiteCopy.t("auth.continueWithGoogle", locale), pending: state.googlePending, disabled: state.busy, locale: locale) { google() }
-            if let e = state.googleError { AuthOAuthError(e, locale: locale) }
-        }
         AuthMethodDivider(locale: locale)
-    }
-
-    private func google() {
-        guard !state.busy else { return }
-        state.googlePending = true; state.clearErrors()
-        Task {
-            let outcome = await auth.signInWithGoogle(locale: locale.rawValue)
-            state.googlePending = false
-            switch outcome {
-            case .done: onDone()
-            case .cancelled: break
-            case .failed(let msg): state.googleError = msg
-            }
-        }
     }
 
     private func apple() {
@@ -133,10 +208,7 @@ struct SocialSignInButtons: View {
     }
 }
 
-/// RN OAuthProviderButton：48 高、圆角 12、hairline 边、parchmentControlSurface.fillStrong 底；左 20 槽放品牌标，文字居中，右侧对称留 20 槽
 private struct AuthProviderButton: View {
-    enum Variant { case google, apple }
-    let variant: Variant
     let label: String
     let pending: Bool
     let disabled: Bool
@@ -151,10 +223,8 @@ private struct AuthProviderButton: View {
                     ProgressView().tint(theme.ink)
                 } else {
                     HStack(spacing: 0) {
-                        ZStack {
-                            if variant == .apple { AppleBrandMark(color: theme.ink) } else { GoogleBrandMark() }
-                        }
-                        .frame(width: 20, height: 20)
+                        AppleBrandMark(color: theme.ink)
+                            .frame(width: 20, height: 20)
                         Text(locale.zh(label)).askFont(size: 15, weight: .semibold).lineSpacing(5).foregroundStyle(theme.ink)
                             .multilineTextAlignment(.center).lineLimit(2).frame(maxWidth: .infinity)
                         Color.clear.frame(width: 20, height: 20)
@@ -172,14 +242,12 @@ private struct AuthProviderButton: View {
     }
 }
 
-/// RN buttonPressed：按下 0.88
 private struct AuthPressStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label.opacity(configuration.isPressed ? 0.88 : 1)
     }
 }
 
-/// RN OAuthInlineError：13 号 / 行高 18 / #b42318 居中
 private struct AuthOAuthError: View {
     let text: String
     let locale: AppLocale
@@ -190,7 +258,6 @@ private struct AuthOAuthError: View {
     }
 }
 
-/// RN MemberAuthMethodDivider：hairline 线 —「或」— 线，上下 16
 private struct AuthMethodDivider: View {
     let locale: AppLocale
     @Environment(\.parchment) private var theme
@@ -204,9 +271,6 @@ private struct AuthMethodDivider: View {
     }
 }
 
-/// 页面骨架：羊皮卷底 + 返回 + 标题 + 引言 + 表单（键盘顶起靠 ScrollView）。
-/// 顶部安全区照 PlansListView 的写法：GeometryReader 本身不 ignoresSafeArea（那样 safeAreaInsets 会归零，「返回」就顶进状态栏——Josh 真机 2026-09-09），
-/// 只让羊皮卷底铺满，内容按 geo.safeAreaInsets.top 让开刘海。
 private struct AuthPage<Content: View>: View {
     let locale: AppLocale
     let title: String
@@ -224,7 +288,7 @@ private struct AuthPage<Content: View>: View {
                     .buttonStyle(.plain)
                     Text(locale.zh(title)).askFont(size: 18, weight: .semibold).foregroundStyle(theme.ink)
                         .frame(maxWidth: .infinity).padding(.top, 8)
-                    Text(SiteCopy.t("auth.registerIntro", locale)).askFont(size: 14).lineSpacing(4).foregroundStyle(theme.muted)
+                    Text(SiteCopy.t("native.otpIntro", locale)).askFont(size: 14).lineSpacing(4).foregroundStyle(theme.muted)
                         .multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(.top, 10)
                     VStack(alignment: .leading, spacing: 10) { content() }.padding(.top, 24)
                 }
@@ -238,7 +302,6 @@ private struct AuthPage<Content: View>: View {
     }
 }
 
-/// 欢迎页也要用这几块（原本只给登录 / 注册页），所以不再 private
 struct AuthField: View {
     let label: String
     @Binding var text: String
@@ -266,7 +329,6 @@ struct AuthField: View {
     }
 }
 
-/// 欢迎页也要用这几块（原本只给登录 / 注册页），所以不再 private
 struct AuthErrorText: View {
     let text: String
     let locale: AppLocale
@@ -277,7 +339,6 @@ struct AuthErrorText: View {
     }
 }
 
-/// 欢迎页也要用这几块（原本只给登录 / 注册页），所以不再 private
 struct AuthSubmit: View {
     let title: String
     let pending: Bool
@@ -291,7 +352,6 @@ struct AuthSubmit: View {
                 else { Text(locale.zh(title)).askFont(size: 15, weight: .semibold).foregroundStyle(theme.ink) }
             }
             .frame(maxWidth: .infinity).frame(minHeight: 48)
-            // 主 CTA 用琥珀（与欢迎页「开始今日灵修」同一颗），和纸色的次级按钮拉开层级
             .background(RoundedRectangle(cornerRadius: 12).fill(Color(rgb: 0xffb101, opacity: 0.22)))
             .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(theme.border, lineWidth: 0.5))
         }
@@ -299,7 +359,6 @@ struct AuthSubmit: View {
     }
 }
 
-/// 欢迎页也要用这几块（原本只给登录 / 注册页），所以不再 private
 struct AuthLink: View {
     let title: String
     let locale: AppLocale

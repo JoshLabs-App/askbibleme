@@ -39,9 +39,7 @@ final class TranslationDownloader: ObservableObject {
             guard let http = resp as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
                 states[id] = .failed("HTTP \((resp as? HTTPURLResponse)?.statusCode ?? 0)"); return
             }
-            let dest = Self.localFile(id)
-            try? FileManager.default.removeItem(at: dest)
-            try FileManager.default.moveItem(at: tmp, to: dest)
+            try PackStore.installSQLiteAtomically(from: tmp, to: Self.localFile(id))
             states[id] = .done
         } catch {
             states[id] = .failed(error.localizedDescription)

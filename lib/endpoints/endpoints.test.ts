@@ -2,8 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const R2 = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/";
 const CUSTOM = "https://askbible-media.joshlabs.app/";
+const SYNC_PRIMARY = "https://askbible-sync.joshlabs.app/";
+const SYNC_BACKUP = "https://askbible.me/api/sync/";
 
-/** 模拟浏览器：localStorage + fetch。`blocked` 里的域一律当作被墙（请求直接失败）。 */
 function fakeBrowser(blocked: string[], remoteList?: unknown) {
   const store = new Map<string, string>();
   vi.stubGlobal("window", {
@@ -32,7 +33,7 @@ async function load() {
   return import("./index");
 }
 
-describe("防封换线：网页端候选域", () => {
+describe("防封换线：网页端候选域（D-44 去 Supabase）", () => {
   beforeEach(() => vi.unstubAllGlobals());
   afterEach(() => vi.unstubAllGlobals());
 
@@ -40,7 +41,7 @@ describe("防封换线：网页端候选域", () => {
     const m = await load();
     expect(m.endpointBase("media")).toBe(R2.slice(0, -1));
     expect(m.endpointDefaultBase("site")).toBe("https://askbible.me");
-    expect(m.endpointDefaultBase("api")).toBe("https://tgobadhdylarhssudplc.supabase.co");
+    expect(m.endpointDefaultBase("api")).toBe(SYNC_PRIMARY.slice(0, -1));
   });
 
   it("都通的时候取列表里最靠前的那条，并存进 localStorage", async () => {
@@ -48,7 +49,7 @@ describe("防封换线：网页端候选域", () => {
     const m = await load();
     await m.refreshEndpoints(true);
     expect(m.endpointBase("media")).toBe(R2.slice(0, -1));
-    expect(JSON.parse(store.get("askbible-endpoint-host-v1")!).media).toBe(R2);
+    expect(JSON.parse(store.get("askbible-endpoint-host-v2")!).media).toBe(R2);
   });
 
   it("第一条被墙就换到第二条，通知订阅者，下次启动直接用缓存", async () => {
@@ -59,9 +60,10 @@ describe("防封换线：网页端候选域", () => {
     await m.refreshEndpoints(true);
     expect(m.endpointBase("media")).toBe(CUSTOM.slice(0, -1));
     expect(onChange).toHaveBeenCalled();
-    expect(m.rebaseMediaUrl(`${R2}downloads/android/AskBible-latest.apk`)).toBe(`${CUSTOM}downloads/android/AskBible-latest.apk`);
+    expect(m.rebaseMediaUrl(`${R2}downloads/android/AskBible-latest.apk`)).toBe(
+      `${CUSTOM}downloads/android/AskBible-latest.apk`,
+    );
 
-    // 「下次启动」：重新加载模块，不探测也该直接读到缓存的线路
     const saved = new Map(store);
     fakeBrowser([R2]);
     (window as unknown as { localStorage: { getItem: (k: string) => string | null } }).localStorage.getItem = (k) =>
@@ -70,11 +72,11 @@ describe("防封换线：网页端候选域", () => {
     expect(again.endpointBase("media")).toBe(CUSTOM.slice(0, -1));
   });
 
-  it("supabase.co 连不上时 api 角色换到自家反代，media 不受牵连", async () => {
-    fakeBrowser(["https://tgobadhdylarhssudplc.supabase.co/"]);
+  it("askbible-sync.joshlabs.app 连不上时 api 角色自动切到主站同域 /api/sync 备线，media 不受牵连", async () => {
+    fakeBrowser([SYNC_PRIMARY]);
     const m = await load();
     await m.refreshEndpoints(true);
-    expect(m.endpointBase("api")).toBe("https://askbible-sb.joshlabs.app");
+    expect(m.endpointBase("api")).toBe(SYNC_BACKUP.slice(0, -1));
     expect(m.endpointBase("media")).toBe(R2.slice(0, -1));
   });
 
@@ -101,6 +103,8 @@ describe("防封换线：网页端候选域", () => {
 
   it("不是 media 候选域的地址不动", async () => {
     const m = await load();
-    expect(m.rebaseMediaUrl("https://apps.apple.com/app/id6771996188")).toBe("https://apps.apple.com/app/id6771996188");
+    expect(m.rebaseMediaUrl("https://apps.apple.com/app/id6771996188")).toBe(
+      "https://apps.apple.com/app/id6771996188",
+    );
   });
 });

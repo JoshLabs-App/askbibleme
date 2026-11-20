@@ -7,10 +7,24 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
+import java.security.MessageDigest
 
-/** Downloads are installed only after their HTTP length and SQLite pages agree. */
+/** Downloads are installed only after their HTTP length, SQLite pages, and optional SHA-256 agree. */
 object SQLiteDownload {
     private val signature = "SQLite format 3\u0000".toByteArray(Charsets.US_ASCII)
+
+    fun sha256Hex(file: File): String? = runCatching {
+        val md = MessageDigest.getInstance("SHA-256")
+        file.inputStream().use { input ->
+            val buf = ByteArray(1 shl 16)
+            while (true) {
+                val n = input.read(buf)
+                if (n <= 0) break
+                md.update(buf, 0, n)
+            }
+        }
+        md.digest().joinToString("") { "%02x".format(it) }
+    }.getOrNull()
 
     // SQLite's 100-byte header records page size and, when current, page count:
     // https://www.sqlite.org/fileformat.html#the_database_header
@@ -28,7 +42,13 @@ object SQLiteDownload {
         pageCount == 0L || uint(24) != uint(92) || size == pageCount * pageSize
     }.getOrDefault(false)
 
-    fun install(url: String, destination: File, onProgress: (Double) -> Unit = {}) {
+    fun install(
+        url: String,
+        destination: File,
+        expectedSha256: String? = null,
+        expectedSizeBytes: Long? = null,
+        onProgress: (Double) -> Unit = {},
+    ) {
         val parent = destination.absoluteFile.parentFile ?: throw IOException("Missing download directory")
         if (!parent.isDirectory && !parent.mkdirs()) throw IOException("Cannot create download directory")
         val temporary = File.createTempFile(destination.name + ".", ".part", parent)
@@ -58,7 +78,17 @@ object SQLiteDownload {
                 }
             }
             if (total > 0 && read != total) throw IOException("Truncated download: $read/$total")
+            if (expectedSizeBytes != null && expectedSizeBytes > 0L && read != expectedSizeBytes) {
+                throw IOException("Pack size mismatch: $read/$expectedSizeBytes")
+            }
             if (!isComplete(temporary)) throw IOException("Invalid or incomplete SQLite download")
+            val cleanExpectedSha = expectedSha256?.trim()?.lowercase()?.ifEmpty { null }
+            if (cleanExpectedSha != null) {
+                val actualSha = sha256Hex(temporary) ?: ""
+                if (actualSha != cleanExpectedSha) {
+                    throw IOException("Pack SHA-256 mismatch")
+                }
+            }
             // Never expose a partially copied file, and keep a previous database
             // intact if validation or replacement fails.
             Files.move(temporary.toPath(), destination.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)

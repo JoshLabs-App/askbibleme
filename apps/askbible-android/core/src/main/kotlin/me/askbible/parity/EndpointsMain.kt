@@ -11,8 +11,8 @@ fun endpointsMain() {
     val dead = "https://blocked.invalid/"
     val mem = HashMap<String, String>()
     for (r in Endpoints.Role.entries) {
-        mem["host.${r.key}"] = dead
-        mem["order.${r.key}"] = dead
+        mem["host.v2.${r.key}"] = dead
+        mem["order.v2.${r.key}"] = dead
     }
     Endpoints.init(object : Endpoints.Store {
         override fun get(key: String): String? = mem[key]

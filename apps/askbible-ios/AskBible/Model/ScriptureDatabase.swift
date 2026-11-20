@@ -46,29 +46,38 @@ final class ScriptureDatabase {
         FileManager.default.fileExists(atPath: installedFile(translationId).path)
     }
 
-    /// `directory` 留空走 App bundle；命令行 harness 传入 Resources 目录来做数据层自检。
+    /// `directory` 留空走 App bundle（若 PackStore 已装了热更/下载版且完整可用则优先）；命令行 harness 传入 Resources 目录来做数据层自检。
     init(translationId: String, directory: URL? = nil) throws {
         self.translationId = translationId
-        let resolved: URL?
+        let candidates: [URL]
         if let directory {
             let candidate = directory.appendingPathComponent("\(translationId).sqlite")
-            resolved = FileManager.default.fileExists(atPath: candidate.path) ? candidate : nil
-        } else if Self.isInstalled(translationId) {
-            resolved = Self.installedFile(translationId)
+            candidates = FileManager.default.fileExists(atPath: candidate.path) ? [candidate] : []
         } else {
-            resolved = Bundle.main.url(forResource: translationId, withExtension: "sqlite")
+            var list: [URL] = []
+            if Self.isInstalled(translationId) { list.append(Self.installedFile(translationId)) }
+            if let bundled = Bundle.main.url(forResource: translationId, withExtension: "sqlite") { list.append(bundled) }
+            candidates = list
         }
-        guard let url = resolved else {
+        guard !candidates.isEmpty else {
             throw DatabaseError.missingFile("\(translationId).sqlite")
         }
-        var db: OpaquePointer?
-        let rc = sqlite3_open_v2(url.path, &db, SQLITE_OPEN_READONLY, nil)
-        guard rc == SQLITE_OK, let db else {
-            let msg = db.map { String(cString: sqlite3_errmsg($0)) } ?? "rc=\(rc)"
+        var opened: OpaquePointer?
+        var lastError = "missing"
+        for url in candidates {
+            var db: OpaquePointer?
+            let rc = sqlite3_open_v2(url.path, &db, SQLITE_OPEN_READONLY, nil)
+            if rc == SQLITE_OK, let db {
+                opened = db
+                break
+            }
+            lastError = db.map { String(cString: sqlite3_errmsg($0)) } ?? "rc=\(rc)"
             if let db { sqlite3_close(db) }
-            throw DatabaseError.openFailed(msg)
         }
-        self.handle = db
+        guard let handle = opened else {
+            throw DatabaseError.openFailed(lastError)
+        }
+        self.handle = handle
     }
 
     deinit { sqlite3_close(handle) }
@@ -147,19 +156,26 @@ final class XrefDatabase {
     private let handle: OpaquePointer
 
     init?(directory: URL? = nil) {
-        let resolved: URL?
+        let candidates: [URL]
         if let directory {
             let candidate = directory.appendingPathComponent("scripture-xrefs.sqlite")
-            resolved = FileManager.default.fileExists(atPath: candidate.path) ? candidate : nil
+            candidates = FileManager.default.fileExists(atPath: candidate.path) ? [candidate] : []
         } else {
-            resolved = Bundle.main.url(forResource: "scripture-xrefs", withExtension: "sqlite")
+            var list: [URL] = []
+            if ScriptureDatabase.isInstalled("scripture-xrefs") { list.append(ScriptureDatabase.installedFile("scripture-xrefs")) }
+            if let bundled = Bundle.main.url(forResource: "scripture-xrefs", withExtension: "sqlite") { list.append(bundled) }
+            candidates = list
         }
-        guard let url = resolved else { return nil }
-        var db: OpaquePointer?
-        guard sqlite3_open_v2(url.path, &db, SQLITE_OPEN_READONLY, nil) == SQLITE_OK, let db else {
+        var opened: OpaquePointer?
+        for url in candidates {
+            var db: OpaquePointer?
+            if sqlite3_open_v2(url.path, &db, SQLITE_OPEN_READONLY, nil) == SQLITE_OK, let db {
+                opened = db
+                break
+            }
             if let db { sqlite3_close(db) }
-            return nil
         }
+        guard let db = opened else { return nil }
         self.handle = db
     }
 

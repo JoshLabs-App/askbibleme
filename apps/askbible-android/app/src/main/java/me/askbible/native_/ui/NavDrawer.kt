@@ -147,7 +147,6 @@ fun NavDrawer(
                             DrawerRow(SiteCopy.t("auth.drawerLogout", locale), null, theme, onLogout)
                         } else {
                             DrawerRow(SiteCopy.t("auth.pageTitle", locale), null, theme, onLogin)
-                            DrawerRow(SiteCopy.t("native.register", locale), null, theme, onRegister)
                         }
                         // 每日读经提醒：左边开关（点文字切换），右边时间（点时间改）
                         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),

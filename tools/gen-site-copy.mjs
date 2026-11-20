@@ -21,11 +21,30 @@ const CHECK = process.argv.includes("--check");
 const read = (p) => readFileSync(path.join(ROOT, p), "utf8");
 const flat = (o, p = "", out = {}) => { for (const [k, v] of Object.entries(o)) { const key = p ? `${p}.${k}` : k; if (v && typeof v === "object") flat(v, key, out); else out[key] = String(v); } return out; };
 
-const zh = flat(JSON.parse(read("apps/askbible-mobile/assets/content/zh-CN.json")));
-const en = flat(JSON.parse(read("apps/askbible-mobile/assets/content/en.json")));
-// RN site-copy.ts 的 AUTH_UI_FALLBACKS：JSON 里没有时 t() 用它们
-for (const m of read("apps/askbible-mobile/src/i18n/site-copy.ts").matchAll(/"([\w.]+)":\s*\{\s*zh:\s*"((?:[^"\\]|\\.)*)",\s*en:\s*"((?:[^"\\]|\\.)*)"/g)) {
-  if (!(m[1] in zh)) { zh[m[1]] = JSON.parse(`"${m[2]}"`); en[m[1]] = JSON.parse(`"${m[3]}"`); }
+const zh = flat(JSON.parse(read("locales/zh-CN.json")));
+const en = flat(JSON.parse(read("locales/en.json")));
+const AUTH_UI_FALLBACKS = {
+  "auth.continueWithApple": { zh: "使用 Apple 登录", en: "Continue with Apple" },
+  "auth.continueWithGoogle": { zh: "使用 Google 登录", en: "Continue with Google" },
+  "auth.drawerLogout": { zh: "退出登录", en: "Sign out" },
+  "auth.email": { zh: "邮箱", en: "Email" },
+  "auth.errorNetwork": { zh: "网络异常，请重试。", en: "Network error. Try again." },
+  "auth.loginFooterRegister": { zh: "没有账号？去注册", en: "New here? Create an account" },
+  "auth.orDivider": { zh: "或", en: "or" },
+  "auth.pageTitle": { zh: "登录", en: "Sign in" },
+  "auth.password": { zh: "密码", en: "Password" },
+  "auth.registerGoLogin": { zh: "已有账号？去登录", en: "Already have an account? Sign in" },
+  "auth.registerIntro": { zh: "登录以同步多端读经进度与收藏。", en: "Sign in to sync your reading progress and bookmarks across devices." },
+  "auth.registerName": { zh: "昵称（可选）", en: "Display name (optional)" },
+  "auth.registerPageTitle": { zh: "注册", en: "Create account" },
+  "auth.registerSubmit": { zh: "注册", en: "Create account" },
+  "auth.submit": { zh: "登录", en: "Sign in" },
+  "onboarding.welcome.languageTitle": { zh: "选择语言", en: "Choose your language" },
+  "onboarding.welcome.loginIntro": { zh: "登录即可多端同步读经进度；也可先略过。", en: "Sign in to sync reading progress across devices, or skip for now." },
+  "onboarding.welcome.loginSkip": { zh: "略过", en: "Skip" },
+};
+for (const [k, v] of Object.entries(AUTH_UI_FALLBACKS)) {
+  if (!(k in zh)) { zh[k] = v.zh; en[k] = v.en; }
 }
 const briefZh = JSON.parse(read("data/bible-reading-plans/mobile-brief.zh-CN.json"));
 const briefEn = JSON.parse(read("data/bible-reading-plans/mobile-brief.en.json"));

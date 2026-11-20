@@ -26,7 +26,7 @@ struct RootView: View {
     @StateObject private var bookmarks = VerseBookmarkStore()
     @StateObject private var searchPrefs = SearchPrefs()
     @StateObject private var naturePrefs = NatureHomePrefs()
-    /// 会员登录（Supabase 直连；RN MemberAuthProvider）
+    /// 会员登录（AskBible Sync Worker + D1，D-44）
     @StateObject private var auth = MemberAuthStore()
     /// 读经活动（习惯日 / 累计听 / 使用时长 / 最近阅读）与会员读经进度同步
     @StateObject private var activity = ReadingActivityStore()
@@ -415,10 +415,11 @@ struct RootView: View {
                 if SolidJoys.available(locale: appLocale, isAdmin: auth.isAdmin) { await devotionals.load(locale: appLocale) }
             }
             .task {
-                // 防封换线：先挑线路，后面的登录校验 / 同步才不会打到已经不通的域
+                // 防封换线：先挑线路，后面的登录校验 / 同步 / 离线包热更才不会打到已经不通的域
                 await Endpoints.refresh()
                 await auth.verifyRemote()
                 await sync.flushNow(reason: "foreground")
+                await PackStore.refreshInstalledPacksIfNeeded()
             }
             .onChange(of: scenePhase) { _, phase in
                 // 听读 XP 只在前台给（A 方案防刷：后台放整夜不算）
@@ -426,7 +427,11 @@ struct RootView: View {
                 if phase == .active {
                     audio.recoverAfterInterruption(); music.recoverAfterInterruption()
                     activity.noteForeground(); activity.touchHabitDay(); naturePrefs.rotateIfNewDay()
-                    Task { await Endpoints.refresh(); await sync.flushNow(reason: "foreground") }
+                    Task {
+                        await Endpoints.refresh()
+                        await sync.flushNow(reason: "foreground")
+                        await PackStore.refreshInstalledPacksIfNeeded()
+                    }
                 } else {
                     music.saveResume()
                     activity.noteBackground()

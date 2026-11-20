@@ -1,256 +1,339 @@
 "use client";
 
-import type { AuthChangeEvent, User } from "@supabase/supabase-js";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-import { getSupabaseAnonKey, getSupabaseUrl, isSupabaseAuthConfigured } from "@/lib/supabase/config";
+import { endpointBase } from "@/lib/endpoints";
 
 export type AskbibleWebUser = {
   id: string;
   email: string;
   name: string;
+  locale?: string | null;
   isAdmin: boolean;
-  /** 账号注册时间（ISO），用于探索页「一起走过」 */
   createdAt: string | null;
 };
 
-function displayNameFromUser(user: User, fallback?: string): string {
-  const trimmed = fallback?.trim();
-  if (trimmed) return trimmed;
-  const meta = user.user_metadata;
-  if (typeof meta?.full_name === "string" && meta.full_name.trim()) return meta.full_name.trim();
-  if (typeof meta?.name === "string" && meta.name.trim()) return meta.name.trim();
-  if (typeof meta?.display_name === "string" && meta.display_name.trim()) return meta.display_name.trim();
-  return user.email || user.id;
+export type AskbibleWebSession = {
+  sessionToken: string;
+  expiresAt: string;
+  user: AskbibleWebUser;
+};
+
+const SESSION_STORAGE_KEY = "askbible.web.member-session.v2";
+const DEVICE_ID_KEY = "askbible.web.device-id.v1";
+
+let memorySession: AskbibleWebSession | null = null;
+const authListeners = new Set<(event: "SIGNED_IN" | "SIGNED_OUT", session: AskbibleWebSession | null) => void>();
+
+function syncApiBase(): string {
+  return endpointBase("api").replace(/\/+$/, "");
 }
 
-async function loadProfile(
-  supabase: NonNullable<ReturnType<typeof createSupabaseBrowserClient>>,
-  userId: string,
-): Promise<{ display_name: string | null; locale: string | null; is_admin: boolean | null } | null> {
-  const { data } = await supabase
-    .from("askbible_profiles")
-    .select("display_name, locale, is_admin")
-    .eq("user_id", userId)
-    .maybeSingle();
-  return data ?? null;
+function getOrCreateDeviceId(): string {
+  if (typeof window === "undefined") return "ssr";
+  try {
+    const existing = window.localStorage.getItem(DEVICE_ID_KEY);
+    if (existing) return existing;
+    const created =
+      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `web_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+    window.localStorage.setItem(DEVICE_ID_KEY, created);
+    return created;
+  } catch {
+    return "web-ephemeral";
+  }
 }
 
-async function ensureOwnProfile(input: {
-  supabase: NonNullable<ReturnType<typeof createSupabaseBrowserClient>>;
-  user: User;
-  displayName?: string;
-  locale?: string;
-}): Promise<void> {
-  const existing = await loadProfile(input.supabase, input.user.id);
-  const displayName = existing?.display_name?.trim() || displayNameFromUser(input.user, input.displayName);
-  const locale = input.locale?.trim() || existing?.locale || "zh";
-  if (existing?.display_name?.trim() && (!input.locale || input.locale === existing.locale)) return;
-  await input.supabase.from("askbible_profiles").upsert(
-    {
-      user_id: input.user.id,
-      display_name: displayName,
-      locale,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "user_id" },
-  );
+export function readStoredAskbibleWebSession(): AskbibleWebSession | null {
+  if (memorySession) return memorySession;
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(SESSION_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<AskbibleWebSession> | null;
+    if (!parsed?.sessionToken || !parsed.user?.id || !parsed.user?.email) return null;
+    const expMs = Date.parse(parsed.expiresAt || "");
+    if (Number.isFinite(expMs) && expMs <= Date.now()) {
+      clearStoredAskbibleWebSession(false);
+      return null;
+    }
+    return {
+      sessionToken: parsed.sessionToken,
+      expiresAt: parsed.expiresAt || new Date(Date.now() + 86400_000).toISOString(),
+      user: {
+        id: parsed.user.id,
+        email: parsed.user.email,
+        name: parsed.user.name || parsed.user.email.split("@")[0] || parsed.user.email,
+        locale: parsed.user.locale ?? null,
+        isAdmin: Boolean(parsed.user.isAdmin),
+        createdAt: parsed.user.createdAt ?? null,
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredAskbibleWebSession(session: AskbibleWebSession, emit = true): void {
+  memorySession = session;
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+    } catch {
+      // Keep in-memory session when browser storage quota is full
+    }
+  }
+  if (emit) {
+    authListeners.forEach((fn) => fn("SIGNED_IN", session));
+  }
+}
+
+function clearStoredAskbibleWebSession(emit = true): void {
+  memorySession = null;
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.removeItem(SESSION_STORAGE_KEY);
+    } catch {
+      // Ignore storage errors
+    }
+  }
+  if (emit) {
+    authListeners.forEach((fn) => fn("SIGNED_OUT", null));
+  }
+}
+
+export function subscribeAskbibleWebAuth(
+  fn: (event: "SIGNED_IN" | "SIGNED_OUT", session: AskbibleWebSession | null) => void,
+): () => void {
+  authListeners.add(fn);
+  return () => {
+    authListeners.delete(fn);
+  };
 }
 
 export async function fetchAskbibleWebSessionUser(): Promise<{
   configured: boolean;
   user: AskbibleWebUser | null;
 }> {
-  if (!isSupabaseAuthConfigured()) {
-    return { configured: false, user: null };
-  }
-  const supabase = createSupabaseBrowserClient();
-  if (!supabase) return { configured: false, user: null };
-
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user?.email) {
+  const stored = readStoredAskbibleWebSession();
+  if (!stored) {
     return { configured: true, user: null };
   }
-  const profile = await loadProfile(supabase, data.user.id);
-  const createdAt =
-    typeof data.user.created_at === "string" && data.user.created_at.trim()
-      ? data.user.created_at.trim()
-      : null;
-  return {
-    configured: true,
-    user: {
-      id: data.user.id,
-      email: data.user.email,
-      name: profile?.display_name?.trim() || displayNameFromUser(data.user),
-      isAdmin: Boolean(profile?.is_admin),
-      createdAt,
-    },
-  };
-}
 
-export async function signInAskbibleWebWithPassword(input: {
-  email: string;
-  password: string;
-}): Promise<{ ok: true } | { ok: false; error: string }> {
-  const supabase = createSupabaseBrowserClient();
-  if (!supabase) return { ok: false, error: "auth_not_configured" };
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: input.email.trim(),
-    password: input.password,
-  });
-  if (error || !data.user) {
-    return { ok: false, error: error?.message || "invalid_credentials" };
-  }
-  await ensureOwnProfile({ supabase, user: data.user });
-  return { ok: true };
-}
+  try {
+    const res = await fetch(`${syncApiBase()}/v1/auth/session`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${stored.sessionToken}`,
+        Accept: "application/json",
+      },
+      cache: "no-store",
+    });
 
-export async function signInAskbibleWebWithOtp(email: string): Promise<
-  { ok: true } | { ok: false; error: string; status?: number }
-> {
-  const supabase = createSupabaseBrowserClient();
-  if (!supabase) return { ok: false, error: "auth_not_configured" };
-  const trimmed = email.trim();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-    return { ok: false, error: "invalid_email" };
-  }
-  const { error } = await supabase.auth.signInWithOtp({
-    email: trimmed,
-  });
-  if (error) {
-    return {
-      ok: false,
-      error: error.message,
-      status: error.status,
+    if (res.status === 401 || res.status === 403) {
+      // Only clear if the active stored token hasn't been replaced by a newer login while in flight
+      if (readStoredAskbibleWebSession()?.sessionToken === stored.sessionToken) {
+        clearStoredAskbibleWebSession(true);
+      }
+      return { configured: true, user: null };
+    }
+
+    if (!res.ok) {
+      // Transient 429 / 5xx network hiccup: keep cached local session alive
+      return { configured: true, user: stored.user };
+    }
+
+    const data = (await res.json()) as {
+      ok?: boolean;
+      expiresAt?: string;
+      user?: AskbibleWebUser;
     };
+    if (!data?.ok || !data.user?.id) {
+      return { configured: true, user: stored.user };
+    }
+    const updated: AskbibleWebSession = {
+      sessionToken: stored.sessionToken,
+      expiresAt: data.expiresAt || stored.expiresAt,
+      user: {
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.name || stored.user.name,
+        locale: data.user.locale ?? stored.user.locale ?? null,
+        isAdmin: Boolean(data.user.isAdmin),
+        createdAt: data.user.createdAt ?? stored.user.createdAt ?? null,
+      },
+    };
+    if (readStoredAskbibleWebSession()?.sessionToken === stored.sessionToken) {
+      writeStoredAskbibleWebSession(updated, false);
+    }
+    return { configured: true, user: updated.user };
+  } catch {
+    // Offline or DNS issue: keep local session so user stays signed in offline
+    return { configured: true, user: stored.user };
   }
-  return { ok: true };
+}
+
+export async function signInAskbibleWebWithOtp(
+  email: string,
+  locale?: string,
+): Promise<{ ok: true } | { ok: false; error: string; status?: number }> {
+  const trimmed = email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+    return { ok: false, error: "invalid_email", status: 400 };
+  }
+  try {
+    const res = await fetch(`${syncApiBase()}/v1/auth/otp/send`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ email: trimmed, locale }),
+    });
+    const data = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      code?: string;
+      error?: string;
+    };
+    if (!res.ok || !data.ok) {
+      return {
+        ok: false,
+        error: data.code === "invalid_email" ? "invalid_email" : data.error || "otp_send_failed",
+        status: res.status,
+      };
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "network_error" };
+  }
 }
 
 export async function verifyAskbibleWebOtp(input: {
   email: string;
   token: string;
+  locale?: string;
 }): Promise<{ ok: true } | { ok: false; error: string; status?: number }> {
-  const supabase = createSupabaseBrowserClient();
-  if (!supabase) return { ok: false, error: "auth_not_configured" };
-  const email = input.email.trim();
-  const token = input.token.trim();
-  if (!email || !token) {
-    return { ok: false, error: "invalid_params" };
+  const email = input.email.trim().toLowerCase();
+  const code = input.token.trim().replace(/\D/g, "");
+  if (!email || code.length !== 6) {
+    return { ok: false, error: "invalid_otp", status: 400 };
   }
-  const { data, error } = await supabase.auth.verifyOtp({
-    email,
-    token,
-    type: "email",
-  });
-  if (error) {
-    return {
-      ok: false,
-      error: error.message,
-      status: error.status,
+  try {
+    const res = await fetch(`${syncApiBase()}/v1/auth/otp/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        email,
+        code,
+        locale: input.locale,
+        deviceId: getOrCreateDeviceId(),
+        deviceName: typeof navigator !== "undefined" ? navigator.platform || "Browser" : "Browser",
+        platform: "web",
+      }),
+    });
+    const data = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      sessionToken?: string;
+      expiresAt?: string;
+      user?: AskbibleWebUser;
+      error?: string;
     };
-  }
-  if (!data.user) {
-    return { ok: false, error: "no_user" };
-  }
-  await ensureOwnProfile({ supabase, user: data.user });
-  return { ok: true };
-}
-
-export async function signUpAskbibleWebWithPassword(input: {
-  email: string;
-  password: string;
-  name?: string;
-}): Promise<{ ok: true } | { ok: false; error: string }> {
-  const supabase = createSupabaseBrowserClient();
-  if (!supabase) return { ok: false, error: "auth_not_configured" };
-  const displayName = input.name?.trim() || "";
-  const { data, error } = await supabase.auth.signUp({
-    email: input.email.trim(),
-    password: input.password,
-    options: {
-      data: displayName ? { name: displayName, display_name: displayName } : undefined,
-    },
-  });
-  if (error) return { ok: false, error: error.message };
-  if (data.session?.user) {
-    await ensureOwnProfile({
-      supabase,
-      user: data.session.user,
-      displayName,
+    if (!res.ok || !data.ok || !data.sessionToken || !data.user?.id) {
+      return { ok: false, error: data.error || "invalid_otp", status: res.status };
+    }
+    writeStoredAskbibleWebSession({
+      sessionToken: data.sessionToken,
+      expiresAt: data.expiresAt || new Date(Date.now() + 365 * 86400_000).toISOString(),
+      user: {
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.name || data.user.email.split("@")[0] || data.user.email,
+        locale: data.user.locale ?? null,
+        isAdmin: Boolean(data.user.isAdmin),
+        createdAt: data.user.createdAt ?? null,
+      },
     });
     return { ok: true };
+  } catch {
+    return { ok: false, error: "network_error" };
   }
-  if (data.user) {
-    return { ok: false, error: "email_confirmation_required" };
+}
+
+export async function updateAskbibleWebProfile(input: {
+  name?: string;
+  locale?: string;
+}): Promise<{ ok: true; user: AskbibleWebUser } | { ok: false; error: string }> {
+  const stored = readStoredAskbibleWebSession();
+  if (!stored) return { ok: false, error: "unauthorized" };
+  try {
+    const res = await fetch(`${syncApiBase()}/v1/auth/profile`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${stored.sessionToken}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(input),
+    });
+    const data = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      user?: AskbibleWebUser;
+      error?: string;
+    };
+    if (!res.ok || !data.ok || !data.user) {
+      return { ok: false, error: data.error || "update_failed" };
+    }
+    const next: AskbibleWebSession = { ...stored, user: data.user };
+    writeStoredAskbibleWebSession(next, false);
+    return { ok: true, user: data.user };
+  } catch {
+    return { ok: false, error: "network_error" };
   }
-  return { ok: false, error: "register_failed" };
 }
 
 export async function signOutAskbibleWeb(expectedUserId?: string): Promise<void> {
-  const supabase = createSupabaseBrowserClient();
-  if (!supabase) return;
-  let changed = false;
-  const listener = supabase.auth.onAuthStateChange((event: AuthChangeEvent) => {
-    if (event === "SIGNED_IN" || event === "SIGNED_OUT") changed = true;
-  });
+  const stored = readStoredAskbibleWebSession();
+  if (!stored) return;
+  if (expectedUserId && stored.user.id !== expectedUserId) return;
+  clearStoredAskbibleWebSession(true);
   try {
-    if (expectedUserId) {
-      const current = await supabase.auth.getSession();
-      if (changed || current.data.session?.user.id !== expectedUserId) return;
-    }
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-  } finally { listener.data.subscription.unsubscribe(); }
+    await fetch(`${syncApiBase()}/v1/auth/logout`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${stored.sessionToken}` },
+    });
+  } catch {
+    // Local session is already cleared; remote token can expire naturally
+  }
 }
 
 export async function deleteAskbibleWebAccount(): Promise<
   { ok: true } | { ok: false; error: string; code?: string }
 > {
-  if (!isSupabaseAuthConfigured()) {
-    return { ok: false, error: "auth_not_configured", code: "supabase_not_configured" };
+  const stored = readStoredAskbibleWebSession();
+  if (!stored) {
+    return { ok: false, error: "未登录或登录已过期。", code: "unauthorized" };
   }
-  const supabase = createSupabaseBrowserClient();
-  if (!supabase) {
-    return { ok: false, error: "auth_not_configured", code: "supabase_not_configured" };
-  }
-  const { data: sessionData } = await supabase.auth.getSession();
-  const accessToken = sessionData.session?.access_token;
-  if (!accessToken) {
-    return { ok: false, error: "unauthorized", code: "unauthorized" };
-  }
-
-  const url = `${getSupabaseUrl().replace(/\/$/, "")}/functions/v1/delete-account`;
-  let changed = false;
-  const listener = supabase.auth.onAuthStateChange((event: AuthChangeEvent) => {
-    if (event === "SIGNED_IN" || event === "SIGNED_OUT") changed = true;
-  });
   try {
-    const res = await fetch(url, {
+    const res = await fetch(`${syncApiBase()}/v1/auth/account`, {
       method: "DELETE",
       headers: {
+        Authorization: `Bearer ${stored.sessionToken}`,
         Accept: "application/json",
-        Authorization: `Bearer ${accessToken}`,
-        apikey: getSupabaseAnonKey(),
       },
     });
-    const data = (await res.json().catch(() => null)) as {
+    const data = (await res.json().catch(() => ({}))) as {
       ok?: boolean;
-      error?: string;
       code?: string;
-    } | null;
-    if (!res.ok || data?.ok !== true) {
+      error?: string;
+    };
+    if (!res.ok || !data.ok) {
       return {
         ok: false,
-        error: typeof data?.error === "string" ? data.error : `HTTP ${res.status}`,
-        code: typeof data?.code === "string" ? data.code : undefined,
+        error: data.error || "注销失败，请稍后重试。",
+        code: data.code,
       };
     }
-    const current = await supabase.auth.getSession();
-    if (!changed && current.data.session?.user.id === sessionData.session?.user.id) {
-      await supabase.auth.signOut();
+    if (readStoredAskbibleWebSession()?.sessionToken === stored.sessionToken) {
+      clearStoredAskbibleWebSession(true);
     }
     return { ok: true };
   } catch {
-    return { ok: false, error: "network", code: "network" };
-  } finally { listener.data.subscription.unsubscribe(); }
+    return { ok: false, error: "网络异常，未能连接服务器。", code: "network_error" };
+  }
 }

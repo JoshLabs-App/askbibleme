@@ -65,8 +65,48 @@
     "en": "Apple sign-in failed. Please try again."
   },
   "native.authAppleNotConfigured": {
-    "zh": "Apple 登录尚未配置。请在 Supabase 的 Apple 提供商中登记 Bundle ID：me.askbible.native。",
-    "en": "Apple sign-in is not configured yet. Register the bundle ID me.askbible.native under the Apple provider in Supabase."
+    "zh": "Apple 登录暂时不可用，请稍后再试。",
+    "en": "Apple sign-in is not available right now. Please try again later."
+  },
+  "native.otpIntro": {
+    "zh": "输入邮箱获取 6 位验证码，无需密码；新邮箱将自动创建账号并同步读经进度。",
+    "en": "Enter your email to get a 6-digit code—no password needed. New emails automatically create an account and sync reading progress."
+  },
+  "native.otpSendCode": {
+    "zh": "获取验证码",
+    "en": "Send code"
+  },
+  "native.otpCodeLabel": {
+    "zh": "6 位数字验证码",
+    "en": "6-digit verification code"
+  },
+  "native.otpVerifySubmit": {
+    "zh": "验证并登录",
+    "en": "Verify & sign in"
+  },
+  "native.otpSentTo": {
+    "zh": "验证码已发送至 {{email}}（10 分钟内有效）",
+    "en": "Code sent to {{email}} (valid for 10 min)"
+  },
+  "native.otpResend": {
+    "zh": "重新发送验证码",
+    "en": "Resend code"
+  },
+  "native.otpResendIn": {
+    "zh": "{{n}} 秒后可重发",
+    "en": "Resend in {{n}}s"
+  },
+  "native.otpChangeEmail": {
+    "zh": "更换邮箱",
+    "en": "Change email"
+  },
+  "native.otpInvalidEmail": {
+    "zh": "请输入有效的邮箱地址。",
+    "en": "Please enter a valid email address."
+  },
+  "native.otpInvalidCode": {
+    "zh": "请输入 6 位数字验证码。",
+    "en": "Please enter the 6-digit code."
   },
   "native.authDefaultName": {
     "zh": "用户",

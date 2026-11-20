@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<resources>
-  <color name="splashscreen_background">#ffb101</color>
-  <color name="iconBackground">#ffb101</color>
-  <color name="colorPrimary">#ffb101</color>
-  <color name="colorPrimaryDark">#db9801</color>
-  <color name="notification_icon_color">#ecd9b9</color>
-  <color name="parchment_window_fill">#faf3e1</color>
-</resources>

@@ -119,23 +119,15 @@ struct WelcomeView: View {
     }
 }
 
-/// 登录整套（第三方 + 折叠的邮箱密码）。从欢迎页右上角「登录」拉起，不占首屏。
+/// 登录面板（Apple 原生登录 + 折叠的 6 位邮箱验证码）。从欢迎页右上角「登录」拉起，不占首屏。
 struct WelcomeSignInSheet: View {
     @ObservedObject var auth: MemberAuthStore
     let locale: AppLocale
     var onDone: () -> Void
 
-    @State private var email = ""
-    @State private var password = ""
-    @State private var name = ""
-    /// 邮箱密码默认折叠（ChatGPT 评审 P0：三种登录方式同时展开，首屏信息量过大）
     @State private var emailOpen = false
-    @State private var registering = false
-    @State private var pendingAction: Action?
-    @State private var error: String?
     @StateObject private var social = SocialSignInState()
 
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.parchment) private var theme
 
     var body: some View {
@@ -149,7 +141,13 @@ struct WelcomeSignInSheet: View {
                         .padding(.bottom, 2)
                     SocialSignInButtons(auth: auth, locale: locale, state: social, onDone: onDone)
                     if emailOpen {
-                        emailForm
+                        EmailOtpForm(
+                            auth: auth,
+                            locale: locale,
+                            externalBusy: social.busy,
+                            onBeforeSubmit: { social.clearErrors() },
+                            onDone: onDone
+                        )
                     } else {
                         Button { emailOpen = true } label: {
                             Text(SiteCopy.t("native.welcomeEmailSignIn", locale))
@@ -171,49 +169,6 @@ struct WelcomeSignInSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
-    }
-
-    private var emailForm: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            AuthField(label: SiteCopy.t("auth.email", locale), text: $email, locale: locale,
-                      keyboard: .emailAddress, contentType: .emailAddress)
-            if registering {
-                AuthField(label: SiteCopy.t("auth.registerName", locale), text: $name, locale: locale,
-                          contentType: .name)
-            }
-            AuthField(label: SiteCopy.t("auth.password", locale), text: $password, locale: locale,
-                      secure: true, contentType: registering ? .newPassword : .password)
-            if let error { AuthErrorText(error, locale: locale) }
-            AuthSubmit(title: SiteCopy.t(registering ? "auth.registerSubmit" : "auth.submit", locale),
-                       pending: pendingAction != nil, locale: locale) {
-                submit(registering ? .register : .login)
-            }
-            // 注册是文字链接，不再和登录并排等重
-            AuthLink(title: SiteCopy.t(registering ? "auth.registerGoLogin" : "native.welcomeNoAccount", locale),
-                     locale: locale) {
-                registering.toggle(); error = nil
-            }
-        }
-    }
-
-    enum Action { case login, register }
-
-    private func submit(_ action: Action) {
-        guard pendingAction == nil, !social.busy else { return }
-        pendingAction = action; error = nil; social.clearErrors()
-        Task {
-            let err: String?
-            switch action {
-            case .login: err = await auth.signIn(email: email, password: password, locale: locale.rawValue)
-            case .register: err = await auth.register(email: email, password: password, name: name, locale: locale.rawValue)
-            }
-            pendingAction = nil
-            if let err {
-                error = err == "network" ? SiteCopy.t("auth.errorNetwork", locale) : SiteCopy.localizeKnown(err, locale)
-            } else {
-                onDone()
-            }
-        }
     }
 }
 

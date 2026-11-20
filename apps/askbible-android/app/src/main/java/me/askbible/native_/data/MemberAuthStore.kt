@@ -1,28 +1,23 @@
 package me.askbible.native_.data
 
 import android.content.Context
-import android.net.Uri
-import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import java.util.UUID
 
 /**
- * 会员登录状态（RN useMemberAuthProvider + useMemberAuthBootstrap）：本机会话 + 启动时后台校验。
- * 登录 / 注册成功即写会话；退出清会话（服务端 logout 尽力而为）。与 iOS MemberAuthStore 同构。
+ * 会员登录状态（DECISIONS D-44：`askbible-sync` 1 年滑动会话 + 6 位邮箱验证码登录）。
+ * 保留完整的 `MemberSessionState`（`revision` / `accountRevision`）隔离，与 iOS `MemberAuthStore.swift` 同构。
  */
 class MemberAuthStore(context: Context) {
     private companion object {
-        const val KEY_VERIFIER = "oauth-pkce-verifier"
-        const val KEY_LOCALE = "oauth-locale"
+        const val KEY_DEVICE_ID = "sync-device-id-v1"
     }
 
     private val sp = context.applicationContext.getSharedPreferences("member-auth", Context.MODE_PRIVATE)
@@ -31,45 +26,71 @@ class MemberAuthStore(context: Context) {
     private val session: MemberSession? get() = sessionState.session
     private val refreshMutex = Mutex()
     val accountRevision: Long get() = sessionState.accountRevision
-    /**
-     * 管理员账号（askbible_profiles.is_admin）。还没公开的功能只给它看（Josh 2026-10-01：每日灵修先只给管理账户）。
-     * 按用户 id 记在本机，断网时沿用上次的结果；没登录一律 false。
-     */
+
     var isAdmin by mutableStateOf(false); private set
     private fun adminKey(userId: String) = "is-admin.$userId"
-    /** 当前会话 token（读经同步用；没登录为 null） */
     val sessionToken: String? get() = session?.sessionToken
 
     init {
-        // 过期但带 refresh_token 的也先算登着（启动后 verifyRemote 会先续期）；RN 是一过期就登出
-        val s = sp.getString(MemberAuthRules.SESSION_KEY, null)?.let { MemberAuthRules.parseSession(it, System.currentTimeMillis(), allowExpired = true) }
-        if (s != null) { sessionState.replace(s); user = s.user; isAdmin = sp.getBoolean(adminKey(s.user.id), false) } else sp.edit().remove(MemberAuthRules.SESSION_KEY).apply()
+        val devId = sp.getString(KEY_DEVICE_ID, null) ?: UUID.randomUUID().toString().also {
+            sp.edit().putString(KEY_DEVICE_ID, it).apply()
+        }
+        AskBibleSyncClient.deviceId = devId
+
+        val s = sp.getString(MemberAuthRules.SESSION_KEY, null)?.let { MemberAuthRules.parseSession(it) }
+        if (s != null) {
+            sessionState.replace(s)
+            user = s.user
+            isAdmin = s.user.isAdmin ?: sp.getBoolean(adminKey(s.user.id), false)
+        } else {
+            sp.edit().remove(MemberAuthRules.SESSION_KEY).apply()
+        }
     }
 
-    /** 登录后 / 启动后问一次服务器这个账号是不是管理员 */
     suspend fun refreshAdminFlag() {
-        val id = user?.id ?: return
-        val account = accountRevision
-        val token = ensureFreshToken() ?: return
-        if (accountRevision != account) return
-        val remote = withContext(Dispatchers.IO) { SupabaseAuthClient.fetchIsAdmin(token, id) } ?: return
-        if (user?.id != id || accountRevision != account) return
-        isAdmin = remote
-        sp.edit().putBoolean(adminKey(id), remote).apply()
+        verifyRemote()
     }
 
-    /** 拿一个还能用的 access token：快到期（2 分钟内）就先用 refresh_token 续；续期被拒（已作废）→ 登出；断网 → 先用旧的 */
+    /** 拿一个有效 token：距过期不足 24 小时时滑动续期一次；429/5xx/断网保留当前有效会话 */
     suspend fun ensureFreshToken(): String? = refreshMutex.withLock {
         val s = session ?: return@withLock null
-        if (MemberAuthRules.secondsUntilExpiry(s) >= 120) return@withLock s.sessionToken
-        val rt = s.refreshToken ?: return@withLock if (MemberAuthRules.secondsUntilExpiry(s) <= 0) { persist(null); null } else s.sessionToken
+        if (MemberAuthRules.secondsUntilExpiry(s) <= 0) {
+            persist(null)
+            return@withLock null
+        }
+        if (MemberAuthRules.secondsUntilExpiry(s) >= 86_400) return@withLock s.sessionToken
+        verifyCurrentLocked(s)
+    }
+
+    private suspend fun verifyCurrentLocked(s: MemberSession): String? {
+        val token = s.sessionToken
         val revision = sessionState.revision
-        val r = withContext(Dispatchers.IO) { SupabaseAuthClient.refresh(rt, s.user.locale) }
-        // A sign-out or another login wins over a response for the previous session.
-        if (sessionState.revision != revision) return@withLock null
-        when (r) {
-            is MemberAuthResult.Ok -> { val next = r.session.copy(user = r.session.user.copy(createdAt = r.session.user.createdAt ?: s.user.createdAt)); persist(next); next.sessionToken }
-            is MemberAuthResult.Failed -> if (r.code == "network") (if (MemberAuthRules.secondsUntilExpiry(s) > 0) s.sessionToken else null) else { persist(null); null }
+        val outcome = try {
+            withContext(Dispatchers.IO) { AskBibleSyncClient.verify(token) }
+        } catch (e: CancellationException) {
+            throw e
+        }
+        if (sessionState.revision != revision) return session?.sessionToken
+        return when (outcome) {
+            is AskBibleSyncClient.VerifyOutcome.Ok -> {
+                var remoteUser = outcome.session.user
+                val current = session ?: return null
+                if (remoteUser.id != current.user.id) return null
+                if (current.user.name != s.user.name) remoteUser = remoteUser.copy(name = current.user.name)
+                if (current.user.locale != s.user.locale) remoteUser = remoteUser.copy(locale = current.user.locale)
+                remoteUser = remoteUser.copy(createdAt = remoteUser.createdAt ?: current.user.createdAt)
+                val next = MemberSession(token, outcome.session.expiresAt, remoteUser)
+                persistIfCurrent(revision, next)
+                next.sessionToken
+            }
+            AskBibleSyncClient.VerifyOutcome.Unauthorized -> {
+                persistIfCurrent(revision, null)
+                null
+            }
+            AskBibleSyncClient.VerifyOutcome.TransientFailure -> {
+                val current = session ?: return null
+                if (MemberAuthRules.secondsUntilExpiry(current) > 0) current.sessionToken else null
+            }
         }
     }
 
@@ -87,170 +108,55 @@ class MemberAuthStore(context: Context) {
     private fun publishSession() {
         val s = session
         user = s?.user
-        isAdmin = s != null && sp.getBoolean(adminKey(s.user.id), false)
-        if (s != null) sp.edit().putString(MemberAuthRules.SESSION_KEY, s.toJson()).apply()
-        else sp.edit().remove(MemberAuthRules.SESSION_KEY).apply()
+        if (s != null) {
+            val admin = s.user.isAdmin ?: sp.getBoolean(adminKey(s.user.id), false)
+            isAdmin = admin
+            sp.edit()
+                .putBoolean(adminKey(s.user.id), admin)
+                .putString(MemberAuthRules.SESSION_KEY, s.toJson())
+                .apply()
+        } else {
+            isAdmin = false
+            sp.edit().remove(MemberAuthRules.SESSION_KEY).apply()
+        }
     }
 
-    /** 启动后校验会话：token 作废就清掉；网络不通保留本机会话（RN 同） */
+    /** 启动后校验会话：401/403 清掉本机会话；断网或 5xx 保留本机会话 */
     suspend fun verifyRemote() {
-        if (ensureFreshToken() == null) return
         refreshMutex.withLock {
             val s = session ?: return@withLock
-            val token = s.sessionToken
-            val revision = sessionState.revision
-            val remote = try { withContext(Dispatchers.IO) { SupabaseAuthClient.verify(token) } }
-                catch (e: CancellationException) { throw e }
-                catch (_: Exception) { return@withLock }
-            if (sessionState.revision != revision) return@withLock
-            if (remote != null) persistIfCurrent(revision, MemberSession(token, s.expiresAt, remote.copy(createdAt = remote.createdAt ?: s.user.createdAt), s.refreshToken))
-            else {
-                // access token 被服务端作废但 refresh_token 还在：续一次
-                val rt = s.refreshToken
-                val refreshed = if (rt != null) withContext(Dispatchers.IO) { SupabaseAuthClient.refresh(rt, s.user.locale) } else null
-                if (refreshed is MemberAuthResult.Ok) persistIfCurrent(revision, refreshed.session)
-                else if (refreshed !is MemberAuthResult.Failed || refreshed.code != "network") persistIfCurrent(revision, null)
-            }
+            verifyCurrentLocked(s)
         }
     }
 
-    /** 成功返回 null，失败返回错误文案（"network" 由页面换成中文） */
-    suspend fun signIn(email: String, password: String, locale: String): String? {
+    /** 发送 6 位邮箱验证码（成功返回 null，失败返回错误文案） */
+    suspend fun sendOtp(email: String, locale: String): String? =
+        when (val r = withContext(Dispatchers.IO) { AskBibleSyncClient.sendOtp(email, locale) }) {
+            is OtpSendResult.Ok -> null
+            is OtpSendResult.Failed -> r.error
+        }
+
+    /** 校验 6 位邮箱验证码并建立会话（成功返回 null，失败返回错误文案） */
+    suspend fun verifyOtp(email: String, code: String, name: String? = null, locale: String): String? {
         val revision = sessionState.revision
-        return when (val r = withContext(Dispatchers.IO) { SupabaseAuthClient.signIn(email, password, locale) }) {
+        return when (val r = withContext(Dispatchers.IO) { AskBibleSyncClient.verifyOtp(email, code, name, locale) }) {
             is MemberAuthResult.Ok -> { persistIfCurrent(revision, r.session); null }
             is MemberAuthResult.Failed -> r.error
         }
-    }
-
-    suspend fun register(email: String, password: String, name: String, locale: String): String? {
-        val revision = sessionState.revision
-        return when (val r = withContext(Dispatchers.IO) { SupabaseAuthClient.signUp(email, password, name, locale) }) {
-            is MemberAuthResult.Ok -> { persistIfCurrent(revision, r.session); null }
-            is MemberAuthResult.Failed -> r.error
-        }
-    }
-
-    // ---- Google：Supabase 浏览器 OAuth（RN signInWithGoogleMobile 的 Supabase browser OAuth 分支）----
-
-    /** 第三方登录结果：成功 / 用户取消（不提示）/ 失败（文案） */
-    sealed class SocialOutcome {
-        object Done : SocialOutcome()
-        object Cancelled : SocialOutcome()
-        data class Failed(val message: String) : SocialOutcome()
-    }
-
-    /** 浏览器 OAuth 进行中（按钮转圈） */
-    var oauthPending by mutableStateOf(false); private set
-    /** 最近一次浏览器 OAuth 的结果；登录页消费后 clearOAuthResult() */
-    var oauthResult by mutableStateOf<SocialOutcome?>(null); private set
-    private var callbackHandled = false
-    private val scope = CoroutineScope(Dispatchers.Main)
-
-    /** 开 Custom Tab 到 Supabase /authorize（PKCE）；verifier 落盘，进程被杀后回调回来也能换 */
-    fun startGoogleSignIn(context: Context, locale: String) {
-        if (oauthPending) return
-        val verifier = MemberOAuthRules.randomVerifier()
-        sp.edit().putString(KEY_VERIFIER, verifier).putString(KEY_LOCALE, locale).apply()
-        oauthPending = true; oauthResult = null; callbackHandled = false
-        val url = MemberOAuthRules.authorizeUrl("google", MemberOAuthRules.APP_REDIRECT, MemberOAuthRules.pkceChallenge(verifier))
-        try {
-            CustomTabsIntent.Builder().setShowTitle(false).build().launchUrl(context, Uri.parse(url))
-        } catch (_: Exception) {
-            oauthPending = false
-            oauthResult = SocialOutcome.Failed(MemberOAuthRules.resolveError("google", "google_failed", "no browser") ?: MemberOAuthRules.GOOGLE_FAILED_TEXT)
-            sp.edit().remove(KEY_VERIFIER).remove(KEY_LOCALE).apply()
-        }
-    }
-
-    /**
-     * askbible://auth/callback?code=… 回来：code + verifier 换会话（RN completeGoogleOAuthFromCallbackUrl）。
-     * 在 store 自己的 scope 里跑，不挂在 Compose 的 LaunchedEffect 上——回调总线一清空 effect 就被取消，会把换会话卡在半路。
-     */
-    fun handleOAuthCallback(url: String) {
-        if (!MemberOAuthRules.isCallbackUrl(url)) return
-        callbackHandled = true
-        scope.launch { exchangeCallback(url) }
-    }
-
-    private suspend fun exchangeCallback(url: String) {
-        val revision = sessionState.revision
-        val verifier = sp.getString(KEY_VERIFIER, null)
-        val locale = sp.getString(KEY_LOCALE, null)
-        sp.edit().remove(KEY_VERIFIER).remove(KEY_LOCALE).apply()
-        oauthPending = true
-        val p = MemberOAuthRules.parseCallback(url)
-        val errorCode = p.errorCode
-        val code = p.code
-        val access = p.accessToken
-        val outcome: SocialOutcome = when {
-            errorCode != null -> SocialOutcome.Failed(MemberOAuthRules.resolveError("google", errorCode, errorCode) ?: MemberOAuthRules.GOOGLE_FAILED_TEXT)
-            code != null && verifier != null -> finishSocial(withContext(Dispatchers.IO) { SupabaseAuthClient.exchangeCode(code, verifier, locale) }, "google", revision)
-            access != null && p.refreshToken != null -> finishSocial(withContext(Dispatchers.IO) { SupabaseAuthClient.sessionFromTokens(access, locale) }, "google", revision)
-            else -> finishSocial(MemberAuthResult.Failed("missing_code", "google_failed"), "google", revision)
-        }
-        oauthPending = false
-        oauthResult = outcome
-    }
-
-    /** 回到前台却一直没回调（用户关了浏览器）：1.5 秒后仍没有就算取消 */
-    fun onResumedFromBrowser() {
-        if (!oauthPending || callbackHandled) return
-        scope.launch {
-            delay(1500)
-            if (oauthPending && !callbackHandled) { oauthPending = false; oauthResult = SocialOutcome.Cancelled }
-        }
-    }
-
-    fun clearOAuthResult() { oauthResult = null }
-
-    private fun finishSocial(r: MemberAuthResult, provider: String, revision: Long): SocialOutcome = when (r) {
-        is MemberAuthResult.Ok -> if (persistIfCurrent(revision, r.session)) SocialOutcome.Done else SocialOutcome.Cancelled
-        is MemberAuthResult.Failed -> SocialOutcome.Failed(
-            MemberOAuthRules.resolveError(provider, r.code, r.error) ?: if (provider == "apple") MemberOAuthRules.APPLE_FAILED_TEXT else MemberOAuthRules.GOOGLE_FAILED_TEXT,
-        )
     }
 
     suspend fun signOut() {
         val token = session?.sessionToken
         persist(null)
-        if (token != null) withContext(Dispatchers.IO) { SupabaseAuthClient.signOut(token) }
+        if (token != null) withContext(Dispatchers.IO) { AskBibleSyncClient.signOut(token) }
     }
 
-    /**
-     * 删除账户（RN deleteAccount → DELETE /api/mobile/auth/account）：服务端删掉会员，本机再登出。
-     * 返回 null 表示成功，否则是错误码。
-     */
+    /** 原子删除账户（`DELETE /v1/auth/account`）：确认成功后才清本机态 */
     suspend fun deleteAccount(): String? {
         val account = accountRevision
-        val token = ensureFreshToken() ?: return "unauthorized"
-        if (accountRevision != account) return "unauthorized"
-        val error = withContext(Dispatchers.IO) { try {
-            val url = java.net.URL(Endpoints.siteBase + "/api/mobile/auth/account")
-            val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
-                requestMethod = "DELETE"
-                connectTimeout = 20_000
-                readTimeout = 20_000
-                setRequestProperty("Authorization", "Bearer $token")
-                setRequestProperty("Accept", "application/json")
-            }
-            val (status, body) = try {
-                val status = conn.responseCode
-                status to ((if (status in 200..299) conn.inputStream else conn.errorStream)
-                    ?.bufferedReader()?.use { it.readText() } ?: "")
-            } finally { conn.disconnect() }
-            val json = runCatching { org.json.JSONObject(body) }.getOrNull()
-            if (status == 200 && json?.optBoolean("ok", true) != false) {
-                null
-            } else {
-                json?.optString("code")?.takeIf { it.isNotEmpty() }
-                    ?: json?.optString("error")?.takeIf { it.isNotEmpty() }
-                    ?: "network"
-            }
-        } catch (e: CancellationException) { throw e }
-        catch (_: Exception) {
-            "network"
-        } }
+        val s = session ?: return "unauthorized"
+        if (MemberAuthRules.secondsUntilExpiry(s) <= 0) return "unauthorized"
+        val error = withContext(Dispatchers.IO) { AskBibleSyncClient.deleteAccount(s.sessionToken) }
         if (error == null && accountRevision == account) persist(null)
         return error
     }
@@ -259,7 +165,6 @@ class MemberAuthStore(context: Context) {
     suspend fun updateDisplayName(raw: String): Boolean {
         val name = MemberAuthRules.normalizeDisplayName(raw)
         if (!MemberAuthRules.isValidDisplayName(name)) return false
-        // A profile edit must retain the tokens produced by an in-flight refresh.
         val account = accountRevision
         val s = refreshMutex.withLock {
             if (accountRevision != account) return false
@@ -267,7 +172,7 @@ class MemberAuthStore(context: Context) {
             persist(current.copy(user = current.user.copy(name = name)))
             current
         }
-        withContext(Dispatchers.IO) { SupabaseAuthClient.updateDisplayName(s.sessionToken, s.user.id, name) }
+        withContext(Dispatchers.IO) { AskBibleSyncClient.updateDisplayName(s.sessionToken, name, s.user.locale) }
         return true
     }
 }

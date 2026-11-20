@@ -26,12 +26,12 @@ const BUILTIN: Record<EndpointRole, string[]> = {
 
 /**
  * 网页端要探测的角色。`site` 就是本站自己（页面能打开就说明它通），不用探；
- * `api` 是浏览器端 Supabase 的入口（lib/supabase/browser.ts）。
+ * `api` 是 AskBible Sync Worker（askbible-sync）入口。
  */
 const PROBED_ROLES: EndpointRole[] = ["media", "api"];
 
-const HOST_KEY = "askbible-endpoint-host-v1"; // { media, api }：上次探通的
-const LIST_KEY = "askbible-endpoint-list-v1"; // { media: [...] }：线上候选表
+const HOST_KEY = "askbible-endpoint-host-v2"; // { media, api }：上次探通的（v2 去 Supabase 隔离旧缓存）
+const LIST_KEY = "askbible-endpoint-list-v2"; // { media: [...] }：线上候选表
 const PROBE = "healthz.txt";
 const REFRESH_INTERVAL_MS = 10 * 60 * 1000;
 

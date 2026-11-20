@@ -20,11 +20,21 @@ function mergeBookmarks(a: unknown, b: unknown): unknown {
   if (!b || typeof b !== "object") return a;
   const out: Record<string, unknown> = { ...(a as Record<string, unknown>) };
   for (const [key, item] of Object.entries(b as Record<string, unknown>)) {
-    const next = item as { savedAt?: number } | undefined;
-    const prev = out[key] as { savedAt?: number } | undefined;
-    if (!prev || (typeof next?.savedAt === "number" && next.savedAt >= (prev.savedAt ?? 0))) {
-      out[key] = item;
+    if (item === null) {
+      delete out[key];
+      continue;
     }
+    const next = item as { savedAt?: number; deletedAt?: number; deleted?: boolean } | undefined;
+    const prev = out[key] as { savedAt?: number; deletedAt?: number } | undefined;
+    const nextTs = next?.deletedAt ?? next?.savedAt;
+    const prevTs = prev?.deletedAt ?? prev?.savedAt ?? 0;
+    if (!prev || (typeof nextTs === "number" && nextTs >= prevTs)) {
+      if (next?.deleted === true) delete out[key];
+      else out[key] = item;
+    }
+  }
+  for (const [k, v] of Object.entries(out)) {
+    if ((v as { deleted?: boolean } | undefined)?.deleted === true) delete out[k];
   }
   return out;
 }
@@ -35,15 +45,24 @@ function mergeHighlightStore(a: unknown, b: unknown): unknown {
   const out: Record<string, { i: number; c: string }[]> = {
     ...(a as Record<string, { i: number; c: string }[]>),
   };
-  for (const [key, entries] of Object.entries(b as Record<string, { i: number; c: string }[]>)) {
+  for (const [key, entries] of Object.entries(b as Record<string, { i: number; c: string }[] | null>)) {
+    if (entries === null) {
+      delete out[key];
+      continue;
+    }
     if (!Array.isArray(entries)) continue;
+    if (entries.length === 0) {
+      delete out[key];
+      continue;
+    }
     const byIndex = new Map<number, string>();
     for (const row of out[key] ?? []) {
-      if (Number.isInteger(row?.i) && row.i >= 0) byIndex.set(row.i, row.c);
+      if (Number.isInteger(row?.i) && row.i >= 0 && row.c) byIndex.set(row.i, row.c);
     }
     for (const row of entries) {
       if (!row || !Number.isInteger(row.i) || row.i < 0) continue;
-      byIndex.set(row.i, row.c);
+      if (row.c === "") byIndex.delete(row.i);
+      else if (row.c) byIndex.set(row.i, row.c);
     }
     const merged = Array.from(byIndex.entries())
       .sort((x, y) => x[0] - y[0])

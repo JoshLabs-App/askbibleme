@@ -31,9 +31,9 @@ for (const role of ROLES) {
   const list = src.roles?.[role]?.candidates;
   if (!Array.isArray(list) || !list.length) { problems.push(`真源缺角色 ${role}`); continue; }
   for (const h of list) {
-    if (!/^https:\/\/[a-z0-9.-]+\/$/.test(h)) problems.push(`${role}: 候选域要写成 https://主机名/ ：${h}`);
+    if (!/^https:\/\/[a-z0-9.-]+(?:\/[a-z0-9/_-]+)?\/$/.test(h)) problems.push(`${role}: 候选域要写成 https://主机名/[路径/] ：${h}`);
     // 2026-10-01 国内多节点实测 0/24，写进候选表只会白白拖慢探测
-    if (/\.workers\.dev\/$/.test(h)) problems.push(`${role}: *.workers.dev 国内整段不通，别写进候选表：${h}`);
+    if (/\.workers\.dev\//.test(h)) problems.push(`${role}: *.workers.dev 国内整段不通，别写进候选表：${h}`);
   }
 }
 
@@ -85,6 +85,7 @@ if (PUSH) {
     if (res.status !== 0) throw new Error(`上传失败 ${key}：${(res.stderr || res.stdout || "").slice(0, 400)}`);
     console.log(`已上传 ${BUCKET}/${key}`);
   };
-  put(path.join(ROOT, "data/endpoints.json"), "endpoints.json", "application/json; charset=utf-8");
+  // v2 写到 v2/endpoints.json，永不覆盖根路径 endpoints.json（保护已上架 v1 老版本 App 的旧 api 候选表）
+  put(path.join(ROOT, "data/endpoints.json"), "v2/endpoints.json", "application/json; charset=utf-8");
   put(healthz, "healthz.txt", "text/plain; charset=utf-8");
 }

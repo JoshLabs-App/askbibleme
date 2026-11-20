@@ -13,12 +13,15 @@ import {
 import {
   deleteAskbibleWebAccount,
   fetchAskbibleWebSessionUser,
+  readStoredAskbibleWebSession,
   signOutAskbibleWeb,
+  subscribeAskbibleWebAuth,
   type AskbibleWebUser,
 } from "@/lib/askbible-web-auth-client";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
-import { discardMemberReadingOwnerArchiveWeb, handleMemberReadingAuthChangeWeb } from "@/lib/member-reading-sync/client/run-member-reading-sync-web";
+import {
+  discardMemberReadingOwnerArchiveWeb,
+  handleMemberReadingAuthChangeWeb,
+} from "@/lib/member-reading-sync/client/run-member-reading-sync-web";
 
 export type AskbibleAppUser = {
   id: string;
@@ -28,7 +31,6 @@ export type AskbibleAppUser = {
 };
 
 type Ctx = {
-  /** 是否已完成首次用户态拉取 */
   bootstrapped: boolean;
   configured: boolean;
   user: AskbibleAppUser | null;
@@ -53,7 +55,7 @@ function toAppUser(user: AskbibleWebUser | null): AskbibleAppUser | null {
 
 export function AskbibleUserProvider({ children }: { children: ReactNode }) {
   const [bootstrapped, setBootstrapped] = useState(false);
-  const [configured, setConfigured] = useState(false);
+  const [configured, setConfigured] = useState(true);
   const [user, setUser] = useState<AskbibleAppUser | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -70,7 +72,7 @@ export function AskbibleUserProvider({ children }: { children: ReactNode }) {
       setIsAdmin(Boolean(session.user?.isAdmin));
     } catch {
       if (generation !== refreshGeneration.current) return;
-      setConfigured(false);
+      setConfigured(true);
       setUser(null);
       setIsAdmin(false);
     } finally {
@@ -83,55 +85,64 @@ export function AskbibleUserProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    const listener = createSupabaseBrowserClient()?.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
+    const initial = readStoredAskbibleWebSession();
+    handleMemberReadingAuthChangeWeb(initial?.user.id ?? null, true);
+
+    const unsubscribe = subscribeAskbibleWebAuth((event, session) => {
       refreshGeneration.current += 1;
-      if (event === "SIGNED_OUT" || event === "SIGNED_IN" || event === "INITIAL_SESSION") {
-        authGeneration.current += 1;
-        handleMemberReadingAuthChangeWeb(session?.user.id ?? null, event === "INITIAL_SESSION");
-      }
+      authGeneration.current += 1;
+      handleMemberReadingAuthChangeWeb(session?.user.id ?? null, false);
       if (event === "SIGNED_OUT") {
         setUser(null);
         setIsAdmin(false);
+      } else if (session?.user) {
+        setUser(toAppUser(session.user));
+        setIsAdmin(Boolean(session.user.isAdmin));
       }
-      // Supabase holds an auth lock inside this callback; refresh after it returns.
-      queueMicrotask(() => { if (mounted) void refresh(); });
+      queueMicrotask(() => {
+        if (mounted) void refresh();
+      });
     });
+
     void refresh();
     return () => {
       mounted = false;
       refreshGeneration.current += 1;
-      listener?.data.subscription.unsubscribe();
+      unsubscribe();
     };
   }, [refresh]);
 
   const logout = useCallback(async () => {
     const generation = authGeneration.current;
+    const targetUserId = user?.id;
     try {
       const { flushMemberReadingSyncWebNow } = await import(
         "@/lib/member-reading-sync/client/run-member-reading-sync-web"
       );
-      // An unavailable sync service must not trap the user in a signed-in state.
       let timeout: ReturnType<typeof setTimeout> | undefined;
       try {
         await Promise.race([
           flushMemberReadingSyncWebNow("sign-out"),
-          new Promise<void>((resolve) => { timeout = setTimeout(resolve, 12_000); }),
+          new Promise<void>((resolve) => {
+            timeout = setTimeout(resolve, 8_000);
+          }),
         ]);
       } finally {
         clearTimeout(timeout);
       }
-      const current = await createSupabaseBrowserClient()?.auth.getSession();
-      if (generation !== authGeneration.current || current?.data.session?.user.id !== user?.id) return;
-      await signOutAskbibleWeb(user?.id);
+      const current = readStoredAskbibleWebSession();
+      if (generation !== authGeneration.current || current?.user.id !== targetUserId) return;
+      await signOutAskbibleWeb(targetUserId);
     } finally {
       await refresh();
     }
   }, [refresh, user?.id]);
 
   const deleteAccount = useCallback(async () => {
+    const targetUserId = user?.id;
     const result = await deleteAskbibleWebAccount();
     if (result.ok) {
-      if (user?.id) discardMemberReadingOwnerArchiveWeb(user.id);
+      if (targetUserId) discardMemberReadingOwnerArchiveWeb(targetUserId);
       await refresh();
     }
     return result;

@@ -36,18 +36,20 @@ class ScriptureDatabase private constructor(
         private val BOOK_RE = Regex("^[A-Z0-9]{2,8}$")
 
         fun open(context: Context, translationId: String): ScriptureDatabase? {
-            // 按需下载的译本（KJV）住在 filesDir/scripture；其余从 assets 拷出来
+            // 按需下载或 PackStore 静默热更的译本住在 filesDir/scripture；若损坏则自动回退内置 assets
             val downloaded = TranslationDownloader.localFile(context, translationId)
-            val file = (if (downloaded.exists() && downloaded.length() > 0) downloaded else null)
-                ?: ensureOnDisk(context, "$translationId.sqlite") ?: return null
-            return try {
-                ScriptureDatabase(
-                    translationId,
-                    SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READONLY)
-                )
-            } catch (_: Exception) {
-                null
+            val candidates = ArrayList<File>(2)
+            if (downloaded.exists() && SQLiteDownload.isComplete(downloaded)) candidates.add(downloaded)
+            ensureOnDisk(context, "$translationId.sqlite")?.let { if (it != downloaded) candidates.add(it) }
+            for (file in candidates) {
+                try {
+                    return ScriptureDatabase(
+                        translationId,
+                        SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READONLY)
+                    )
+                } catch (_: Exception) {}
             }
+            return null
         }
 
         /** assets 里的库拷到 filesDir；已存在且大小一致就不重复拷 */
@@ -144,12 +146,16 @@ class ScriptureDatabase private constructor(
 class XrefDatabase private constructor(private val db: SQLiteDatabase) {
     companion object {
         fun open(context: Context): XrefDatabase? {
-            val file = ScriptureDatabase.ensureOnDisk(context, "scripture-xrefs.sqlite") ?: return null
-            return try {
-                XrefDatabase(SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READONLY))
-            } catch (_: Exception) {
-                null
+            val hot = TranslationDownloader.localFile(context, "scripture-xrefs")
+            val candidates = ArrayList<File>(2)
+            if (hot.exists() && SQLiteDownload.isComplete(hot)) candidates.add(hot)
+            ScriptureDatabase.ensureOnDisk(context, "scripture-xrefs.sqlite")?.let { candidates.add(it) }
+            for (file in candidates) {
+                try {
+                    return XrefDatabase(SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READONLY))
+                } catch (_: Exception) {}
             }
+            return null
         }
     }
 

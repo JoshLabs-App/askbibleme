@@ -1,10 +1,10 @@
 import Foundation
 
-/// 防封换线（docs/anti-block-endpoints.md、DECISIONS D-20）：代码里不写死单个域名。
+/// 防封换线（docs/anti-block-endpoints.md、DECISIONS D-20 / D-44）：代码里不写死单个域名。
 ///
 /// 每个角色内置一组候选域，启动后并发探测，取**列表里最靠前**那条通的并缓存到 UserDefaults；
-/// 候选表本身从桶根的 `endpoints.json` 更新（真源 `data/endpoints.json`），加新域不用发版。
-/// 三端同一套：安卓 `Endpoints.kt`、网页 `lib/endpoints/`。照听到 `Endpoints.swift` 改的。
+/// 候选表本身从桶的 `v2/endpoints.json` 更新（真源 `data/endpoints.json`），加新域不用发版。
+/// 三端同一套：安卓 `Endpoints.kt`、网页 `lib/endpoints/`。
 ///
 /// 只依赖 Foundation —— `tools/*-check.mjs` 的对拍会把这个文件和各音源文件一起用 swiftc 编译。
 enum Endpoints {
@@ -14,19 +14,18 @@ enum Endpoints {
     enum Role: String, CaseIterable {
         /// R2 桶 `askbible-media`：金句语音、音乐、场景、勋章图、整本库
         case media
-        /// 主站接口：在线译本、章节朗读地址解析、注销账号
+        /// 主站接口（Cloudflare Worker `askbible-web`）：在线译本、章节朗读地址解析
         case site
-        /// Supabase：登录、会员同步
+        /// AskBible Sync（Cloudflare Worker `askbible-sync` + D1）：验证码/Apple 登录、会员同步、注销账号
         case api
 
         /// 内置默认候选域（`npm run check:endpoints` 核对它和 data/endpoints.json 一致）。
         /// 线上列表排在这些前面，但内置的永远垫在末尾兜底——线上表写坏了也不至于把客户端锁死。
-        /// 每个角色的第一条就是老版本写死的那个地址，所以没探测前的行为和老版本一模一样。
         var builtin: [String] {
             switch self {
             case .media: return ["https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/", "https://askbible-media.joshlabs.app/"]
-            case .site:  return ["https://askbible.me/", "https://askbible-site.joshlabs.app/"]
-            case .api:   return ["https://tgobadhdylarhssudplc.supabase.co/", "https://askbible-sb.joshlabs.app/"]
+            case .site:  return ["https://askbible.me/", "https://bible.joshlabs.app/", "https://askbible-site.joshlabs.app/"]
+            case .api:   return ["https://askbible-sync.joshlabs.app/", "https://askbible.me/api/sync/", "https://bible.joshlabs.app/api/sync/"]
             }
         }
     }
@@ -67,10 +66,10 @@ enum Endpoints {
         return url
     }
 
-    // MARK: 本地缓存
+    // MARK: 本地缓存（v2 键空间隔离旧版缓存）
 
-    private static func hostKey(_ r: Role) -> String { "endpointHost.\(r.rawValue)" }
-    private static func listKey(_ r: Role) -> String { "endpointList.\(r.rawValue)" }
+    private static func hostKey(_ r: Role) -> String { "endpointHost.v2.\(r.rawValue)" }
+    private static func listKey(_ r: Role) -> String { "endpointList.v2.\(r.rawValue)" }
 
     private static func cachedHost(_ r: Role) -> String? {
         let h = UserDefaults.standard.string(forKey: hostKey(r))
@@ -130,7 +129,7 @@ enum Endpoints {
     }
 
     /// 通不通只看「有没有 HTTP 响应」：被墙表现为 DNS 失败 / TLS 重置 / 超时，而不是 404。
-    /// 所以探测文件没放的域（主站、Supabase）也照样算通。
+    /// 所以探测文件没放的域（主站等）也照样算通。
     private static func probe(_ host: String) async -> Bool {
         guard let url = URL(string: host + probePath) else { return false }
         var req = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 6)
@@ -140,9 +139,9 @@ enum Endpoints {
         return http.statusCode < 500
     }
 
-    /// 从当前 media 域（桶根）拉候选表，存下来下次启动就生效
+    /// 从当前 media 域拉 `v2/endpoints.json` 候选表（与老版本根路径 `endpoints.json` 隔离），存下来下次启动就生效
     private static func fetchList() async {
-        guard let url = URL(string: host(.media) + "endpoints.json") else { return }
+        guard let url = URL(string: host(.media) + "v2/endpoints.json") else { return }
         let req = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10)
         guard let (d, resp) = try? await URLSession.shared.data(for: req),
               let http = resp as? HTTPURLResponse, http.statusCode == 200,

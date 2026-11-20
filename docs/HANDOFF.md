@@ -775,3 +775,20 @@ manifest `start_url=/web`；手机截图和金句字体文件都取得到。本�
 - 电视浏览器判断集中在 `lib/dom/is-tv-browser.ts`，别在别处另写一份。
 
 **网页只在本机构建（2026-10-31 用户明确要求）**：Agent 在本机完成生产构建，只上传 `.vercel/output` 产物（`vercel deploy --prebuilt --prod`）。禁止 Vercel 云端构建、`--remote` 回退和通过 Git 自动构建发布；`vercel.json` 关闭 Git 自动部署。缺失本地构建配置时先补齐，不得改用云端构建。服务端运行时配置继续由 Vercel 正式环境提供。
+
+---
+
+## 附：2026-11-20 D-44 极轻架构重构（去 Supabase + 单点合并 + PackStore + 清退历史死重）
+
+### 当前状态（已完成并验收）
+1. **云端单栈轻量化（去 Supabase → Cloudflare Worker `askbible-sync` + D1）**：
+   - `workers/askbible-sync`（纯 JS 零依赖，gzip 11.34 KiB）已部署至 `https://askbible-sync.joshlabs.app`（备线同域 `/api/sync/*`），绑定 D1 `askbible-sync`（`c2c72372-a3da-44ad-978d-02cb186a1c5a`）。
+   - 已从共用 Supabase 只读迁入全部 28 名用户与 14 份读经同步文档（保留原 UUID，旧设备升级登录零丢失合并；Supabase 原库未改动，不影响老版本与 `03听到`）。
+   - 支持 Resend 6 位邮箱验证码登录、Apple / Google 原生 ID Token WebCrypto JWKS 直验（零浏览器回调跳转）、1 年滑动会话、单次往返服务端权威合并读经同步、原子注销账户与反馈提交。
+2. **三端对齐（iOS + Android + Web）**：
+   - 三端 `Endpoints` 升级至 `v2/endpoints.json` 与 `v2` 本机缓存键（与老版本根路径 `endpoints.json` 完全隔离）。
+   - iOS `PackStore.swift` 与 Android `PackStore.kt` + `SQLiteDownload.kt` 落地 `v2/catalog.json`、`SHA-256` 及 SQLite 100 字节头/页数防截断原子替换校验；两端新增 `NativeMediaBridge` 本地离线协议与三路音频/小组件/提醒桥接底座。
+   - 三端客户端移除重复的 ~450 行本地同步合并代码，统一改为单次往返 `POST /v1/sync/reading`。
+3. **清退历史死重**：
+   - 已移除退役的 `apps/askbible-mobile`（Expo，2.4 GB / 10.5 万行）、`.maestro`、`eas.json`、`render.yaml`、`vercel.json`、`supabase/`、`workers/supabase-proxy` 及 ~150 个废弃脚本与 `@supabase/*`、`bcryptjs`、`eas-cli` 依赖。
+   - 跟读时间轴库 `npm run build:verse-timings` 已直接由 `public/verse-timings/` 真源生成两端 `verse-timings.sqlite`。

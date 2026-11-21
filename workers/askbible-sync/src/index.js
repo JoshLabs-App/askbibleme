@@ -58,6 +58,13 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function getReviewerDemoConfig(env) {
+  const email = normalizeEmail(env?.REVIEWER_DEMO_EMAIL || "");
+  const otp = String(env?.REVIEWER_DEMO_OTP || "").replace(/\D/g, "");
+  if (!isValidEmail(email) || otp.length !== 6) return null;
+  return { email, otp };
+}
+
 function normalizeDisplayName(raw) {
   return String(raw || "").trim().replace(/\s+/g, " ");
 }
@@ -249,6 +256,14 @@ export default {
         if (!isValidEmail(email)) {
           return json({ ok: false, code: "invalid_email", error: "请输入有效的邮箱地址。" }, 400);
         }
+        const demo = getReviewerDemoConfig(env);
+        if (demo && email === demo.email) {
+          return json({
+            ok: true,
+            email,
+            expiresInSec: Math.floor(OTP_TTL_MS / 1000),
+          });
+        }
         const now = Date.now();
         const existing = await env.DB.prepare("SELECT created_at FROM otp_codes WHERE email = ?")
           .bind(email)
@@ -287,6 +302,23 @@ export default {
         const code = String(body.code || body.token || "").replace(/\D/g, "");
         if (!isValidEmail(email) || code.length !== 6) {
           return json({ ok: false, code: "invalid_otp", error: "请输入有效的邮箱与 6 位数字验证码。" }, 400);
+        }
+        const demo = getReviewerDemoConfig(env);
+        if (demo && email === demo.email) {
+          const expectedDemoHash = await sha256Hex(`demo:${demo.email}:${demo.otp}`);
+          const actualDemoHash = await sha256Hex(`demo:${email}:${code}`);
+          if (actualDemoHash !== expectedDemoHash) {
+            return json({ ok: false, code: "invalid_otp", error: "验证码不正确，请核对后重试。" }, 401);
+          }
+          const session = await ensureUserAndCreateSession(env, {
+            email,
+            preferredName: body.displayName || body.name || "App Reviewer",
+            locale: body.locale || "en",
+            deviceId: body.deviceId,
+            deviceName: body.deviceName,
+            platform: body.platform || "android",
+          });
+          return json({ ok: true, ...session });
         }
         const now = Date.now();
         const otpRow = await env.DB.prepare(

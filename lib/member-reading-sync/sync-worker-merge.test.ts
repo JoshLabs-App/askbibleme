@@ -446,4 +446,64 @@ describe("askbible-sync server-side authoritative merger (D-44)", () => {
     expect(merged.achievements.value.versesRead).toBe(120);
     expect(merged.achievements.value.earned.first_read.tier).toBe(2);
   });
+
+  it("supports reusable, non-expiring, zero-cooldown store reviewer demo OTP credentials", async () => {
+    const { db } = makeMockD1({ initialDoc: null });
+    const env = {
+      DB: db,
+      REVIEWER_DEMO_EMAIL: "play-review-demo@askbible.me",
+      REVIEWER_DEMO_OTP: "482917",
+    };
+
+    // Repeated sendOtp calls do not require Resend or hit 45s cooldown
+    for (let i = 0; i < 3; i++) {
+      const sendRes = await worker.fetch(
+        new Request("https://askbible-sync.joshlabs.app/v1/auth/otp/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: "  PLAY-REVIEW-DEMO@askbible.me ", locale: "en" }),
+        }),
+        env
+      );
+      expect(sendRes.status).toBe(200);
+      const sendBody = (await sendRes.json()) as { ok: boolean; email: string };
+      expect(sendBody.ok).toBe(true);
+      expect(sendBody.email).toBe("play-review-demo@askbible.me");
+    }
+
+    // Wrong codes return 401 without locking out the demo account after 5 attempts
+    for (let i = 0; i < 6; i++) {
+      const badRes = await worker.fetch(
+        new Request("https://askbible-sync.joshlabs.app/v1/auth/otp/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: "play-review-demo@askbible.me", code: "000000", locale: "en" }),
+        }),
+        env
+      );
+      expect(badRes.status).toBe(401);
+    }
+
+    // Correct code remains reusable across multiple reviewer sessions
+    for (let i = 0; i < 2; i++) {
+      const okRes = await worker.fetch(
+        new Request("https://askbible-sync.joshlabs.app/v1/auth/otp/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: "play-review-demo@askbible.me",
+            code: "482917",
+            locale: "en",
+            platform: "android",
+          }),
+        }),
+        env
+      );
+      expect(okRes.status).toBe(200);
+      const okBody = (await okRes.json()) as { ok: boolean; sessionToken: string; user: { email: string } };
+      expect(okBody.ok).toBe(true);
+      expect(okBody.sessionToken.length).toBeGreaterThan(20);
+      expect(okBody.user.email).toBe("play-review-demo@askbible.me");
+    }
+  });
 });

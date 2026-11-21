@@ -122,7 +122,7 @@ export function ReadScriptureAudioDockStrip({ placement }: Props) {
   return (
     <ReadScripturePlaybackDock
       visible
-      className="read-scripture-dock--surface rounded-2xl border border-[var(--bc-read-border,rgba(92,64,48,0.14))] pb-2 shadow-lg"
+      className="read-scripture-dock--surface px-5 pt-1 pb-0.5"
       busy={preparing}
       playing={playing && scriptureActive}
       preparing={preparing}

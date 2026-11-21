@@ -450,7 +450,7 @@ export function AppShellTopBar({
                 type="button"
                 aria-label={t("chrome.closeNavMenu")}
                 className={[
-                  "absolute inset-0 border-0 bg-black/40 backdrop-blur-[1px] transition-opacity",
+                  "absolute inset-0 border-0 bg-black/42 transition-opacity",
                   drawerMotion,
                   drawerEntered ? "opacity-100" : "opacity-0",
                 ].join(" ")}

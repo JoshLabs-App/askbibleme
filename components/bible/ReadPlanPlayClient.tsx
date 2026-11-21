@@ -446,7 +446,7 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
           visible={hasQueue}
           busy={busy}
           disabled={!hasQueue}
-          className="pointer-events-auto bg-[var(--bc-read-surface,rgba(250,246,238,0.96))] backdrop-blur-sm"
+          className="pointer-events-auto bg-[var(--bc-read-surface-solid,#f7efdf)]"
           playing={isScripturePlaying}
           preparing={isPreparing}
           currentSec={currentSec}

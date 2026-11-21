@@ -524,19 +524,16 @@ struct RootView: View {
     }
 
     private var content: some View {
-        ZStack {
-            // 版本对照：有新版就提示并送去 App Store（零尺寸，不占布局）
-            AppUpdateGate()
-                .onAppear { RatePrompt.noteLaunch() }
+        let devotionalDockActive = (tab == .plan || tab == .read)
+            && devotional.currentKey.flatMap({ devotionals.days[$0] }) != nil
+        return ZStack {
             AskTabShell(
                 selection: $tab,
                 locale: appLocale,
-                dockActive: readDockActive || planDockActive,
-                // 三处都贴底铺满：浮层卡片会在坞和底栏之间留一道空（Josh 2026-09-23「中间不要留这么多空」）
-                dockFlush: readDockActive || planDockActive,
-                // 计划目录 / 详情是独立子页，不放底栏；播放页是主页级页面，底栏照常
-                showTabBar: !(tab == .plan && planRoute != .play && !showSearch) && authRoute == nil && !(tab == .music && musicChromeHidden) && !(tab == .home && homeChromeHidden),
-                // 中央键原来点一下进今日读经；改成普通 Tab 后由切到 .plan 触发同一个动作
+                dockActive: readDockActive || planDockActive || devotionalDockActive,
+                showTabBar: !(tab == .plan && planRoute != .play && !showSearch) && authRoute == nil && !(tab == .music && musicChromeHidden),
+                homeBarHidden: tab == .home && homeChromeHidden,
+                onWakeHomeChrome: { withAnimation(.easeInOut(duration: 0.3)) { homeChromeHidden = false } },
                 onEnterPlan: openToday
             ) { which in
                 screen(for: which)
@@ -545,23 +542,17 @@ struct RootView: View {
                 if (tab == .plan || tab == .read), let key = devotional.currentKey, let day = devotionals.days[key] {
                     DevotionalControls(day: day, player: devotional, locale: appLocale).padding(.horizontal, 20)
                 } else if readDockActive {
-                    // 读经 / 圣经 / 计划播放三处共用同一个坞：同骨架、同占位、同间距，
-                    // 只有底色跟页面走（Josh 2026-09-23）
-                    compactDock(PlaybackDock(
+                    PlaybackDock(
                         audio: audio,
                         available: audioURL != nil,
                         onSearch: {
                             if let o = openedChapter { searchRef = SearchChapterRef(bookId: o.book.id, chapter: o.chapter) }
                             showSearch = true
                         },
-                        onSkipNext: skipToNextChapter,
-                        title: openedChapter.map { "\($0.book.name(displayLocale)) \($0.chapter)" } ?? "",
-                        artworkSceneId: naturePrefs.sceneId,
-                        locale: appLocale,
-                        quiet: true))
+                        onSkipNext: skipToNextChapter
+                    )
                 } else if planDockActive {
-                    // 播放页的坞：左键是经文搜索（带当前章上下文）；播放键没建池时从选中章起播
-                    compactDock(PlaybackDock(
+                    PlaybackDock(
                         audio: audio,
                         available: planActiveAudioAvailable,
                         onSearch: {
@@ -570,12 +561,8 @@ struct RootView: View {
                             showSearch = true
                         },
                         onSkipNext: planNext,
-                        onToggle: planTogglePlay,
-                        title: planDockTitle,
-                        artworkSceneId: naturePrefs.sceneId,
-                        locale: appLocale,
-                        // 和读经页同一个占位：不出封面和章名，坞的高度三处一致
-                        quiet: true))
+                        onToggle: planTogglePlay
+                    )
                 }
             }
             if let book = openedBook, openedChapter == nil {
@@ -729,7 +716,7 @@ struct RootView: View {
                 VerseFeedbackToast(message: toast)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                     .padding(.horizontal, 24)
-                    .padding(.bottom, 108)
+                    .padding(.bottom, 108 + ShellMetrics.tabRowHeight + (readDockActive ? ShellMetrics.dockContentHeight : 0))
             }
 
             if showSleepSheet {
@@ -738,6 +725,11 @@ struct RootView: View {
                     onPick: { m in setSleepTimerAll(m ?? 0) },
                     onClose: { showSleepSheet = false })
             }
+
+            // 版本对照：有新版就弹羊皮卡片（放顶层，对齐安卓 UpdateGate.kt）
+            AppUpdateGate()
+                .onAppear { RatePrompt.noteLaunch() }
+                .zIndex(28)
         }
         // +XP 飘字：读 / 听的时候几秒跳一次（Josh 2026-09-18「要感觉到 XP 一直在增加」）
         .overlay(alignment: .top) {
@@ -751,13 +743,6 @@ struct RootView: View {
                 EarnedToast().environmentObject(achievements).padding(.top, 8).padding(.horizontal, 16)
             }
         }
-    }
-
-    /// 坞一律用紧凑档（两行迷你播放器）；完整坞只留给将来真的需要大播放页时用。
-    private func compactDock(_ dock: PlaybackDock) -> PlaybackDock {
-        var d = dock
-        d.compact = true
-        return d
     }
 
     @ViewBuilder

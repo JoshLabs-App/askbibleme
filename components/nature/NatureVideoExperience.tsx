@@ -1176,7 +1176,7 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
             onKeyDown={(e) => { if (e.key === "ArrowUp") { e.preventDefault(); setSceneToolsOpen(true); } else if (e.key === "ArrowDown") { e.preventDefault(); router.push(`${shellRoot}/music`); } }}
             />
             <div className="relative z-10 flex min-h-0 flex-1 flex-col pointer-events-none">
-              <div className="mx-auto mt-6 max-w-sm rounded-3xl bg-white/[0.14] px-5 py-6 text-center ring-1 ring-white/[0.22] backdrop-blur-2xl sm:mt-8">
+              <div className="mx-auto mt-6 max-w-sm rounded-2xl bg-[#241a13] px-5 py-6 text-center ring-1 ring-white/18 sm:mt-8">
                 <p className="text-[15px] font-medium leading-snug text-white/90 sm:text-[16px]">{t("nature.emptyTitle")}</p>
                 <p className="mt-3 text-[12px] leading-relaxed text-white/55 sm:text-[13px]">{t("nature.emptyHint")}</p>
               </div>

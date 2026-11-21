@@ -67,9 +67,7 @@ struct HighlightBar: View {
         }
         .padding(.horizontal, 18).padding(.top, 14).padding(.bottom, 28)
         .frame(maxWidth: .infinity, alignment: .leading)
-        // Josh 2026-09-16 真机确认画笔正常后改成玻璃。玻璃背景不像原来那张整屏羊皮图会吃触点
-        // （DECISIONS 2026-09-13 Bug 2），所以不再需要 backgroundHitTesting: false 那个补丁。
-        .askGlassRect(tone: .light, radius: AskCorner.card)
+        .parchmentCard(cornerRadius: AskCorner.card, backgroundHitTesting: false)
         .askFloatingShadow(.overlay)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         .ignoresSafeArea(edges: .bottom)

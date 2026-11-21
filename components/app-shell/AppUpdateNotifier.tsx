@@ -93,7 +93,7 @@ export function AppUpdateNotifier() {
     <div
       role="status"
       aria-live="assertive"
-      className="app-update-notifier pointer-events-auto fixed left-3 right-3 z-[90] max-w-lg rounded-2xl border border-border/55 bg-canvas/95 px-4 py-3 text-left text-ink shadow-[0_8px_32px_-8px_rgba(15,40,60,0.22)] backdrop-blur-md sm:left-1/2 sm:right-auto sm:-translate-x-1/2"
+      className="app-update-notifier pointer-events-auto fixed left-3 right-3 z-[90] max-w-lg rounded-2xl border border-border/65 bg-canvas px-4 py-3 text-left text-ink shadow-[0_8px_32px_-8px_rgba(15,40,60,0.22)] sm:left-1/2 sm:right-auto sm:-translate-x-1/2"
       style={{
         bottom: "max(5.75rem, calc(4.85rem + env(safe-area-inset-bottom, 0px)))",
       }}

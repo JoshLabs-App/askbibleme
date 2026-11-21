@@ -174,23 +174,24 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
 
   const outer =
     placement === "fixedShell"
-      ? `home-bottom-nav ${isMusicShellPath(pathname) ? "" : "home-bottom-nav--surface"} pointer-events-none fixed inset-x-0 bottom-0 z-30 flex flex-col items-center justify-end gap-1.5 px-3 pb-[max(0.375rem,env(safe-area-inset-bottom,0px))] pt-0`
-      : "pointer-events-none absolute inset-x-0 bottom-0 z-[18] flex flex-col items-center justify-end gap-1.5 px-3 pb-[max(0.375rem,env(safe-area-inset-bottom,0px))] pt-0";
+      ? `home-bottom-nav ${showFullScriptureDock ? "home-bottom-nav--docked pointer-events-auto" : "pointer-events-none"} fixed inset-x-0 bottom-0 z-30 flex flex-col items-center justify-end gap-1.5 ${showFullScriptureDock ? "px-0 pt-0" : "px-3 pt-0"} pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]`
+      : "pointer-events-none absolute inset-x-0 bottom-0 z-[18] flex flex-col items-center justify-end gap-1.5 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-0";
 
   const navTapTarget = (_item: NavItemDef): void => {};
 
-  const renderTabIcon = (item: NavItemDef) => (<>
+  const renderTabIcon = (item: NavItemDef, active: boolean) => (
     <ShellMaterialIcon
       name={item.materialIcon}
       size={SHELL_TAB_ICON_SIZE_PX}
-      color={placement === "fixedShell" && !isMusicShellPath(pathname) ? "currentColor" : SHELL_TAB_BAR_ICON}
+      color={active ? "#FFB101" : SHELL_TAB_BAR_ICON}
       className="home-bottom-nav__tab-icon"
     />
-    {placement === "fixedShell" && !isMusicShellPath(pathname) ? <span className="home-bottom-nav__label">{tabLabel(item.labelKey)}</span> : null}
-  </>);
+  );
 
   const renderIconLink = (item: NavItemDef) => {
-    const active = item.match(pathname) && !(item.labelKey === "nav.read" && isPlanPlay);
+    const active =
+      (item.match(pathname) || (item.labelKey === "nav.home" && isMusicShellPath(pathname))) &&
+      !(item.labelKey === "nav.read" && isPlanPlay);
     if (item.labelKey === "nav.read" && readChapterRoute !== null) {
       return (
         <button
@@ -205,7 +206,7 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
             setReadCatalogOpen((value) => !value);
           }}
         >
-          {renderTabIcon(item)}
+          {renderTabIcon(item, active)}
         </button>
       );
     }
@@ -227,7 +228,7 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
             router.replace(shellHref("/read", shellRoot));
           }}
         >
-          {renderTabIcon(item)}
+          {renderTabIcon(item, active)}
         </Link>
       );
     }
@@ -249,7 +250,7 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
             router.replace(shellHref("/explore", shellRoot));
           }}
         >
-          {renderTabIcon(item)}
+          {renderTabIcon(item, active)}
         </Link>
       );
     }
@@ -263,7 +264,7 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
         className={iconLinkClass(active)}
         onClick={() => navTapTarget(item)}
       >
-        {renderTabIcon(item)}
+        {renderTabIcon(item, active)}
       </Link>
     );
   };
@@ -325,18 +326,17 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
             <ShellMaterialCommunityIcon
               name="account-voice"
               size={SHELL_PLAY_ICON_SIZE_PX}
-              color={fabActive ? "var(--brand-logo-background)" : placement === "fixedShell" && !isMusicShellPath(pathname) ? "var(--bc-read-book, #3d2e24)" : SHELL_TAB_BAR_ICON}
+              color={fabActive ? "#FFB101" : "rgba(255,255,255,0.92)"}
               className="home-bottom-nav__play-icon"
             />
           ) : (
             <ShellMaterialIcon
               name={fabActive ? "pause" : "play-arrow"}
               size={fabActive ? 28 : SHELL_PLAY_ICON_SIZE_PX}
-              color={fabActive ? "var(--brand-logo-background)" : SHELL_TAB_BAR_ICON}
+              color={fabActive ? "#FFB101" : SHELL_TAB_BAR_ICON}
               className="home-bottom-nav__play-icon"
             />
           )}
-          {placement === "fixedShell" && !isMusicShellPath(pathname) ? <span className="home-bottom-nav__label">{locale === "en" ? "Plan" : locale === "zh-TW" ? "讀經" : "读经"}</span> : null}
         </button>
 
         <div className="home-bottom-nav__side home-bottom-nav__side--right">

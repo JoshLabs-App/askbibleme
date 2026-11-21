@@ -795,3 +795,6 @@ manifest `start_url=/web`；手机截图和金句字体文件都取得到。本�
 4. **Cloudflare 构建与反代防坑（必读）**：
    - 根 `package.json` **必须保留 `"type": "module"`**（且 `vite.config.ts` 保持 `.ts`）：否则 `@cloudflare/build-output-utils` 在展开预构建目录时会将 `.js` 产物标为 CommonJS，导致线上 SSR 抛 `No such module "ssr/index.js"`（1101）。
    - 主站同域备线 `/api/sync/*` 通过 `cloudflare.config.ts` 的 `ASKBIBLE_SYNC: bindings.worker({ worker: "askbible-sync" })` 走 Worker Service Binding 零延迟内网直连，避免公网子请求触发同账号域名 Cloudflare WAF `403`。
+5. **全端外观与交互基准（D-45，2026-11-20 Josh 定）**：
+   - 全端整体外观与操作体验统一对齐安卓 App（`apps/askbible-android`）的羊皮卷实底与直接图标版面，**禁用苹果 Liquid Glass / 毛玻璃胶囊底栏与玻璃圆钮簇**。
+   - iOS 与网页端已撤除全部 `glassEffect`、`Material`、`backdrop-blur`，统一为 5 位纯 `MaterialIcons` 底栏、整宽贴底单栏 `PlaybackDock`、直接常驻目录/章页右侧工具栏与 `parchmentCard` 羊皮实底弹层。

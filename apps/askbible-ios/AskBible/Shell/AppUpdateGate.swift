@@ -74,27 +74,65 @@ final class AppUpdateChecker: ObservableObject {
     }
 }
 
-/// 挂在根视图上：有新版就弹一次，送去 App Store。
+/// 挂在根视图上：有新版就用羊皮卡片提示一次（对齐安卓 `UpdateGate.kt` `surfaceSolid`，不用 iOS 26 系统玻璃 Alert）。
 struct AppUpdateGate: View {
     @StateObject private var checker = AppUpdateChecker()
     @Environment(\.parchment) private var theme
 
     var body: some View {
-        Color.clear
-            .task { await checker.check() }
-            .alert(
-                SiteCopy.f("native.updateTitle", ["version": checker.newVersion ?? ""]),
-                isPresented: Binding(get: { checker.newVersion != nil },
-                                     set: { if !$0 { checker.skipCurrent() } })
-            ) {
-                Button(SiteCopy.t("native.updateOpenAppStore")) {
-                    if let url = AppStoreInfo.storeURL { UIApplication.shared.open(url) }
-                    checker.newVersion = nil
+        ZStack {
+            if let version = checker.newVersion {
+                theme.modalBackdrop
+                    .ignoresSafeArea()
+                    .contentShape(Rectangle())
+                    .onTapGesture { checker.skipCurrent() }
+
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(SiteCopy.f("native.updateTitle", ["version": version]))
+                        .askFont(size: 18, weight: .semibold)
+                        .foregroundStyle(theme.ink)
+
+                    Text(SiteCopy.t("native.updateHintIOS"))
+                        .askFont(size: 14)
+                        .lineSpacing(4)
+                        .foregroundStyle(theme.inkSoft)
+                        .padding(.top, 10)
+
+                    HStack(spacing: 16) {
+                        Spacer()
+                        Button {
+                            checker.skipCurrent()
+                        } label: {
+                            Text(SiteCopy.t("native.updateLater"))
+                                .askFont(size: 15, weight: .medium)
+                                .foregroundStyle(theme.muted)
+                                .padding(.vertical, 8).padding(.horizontal, 6)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+
+                        Button {
+                            if let url = AppStoreInfo.storeURL { UIApplication.shared.open(url) }
+                            checker.newVersion = nil
+                        } label: {
+                            Text(SiteCopy.t("native.updateOpenAppStore"))
+                                .askFont(size: 15, weight: .semibold)
+                                .foregroundStyle(theme.accentOt)
+                                .padding(.vertical, 8).padding(.horizontal, 6)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.top, 18)
                 }
-                Button(SiteCopy.t("native.updateLater"), role: .cancel) { checker.skipCurrent() }
-            } message: {
-                Text(SiteCopy.t("native.updateHintIOS"))
+                .padding(.horizontal, 22).padding(.top, 20).padding(.bottom, 16)
+                .frame(maxWidth: 320, alignment: .leading)
+                .parchmentCard(cornerRadius: AskCorner.card)
+                .askFloatingShadow(.overlay)
+                .padding(.horizontal, 28)
             }
+        }
+        .task { await checker.check() }
     }
 }
 

@@ -1293,7 +1293,7 @@ export function StudioAIDiscussionPanel({
       </div>
 
       {/* 下栏：输入区始终钉在右栏底部，不参与滚动 */}
-      <footer className="relative z-10 shrink-0 border-t-2 border-border/60 bg-canvas px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(44,40,36,0.08)] backdrop-blur-sm">
+      <footer className="relative z-10 shrink-0 border-t-2 border-border/60 bg-canvas px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(44,40,36,0.08)]">
         {note ? (
           <p className="mb-2 text-[10px] leading-snug text-muted" role="status">
             {note}

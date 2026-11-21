@@ -103,8 +103,7 @@ struct ChapterView: View {
                 if reportedEnd != tag { reportedEnd = tag; onReachedEnd() }
             }
         )
-        .padding(.bottom, ShellMetrics.glassDockHeight)
-        .askNoScrollEdgeBlur()
+        .shellBottomInset(hasDock: true)
         .parchmentFade(.chapter)
     }
 
@@ -256,8 +255,6 @@ struct ChapterView: View {
                     .padding(.horizontal, 20)
                 }
                 .shellBottomInset(hasDock: true)
-                // 系统的底缘渐进模糊会把经文糊掉，玻璃就没东西可折射了（见 askNoScrollEdgeBlur）
-                .askNoScrollEdgeBlur()
                 // 浮层时在 shellBottomInset 之外再留出空间，防止底部文字被遮住
                 .safeAreaInset(edge: .bottom) {
                     if paintColor != nil || eraseMode { Color.clear.frame(height: 140) }
@@ -281,9 +278,6 @@ struct ChapterView: View {
     enum LoadState { case idle, loading, failed }
     @State private var loadState: LoadState = .idle
     @State private var reloadToken = 0
-    /// 右栏工具簇是否展开（收起时只留一颗钮，不挡经文）
-    @State private var railOpen = false
-    @Namespace private var railNamespace
 
     private var bookmarkedVerses: Set<Int> { bookmarks.bookmarkedVerses(translationId: store.translation.id, bookId: bookId, chapter: chapter) }
 
@@ -524,79 +518,41 @@ struct ChapterView: View {
     }
 
 
-    /// 左上返回 + 右上竖排。位置来自 `readTopChrome.ts`：
-    /// 第 index 个按钮顶边 = safeTop + 6 + index × (50 + 5)，右边距 8，图标 32，白色带阴影。
+    /// 左上返回 + 右上竖排：对齐安卓 `ChapterScreen.kt` `TopChrome`（无玻璃圆钮簇）。
     private func topChrome() -> some View {
         HStack(alignment: .top) {
-            // RN 的返回是 React Navigation HeaderBackButton：iOS 上是系统 chevron，Android 才是 arrow-back
-            chromeButton(systemName: "chevron.left", action: onBack)
+            chromeGlyph(MI.arrowBack, action: onBack)
             Spacer()
-            // 右栏原来是 5 颗常驻按钮（竖排 270pt）压在经文上。白字带阴影时字能从笔画缝里透出来还能忍，
-            // 换成玻璃圆钮后就是实打实地挡住两三行经文 —— 所以收成一颗，点开才展开成玻璃簇
-            // （iOS 26 下靠 askGlassID 从那颗钮长出来）。经文是主角，工具不常驻。
-            AskGlassGroup(spacing: 8) {
-                VStack(spacing: ShellMetrics.topChromeGap) {
-                    chromeButton(systemName: railOpen ? "xmark" : "ellipsis") {
-                        withAnimation(.smooth(duration: 0.3)) { railOpen.toggle() }
-                    }
-                    .askGlassID("rail-toggle", in: railNamespace)
-
-                    if railOpen {
-                        chromeGlyph(MI.settings) { railOpen = false; onOpenSettings() }
-                            .askGlassID("rail-settings", in: railNamespace)
-                        chromeGlyph(MI.search) { railOpen = false; onOpenSearch() }
-                            .askGlassID("rail-search", in: railNamespace)
-                        chromeGlyph(MI.bookmarkBorder) { railOpen = false; onOpenFavorites() }
-                            .askGlassID("rail-favorites", in: railNamespace)
-                        chromeLabel("+") { if let n = size.next { size = n } }
-                            .askGlassID("rail-bigger", in: railNamespace)
-                        chromeLabel("\u{2212}") { if let p = size.previous { size = p } }
-                            .askGlassID("rail-smaller", in: railNamespace)
-                    }
-                }
+            VStack(spacing: ShellMetrics.topChromeGap) {
+                chromeGlyph(MI.settings, action: onOpenSettings)
+                chromeGlyph(MI.search, action: onOpenSearch)
+                chromeGlyph(MI.bookmarkBorder, action: onOpenFavorites)
+                chromeLabel("+") { if let n = size.next { size = n } }
+                chromeLabel("\u{2212}") { if let p = size.previous { size = p } }
             }
         }
         .padding(.horizontal, ShellMetrics.topChromeSideInset)
         .padding(.top, ShellMetrics.topChromeOffset)
     }
 
-    private func chromeButton(systemName: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: systemName)
-                .askFont(size: ShellMetrics.topChromeIcon * 0.68, weight: .semibold)
-                .foregroundStyle(theme.ink.opacity(0.78))
-                // SF Symbol 只有笔画本身可点：不补 contentShape，50×50 里只有细细的箭头能点中
-                // （Josh 2026-09-10 真机「今日读经进章后返回退不回去」）
-                .frame(width: ShellMetrics.topChromeButton, height: ShellMetrics.topChromeButton)
-                .contentShape(Rectangle())
-                .askGlassCapsule(tone: .light, interactive: true)
-                .askFloatingShadow()
-        }
-        .buttonStyle(.plain)
-    }
-
-    /// 右栏图标走 RN 同一套 Material 字形（READ_TOP_CHROME.iconSize = 32）
     private func chromeGlyph(_ glyph: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            MaterialIcon(glyph: glyph, size: ShellMetrics.topChromeIcon * 0.84, color: theme.ink.opacity(0.78))
+            MaterialIcon(glyph: glyph, size: ShellMetrics.topChromeIcon, color: .white)
                 .frame(width: ShellMetrics.topChromeButton, height: ShellMetrics.topChromeButton)
+                .shellIconShadow()
                 .contentShape(Rectangle())
-                .askGlassCapsule(tone: .light, interactive: true)
-                .askFloatingShadow()
         }
         .buttonStyle(.plain)
     }
 
-    /// 字号 +/− 是 32pt 文字，不是图标 —— 与 `topActionSizeLabel` 一致
     private func chromeLabel(_ text: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(text)
-                .askFont(size: ShellMetrics.topChromeSizeLabel * 0.84, weight: .medium)
-                .foregroundStyle(theme.ink.opacity(0.78))
+                .askFont(size: ShellMetrics.topChromeSizeLabel, weight: .medium)
+                .foregroundStyle(Color.white)
                 .frame(width: ShellMetrics.topChromeButton, height: ShellMetrics.topChromeButton)
+                .shellIconShadow()
                 .contentShape(Rectangle())
-                .askGlassCapsule(tone: .light, interactive: true)
-                .askFloatingShadow()
         }
         .buttonStyle(.plain)
     }

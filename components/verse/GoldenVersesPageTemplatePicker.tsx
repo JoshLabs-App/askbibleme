@@ -94,7 +94,7 @@ export function GoldenVersesPageTemplatePicker({
           id="golden-verse-page-template-popover"
           role="dialog"
           aria-label={t("pages.goldenVerses.pageTemplate")}
-          className="absolute right-0 top-[calc(100%+0.35rem)] z-[60] w-[min(20rem,calc(100vw-1.25rem))] rounded-xl border border-white/20 bg-ink/88 p-3 shadow-xl backdrop-blur-md"
+          className="absolute right-0 top-[calc(100%+0.35rem)] z-[60] w-[min(20rem,calc(100vw-1.25rem))] rounded-xl border border-white/18 bg-[#241a13] p-3 shadow-xl"
         >
           <p className="mb-2 px-0.5 text-[11px] font-medium tracking-wide text-white/70">
             {t("pages.goldenVerses.pageTemplate")}

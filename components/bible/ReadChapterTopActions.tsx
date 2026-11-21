@@ -12,17 +12,7 @@ import { useReadChapterPageAudioAvailable } from "@/hooks/useReadChapterPageAudi
 import { parseReadChapterPathname } from "@/lib/read/resolve-chapter-page-scripture-play-target";
 
 function IconBack() {
-  return (
-    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M14.5 5 9 12l5.5 7"
-        stroke="#fff"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <ShellMaterialIcon name="arrow-back" size={30} color="#fff" />;
 }
 
 const btnClass =
@@ -114,20 +104,20 @@ export function ReadChapterTopActions() {
         <button
           type="button"
           className={sizeBtnClass}
-          aria-label={t("pages.read.typography.sizeSmallerAria")}
-          disabled={sizeAtMin}
-          onClick={() => bumpSize(-1)}
-        >
-          −
-        </button>
-        <button
-          type="button"
-          className={sizeBtnClass}
           aria-label={t("pages.read.typography.sizeLargerAria")}
           disabled={sizeAtMax}
           onClick={() => bumpSize(1)}
         >
           +
+        </button>
+        <button
+          type="button"
+          className={sizeBtnClass}
+          aria-label={t("pages.read.typography.sizeSmallerAria")}
+          disabled={sizeAtMin}
+          onClick={() => bumpSize(-1)}
+        >
+          −
         </button>
       </div>
     </>

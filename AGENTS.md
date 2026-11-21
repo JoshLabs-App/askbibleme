@@ -66,24 +66,11 @@
 - **不允许**擅自扩展功能；超出范围的想法写入 `docs/10-parking-lot.md`，**不要**在代码里实现。
 - **全端外观与交互基准（2026-11-20 Josh 定，D-45）**：全端（iOS / Android / Web）的整体外观、壳层版面与操作体验统一**对齐安卓 App（`apps/askbible-android`）的简洁羊皮卷实底版面**；**禁止**使用苹果 Liquid Glass（`glassEffect` / 毛玻璃 `Material` / 悬浮玻璃胶囊底栏或玻璃圆钮簇）。若受平台系统能力限制，先记录差异与原因，再给降级方案。
 - 多端开发推进顺序：按任务涉及端完成对齐验收（Web/Studio 专属任务无需先做原生端）。
-- 移动端媒体（音乐/视频/金句音频）默认**本地播放优先**：播放只走安装包内或设备已下载的商店资源包，不作为常规直连远端播放源。
-- **大体积增量不走 Render**：禁止用 `askbible.me` / Render 当 App 媒体增量下发通道。详见 `.cursor/rules/mobile-local-media-playback-first.mdc`。
-- **金句**：首页文字默认全量池；语音 **TEMPORARY** 走 Cloudflare R2 HTTPS 直链点播（不进安装包、不走 Render）。见 `docs/mobile-golden-verse-audio.md`。恢复本地 zip：`EXPO_PUBLIC_GOLDEN_VERSE_AUDIO_STREAM=0` + `MOBILE_BUNDLE_GOLDEN_VERSE_AUDIO=1`。
+- 移动端媒体（音乐/视频/金句音频）默认**本地播放优先**：安装包内置核心离线包与每专辑首曲，增量媒体与扩展包统一走 **Cloudflare R2**（+ 本机缓存），严禁用主站 `askbible.me` 当大体积媒体下发通道。详见 `.cursor/rules/mobile-local-media-playback-first.mdc`。
 - **音乐默认播放**：首页 / 壳层默认只播「安静」专辑；「下午茶 / 专注工作 / 睡眠」等其它专辑不得混入默认选曲池，仅在音乐栏用户主动切换后才播放。
-- **音乐安装包（现行）**：
-  - **iOS / Android**：默认每专辑只打 **第一首**；其余 **TEMPORARY：Cloudflare R2** 直链 + 本机缓存。见 `musicAudioRemote.ts`。
-  - **Android 商店**：生产构建 **默认 `MOBILE_ANDROID_MUSIC_PAD=0`**。**禁止**为上架误开 `MOBILE_ANDROID_MUSIC_PAD=1`（会把全量曲打进 AAB，约 650MB）。遗留 PAD 见 `docs/mobile-android-music-pad.md`，需 `ALLOW_ANDROID_MUSIC_PAD=1` 才允许。
-  - 调试全量：`MOBILE_BUNDLE_MUSIC_FULL=1`；限量仍可用 `MOBILE_BUNDLE_MUSIC_LIMIT=N`。
 - **R2 铁律（违反会让已上架 App 挂掉）**：本项目的 R2 桶是 `askbible-media`，公开地址
-  `https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev`。这个 URL **编译进了已上架的二进制**
-  （`goldenVerseAudioRemote.ts`、`musicAudioRemote.ts`、`lib/bible/golden-verse-audio.ts`、
-  `lib/app-install-urls.ts` 的安卓 APK 下载链接），所以：**桶名不能改**（`pub-*` 里那串 id 绑的是
-  bucket，改名 = 新 id = 旧 App 全部 404）、**r2.dev 公开访问不能关**。它没有成本，让它一直开着。
-  以后要换成 `askbible-media.joshlabs.app` 自定义域，是**新增**不是替换：新版 App 用新域名，
-  旧版继续走 r2.dev，两边同时活。跨项目规则见
-  `/Users/joshua/Desktop/APP/skills/joshlabs-dev/references/infrastructure-cloudflare.md`。
-- **移动端发版禁止 EAS 云端构建**：iOS 用 `npm run mobile:build:ios:production`（本机 `--local`），Android 用 `npm run mobile:build:android:production`（本机 Gradle）；流程见 `docs/mobile-release-checklist.md`。
-- **App 验收与合入（人不用记）**：改 `apps/askbible-mobile` 时 Agent 按 `.cursor/rules/mobile-maestro-auto-merge.mdc` 自动 Maestro + PR 合入门禁；见 `docs/mobile-maestro-auto-merge.md`。
+  `https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev`。这个 URL **编译进了已上架的二进制**，所以：**桶名不能改**（`pub-*` 里那串 id 绑的是 bucket，改名 = 新 id = 旧 App 全部 404）、**r2.dev 公开访问不能关**。它没有成本，让它一直开着。新自定义域 `askbible-media.joshlabs.app` 与旧 `r2.dev` 必须同时存活。跨项目规则见 `/Users/joshua/Desktop/APP/skills/joshlabs-dev/references/infrastructure-cloudflare.md`。
+- **原生构建与校验**：iOS 使用本机 `xcodebuild`（`apps/askbible-ios`），Android 使用本机 Gradle（`apps/askbible-android`）；跨端数据与生成器自检运行 `npm run check:native`，Web 类型与单测运行 `npm run check`。
 
 ### 执行节奏
 

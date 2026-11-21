@@ -154,6 +154,46 @@ writeJson(path.join(cwd, "public", "data", "resource-packs", "asset-stats.json")
   assets: scanAssetsUnder(["/music", "/nature", "/audio"]),
 });
 
+// 9. JoshBox-style v2/catalog.json (SHA-256 + sizeBytes for silent atomic PackStore hot-updates, D-44)
+function sha256File(absPath) {
+  const hash = crypto.createHash("sha256");
+  hash.update(fs.readFileSync(absPath));
+  return hash.digest("hex");
+}
+
+const packSources = [
+  { id: "bible.cuv-simp", kind: "sqlite", src: "apps/askbible-ios/AskBible/Resources/cuv-simp.sqlite", urlPath: "bible/cuv-simp.sqlite" },
+  { id: "bible.cuv-trad", kind: "sqlite", src: "apps/askbible-ios/AskBible/Resources/cuv-trad.sqlite", urlPath: "bible/cuv-trad.sqlite" },
+  { id: "bible.web-en", kind: "sqlite", src: "apps/askbible-ios/AskBible/Resources/web-en.sqlite", urlPath: "bible/web-en.sqlite" },
+  { id: "bible.ust-en", kind: "sqlite", src: "apps/askbible-ios/AskBible/Resources/ust-en.sqlite", urlPath: "bible/ust-en.sqlite" },
+  { id: "companion.xrefs", kind: "sqlite", src: "apps/askbible-ios/AskBible/Resources/scripture-xrefs.sqlite", urlPath: "bible/scripture-xrefs.sqlite" },
+  { id: "bundle.explore-articles", kind: "json", src: "public/data/static-bundles/explore-featured-articles.json", urlPath: "data/static-bundles/explore-featured-articles.json" },
+  { id: "bundle.figures", kind: "json", src: "public/data/static-bundles/legacy-figures-mobile.json", urlPath: "data/static-bundles/legacy-figures-mobile.json" },
+];
+
+const catalogPacks = [];
+for (const p of packSources) {
+  const abs = path.join(cwd, p.src);
+  if (!fs.existsSync(abs)) continue;
+  const stat = fs.statSync(abs);
+  const sha256 = sha256File(abs);
+  catalogPacks.push({
+    id: p.id,
+    kind: p.kind,
+    version: sha256.slice(0, 12),
+    path: p.urlPath,
+    sha256,
+    sizeBytes: stat.size,
+    sqlite: p.kind === "sqlite",
+  });
+}
+
+writeJson(path.join(cwd, "public", "v2", "catalog.json"), {
+  schemaVersion: 2,
+  generatedAt: new Date().toISOString(),
+  packs: catalogPacks,
+});
+
 console.log(
-  `[build-cf-static-assets] ok: ${allBookIds.size} chapter-segment books, ${bgFiles.length} bg-uploads, bootstrap=${bootstrapMap["theme-repeat-ge5"]?.length ?? 0}`,
+  `[build-cf-static-assets] ok: ${allBookIds.size} chapter-segment books, ${bgFiles.length} bg-uploads, bootstrap=${bootstrapMap["theme-repeat-ge5"]?.length ?? 0}, packs=${catalogPacks.length}`,
 );

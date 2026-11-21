@@ -5,10 +5,10 @@ import Foundation
 // 并且候选表被线上 endpoints.json 换掉。输出与 Kotlin 侧（core --endpoints）同形状的 JSON。
 
 let dead = "https://blocked.invalid/"
-let keys = Endpoints.Role.allCases.flatMap { ["endpointHost.\($0.rawValue)", "endpointList.\($0.rawValue)"] }
+let keys = Endpoints.Role.allCases.flatMap { ["endpointHost.v2.\($0.rawValue)", "endpointList.v2.\($0.rawValue)"] }
 for r in Endpoints.Role.allCases {
-    UserDefaults.standard.set(dead, forKey: "endpointHost.\(r.rawValue)")
-    UserDefaults.standard.set([dead], forKey: "endpointList.\(r.rawValue)")
+    UserDefaults.standard.set(dead, forKey: "endpointHost.v2.\(r.rawValue)")
+    UserDefaults.standard.set([dead], forKey: "endpointList.v2.\(r.rawValue)")
 }
 
 let before = [Endpoints.mediaBase, Endpoints.siteBase, Endpoints.apiBase]

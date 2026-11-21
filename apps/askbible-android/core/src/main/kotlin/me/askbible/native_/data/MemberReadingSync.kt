@@ -4,30 +4,21 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
 /**
- * 会员读经进度同步的纯规则（check:member-sync 对拍）——照抄 RN src/member-sync：
- * schema（23 个 blob 键）、mergeReadingBlobs（逐键三方合并）、memberReadingSyncOwnerPolicy（归属判定）、
- * readingPlanSyncSidecar（appLocale 侧车带计划）、reading-plan-prefs-merge（计划偏好合并）、
- * merge-triple-loop / merge-nt-deep-repeat（指针取最远 + 已读章并集）、reading-habit-stats（连读）、
- * year-day-timeline（全年轴）、app-usage-time / scripture-listen-totals 的文案。
- * blob 的 value 是任意 JSON：这里用 org.json（JSONObject / JSONArray / String / Number / Boolean / JSONObject.NULL）。
- * 与 iOS Model/MemberReadingSync.swift 同构。
+ * 会员读经同步的本机轻量规则与展示辅助（DECISIONS D-44：服务端 `askbible-sync` 统一执行 26 个 blob 的三方合并，
+ * 客户端不再重复维护 450 行合并器，仅保留归属判定、本机计划偏好合并、习惯连读统计、全年轴与时长格式化）。
+ * 与 iOS `MemberReadingSync.swift` 同构。
  */
 object MemberReadingSyncRules {
     const val SCHEMA_VERSION = 1
-    const val TABLE = "member_reading_sync_documents"
     const val META_KEY = "askbible.member-reading-sync-meta.v1"
     val BLOB_KEYS: List<String> = listOf(
         "bookmarks", "highlights", "lastPosition", "chapterCompletion", "tripleLoopProgress", "ntDeepRepeatProgress",
         "readingPlanPrefs", "todayReadingDone", "todayReadingFraction", "habitStats", "scriptureListenTotals",
         "readTypography", "readTranslation", "recentSearches", "homeNatureUi", "homePrayerVerse", "homeVersePoolScope",
         "natureSceneUi", "musicVisualTheme", "scripturePlaybackRate", "cuvAudioVoice", "exploreYearDayProfile", "appLocale",
-        // Josh 2026-09-11：使用时长与最近阅读也要上云（原本只存本机）
-        "appUsageTime", "recentChapters",
-        // Josh 2026-09-18：成就 / XP 账本（AchievementStore）
-        "achievements",
+        "appUsageTime", "recentChapters", "achievements",
     )
     const val MIN_SYNC_INTERVAL_MS = 30_000L
     const val LOCAL_CHANGE_DEBOUNCE_MS = 1_500L
@@ -39,7 +30,6 @@ object MemberReadingSyncRules {
 
     fun dict(v: Any?): JSONObject? = v as? JSONObject
     fun str(v: Any?): String? = v as? String
-    /** JS typeof === "number"：布尔不算数 */
     fun num(v: Any?): Double? = (v as? Number)?.toDouble()
     fun bool(v: Any?): Boolean? = v as? Boolean
     fun isNull(v: Any?): Boolean = v == null || v === JSONObject.NULL
@@ -49,7 +39,6 @@ object MemberReadingSyncRules {
     }
     private fun JSONObject.copy(): JSONObject = JSONObject().also { o -> for (k in keys()) o.put(k, opt(k)) }
 
-    /** JS Date.parse：完整 ISO（含时区 / 毫秒）或 YYYY-MM-DD（按 UTC 零点）；解析失败 null */
     fun jsDateParseMs(raw: String?): Double? {
         val s = raw?.trim().orEmpty()
         if (s.isEmpty()) return null
@@ -58,136 +47,12 @@ object MemberReadingSyncRules {
         return PlanDates.daysFromCivil(y, m, d).toDouble() * 86_400_000
     }
 
-    /** RN parseIsoMs：解析失败算 0 */
     fun parseIsoMs(iso: String?): Double = jsDateParseMs(iso) ?: 0.0
 
-    /** JS Date.toISOString：UTC、带毫秒 */
     fun isoString(ms: Double): String = MemberAuthRules.ISO_MILLIS.format(java.time.Instant.ofEpochMilli(ms.toLong()))
 
-    /** JS 默认 sort：按 UTF-16 code unit（Kotlin String.compareTo 就是） */
     fun jsSorted(list: Collection<String>): List<String> = list.sorted()
 
-    private fun jsonNumber(d: Double): Any = if (d == Math.floor(d) && !d.isInfinite() && Math.abs(d) < 1e15) d.toLong() else d
-
-    // ---- 逐键合并（RN mergeReadingBlobs.ts） ----
-
-    fun mergeBookmarks(a: Any?, b: Any?): Any? {
-        val da = dict(a) ?: return b
-        val db = dict(b) ?: return a
-        val out = da.copy()
-        for (key in db.keys()) {
-            val item = db.opt(key)
-            val nextSaved = num(dict(item)?.opt("savedAt"))
-            val prevSaved = num(dict(out.opt(key))?.opt("savedAt"))
-            if (!out.has(key) || (nextSaved != null && nextSaved >= (prevSaved ?: 0.0))) out.put(key, item)
-        }
-        return out
-    }
-
-    fun mergeHighlightStore(a: Any?, b: Any?): Any? {
-        val da = dict(a) ?: return b
-        val db = dict(b) ?: return a
-        val out = da.copy()
-        for (key in db.keys()) {
-            val rows = db.opt(key) as? JSONArray ?: continue
-            val byIndex = java.util.TreeMap<Int, String>()
-            fun put(row: Any?) {
-                val r = dict(row) ?: return
-                val iRaw = num(r.opt("i")) ?: return
-                if (iRaw != Math.floor(iRaw) || iRaw < 0) return
-                byIndex[iRaw.toInt()] = r.opt("c") as? String ?: ""
-            }
-            (out.opt(key) as? JSONArray)?.let { arr -> for (i in 0 until arr.length()) put(arr.opt(i)) }
-            for (i in 0 until rows.length()) put(rows.opt(i))
-            if (byIndex.isEmpty()) out.remove(key)
-            else out.put(key, JSONArray().also { arr -> for ((i, c) in byIndex) arr.put(JSONObject().put("i", i).put("c", c)) })
-        }
-        return out
-    }
-
-    /** chapterCompletion.completed / todayReadingDone.doneKeys / habitStats.completedDates：并集排序，scopeKey 取右边 */
-    fun mergeStringSetRecords(a: Any?, b: Any?, field: String): Any? {
-        fun read(v: Any?) = stringArray(dict(v)?.opt(field))
-        fun scopeKey(v: Any?) = str(dict(v)?.opt("scopeKey"))
-        val merged = jsSorted((read(a) + read(b)).toSet())
-        val out = (dict(a) ?: dict(b))?.copy() ?: JSONObject()
-        out.put("version", 1)
-        out.put(field, JSONArray(merged))
-        val sa = scopeKey(a); val sb = scopeKey(b)
-        when {
-            sa != null && sb != null && sa == sb -> out.put("scopeKey", sa)
-            sb != null -> out.put("scopeKey", sb)
-            sa != null -> out.put("scopeKey", sa)
-        }
-        return out
-    }
-
-    fun mergeFractions(a: Any?, b: Any?): Any? {
-        val da = dict(a) ?: return b
-        val db = dict(b) ?: return a
-        val scopeA = str(da.opt("scopeKey")); val scopeB = str(db.opt("scopeKey"))
-        if (!scopeA.isNullOrEmpty() && !scopeB.isNullOrEmpty() && scopeA != scopeB && !isSameTodayReadingPlanScope(scopeA, scopeB)) {
-            return if (parseIsoMs(str(db.opt("updatedAt"))) >= parseIsoMs(str(da.opt("updatedAt")))) b else a
-        }
-        val merged = JSONObject()
-        dict(da.opt("fractions"))?.let { fa -> for (k in fa.keys()) merged.put(k, fa.opt(k)) }
-        dict(db.opt("fractions"))?.let { fb ->
-            for (k in fb.keys()) {
-                val v = num(fb.opt(k)) ?: continue
-                merged.put(k, jsonNumber(maxOf(num(merged.opt(k)) ?: 0.0, v)))
-            }
-        }
-        // JS `scopeB || scopeA`：空串算假；两边都没有就不写这个键
-        val scope = if (!scopeB.isNullOrEmpty()) scopeB else scopeA
-        val out = JSONObject().put("version", 1).put("fractions", merged)
-        if (scope != null) out.put("scopeKey", scope)
-        return out
-    }
-
-    fun mergeRecentSearches(a: Any?, b: Any?): Any? {
-        fun read(v: Any?) = stringArray(dict(v)?.opt("terms"))
-        val seen = HashSet<String>(); val merged = ArrayList<String>()
-        for (term in read(b) + read(a)) {
-            val trimmed = term.trim().replace(Regex("\\s+"), " ")
-            if (trimmed.isEmpty()) continue
-            val key = trimmed.lowercase()
-            if (!seen.add(key)) continue
-            merged.add(trimmed)
-            if (merged.size >= 10) break
-        }
-        return JSONObject().put("version", 1).put("terms", JSONArray(merged))
-    }
-
-    /** RN planIdFromTodayReadingScopeKey：`planId:epoch:N` / `planId:day:N` / `planId` 取冒号前 */
-    fun planIdFromScopeKey(scopeKey: String?): String? {
-        val s = scopeKey?.trim().orEmpty()
-        if (s.isEmpty()) return null
-        return s.split(":")[0].trim().ifEmpty { null }
-    }
-
-    fun isSameTodayReadingPlanScope(a: String?, b: String?): Boolean {
-        if (a.isNullOrEmpty() || b.isNullOrEmpty()) return false
-        if (a == b) return true
-        val pa = planIdFromScopeKey(a); val pb = planIdFromScopeKey(b)
-        return pa != null && pb != null && pa == pb
-    }
-
-    fun mergeTodayReadingDone(a: Any?, b: Any?): Any? {
-        val scopeA = str(dict(a)?.opt("scopeKey")); val scopeB = str(dict(b)?.opt("scopeKey"))
-        if (!scopeA.isNullOrEmpty() && !scopeB.isNullOrEmpty() && scopeA == scopeB) return mergeStringSetRecords(a, b, "doneKeys")
-        fun keys(v: Any?) = stringArray(dict(v)?.opt("doneKeys")).filter { it.isNotEmpty() }
-        val planA = planIdFromScopeKey(scopeA); val planB = planIdFromScopeKey(scopeB)
-        if (planA != null && planB != null && planA == planB) {
-            return JSONObject().put("version", 1).put("scopeKey", scopeB ?: scopeA ?: "")
-                .put("doneKeys", JSONArray(jsSorted((keys(a) + keys(b)).toSet())))
-        }
-        val ka = keys(a); val kb = keys(b)
-        if (kb.size > ka.size) return b
-        if (ka.size > kb.size) return a
-        return b
-    }
-
-    /** RN parseScriptureListenTotalsRecord：version 1、totalSec 有限且 ≥ 0 → 取整 */
     fun parseListenTotals(v: Any?): JSONObject? {
         val d = dict(v) ?: return null
         if (num(d.opt("version")) != 1.0) return null
@@ -196,45 +61,7 @@ object MemberReadingSyncRules {
         return JSONObject().put("version", 1).put("totalSec", Math.floor(n).toLong())
     }
 
-    /** 最近阅读：按「卷:章」并集，同一章取更晚的时间，按时间倒序，最多 12 条（与 TS mergeRecentChapters 同） */
-    fun mergeRecentChapters(a: Any?, b: Any?): Any? {
-        fun read(v: Any?): List<JSONObject> {
-            val items = dict(v)?.opt("items") as? JSONArray ?: return emptyList()
-            val out = ArrayList<JSONObject>(items.length())
-            for (i in 0 until items.length()) {
-                val o = items.opt(i) as? JSONObject ?: continue
-                val bookId = (str(o.opt("bookId")) ?: "").trim().uppercase()
-                val chapter = (num(o.opt("chapter")) ?: 0.0).toInt()
-                if (bookId.isEmpty() || chapter <= 0) continue
-                out.add(JSONObject()
-                    .put("bookId", bookId)
-                    .put("chapter", chapter)
-                    .put("bookName", str(o.opt("bookName")) ?: bookId)
-                    .put("at", (num(o.opt("at")) ?: 0.0).toLong()))
-            }
-            return out
-        }
-        val byKey = LinkedHashMap<String, JSONObject>()
-        for (item in read(a) + read(b)) {
-            val key = "${item.optString("bookId")}:${item.optInt("chapter")}"
-            val prev = byKey[key]
-            if (prev != null && prev.optLong("at") >= item.optLong("at")) continue
-            byKey[key] = item
-        }
-        val sorted = byKey.values.sortedWith(
-            compareByDescending<JSONObject> { it.optLong("at") }.thenBy { it.optString("bookId") },
-        ).take(12)
-        return JSONObject().put("version", 1).put("items", JSONArray(sorted))
-    }
-
-    fun mergeListenTotals(a: Any?, b: Any?): Any? {
-        val left = parseListenTotals(a); val right = parseListenTotals(b)
-        if (left == null) return right ?: b
-        if (right == null) return left
-        return JSONObject().put("version", 1).put("totalSec", maxOf(left.optLong("totalSec"), right.optLong("totalSec")))
-    }
-
-    // ---- 读经计划偏好合并（lib/read/reading-plan-prefs-merge.ts） ----
+    // ---- 读经计划偏好（本机校验与云端回填） ----
 
     private const val DEFAULT_PLAN_ID = "triple-loop"
     private const val DEFAULT_ANCHOR = "calendar-easter"
@@ -251,7 +78,7 @@ object MemberReadingSyncRules {
     private fun isUnchosenProductDefault(p: JSONObject): Boolean {
         if (bool(p.opt("chosen")) == true) return false
         if (readAheadDays(p) > 0) return false
-        val planId = str(p.opt("planId")) ?: ""; val anchor = str(p.opt("anchor")) ?: ""
+        val planId = str(p.opt("planId")).orEmpty(); val anchor = str(p.opt("anchor")).orEmpty()
         if (planId == NT_DEEP_REPEAT_PLAN_ID && anchor == "from-today") {
             val pace = num(p.opt("ntDeepRepeatPace"))
             return pace == null || pace == NT_DEFAULT_PACE
@@ -260,31 +87,28 @@ object MemberReadingSyncRules {
         if (anchor != DEFAULT_ANCHOR) return false
         if (!isNull(p.opt("ntDeepRepeatPace"))) return false
         if (anchor == "calendar-easter") {
-            val started = str(p.opt("startedOn"))?.trim() ?: ""
+            val started = str(p.opt("startedOn"))?.trim().orEmpty()
             if (started.isNotEmpty() && started != EASTER_EPOCH) return false
         }
         return true
     }
 
-    /** RN shouldSyncReadingPlanPrefs：用户选过的才上传；产品隐式默认不上传 */
     fun shouldSyncReadingPlanPrefs(prefs: JSONObject?): Boolean {
         val p = prefs ?: return false
         if (num(p.opt("version")) != 1.0) return false
-        val id = str(p.opt("planId"))?.trim().orEmpty()
-        if (id.isEmpty()) return false
+        if (str(p.opt("planId"))?.trim().isNullOrEmpty()) return false
         if (bool(p.opt("chosen")) == true) return true
         return !isUnchosenProductDefault(p)
     }
 
     private fun selectedAtMs(p: JSONObject): Double {
         val raw = str(p.opt("selectedAt"))?.trim().orEmpty()
-        if (raw.isEmpty()) return 0.0
-        return jsDateParseMs(raw) ?: 0.0
+        return if (raw.isEmpty()) 0.0 else jsDateParseMs(raw) ?: 0.0
     }
 
     private fun prefsWithAhead(prefs: JSONObject, other: JSONObject?): JSONObject {
         val samePlan = other != null && num(other.opt("version")) == 1.0 && str(other.opt("planId")) == str(prefs.opt("planId"))
-        val ahead = if (samePlan) maxOf(readAheadDays(prefs), readAheadDays(other!!)) else readAheadDays(prefs)
+        val ahead = if (samePlan && other != null) maxOf(readAheadDays(prefs), readAheadDays(other)) else readAheadDays(prefs)
         val out = prefs.copy()
         if (ahead > 0) out.put("aheadDays", ahead) else out.remove("aheadDays")
         return out
@@ -309,7 +133,9 @@ object MemberReadingSyncRules {
             return prefsWithAhead(left, right)
         }
         val leftChosen = bool(left.opt("chosen")) == true; val rightChosen = bool(right.opt("chosen")) == true
-        if (leftChosen != rightChosen) return prefsWithAhead(if (leftChosen) left else right, if (leftChosen) right else left)
+        if (leftChosen != rightChosen) {
+            return prefsWithAhead(if (leftChosen) left else right, if (leftChosen) right else left)
+        }
         val lms = selectedAtMs(left); val rms = selectedAtMs(right)
         if (str(left.opt("planId")) != str(right.opt("planId"))) {
             if (lms != rms) return prefsWithAhead(if (lms > rms) left else right, null)
@@ -323,149 +149,10 @@ object MemberReadingSyncRules {
         return merged
     }
 
-    // ---- 三循环 / 深读进度合并（merge-triple-loop / merge-nt-deep-repeat） ----
-
-    private fun pointerProgress(p: PlanPointer, order: List<String>): Int = maxOf(0, order.indexOf(p.bookId)) * 10_000 + p.chapter
-    private fun mergePointer(a: PlanPointer, b: PlanPointer, order: List<String>): PlanPointer =
-        if (pointerProgress(a, order) >= pointerProgress(b, order)) a else b
-    private fun earlierStarted(a: String?, b: String?): String? = if (a != null && b != null) (if (a <= b) a else b) else a ?: b
-
-    /** RN mergeTripleLoopReadingState：各轨取读得最远的位置，已读章取并集 */
-    fun mergeTripleLoopState(a: Any?, b: Any?): Any? {
-        val left = TripleLoop.normalize(PlanStateJson.tripleFrom(dict(a))); val right = TripleLoop.normalize(PlanStateJson.tripleFrom(dict(b)))
-        val keys = listOf("ot", "nt", "wisdom").associateWith { t -> jsSorted(((left.chaptersReadKeys[t] ?: emptyList()) + (right.chaptersReadKeys[t] ?: emptyList())).toSet()) }
-        val s = TripleLoopState(
-            ot = mergePointer(left.ot, right.ot, TripleLoop.OT_ORDER), nt = mergePointer(left.nt, right.nt, TripleLoop.NT_ORDER),
-            wisdom = mergePointer(left.wisdom, right.wisdom, TripleLoop.WISDOM_ORDER), chaptersReadKeys = keys,
-            startedAt = earlierStarted(left.startedAt, right.startedAt),
-        )
-        return PlanStateJson.tripleJson(TripleLoop.normalize(s))
-    }
-
-    /** RN mergeNtDeepRepeatReadingState：取读得最远的一阶 / 段内天，已读章取并集 */
-    fun mergeNtDeepRepeatState(a: Any?, b: Any?, now: LocalDate = LocalDate.now()): Any? {
-        val left = NtDeepRepeat.normalize(PlanStateJson.ntFrom(dict(a)), now); val right = NtDeepRepeat.normalize(PlanStateJson.ntFrom(dict(b)), now)
-        val keys = listOf("ot", "nt").associateWith { t -> jsSorted(((left.chaptersReadKeys[t] ?: emptyList()) + (right.chaptersReadKeys[t] ?: emptyList())).toSet()) }
-        fun progress(s: NtDeepRepeatState) = s.curriculumIndex * 1000 + s.dayInSegment
-        val lead = if (progress(left) >= progress(right)) left else right
-        val dayInSegment = if (left.curriculumIndex == right.curriculumIndex) maxOf(left.dayInSegment, right.dayInSegment) else lead.dayInSegment
-        val s = NtDeepRepeatState(
-            ot = mergePointer(left.ot, right.ot, NtDeepRepeat.OT_ORDER), curriculumIndex = lead.curriculumIndex, dayInSegment = dayInSegment,
-            pace = lead.pace, segmentDayTarget = 0, chaptersReadKeys = keys, startedAt = earlierStarted(left.startedAt, right.startedAt),
-        )
-        return PlanStateJson.ntJson(NtDeepRepeat.normalize(s, now))
-    }
-
-    // ---- 一条 blob 的合并 + 整份推送合并 ----
-
-    fun mergeBlobValue(key: String, a: Any?, b: Any?, now: LocalDate): Any? = when (key) {
-        "bookmarks" -> mergeBookmarks(a, b)
-        // 划重点可擦除，并集会让擦掉的字被旧副本补回：整份以时间戳新的一侧为准
-        "highlights" -> dict(b) ?: a
-        "chapterCompletion" -> mergeStringSetRecords(a, b, "completed")
-        "todayReadingDone" -> mergeTodayReadingDone(a, b)
-        "habitStats" -> mergeStringSetRecords(a, b, "completedDates")
-        "scriptureListenTotals" -> mergeListenTotals(a, b)
-        "todayReadingFraction" -> mergeFractions(a, b)
-        "recentSearches" -> mergeRecentSearches(a, b)
-        "appUsageTime" -> mergeListenTotals(a, b)
-        "recentChapters" -> mergeRecentChapters(a, b)
-        "readingPlanPrefs" -> mergeReadingPlanPrefsValue(a, b)
-        "tripleLoopProgress" -> mergeTripleLoopState(a, b)
-        "ntDeepRepeatProgress" -> mergeNtDeepRepeatState(a, b, now)
-        "achievements" -> mergeAchievements(a, b)
-        else -> b
-    }
-
-    /** 成就账本：计数取大、日期取并集、勋章取更高档、首次点亮时间取更早（与 AchievementStore.mergeRemote 同规则） */
-    fun mergeAchievements(a: Any?, b: Any?): Any? {
-        val left = dict(a) ?: return b
-        val right = dict(b) ?: return a
-        fun maxInt(k: String): Int = maxOf(num(left.opt(k)) ?: 0.0, num(right.opt(k)) ?: 0.0).toInt()
-        fun dates(k: String): List<String> = normalizeDates(stringArray(left.opt(k)) + stringArray(right.opt(k)))
-        // 首读 / 首次点亮时间：两端都有就取更早的那次
-        fun earliestMap(k: String): JSONObject {
-            val out = JSONObject()
-            for (side in listOf(left, right)) {
-                val m = dict(side.opt(k)) ?: continue
-                for (key in m.keys()) {
-                    val at = (num(m.opt(key)) ?: 0.0).toLong()
-                    val cur = if (out.has(key)) out.optLong(key) else null
-                    out.put(key, if (cur == null) at else if (at > 0L) minOf(cur, at) else cur)
-                }
-            }
-            return out
-        }
-        val earned = JSONObject()
-        for (side in listOf(left, right)) {
-            val m = dict(side.opt("earned")) ?: continue
-            for (key in m.keys()) {
-                val o = dict(m.opt(key)) ?: continue
-                val tier = (num(o.opt("tier")) ?: 0.0).toInt()
-                if (tier < 1) continue
-                val at = (num(o.opt("at")) ?: 0.0).toLong()
-                val cur = dict(earned.opt(key))
-                when {
-                    cur == null -> earned.put(key, JSONObject().put("tier", tier).put("at", at))
-                    tier > cur.optInt("tier") -> earned.put(key, JSONObject().put("tier", tier).put("at", at))
-                    tier == cur.optInt("tier") && at > 0L ->
-                        cur.put("at", if (cur.optLong("at") > 0L) minOf(cur.optLong("at"), at) else at)
-                }
-            }
-        }
-        return JSONObject()
-            .put("version", 1)
-            .put("chaptersRead", earliestMap("chaptersRead"))
-            .put("versesRead", maxInt("versesRead"))
-            .put("listenTicks", maxInt("listenTicks"))
-            .put("chaptersOpened", maxInt("chaptersOpened"))
-            .put("morningDates", JSONArray(dates("morningDates")))
-            .put("nightDates", JSONArray(dates("nightDates")))
-            .put("bonusXP", maxInt("bonusXP"))
-            .put("bestStreakDays", maxInt("bestStreakDays"))
-            .put("earned", earned)
-            .put("seals", earliestMap("seals"))
-    }
-
-    /** RN mergeBlobPair：时间戳新的一侧为准（相等取右），updatedAt 取大 */
-    fun mergeBlobPair(key: String, left: JSONObject?, right: JSONObject?, now: LocalDate): JSONObject? {
-        if (left == null) return right
-        if (right == null) return left
-        val lms = parseIsoMs(str(left.opt("updatedAt"))); val rms = parseIsoMs(str(right.opt("updatedAt")))
-        val newer = if (rms >= lms) right else left
-        val older = if (rms >= lms) left else right
-        val out = JSONObject().put("updatedAt", isoString(maxOf(lms, rms)))
-        val v = mergeBlobValue(key, older.opt("value"), newer.opt("value"), now)
-        out.put("value", v ?: JSONObject.NULL)
-        return out
-    }
-
-    /** RN mergeMemberReadingSyncPush：只认 23 个键、updatedAt 非空字符串的 blob */
-    fun mergePush(base: JSONObject?, incoming: JSONObject?, now: LocalDate = LocalDate.now()): JSONObject {
-        val blobs = base?.copy() ?: JSONObject()
-        if (incoming != null) for (rawKey in incoming.keys()) {
-            if (rawKey !in BLOB_KEYS) continue
-            val b = dict(incoming.opt(rawKey)) ?: continue
-            val u = str(b.opt("updatedAt")) ?: continue
-            if (u.trim().isEmpty()) continue
-            blobs.put(rawKey, mergeBlobPair(rawKey, dict(blobs.opt(rawKey)), b, now) ?: JSONObject.NULL)
-        }
-        return blobs
-    }
-
-    /** RN mergeMemberReadingSyncDocuments 的 revision：`${now}-${8 位随机 36 进制}` */
-    fun newRevision(nowMs: Long = System.currentTimeMillis(), random: String = randomBase36(8)): String = "$nowMs-$random"
-    fun randomBase36(n: Int): String {
-        val chars = "0123456789abcdefghijklmnopqrstuvwxyz"
-        val r = java.security.SecureRandom()
-        return buildString(n) { repeat(n) { append(chars[r.nextInt(chars.length)]) } }
-    }
-
-    // ---- 归属判定（memberReadingSyncOwnerPolicy.ts） ----
+    // ---- 归属判定 ----
 
     enum class SyncPath(val raw: String) { REPLACE("replace"), PULL_ONLY_REINSTALL("pull-only-reinstall"), PULL_ONLY_EMPTY("pull-only-empty"), GUEST_PUSH("guest-push"), CONTINUE("continue") }
 
-    /** 退出 / 手动同步 / 本地改计划：本机已有进度时必须上传 */
     fun shouldForcePush(reason: String?): Boolean =
         reason == "sign-out" || reason == "manual-debug" || reason == "local-change" || reason == "readingPlanPrefs"
 
@@ -484,7 +171,6 @@ object MemberReadingSyncRules {
 
     private fun blobValue(blobs: JSONObject?, key: String): Any? = dict(blobs?.opt(key))?.opt("value")
 
-    /** 云端是否已有会覆盖「空默认本机」的读经进度（设置类 last-wins 不算） */
     fun blobsHaveProgress(blobs: JSONObject?): Boolean {
         blobs ?: return false
         dict(blobValue(blobs, "bookmarks"))?.let { if (it.length() > 0) return true }
@@ -500,7 +186,7 @@ object MemberReadingSyncRules {
         return bool(dict(blobValue(blobs, "readingPlanPrefs"))?.opt("chosen")) == true
     }
 
-    // ---- appLocale 侧车（readingPlanSyncSidecar.ts） ----
+    // ---- appLocale 侧车 ----
 
     fun localeValueWithReadingPlan(locale: Any?, plan: Any?): JSONObject {
         val base = dict(locale)?.copy() ?: JSONObject().put("version", 1).put("locale", "zh-CN")
@@ -512,13 +198,11 @@ object MemberReadingSyncRules {
         return if (p === JSONObject.NULL) null else p
     }
     private fun planIdFromValue(v: Any?): String? = str(dict(v)?.opt("planId"))?.trim()?.ifEmpty { null }
-    /** 以正式 readingPlanPrefs 为准；侧车只作旧数据回退 */
     fun planIdFromBlobs(blobs: JSONObject?): String? =
         planIdFromValue(blobValue(blobs, "readingPlanPrefs")) ?: planIdFromValue(readingPlanFromAppLocale(blobValue(blobs, "appLocale")))
 
-    // ---- 习惯统计 / 全年轴（reading-habit-stats.ts / year-day-timeline.ts） ----
+    // ---- 习惯统计 / 全年轴 / 文案 ----
 
-    /** Howard Hinnant civil_from_days（与 PlanDates.daysFromCivil 互逆） */
     fun civilFromDays(z0: Int): Triple<Int, Int, Int> {
         val z = z0 + 719468
         val era = (if (z >= 0) z else z - 146096) / 146097
@@ -538,7 +222,6 @@ object MemberReadingSyncRules {
         return String.format("%04d-%02d-%02d", cy, cm, cd)
     }
 
-    /** 连读：从最近完成日往前数连续天数（今日未完成则从昨日算起） */
     fun computeReadingStreak(completedDates: Collection<String>, today: String): Int {
         val set = completedDates.toSet()
         if (set.isEmpty()) return 0
@@ -549,7 +232,6 @@ object MemberReadingSyncRules {
     }
 
     private val DATE_RE = Regex("^\\d{4}-\\d{2}-\\d{2}$")
-    /** RN parseRecord：只留 YYYY-MM-DD，去重排序 */
     fun normalizeDates(raw: Collection<String>): List<String> = jsSorted(raw.filter { DATE_RE.matches(it) }.toSet())
 
     data class YearTimeline(val dayOfYear: Int, val daysInYear: Int, val progress: Double)
@@ -563,7 +245,6 @@ object MemberReadingSyncRules {
     }
     fun yearTimeline(now: LocalDate = LocalDate.now()): YearTimeline = yearTimeline(now.year, now.monthValue, now.dayOfMonth)
 
-    /** 全年轴上今天之前的已读区段（连续日合并），单位「第几天」 */
     fun yearReadRanges(completedDates: Collection<String>, year: Int, month: Int, day: Int): List<Pair<Int, Int>> {
         val tl = yearTimeline(year, month, day)
         val jan1 = PlanDates.daysFromCivil(year, 1, 1)
@@ -593,8 +274,6 @@ object MemberReadingSyncRules {
         return (s - 1).toDouble() / daysInYear to (e - s + 1).toDouble() / daysInYear
     }
 
-    // ---- 文案（app-usage-time.ts / scripture-listen-totals.ts） ----
-
     fun formatListenDuration(totalSec: Int, en: Boolean): String {
         val sec = maxOf(0, totalSec); val hours = sec / 3600; val minutes = (sec % 3600) / 60
         if (en) {
@@ -621,37 +300,38 @@ object MemberReadingSyncRules {
         return "$hours 小时 $minutes 分钟"
     }
 
-    // ---- 本机 meta（memberReadingSyncApi.readMemberReadingSyncMeta） ----
+    // ---- 本机 meta ----
 
-    data class Meta(val revision: String? = null, val lastSyncedAt: String? = null, val boundUserId: String? = null,
-                    val requirePullOnly: Boolean = false, val lastError: String? = null) {
-        fun serialize(): String = JSONObject().put("revision", revision ?: JSONObject.NULL).put("lastSyncedAt", lastSyncedAt ?: JSONObject.NULL)
-            .put("boundUserId", boundUserId ?: JSONObject.NULL).put("requirePullOnly", requirePullOnly).put("lastError", lastError ?: JSONObject.NULL).toString()
+    data class Meta(
+        val revision: String? = null,
+        val lastSyncedAt: String? = null,
+        val boundUserId: String? = null,
+        val requirePullOnly: Boolean = false,
+        val lastError: String? = null,
+    ) {
+        fun serialize(): String = JSONObject()
+            .put("boundUserId", boundUserId ?: JSONObject.NULL)
+            .put("lastError", lastError ?: JSONObject.NULL)
+            .put("lastSyncedAt", lastSyncedAt ?: JSONObject.NULL)
+            .put("requirePullOnly", requirePullOnly)
+            .put("revision", revision ?: JSONObject.NULL)
+            .toString()
+
         companion object {
             fun parse(raw: String?): Meta {
-                val o = try { if (raw.isNullOrBlank()) null else JSONObject(raw) } catch (_: Exception) { null } ?: return Meta()
-                val bound = (o.opt("boundUserId") as? String)?.trim()?.ifEmpty { null }
-                val err = (o.opt("lastError") as? String)?.trim()?.ifEmpty { null }
-                return Meta(o.opt("revision") as? String, o.opt("lastSyncedAt") as? String, bound, o.opt("requirePullOnly") == true, err)
+                if (raw.isNullOrBlank()) return Meta()
+                val o = try { JSONObject(raw) } catch (_: Exception) { return Meta() }
+                val bound = if (o.isNull("boundUserId")) null else o.optString("boundUserId").trim().ifEmpty { null }
+                val err = if (o.isNull("lastError")) null else o.optString("lastError").trim().ifEmpty { null }
+                val synced = if (o.isNull("lastSyncedAt")) null else o.optString("lastSyncedAt").ifEmpty { null }
+                val rev = if (o.isNull("revision")) null else o.optString("revision").ifEmpty { null }
+                return Meta(rev, synced, bound, o.optBoolean("requirePullOnly", false), err)
             }
         }
     }
-
-    // ---- 对拍用：键排序的规范 JSON（数值按 JS 习惯：整数不带 .0） ----
-
-    fun canonicalJson(v: Any?): String = when (v) {
-        null, JSONObject.NULL -> "null"
-        is JSONObject -> v.keys().asSequence().sorted().joinToString(",", "{", "}") { k -> jsonString(k) + ":" + canonicalJson(v.opt(k)) }
-        is JSONArray -> (0 until v.length()).joinToString(",", "[", "]") { canonicalJson(v.opt(it)) }
-        is String -> jsonString(v)
-        is Boolean -> v.toString()
-        is Number -> { val d = v.toDouble(); if (d == Math.floor(d) && !d.isInfinite() && Math.abs(d) < 1e15) d.toLong().toString() else d.toString() }
-        else -> jsonString(v.toString())
-    }
-    private fun jsonString(s: String): String = JSONObject.quote(s)
 }
 
-/** 计划状态 ↔ JSON（RN 存的就是这个形状；同步的 blob 也是）。原来在 app 的 ReadingPlanStore 里，同步合并要用所以搬进 core。 */
+/** 计划状态 ↔ JSON（本机存储与读经同步 blob 共用） */
 object PlanStateJson {
     fun parsePrefs(o: JSONObject?): ReadingPlanPrefs? {
         o ?: return null

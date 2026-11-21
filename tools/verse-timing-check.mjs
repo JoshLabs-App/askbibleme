@@ -20,6 +20,9 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const IOS = path.join(ROOT, "apps/askbible-ios/AskBible");
+if (!existsSync(path.join(IOS, "Resources/verse-timings.sqlite"))) {
+  execFileSync(process.execPath, [path.join(ROOT, "tools/build-verse-timings-db.mjs")], { stdio: "inherit" });
+}
 
 const bin = path.join(mkdtempSync(path.join(tmpdir(), "timing-")), "bin");
 execFileSync("swiftc", ["-O", "-swift-version", "5",

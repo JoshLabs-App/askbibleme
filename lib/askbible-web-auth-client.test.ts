@@ -1,50 +1,100 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-const auth = vi.hoisted(() => ({ getSession: vi.fn(), signOut: vi.fn(), onAuthStateChange: vi.fn() }));
-vi.mock("@/lib/supabase/browser", () => ({ createSupabaseBrowserClient: () => ({ auth }) }));
-vi.mock("@/lib/supabase/config", () => ({
-  isSupabaseAuthConfigured: () => true,
-  getSupabaseUrl: () => "https://test.invalid",
-  getSupabaseAnonKey: () => "public-test-key",
-}));
-import { deleteAskbibleWebAccount, signOutAskbibleWeb } from "./askbible-web-auth-client";
-const session = (id: string) => ({ data: { session: { user: { id }, access_token: `test-${id}` } } });
+
+const SESSION_KEY = "askbible.web.member-session.v2";
+
+let store: Map<string, string>;
+
+function seedSession(id: string) {
+  store.set(
+    SESSION_KEY,
+    JSON.stringify({
+      sessionToken: `tok-${id}`,
+      expiresAt: new Date(Date.now() + 86400_000).toISOString(),
+      user: { id, email: `${id.toLowerCase()}@example.com`, name: id, isAdmin: false, createdAt: null },
+    }),
+  );
+}
+
 beforeEach(() => {
+  vi.resetModules();
   vi.clearAllMocks();
-  auth.getSession.mockResolvedValue(session("A"));
-  auth.signOut.mockResolvedValue({ error: null });
-  auth.onAuthStateChange.mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } });
-  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true }) }));
+  store = new Map();
+  const ls = {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => void store.set(k, v),
+    removeItem: (k: string) => void store.delete(k),
+  };
+  vi.stubGlobal("window", { localStorage: ls });
+  vi.stubGlobal("localStorage", ls);
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ ok: true }),
+    }),
+  );
 });
-describe("account mutations", () => {
-  it("reports a failed sign-out so callers retain local account data", async () => {
-    auth.signOut.mockResolvedValue({ error: new Error("offline") });
-    await expect(signOutAskbibleWeb()).rejects.toThrow("offline");
+
+describe("askbible-sync web auth client", () => {
+  it("signs out the deleted owner after confirmed account deletion", async () => {
+    seedSession("A");
+    const m = await import("./askbible-web-auth-client");
+    expect(await m.deleteAskbibleWebAccount()).toEqual({ ok: true });
+    expect(m.readStoredAskbibleWebSession()).toBeNull();
   });
-  it("does not sign out B when A's deletion response arrives late", async () => {
-    auth.getSession.mockResolvedValueOnce(session("A")).mockResolvedValueOnce(session("B"));
-    expect(await deleteAskbibleWebAccount()).toEqual({ ok: true });
-    expect(auth.signOut).not.toHaveBeenCalled();
-  });
-  it("signs out the deleted owner after confirmed success", async () => {
-    expect(await deleteAskbibleWebAccount()).toEqual({ ok: true });
-    expect(auth.signOut).toHaveBeenCalledOnce();
-  });
+
   it("a rejected deletion keeps the account signed in", async () => {
-    vi.mocked(fetch).mockResolvedValue({ ok: false, json: async () => ({ error: "try_again" }) } as Response);
-    expect(await deleteAskbibleWebAccount()).toEqual({ ok: false, error: "try_again", code: undefined });
-    expect(auth.signOut).not.toHaveBeenCalled();
-  });
-  it("a delayed logout for A cannot sign out the current B", async () => {
-    auth.getSession.mockResolvedValue(session("B"));
-    await signOutAskbibleWeb("A");
-    expect(auth.signOut).not.toHaveBeenCalled();
-  });
-  it("rechecks auth changes occurring during the final session read", async () => {
-    auth.getSession.mockImplementation(async () => {
-      auth.onAuthStateChange.mock.calls[0][0]("SIGNED_IN");
-      return session("A");
+    seedSession("A");
+    vi.mocked(fetch).mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({ ok: false, error: "try_again" }),
+    } as Response);
+    const m = await import("./askbible-web-auth-client");
+    expect(await m.deleteAskbibleWebAccount()).toEqual({
+      ok: false,
+      error: "try_again",
+      code: undefined,
     });
-    await signOutAskbibleWeb("A");
-    expect(auth.signOut).not.toHaveBeenCalled();
+    expect(m.readStoredAskbibleWebSession()?.user.id).toBe("A");
+  });
+
+  it("does not sign out B when A's deletion response arrives after switching to B", async () => {
+    seedSession("A");
+    const m = await import("./askbible-web-auth-client");
+    vi.mocked(fetch).mockImplementationOnce(async () => {
+      // Simulate user logging into B while A's delete request is in flight
+      await m.verifyAskbibleWebOtp({ email: "b@example.com", token: "123456" });
+      return { ok: true, status: 200, json: async () => ({ ok: true }) } as Response;
+    });
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        ok: true,
+        sessionToken: "tok-B",
+        expiresAt: new Date(Date.now() + 86400_000).toISOString(),
+        user: { id: "B", email: "b@example.com", name: "B", isAdmin: false, createdAt: null },
+      }),
+    } as Response);
+
+    expect(await m.deleteAskbibleWebAccount()).toEqual({ ok: true });
+    expect(m.readStoredAskbibleWebSession()?.user.id).toBe("B");
+  });
+
+  it("a delayed logout for A cannot sign out current B", async () => {
+    seedSession("B");
+    const m = await import("./askbible-web-auth-client");
+    await m.signOutAskbibleWeb("A");
+    expect(m.readStoredAskbibleWebSession()?.user.id).toBe("B");
+  });
+
+  it("retains local session on transient 503 during session refresh", async () => {
+    seedSession("A");
+    vi.mocked(fetch).mockResolvedValue({ ok: false, status: 503 } as Response);
+    const m = await import("./askbible-web-auth-client");
+    const res = await m.fetchAskbibleWebSessionUser();
+    expect(res.user?.id).toBe("A");
   });
 });

@@ -1,11 +1,9 @@
 import Foundation
 import Combine
 
-/// 会员读经进度与云端的同步驱动（RN runMemberReadingSync / requestMemberReadingSync / useMemberReadingSync / readingSyncLocal*）。
-/// 纯规则在 MemberReadingSyncRules；这里只搬 blobs：本机各 store ↔ Supabase member_reading_sync_documents。
-/// 路径：换帐号 / 退出后重登只拉云端；未绑定先看云端（有进度只拉，没进度才把本机当「游客升级」推上去）；
-/// 已绑定同帐号增量合并（推 → 服务端合并 → 本机再合并 → 再推一次确认）。
-/// 调度：登录 / 冷启动 / 回前台立即同步，本地改动 1.5 秒防抖，45 秒轮询走 30 秒节流；同一时刻只跑一份。
+/// 会员读经进度与云端的同步驱动（DECISIONS D-44：去客户端三端重复合并器，统一走 `askbible-sync` Worker 权威合并）。
+/// 路径：换帐号 / 退出后重登只拉云端；未绑定先看云端（有进度只拉，没进度把本机当「游客升级」推上去）；
+/// 已绑定同帐号直接一次 `POST /v1/sync/reading` 原子合并并返回最新文档落盘。
 @MainActor
 final class MemberReadingSyncEngine: ObservableObject {
     typealias Rules = MemberReadingSyncRules
@@ -21,7 +19,6 @@ final class MemberReadingSyncEngine: ObservableObject {
     private var search: SearchPrefs!
     private var highlights: VerseHighlightStore!
     private var achievements: AchievementStore!
-    /// 当前界面语言（appLocale 侧车的 locale）
     var localeTag: () -> String = { "zh-CN" }
 
     private let defaults: UserDefaults
@@ -46,7 +43,6 @@ final class MemberReadingSyncEngine: ObservableObject {
             && context.sessionGeneration == auth?.sessionGeneration && context.userId == auth?.user?.id
     }
 
-    /// Invalidate before clearing local data, so even a transport that ignores cancellation cannot write it back.
     func cancelPendingWork() {
         syncGeneration &+= 1
         inFlight?.cancel(); inFlight = nil
@@ -75,7 +71,7 @@ final class MemberReadingSyncEngine: ObservableObject {
         lastError = meta.lastError
     }
 
-    // MARK: meta（askbible.member-reading-sync-meta.v1，与 RN 同键同形）
+    // MARK: meta
 
     private var meta: Rules.Meta {
         get { Rules.Meta.parse(defaults.string(forKey: Rules.metaKey)) }
@@ -83,11 +79,10 @@ final class MemberReadingSyncEngine: ObservableObject {
     }
     private func remember(_ error: String?) { var m = meta; m.lastError = error; meta = m }
 
-    // MARK: 导出本机（RN exportLocalReadingBlobs / localHasMemberReadingProgress）
+    // MARK: 导出本机
 
     private func wrap(_ v: Any, _ now: String) -> [String: Any] { ["updatedAt": now, "value": v] }
 
-    /// RN 在 hydrate 时把播放页点听日并入习惯统计；导出时也取并集
     private var habitDates: [String] { Rules.normalizeDates(activity.completedDates + Array(plans.listenedDates)) }
 
     func exportLocal() -> [String: Any] {
@@ -108,7 +103,6 @@ final class MemberReadingSyncEngine: ObservableObject {
         if !habit.isEmpty { blobs["habitStats"] = wrap(["version": 1, "completedDates": habit] as [String: Any], now) }
         if activity.listenTotalSec > 0 { blobs["scriptureListenTotals"] = wrap(activity.listenJSON, now) }
         if !search.recent.isEmpty { blobs["recentSearches"] = wrap(["version": 1, "terms": search.recent] as [String: Any], now) }
-        // Josh 2026-09-11：使用时长与最近阅读也上云
         if activity.usageTotalSec > 0 { blobs["appUsageTime"] = wrap(activity.usageJSON, now) }
         if !activity.recent.isEmpty { blobs["recentChapters"] = wrap(activity.recentJSON, now) }
         let hl = highlights.json
@@ -127,7 +121,7 @@ final class MemberReadingSyncEngine: ObservableObject {
         return plans.hasUserTriple || plans.hasUserNt
     }
 
-    // MARK: 应用云端（RN applyMemberReadingSyncBlobs / applyReadingSyncBlob）
+    // MARK: 应用云端
 
     private func beginApplying() {
         applyingRemote = true
@@ -145,7 +139,6 @@ final class MemberReadingSyncEngine: ObservableObject {
             guard let blob = Rules.dict(blobs[key]), let value = blob["value"] else { continue }
             apply(key, value)
         }
-        // 没有正式 readingPlanPrefs blob 时才用 appLocale 侧车里的旧计划
         if blobs["readingPlanPrefs"] == nil, let side = Rules.dict(Rules.readingPlanFromAppLocale(Rules.dict(blobs["appLocale"])?["value"])),
            Rules.str(side["planId"]) != nil {
             let merged = plans.storedPrefsJSON.map { Rules.mergeReadingPlanPrefsValue(side, $0) } ?? side
@@ -202,12 +195,10 @@ final class MemberReadingSyncEngine: ObservableObject {
                 if !parsed.isEmpty { activity.mergeRemoteRecent(parsed) }
             }
         default:
-            // 高亮 / 今日完成 / 字体 / 译本 / 首页与自然场景设置 / 音乐主题 / 语速 / 人声 / 探索档案 / 语言：原生没有对应开关，只在云端保留、不动本机
             break
         }
     }
 
-    /// 换帐号 / 退出：清空本机同步数据（RN clearLocalMemberReadingSyncBlobs）
     private func clearLocalBlobs() {
         beginApplying()
         plans.clearForAccountSwitch(); bookmarks.clearForAccountSwitch(); activity.clearForAccountSwitch(); search.clearRecentForAccountSwitch()
@@ -215,7 +206,7 @@ final class MemberReadingSyncEngine: ObservableObject {
         endApplying()
     }
 
-    // MARK: 一次同步（RN runMemberReadingSync，Supabase 直连；不带主站回落与三次回读确认）
+    // MARK: 一次同步（Worker 单次往返权威合并）
 
     private func stampedPlanPush(_ stored: [String: Any], locale: Any?) -> (plan: [String: Any], locale: [String: Any], at: String) {
         let at = Rules.isoString(ms: Date().timeIntervalSince1970 * 1000)
@@ -225,7 +216,7 @@ final class MemberReadingSyncEngine: ObservableObject {
         return (wrap(value, at), wrap(Rules.localeValueWithReadingPlan(locale: locale, plan: value), at), at)
     }
 
-    private func applyPulled(_ doc: SupabaseAuthClient.SyncDocument?, userId: String) -> Outcome {
+    private func applyPulled(_ doc: AskBibleSyncClient.SyncDocument?, userId: String) -> Outcome {
         applyBlobs(doc?.blobs ?? [:])
         var m = meta
         m.revision = doc?.revision ?? "0"; m.lastSyncedAt = Rules.isoString(ms: Date().timeIntervalSince1970 * 1000)
@@ -235,36 +226,14 @@ final class MemberReadingSyncEngine: ObservableObject {
     }
 
     private func pullAndApplyRemoteOnly(token: String, context: RunContext, label: String) async -> Outcome {
-        let userId = context.userId
-        let result = await SupabaseAuthClient.fetchSyncDocument(token: token, userId: userId)
+        let result = await AskBibleSyncClient.fetchSyncDocument(token: token)
         guard isCurrent(context) else { return .skipped }
         switch result {
-        case .ok(let doc): return applyPulled(doc, userId: userId)
+        case .ok(let doc): return applyPulled(doc, userId: context.userId)
         case .unauthorized: remember(SiteCopy.t("native.syncUnauthorized")); return .unauthorized
         case .failed(let m): remember("\(label)：\(m)"); return .skipped
         case .network: remember(SiteCopy.t("native.syncOffline")); return .offline
         }
-    }
-
-    /// RN memberReadingSyncPushSupabase：读云端 → 合并 → upsert，回合并后的文档
-    private func pushMerged(token: String, context: RunContext, blobs: [String: Any]) async -> SupabaseAuthClient.SyncFetch {
-        let userId = context.userId
-        guard isCurrent(context) else { return .network }
-        let existing = await SupabaseAuthClient.fetchSyncDocument(token: token, userId: userId)
-        guard isCurrent(context) else { return .network }
-        guard case .ok(let doc) = existing else { return existing }
-        let now = Date()
-        let merged = Rules.mergePush(base: doc?.blobs, incoming: blobs, now: now)
-        return await SupabaseAuthClient.upsertSyncDocument(token: token, userId: userId, revision: Rules.newRevision(now: now),
-                                                           updatedAt: Rules.isoString(ms: now.timeIntervalSince1970 * 1000), blobs: merged)
-    }
-
-    /// RN mergeAndApply：网络往返期间本地可能又改了，用最新本地再合并一次再落盘
-    private func mergeAndApply(remote: [String: Any]?, localPush: [String: Any]) -> [String: Any] {
-        let fresh = exportLocal()
-        let merged = Rules.mergePush(base: Rules.mergePush(base: remote, incoming: localPush), incoming: fresh)
-        applyBlobs(merged)
-        return merged
     }
 
     func run(reason: String?) async -> Outcome {
@@ -293,7 +262,7 @@ final class MemberReadingSyncEngine: ObservableObject {
             return await pullAndApplyRemoteOnly(token: token, context: context, label: SiteCopy.t("native.syncPullFailedAfterSwitch"))
         }
         if ownerMode == "unbound" {
-            let initial = await SupabaseAuthClient.fetchSyncDocument(token: token, userId: userId)
+            let initial = await AskBibleSyncClient.fetchSyncDocument(token: token)
             guard isCurrent(context) else { return .skipped }
             switch initial {
             case .unauthorized: remember(SiteCopy.t("native.syncUnauthorized")); return .unauthorized
@@ -303,7 +272,6 @@ final class MemberReadingSyncEngine: ObservableObject {
                 let path = Rules.decidePath(boundUserId: nil, requirePullOnly: false, userId: userId,
                                             remoteHasProgress: Rules.blobsHaveProgress(doc?.blobs), localHasProgress: localHas, forcePush: forcePush)
                 if path == .pullOnlyReinstall || path == .pullOnlyEmpty { return applyPulled(doc, userId: userId) }
-                // 云端无进度、本机有进度：游客升级，先绑定再推本地
                 meta = Rules.Meta(revision: doc?.revision, lastSyncedAt: nil, boundUserId: userId, requirePullOnly: false, lastError: nil)
             }
         } else if !localHas, !forcePushPlan {
@@ -316,36 +284,27 @@ final class MemberReadingSyncEngine: ObservableObject {
             localPush["readingPlanPrefs"] = stamped.plan
             localPush["appLocale"] = stamped.locale
         }
-        let pushed = await pushMerged(token: token, context: context, blobs: localPush)
+        let pushed = await AskBibleSyncClient.pushSyncDocument(token: token, blobs: localPush)
         guard isCurrent(context) else { return .skipped }
         switch pushed {
         case .ok(let doc):
-            let merged = mergeAndApply(remote: doc?.blobs, localPush: localPush)
-            // 首推成功后再确认一次：同步期间本地又改过的，把合并结果再推上去
-            let confirmed = await pushMerged(token: token, context: context, blobs: merged)
-            guard isCurrent(context) else { return .skipped }
-            switch confirmed {
-            case .ok(let confirm):
-                var mm = meta
-                mm.revision = confirm?.revision ?? doc?.revision; mm.lastSyncedAt = Rules.isoString(ms: Date().timeIntervalSince1970 * 1000)
-                mm.boundUserId = userId; mm.requirePullOnly = false; mm.lastError = nil
-                meta = mm
-                return .ok
-            case .unauthorized: remember(SiteCopy.t("native.syncUnauthorized")); return .unauthorized
-            case .failed(let msg): remember(SiteCopy.f("native.syncPushFailedAfterMerge", ["message": msg])); return .skipped
-            case .network: remember(SiteCopy.t("native.syncOffline")); return .offline
-            }
-        case .unauthorized: remember(SiteCopy.t("native.syncUnauthorized")); return .unauthorized
-        case .failed(let msg): remember(SiteCopy.f("native.syncPushFailed", ["message": msg])); return .skipped
-        case .network: remember(SiteCopy.t("native.syncOffline")); return .offline
+            return applyPulled(doc, userId: userId)
+        case .unauthorized:
+            remember(SiteCopy.t("native.syncUnauthorized"))
+            return .unauthorized
+        case .failed(let msg):
+            remember(SiteCopy.f("native.syncPushFailed", ["message": msg]))
+            return .skipped
+        case .network:
+            remember(SiteCopy.t("native.syncOffline"))
+            return .offline
         }
     }
 
-    // MARK: 调度（RN scheduleMemberReadingSync / flushMemberReadingSyncNow / notifyMemberReadingLocalChanged）
+    // MARK: 调度
 
     private var loggedIn: Bool { auth?.user != nil && auth?.sessionToken != nil }
 
-    /// 前台轮询用：30 秒内跑过就不再跑
     func schedule(reason: String = "foreground") {
         guard loggedIn else { return }
         let now = Date().timeIntervalSince1970
@@ -359,15 +318,6 @@ final class MemberReadingSyncEngine: ObservableObject {
         Task { [weak self] in _ = await task.value; if self?.inFlight == task { self?.inFlight = nil } }
     }
 
-    /// 登录 / 回前台 / 本地改动 / 退出前：跳过节流；已有同步在跑就等它完再用最新本地跑一轮
-    ///
-    /// 这里**不能写成递归**（2026-09-19 修）：`schedule()` 把 `inFlight` 的清理挂在另一条 Task 上，
-    /// 所以等到 `await t.value` 返回时，`inFlight` 很可能还指着那个**已经跑完**的 task。
-    /// 递归回来一看 `inFlight` 非 nil，又去 `await` 一个已完成的 task —— 立即返回、不让出任何时间，
-    /// `pendingFlushReason` 还是自己刚写进去的，于是无限递归。它把 MainActor 占死，
-    /// 负责清 `inFlight` 的那条 Task 永远排不上队，循环再也出不来：实测每秒造上百万个 Task，
-    /// 几秒钟就把进程顶到 2GB 被 Jetsam 杀掉（表现为「启动几秒就闪退」且没有崩溃报告）。
-    /// 改法两条：等完就地把 `inFlight` 清掉；递归改循环。
     @discardableResult
     func flushNow(reason: String) async -> Outcome {
         guard loggedIn else { return .skipped }
@@ -382,12 +332,11 @@ final class MemberReadingSyncEngine: ObservableObject {
                 let o = await withTaskCancellationHandler(operation: { await t.value }, onCancel: { t.cancel() })
                 guard !Task.isCancelled, generation == syncGeneration,
                       sessionGeneration == auth?.sessionGeneration else { return .skipped }
-                // t 已经结束了。别等它那条异步清理 —— 就地清，否则下一轮又 await 一个完成态 task 空转
                 if inFlight == t { inFlight = nil }
                 guard let again = pendingFlushReason else { return o }
                 pendingFlushReason = nil
                 reason = again
-                continue        // 用最新的理由真正跑一轮（此时 inFlight 已是 nil，不会再空转）
+                continue
             }
             lastSyncStartedAt = 0
             let task = Task { [weak self] () -> Outcome in
@@ -404,7 +353,6 @@ final class MemberReadingSyncEngine: ObservableObject {
         }
     }
 
-    /// 本地读经数据变更后 1.5 秒内合并成一次上传
     func notifyLocalChanged(_ reason: String) {
         guard !applyingRemote, loggedIn else { return }
         pendingLocalReason = reason
@@ -418,7 +366,6 @@ final class MemberReadingSyncEngine: ObservableObject {
         }
     }
 
-    /// 退出登录前（RN signOut）：把没发出去的本地改动推上去（最多等 12 秒），再清本机、标记下次只拉云端
     func prepareSignOut() async -> Bool {
         let generation = auth?.sessionGeneration
         debounceTask?.cancel(); debounceTask = nil; pendingLocalReason = nil

@@ -29,6 +29,14 @@ class DailyVerseWidget : AppWidgetProvider() {
                 DailyVerseWidget().onUpdate(context, manager, ids)
             }
         }
+
+        fun refreshAll(context: Context) {
+            val manager = AppWidgetManager.getInstance(context)
+            val ids = manager.getAppWidgetIds(ComponentName(context, DailyVerseWidget::class.java))
+            if (ids.isNotEmpty()) {
+                DailyVerseWidget().onUpdate(context, manager, ids)
+            }
+        }
     }
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {

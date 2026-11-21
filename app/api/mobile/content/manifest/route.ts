@@ -4,8 +4,6 @@ import {
   readMobileContentFlagsSync,
   type MobileContentAnnouncement,
 } from "@/lib/admin/mobile-content-flags-store";
-import { isMemberAuthBackendConfigured } from "@/lib/member-auth-backend";
-import { isSupabaseAuthConfigured } from "@/lib/supabase/config";
 
 export const runtime = "nodejs";
 
@@ -94,13 +92,8 @@ function manifestVersion(
 
 export async function GET() {
   const cfg = readMobileContentFlagsSync(process.cwd());
-  const enabled = cfg.flags.remoteContentManifestEnabled;
-  const infoEditionDiskSaveEnabled =
-    process.env.INFO_EDITION_DISK_SAVE === "1" &&
-    ((process.env.DATA_ROOT?.trim()?.length ?? 0) > 0 ||
-      (process.env.INFO_EDITION_DATA_DIR?.trim()?.length ?? 0) > 0);
   const flags = {
-    remoteContentManifestEnabled: enabled,
+    remoteContentManifestEnabled: cfg.flags.remoteContentManifestEnabled,
     exploreCategoriesRemoteEnabled: cfg.flags.exploreCategoriesRemoteEnabled,
   };
 
@@ -111,15 +104,10 @@ export async function GET() {
     manifestVersion: manifestVersion(items, flags, cfg.announcement ?? null),
     flags,
     serverCapabilities: {
-      /**
-       * 反馈与内容纠错都由客户端直写 Supabase（insert-only RLS），与 Render 持久盘无关。
-       * 此处原先按 DATA_ROOT 是否存在判断，磁盘退役后会误报 false 而让 App 收起反馈入口。
-       */
-      feedbackEnabled: isSupabaseAuthConfigured(),
+      feedbackEnabled: true,
       telemetryEnabled: false,
-      memberRegisterEnabled:
-        cfg.flags.memberRegisterEnabled && isMemberAuthBackendConfigured(),
-      infoEditionDiskSaveEnabled,
+      memberRegisterEnabled: cfg.flags.memberRegisterEnabled,
+      infoEditionDiskSaveEnabled: false,
     },
     items,
     announcement: cfg.announcement ?? null,
@@ -128,6 +116,6 @@ export async function GET() {
   };
 
   return NextResponse.json(payload, {
-    headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=120" },
+    headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=300" },
   });
 }

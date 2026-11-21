@@ -1,42 +1,39 @@
 import Foundation
 
-/// 会员登录（RN src/auth：memberSession / supabaseMemberAuth / memberAuthSessionCommit）。
-/// RN 用 supabase-js 直连 Supabase（不经 askbible.me）；这里用同一套 GoTrue / PostgREST 接口手写请求。
-/// 本机会话 JSON 与 RN 同形（sessionToken / expiresAt / user），键也一样，装回 RN 版也能认。
+/// 会员登录与读经同步客户端（DECISIONS D-44：去 Supabase → Cloudflare Worker `askbible-sync` + D1）。
+/// 支持：6 位邮箱验证码登录、Apple / Google 原生 ID Token 公钥直验（零浏览器跳转）、会话滑动续期、修改昵称、原子注销账户、服务端权威合并读经同步。
 struct MemberUser: Codable, Equatable {
     var id: String
     var email: String
     var name: String
     var locale: String?
     var createdAt: String?
+    var isAdmin: Bool?
 }
 
 struct MemberSession: Codable, Equatable {
     var sessionToken: String
     var expiresAt: String
     var user: MemberUser
-    /// GoTrue refresh_token：access token 一小时过期，RN 没存所以一小时就被登出；原生存下来到期自动续（RN 读这份 JSON 会忽略这个键）
-    var refreshToken: String?
 }
 
-/// 纯规则（check:member-auth 对拍）：错误文案映射、显示名回退、会话解析、称呼校验
+/// 纯规则：错误文案映射、显示名回退、会话解析、称呼校验
 enum MemberAuthRules {
     static let sessionKey = "askbible.mobile.member-session.v1"
     static let displayNameMaxLen = 24
 
-    /// RN mapAuthErrorMessage：GoTrue 的英文错误 → 中文提示 + code
     static func mapAuthError(_ message: String) -> (error: String, code: String) {
         let msg = message.trimmingCharacters(in: .whitespacesAndNewlines)
         let m = msg.isEmpty ? "auth_failed" : msg
         func has(_ pattern: String) -> Bool { m.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil }
-        if has("invalid login credentials|invalid_credentials") { return ("邮箱或密码不正确。", "invalid_credentials") }
-        if has("email not confirmed") { return ("请先完成邮箱验证后再登录。", "email_not_confirmed") }
-        if has("user already registered|already been registered") { return ("该邮箱已注册。", "email_taken") }
+        if has("invalid_email") { return ("请输入有效的邮箱地址。", "invalid_email") }
+        if has("invalid_otp") { return ("验证码不正确，请核对后重试。", "invalid_otp") }
+        if has("otp_expired") { return ("验证码已过期，请重新获取。", "otp_expired") }
+        if has("otp_too_many_attempts") { return ("尝试次数过多，请重新获取验证码。", "otp_too_many_attempts") }
         if has("network request failed|failed to fetch|network error|timed out|failed to connect") { return ("network", "network") }
         return (m, "auth_failed")
     }
 
-    /// RN displayNameFromUser：优先传入的名字，再看 user_metadata 的 full_name / name / display_name，最后邮箱、id
     static func displayName(email: String, id: String, metadata: [String: Any], fallback: String?) -> String {
         if let f = fallback?.trimmingCharacters(in: .whitespaces), !f.isEmpty { return f }
         for key in ["full_name", "name", "display_name"] {
@@ -48,47 +45,47 @@ enum MemberAuthRules {
         return email.isEmpty ? id : email
     }
 
-    /// RN readMemberSession：字段齐全且未过期才算有会话
     static func parseSession(_ data: Data, now: Date = Date()) -> MemberSession? {
-        guard let s = parseSession(data, now: now, allowExpired: false) else { return nil }
-        return s
-    }
-
-    /// allowExpired：过期但带 refresh_token 的会话也读出来（启动后先续期再校验）
-    static func parseSession(_ data: Data, now: Date = Date(), allowExpired: Bool) -> MemberSession? {
         guard let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let token = (obj["sessionToken"] as? String)?.trimmingCharacters(in: .whitespaces), !token.isEmpty,
+              let token = (obj["sessionToken"] as? String)?.trimmingCharacters(in: .whitespaces),
+              !token.isEmpty,
+              // 旧版 v1 的 JWT 含 `.` 分段，升到 v2 时静默丢弃旧 token（保留本机读经进度，重新验证登录即无缝合并同 UUID 账户）
+              !token.contains("."),
               let expiresAt = obj["expiresAt"] as? String,
               let u = obj["user"] as? [String: Any],
-              let id = u["id"] as? String, let email = u["email"] as? String else { return nil }
-        let refresh = (obj["refreshToken"] as? String)?.trimmingCharacters(in: .whitespaces)
-        guard let exp = ISO8601DateFormatter.flexible(expiresAt) else { return nil }
-        if exp <= now, !(allowExpired && !(refresh?.isEmpty ?? true)) { return nil }
+              let id = u["id"] as? String, !id.isEmpty,
+              let email = u["email"] as? String else { return nil }
+        guard let exp = ISO8601DateFormatter.flexible(expiresAt), exp > now else { return nil }
         let name = (u["name"] as? String) ?? email
         let created = (u["createdAt"] as? String)?.trimmingCharacters(in: .whitespaces)
-        return MemberSession(sessionToken: token, expiresAt: expiresAt,
-                             user: MemberUser(id: id, email: email, name: name, locale: u["locale"] as? String,
-                                              createdAt: (created?.isEmpty ?? true) ? nil : created),
-                             refreshToken: (refresh?.isEmpty ?? true) ? nil : refresh)
+        let isAdmin = u["isAdmin"] as? Bool
+        return MemberSession(
+            sessionToken: token,
+            expiresAt: expiresAt,
+            user: MemberUser(
+                id: id,
+                email: email,
+                name: name,
+                locale: u["locale"] as? String,
+                createdAt: (created?.isEmpty ?? true) ? nil : created,
+                isAdmin: isAdmin
+            )
+        )
     }
 
-    /// 还有多久过期（秒；已过期为负）
     static func secondsUntilExpiry(_ s: MemberSession, now: Date = Date()) -> Double {
         (ISO8601DateFormatter.flexible(s.expiresAt) ?? now).timeIntervalSince(now)
     }
 
-    /// RN normalizeExploreDisplayName / isValidExploreDisplayName
     static func normalizeDisplayName(_ raw: String) -> String {
         raw.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
     }
+
     static func isValidDisplayName(_ raw: String) -> Bool {
         let n = normalizeDisplayName(raw)
         return !n.isEmpty && n.count <= displayNameMaxLen
     }
 
-    /// 探索页抬头：登录了「你好，名字」，没登录「请登录，解锁更多」
-    /// 抬头 / 菜单里显示的账号名：没设昵称时 name 就是邮箱，整串太长（Josh 2026-09-10「超长，不好看」），
-    /// 取 @ 前面那段，再长就截断。只用于显示，不进对拍规则。
     static func shortAccountName(_ raw: String) -> String {
         let n = normalizeDisplayName(raw)
         let base = n.contains("@") ? String(n.prefix(while: { $0 != "@" })) : n
@@ -101,9 +98,8 @@ enum MemberAuthRules {
         return "你好，\(n.isEmpty ? "用户" : n)"
     }
 
-    /// GoTrue 的 expires_at（unix 秒）→ ISO；缺了按一小时
     static func expiresAtISO(expiresAtSeconds: Double?, now: Date = Date()) -> String {
-        let d = expiresAtSeconds.map { Date(timeIntervalSince1970: $0) } ?? now.addingTimeInterval(3600)
+        let d = expiresAtSeconds.map { Date(timeIntervalSince1970: $0) } ?? now.addingTimeInterval(365 * 86_400)
         return ISO8601DateFormatter.millis.string(from: d)
     }
 }
@@ -115,15 +111,7 @@ extension ISO8601DateFormatter {
     static let plain: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter(); f.formatOptions = [.withInternetDateTime]; return f
     }()
-    /// JS Date.toISOString() 带毫秒；有的接口不带
     static func flexible(_ s: String) -> Date? { millis.date(from: s) ?? plain.date(from: s) }
-}
-
-/// Supabase 直连（与 RN app.config extra.supabaseUrl / anon key 同一套；anon key 是公开的发布密钥，RN 包里也带着）
-enum SupabaseAuthConfig {
-    /// 当前 api 线路（防封换线，见 Endpoints.swift）；默认仍是 supabase.co，被干扰时换到自家反代
-    static var url: String { Endpoints.apiBase }
-    static let anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnb2JhZGhkeWxhcmhzc3VkcGxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyMTMwMDAsImV4cCI6MjA5Njc4OTAwMH0.5EqC5hJFmydZaVBmpXJk1ddJNGX_fY2hN83k5IzAO3I"
 }
 
 enum MemberAuthResult {
@@ -131,29 +119,65 @@ enum MemberAuthResult {
     case failed(error: String, code: String)
 }
 
-/// GoTrue（/auth/v1）+ PostgREST（/rest/v1/askbible_profiles）请求；全部 async，失败给 RN 同款文案
-enum SupabaseAuthClient {
-    /// 与安卓相同的受 RLS 保护查询，仅用于尚未公开的灵修入口。
-    static func fetchIsAdmin(token: String, userId: String) async -> Bool? {
-        guard let id = userId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let result = try? await request("/rest/v1/askbible_profiles?select=is_admin&user_id=eq.\(id)", method: "GET", token: token),
-              result.status == 200, let rows = result.json as? [[String: Any]] else { return nil }
-        return rows.first?["is_admin"] as? Bool ?? false
+enum OtpSendResult {
+    case ok(expiresInSec: Int)
+    case failed(error: String, code: String)
+}
+
+/// AskBible Sync Worker（`/v1/auth/*` + `/v1/sync/reading`）请求客户端
+enum AskBibleSyncClient {
+    struct VerifiedSession {
+        var user: MemberUser
+        var expiresAt: String
     }
 
-    private static func request(_ path: String, method: String, token: String? = nil, body: [String: Any]? = nil,
-                                extraHeaders: [String: String] = [:], timeout: TimeInterval = 15) async throws -> (status: Int, json: Any?) {
-        var req = URLRequest(url: URL(string: SupabaseAuthConfig.url + path)!)
+    struct SyncDocument {
+        var revision: String
+        var updatedAt: String
+        var blobs: [String: Any]
+    }
+
+    enum SyncFetch {
+        case ok(SyncDocument?)
+        case unauthorized
+        case failed(String)
+        case network
+    }
+
+    private static let deviceIdKey = "askbible.sync.device-id.v1"
+
+    private static var deviceId: String {
+        if let existing = UserDefaults.standard.string(forKey: deviceIdKey), !existing.isEmpty {
+            return existing
+        }
+        let fresh = UUID().uuidString.lowercased()
+        UserDefaults.standard.set(fresh, forKey: deviceIdKey)
+        return fresh
+    }
+
+    private static func request(
+        _ path: String,
+        method: String,
+        token: String? = nil,
+        body: [String: Any]? = nil,
+        timeout: TimeInterval = 20
+    ) async throws -> (status: Int, json: Any?) {
+        guard let url = URL(string: Endpoints.apiBase + path) else {
+            throw URLError(.badURL)
+        }
+        var req = URLRequest(url: url)
         req.httpMethod = method
         req.timeoutInterval = timeout
-        req.setValue(SupabaseAuthConfig.anonKey, forHTTPHeaderField: "apikey")
         req.setValue("application/json", forHTTPHeaderField: "Accept")
-        req.setValue("Bearer \(token ?? SupabaseAuthConfig.anonKey)", forHTTPHeaderField: "Authorization")
+        req.setValue("ios", forHTTPHeaderField: "X-Platform")
+        req.setValue(deviceId, forHTTPHeaderField: "X-Device-Id")
+        if let token, !token.isEmpty {
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
         if let body {
             req.setValue("application/json", forHTTPHeaderField: "Content-Type")
             req.httpBody = try JSONSerialization.data(withJSONObject: body)
         }
-        for (k, v) in extraHeaders { req.setValue(v, forHTTPHeaderField: k) }
         let (data, resp) = try await URLSession.shared.data(for: req)
         let status = (resp as? HTTPURLResponse)?.statusCode ?? 0
         let json = data.isEmpty ? nil : try? JSONSerialization.jsonObject(with: data)
@@ -162,133 +186,114 @@ enum SupabaseAuthClient {
 
     private static func errorMessage(_ json: Any?, status: Int) -> String {
         guard let o = json as? [String: Any] else { return "HTTP \(status)" }
-        for k in ["error_description", "msg", "message", "error"] {
+        for k in ["error", "message", "msg"] {
             if let s = o[k] as? String, !s.isEmpty { return s }
         }
         return "HTTP \(status)"
     }
 
-    /// 把 GoTrue 的 session JSON 变成本机会话（顺手保证 askbible_profiles 有一行）
-    private static func session(from o: [String: Any], fallbackName: String?, locale: String?) async -> MemberSession? {
-        guard let token = o["access_token"] as? String, let u = o["user"] as? [String: Any],
-              let id = u["id"] as? String else { return nil }
-        let email = (u["email"] as? String) ?? ""
-        let meta = (u["user_metadata"] as? [String: Any]) ?? [:]
-        let expiresAt = MemberAuthRules.expiresAtISO(expiresAtSeconds: (o["expires_at"] as? NSNumber)?.doubleValue)
-        let created = (u["created_at"] as? String)?.trimmingCharacters(in: .whitespaces)
-        let profile = await ensureProfile(token: token, userId: id,
-                                          displayName: MemberAuthRules.displayName(email: email, id: id, metadata: meta, fallback: fallbackName),
-                                          locale: locale)
-        let name = profile?.displayName ?? MemberAuthRules.displayName(email: email, id: id, metadata: meta, fallback: fallbackName)
-        return MemberSession(sessionToken: token, expiresAt: expiresAt,
-                             user: MemberUser(id: id, email: email, name: name, locale: profile?.locale, createdAt: (created?.isEmpty ?? true) ? nil : created),
-                             refreshToken: (o["refresh_token"] as? String).flatMap { $0.isEmpty ? nil : $0 })
+    private static func errorCode(_ json: Any?, fallback: String) -> String {
+        if let o = json as? [String: Any], let c = o["code"] as? String, !c.isEmpty { return c }
+        return fallback
     }
 
-    /// 用 refresh_token 换一对新 token（grant_type=refresh_token）；refresh_token 作废 → failed(code: refresh_failed)
-    static func refresh(refreshToken: String, locale: String?) async -> MemberAuthResult {
+    private static func parseUser(_ u: [String: Any]) -> MemberUser? {
+        guard let id = u["id"] as? String, !id.isEmpty,
+              let email = u["email"] as? String else { return nil }
+        let name = (u["name"] as? String)?.trimmingCharacters(in: .whitespaces) ?? ""
+        let created = (u["createdAt"] as? String)?.trimmingCharacters(in: .whitespaces)
+        return MemberUser(
+            id: id,
+            email: email,
+            name: name.isEmpty ? email : name,
+            locale: u["locale"] as? String,
+            createdAt: (created?.isEmpty ?? true) ? nil : created,
+            isAdmin: u["isAdmin"] as? Bool
+        )
+    }
+
+    private static func parseSessionResponse(_ o: [String: Any]) -> MemberSession? {
+        guard let token = (o["sessionToken"] as? String)?.trimmingCharacters(in: .whitespaces), !token.isEmpty,
+              let u = o["user"] as? [String: Any],
+              let user = parseUser(u) else { return nil }
+        let expiresAt = (o["expiresAt"] as? String) ?? MemberAuthRules.expiresAtISO(expiresAtSeconds: nil)
+        return MemberSession(sessionToken: token, expiresAt: expiresAt, user: user)
+    }
+
+    /// 1. 发送 6 位邮箱验证码
+    static func sendOtp(email: String, locale: String?) async -> OtpSendResult {
+        let cleanEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard cleanEmail.contains("@"), cleanEmail.contains(".") else {
+            return .failed(error: "请输入有效的邮箱地址。", code: "invalid_email")
+        }
+        var body: [String: Any] = ["email": cleanEmail]
+        if let locale, !locale.isEmpty { body["locale"] = locale }
         do {
-            let (status, json) = try await request("/auth/v1/token?grant_type=refresh_token", method: "POST", body: ["refresh_token": refreshToken], timeout: 30)
-            // Rate limiting or a service outage does not revoke the user's refresh token.
-            if status == 429 || status >= 500 { return .failed(error: "network", code: "network") }
-            if status >= 200, status < 300, let o = json as? [String: Any], let s = await session(from: o, fallbackName: nil, locale: locale) { return .ok(s) }
+            let (status, json) = try await request("/v1/auth/otp/send", method: "POST", body: body)
+            if status >= 200, status < 300, let o = json as? [String: Any], (o["ok"] as? Bool) != false {
+                let sec = (o["expiresInSec"] as? NSNumber)?.intValue ?? 600
+                return .ok(expiresInSec: sec)
+            }
             let msg = errorMessage(json, status: status)
-            if MemberOAuthRules.isNetworkMessage(msg) { return .failed(error: "network", code: "network") }
-            return .failed(error: msg, code: "refresh_failed")
+            let code = errorCode(json, fallback: "otp_send_failed")
+            return .failed(error: msg, code: code)
         } catch {
             return .failed(error: "network", code: "network")
         }
     }
 
-    static func signIn(email: String, password: String, locale: String?) async -> MemberAuthResult {
+    /// 2. 校验 6 位验证码并建立会话（新邮箱自动创建账号）
+    static func verifyOtp(email: String, code: String, name: String?, locale: String?) async -> MemberAuthResult {
+        let cleanEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let digits = code.filter(\.isNumber)
+        guard digits.count == 6 else {
+            return .failed(error: "请输入 6 位数字验证码。", code: "invalid_otp")
+        }
+        var body: [String: Any] = [
+            "email": cleanEmail,
+            "code": digits,
+            "deviceId": deviceId,
+            "platform": "ios",
+        ]
+        if let n = name?.trimmingCharacters(in: .whitespaces), !n.isEmpty { body["displayName"] = n }
+        if let locale, !locale.isEmpty { body["locale"] = locale }
         do {
-            let (status, json) = try await request("/auth/v1/token?grant_type=password", method: "POST",
-                                                   body: ["email": email.trimmingCharacters(in: .whitespaces), "password": password])
-            if status >= 200, status < 300, let o = json as? [String: Any], let s = await session(from: o, fallbackName: nil, locale: locale) {
+            let (status, json) = try await request("/v1/auth/otp/verify", method: "POST", body: body)
+            if status >= 200, status < 300, let o = json as? [String: Any], let s = parseSessionResponse(o) {
                 return .ok(s)
             }
-            let m = MemberAuthRules.mapAuthError(errorMessage(json, status: status))
-            return .failed(error: m.error, code: m.code)
+            let msg = errorMessage(json, status: status)
+            let c = errorCode(json, fallback: "invalid_otp")
+            return .failed(error: msg, code: c)
         } catch {
             return .failed(error: "network", code: "network")
         }
     }
 
-    static func signUp(email: String, password: String, name: String, locale: String?) async -> MemberAuthResult {
-        var data: [String: Any] = [:]
-        let n = name.trimmingCharacters(in: .whitespaces)
-        if !n.isEmpty { data["name"] = n; data["display_name"] = n }
-        if let l = locale?.trimmingCharacters(in: .whitespaces), !l.isEmpty { data["locale"] = l }
-        do {
-            let (status, json) = try await request("/auth/v1/signup", method: "POST",
-                                                   body: ["email": email.trimmingCharacters(in: .whitespaces), "password": password, "data": data])
-            guard status >= 200, status < 300, let o = json as? [String: Any] else {
-                let m = MemberAuthRules.mapAuthError(errorMessage(json, status: status))
-                return .failed(error: m.error, code: m.code)
-            }
-            if o["access_token"] != nil, let s = await session(from: o, fallbackName: n, locale: locale) { return .ok(s) }
-            // 没给 session 只给了 user：要先点邮件里的验证链接
-            if o["id"] != nil || o["user"] != nil { return .failed(error: "请查收验证邮件后再登录。", code: "email_confirmation_required") }
-            return .failed(error: "注册失败", code: "register_failed")
-        } catch {
-            return .failed(error: "network", code: "network")
-        }
-    }
-
-    struct Profile { let displayName: String?; let locale: String? }
-
-    static func fetchProfile(token: String, userId: String) async -> Profile? {
-        guard let (status, json) = try? await request("/rest/v1/askbible_profiles?select=display_name,locale&user_id=eq.\(userId)", method: "GET", token: token),
-              status == 200, let rows = json as? [[String: Any]], let row = rows.first else { return nil }
-        let dn = (row["display_name"] as? String)?.trimmingCharacters(in: .whitespaces)
-        let lc = (row["locale"] as? String)?.trimmingCharacters(in: .whitespaces)
-        return Profile(displayName: (dn?.isEmpty ?? true) ? nil : dn, locale: (lc?.isEmpty ?? true) ? nil : lc)
-    }
-
-    /// RN ensureOwnProfile：已有显示名且 locale 不变就不写；否则 upsert（on_conflict=user_id）
-    static func ensureProfile(token: String, userId: String, displayName: String, locale: String?) async -> Profile? {
-        let existing = await fetchProfile(token: token, userId: userId)
-        let loc = (locale ?? "").trimmingCharacters(in: .whitespaces).prefix(24)
-        if let e = existing, e.displayName != nil, loc.isEmpty || String(loc) == (e.locale ?? "") { return e }
-        var row: [String: Any] = ["user_id": userId, "display_name": existing?.displayName ?? displayName,
-                                  "updated_at": ISO8601DateFormatter.millis.string(from: Date())]
-        if !loc.isEmpty { row["locale"] = String(loc) }
-        _ = try? await request("/rest/v1/askbible_profiles?on_conflict=user_id", method: "POST", token: token, body: row,
-                               extraHeaders: ["Prefer": "resolution=merge-duplicates,return=minimal"])
-        return await fetchProfile(token: token, userId: userId) ?? existing
-    }
-
-    /// 改称呼：写 askbible_profiles.display_name（RN updateLocalDisplayName 之后同步）
-    static func updateDisplayName(token: String, userId: String, name: String) async -> Bool {
-        let row: [String: Any] = ["user_id": userId, "display_name": name, "updated_at": ISO8601DateFormatter.millis.string(from: Date())]
-        guard let (status, _) = try? await request("/rest/v1/askbible_profiles?on_conflict=user_id", method: "POST", token: token, body: row,
-                                                    extraHeaders: ["Prefer": "resolution=merge-duplicates,return=minimal"]) else { return false }
-        return status >= 200 && status < 300
-    }
-
-    /// RN pullMemberProfileFromSupabase：token 还有效就返回最新用户；401/403 返回 nil（会话作废）；网络问题抛错
-    static func verify(token: String) async throws -> MemberUser? {
-        let (status, json) = try await request("/auth/v1/user", method: "GET", token: token)
-        if status == 401 || status == 403 { return nil }
-        guard status == 200, let u = json as? [String: Any], let id = u["id"] as? String, let email = u["email"] as? String, !email.isEmpty else {
-            throw URLError(.badServerResponse)
-        }
-        let meta = (u["user_metadata"] as? [String: Any]) ?? [:]
-        let profile = await fetchProfile(token: token, userId: id)
-        let created = (u["created_at"] as? String)?.trimmingCharacters(in: .whitespaces)
-        return MemberUser(id: id, email: email, name: profile?.displayName ?? MemberAuthRules.displayName(email: email, id: id, metadata: meta, fallback: nil),
-                          locale: profile?.locale, createdAt: (created?.isEmpty ?? true) ? nil : created)
-    }
-
-    /// RN supabase.auth.signInWithIdToken：Apple / Google 原生凭证 → 会话（grant_type=id_token；nonce 传原文，GoTrue 自己算 hash 比对）
-    static func signInWithIdToken(provider: String, idToken: String, nonce: String?, fallbackName: String?, locale: String?) async -> MemberAuthResult {
-        var body: [String: Any] = ["provider": provider, "id_token": idToken]
+    /// 3. Apple / Google 原生 ID Token 直验（WebCrypto JWKS，零浏览器跳转）
+    static func signInWithOAuthIdToken(
+        provider: String,
+        idToken: String,
+        nonce: String?,
+        fallbackName: String?,
+        locale: String?
+    ) async -> MemberAuthResult {
+        var body: [String: Any] = [
+            "idToken": idToken,
+            "deviceId": deviceId,
+            "platform": "ios",
+        ]
         if let nonce, !nonce.isEmpty { body["nonce"] = nonce }
+        if let n = fallbackName?.trimmingCharacters(in: .whitespaces), !n.isEmpty { body["displayName"] = n }
+        if let locale, !locale.isEmpty { body["locale"] = locale }
+        let path = provider == "apple" ? "/v1/auth/oauth/apple" : "/v1/auth/oauth/google"
         do {
-            // GoTrue 验 Apple / Google id_token 要去拿对方的公钥，实测一次 18 秒以上；15 秒就当断网会误报「网络连接失败」（Josh 真 iPhone 2026-09-09）
-            let (status, json) = try await request("/auth/v1/token?grant_type=id_token", method: "POST", body: body, timeout: 90)
-            if status >= 200, status < 300, let o = json as? [String: Any], let s = await session(from: o, fallbackName: fallbackName, locale: locale) {
+            let (status, json) = try await request(path, method: "POST", body: body, timeout: 30)
+            if status >= 200, status < 300, let o = json as? [String: Any], let s = parseSessionResponse(o) {
                 return .ok(s)
+            }
+            if status == 429 || status >= 500 {
+                return .failed(error: "network", code: "network")
             }
             let msg = errorMessage(json, status: status)
             if MemberOAuthRules.isNetworkMessage(msg) { return .failed(error: "network", code: "network") }
@@ -298,77 +303,86 @@ enum SupabaseAuthClient {
         }
     }
 
-    /// RN exchangeCodeForSession：浏览器 OAuth 回调里的 code + 本机 verifier → 会话（grant_type=pkce）
-    static func exchangeCode(_ code: String, verifier: String, locale: String?) async -> MemberAuthResult {
-        do {
-            let (status, json) = try await request("/auth/v1/token?grant_type=pkce", method: "POST", body: ["auth_code": code, "code_verifier": verifier], timeout: 90)
-            if status >= 200, status < 300, let o = json as? [String: Any], let s = await session(from: o, fallbackName: nil, locale: locale) {
-                return .ok(s)
-            }
-            let msg = errorMessage(json, status: status)
-            if MemberOAuthRules.isNetworkMessage(msg) { return .failed(error: "network", code: "network") }
-            return .failed(error: msg, code: "google_failed")
-        } catch {
-            return .failed(error: "network", code: "network")
+    /// 4. 校验并滑动续期当前会话：401/403 返回 nil（作废）；429/5xx 或断网抛错（保留本机会话，不误踢下线）
+    static func verify(token: String) async throws -> VerifiedSession? {
+        let (status, json) = try await request("/v1/auth/session", method: "GET", token: token)
+        if status == 401 || status == 403 { return nil }
+        guard status == 200,
+              let o = json as? [String: Any],
+              let u = o["user"] as? [String: Any],
+              let user = parseUser(u) else {
+            throw URLError(.badServerResponse)
         }
+        let expiresAt = (o["expiresAt"] as? String) ?? MemberAuthRules.expiresAtISO(expiresAtSeconds: nil)
+        return VerifiedSession(user: user, expiresAt: expiresAt)
     }
 
-    /// RN setSession（回调直接带 access_token / refresh_token 的 implicit 分支）：拿 token 取用户后组会话
-    static func sessionFromTokens(accessToken: String, locale: String?) async -> MemberAuthResult {
-        do {
-            let (status, json) = try await request("/auth/v1/user", method: "GET", token: accessToken)
-            if status == 200, let u = json as? [String: Any],
-               let s = await session(from: ["access_token": accessToken, "user": u], fallbackName: nil, locale: locale) { return .ok(s) }
-            return .failed(error: errorMessage(json, status: status), code: "google_failed")
-        } catch {
-            return .failed(error: "network", code: "network")
+    /// 5. 修改昵称
+    static func updateDisplayName(token: String, name: String, locale: String? = nil) async -> Bool {
+        var body: [String: Any] = ["name": name]
+        if let locale, !locale.isEmpty { body["locale"] = locale }
+        guard let (status, _) = try? await request("/v1/auth/profile", method: "PATCH", token: token, body: body) else {
+            return false
         }
+        return (200..<300).contains(status)
     }
 
-    // MARK: 会员读经进度同步文档（RN memberReadingSyncApi：PostgREST member_reading_sync_documents，RLS 只看得到自己那行）
-
-    struct SyncDocument {
-        var revision: String
-        var updatedAt: String
-        var blobs: [String: Any]
-    }
-    enum SyncFetch {
-        case ok(SyncDocument?)
-        case unauthorized
-        case failed(String)
-        case network
-    }
-
-    /// 拉自己的同步文档；没有就 ok(nil)（RN readRemoteDocument + emptyOkResponse）
-    static func fetchSyncDocument(token: String, userId: String) async -> SyncFetch {
-        do {
-            let (status, json) = try await request("/rest/v1/member_reading_sync_documents?select=user_id,schema_version,revision,updated_at,blobs&user_id=eq.\(userId)",
-                                                   method: "GET", token: token, timeout: 30)
-            if status == 401 || status == 403 { return .unauthorized }
-            guard status == 200, let rows = json as? [[String: Any]] else { return .failed(errorMessage(json, status: status)) }
-            guard let row = rows.first else { return .ok(nil) }
-            return .ok(SyncDocument(revision: (row["revision"] as? String) ?? "0", updatedAt: (row["updated_at"] as? String) ?? "",
-                                    blobs: (row["blobs"] as? [String: Any]) ?? [:]))
-        } catch {
-            return .network
-        }
-    }
-
-    /// 写回合并后的文档（upsert on user_id；RN memberReadingSyncPushSupabase）
-    static func upsertSyncDocument(token: String, userId: String, revision: String, updatedAt: String, blobs: [String: Any]) async -> SyncFetch {
-        do {
-            let row: [String: Any] = ["user_id": userId, "schema_version": 1, "revision": revision, "updated_at": updatedAt, "blobs": blobs]
-            let (status, json) = try await request("/rest/v1/member_reading_sync_documents?on_conflict=user_id", method: "POST", token: token, body: row,
-                                                   extraHeaders: ["Prefer": "resolution=merge-duplicates,return=minimal"], timeout: 30)
-            if status == 401 || status == 403 { return .unauthorized }
-            guard status >= 200, status < 300 else { return .failed(errorMessage(json, status: status)) }
-            return .ok(SyncDocument(revision: revision, updatedAt: updatedAt, blobs: blobs))
-        } catch {
-            return .network
-        }
-    }
-
+    /// 6. 退出当前设备会话
     static func signOut(token: String) async {
-        _ = try? await request("/auth/v1/logout", method: "POST", token: token)
+        _ = try? await request("/v1/auth/logout", method: "POST", token: token)
+    }
+
+    /// 7. 原子删除账户（云端 D1 同步文档 + 会话 + 用户一并清除）
+    static func deleteAccount(token: String) async -> String? {
+        do {
+            let (status, json) = try await request("/v1/auth/account", method: "DELETE", token: token, timeout: 20)
+            let o = json as? [String: Any]
+            if status == 200, (o?["ok"] as? Bool) != false {
+                return nil
+            }
+            return (o?["code"] as? String) ?? (o?["error"] as? String) ?? "network"
+        } catch {
+            return "network"
+        }
+    }
+
+    // MARK: 会员读经同步（Worker 单点权威合并）
+
+    private static func parseSyncDoc(_ raw: Any?) -> SyncDocument? {
+        guard let d = raw as? [String: Any] else { return nil }
+        return SyncDocument(
+            revision: (d["revision"] as? String) ?? "0",
+            updatedAt: (d["updatedAt"] as? String) ?? "",
+            blobs: (d["blobs"] as? [String: Any]) ?? [:]
+        )
+    }
+
+    static func fetchSyncDocument(token: String) async -> SyncFetch {
+        do {
+            let (status, json) = try await request("/v1/sync/reading", method: "GET", token: token, timeout: 30)
+            if status == 401 || status == 403 { return .unauthorized }
+            guard status == 200, let o = json as? [String: Any], (o["ok"] as? Bool) != false else {
+                return .failed(errorMessage(json, status: status))
+            }
+            if o["doc"] == nil || o["doc"] is NSNull { return .ok(nil) }
+            return .ok(parseSyncDoc(o["doc"]))
+        } catch {
+            return .network
+        }
+    }
+
+    static func pushSyncDocument(token: String, blobs: [String: Any], replace: Bool = false) async -> SyncFetch {
+        do {
+            var body: [String: Any] = ["blobs": blobs]
+            if replace { body["replace"] = true }
+            let (status, json) = try await request("/v1/sync/reading", method: "POST", token: token, body: body, timeout: 30)
+            if status == 401 || status == 403 { return .unauthorized }
+            guard (200..<300).contains(status), let o = json as? [String: Any], (o["ok"] as? Bool) != false else {
+                return .failed(errorMessage(json, status: status))
+            }
+            return .ok(parseSyncDoc(o["doc"]))
+        } catch {
+            return .network
+        }
     }
 }

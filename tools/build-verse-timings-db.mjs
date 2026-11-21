@@ -1,40 +1,37 @@
 #!/usr/bin/env node
 /**
- * 把 RN 的 verse-timings-bundle.json（4.5 MB）转成原生侧用的 SQLite。
+ * 从真源 `public/verse-timings/`（cuv-v20 / cuv-simp 根级 / web-en）直接生成原生侧 SQLite（D-44 全端同源，不再经由已退役的 RN bundle JSON）。
  *
- * 为什么要转：JSON 全量解析进内存代价太大，而跟读高亮只需要「当前这一章」的时间轴。
- * 转成 SQLite 后按 (scope, book, chapter) 索引查，内存占用与章大小成正比。
- *
- * 只导出 App 内置译本用得到的 scope —— kjv / teochew-nt 没进包，跳过。
- * scope 映射规则来自 `bundled-verse-timings.ts`：
- *   web-en → "web-en"；其余 cuv 系 → "cuv-v20"，缺则回退 "cuv-simp"。
- *
- *   node tools/build-verse-timings-db.mjs
+ *   npm run build:verse-timings
  */
 import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync, unlinkSync, existsSync, statSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const SRC = path.join(ROOT, "apps/askbible-mobile/assets/content/verse-timings-bundle.json");
+const SRC_DIR = path.join(ROOT, "public/verse-timings");
 const OUT = path.join(ROOT, "apps/askbible-ios/AskBible/Resources/verse-timings.sqlite");
-const KEEP_SCOPES = ["cuv-v20", "cuv-simp", "web-en"];
-
-const bundle = JSON.parse(readFileSync(SRC, "utf8"));
+const OUT_ANDROID = path.join(ROOT, "apps/askbible-android/app/src/main/assets/verse-timings.sqlite");
+const SCOPES = [
+  ["cuv-v20", path.join(SRC_DIR, "cuv-v20")],
+  ["cuv-simp", SRC_DIR],
+  ["web-en", path.join(SRC_DIR, "web-en")],
+];
 
 const rows = [];
-for (const scope of KEEP_SCOPES) {
-  const chapters = bundle[scope];
-  if (!chapters) continue;
-  for (const [key, list] of Object.entries(chapters)) {
-    if (!Array.isArray(list)) continue;
-    // key 形如 "1CH-1"：书卷 id 自身可能含连字符以外的数字，按最后一个 '-' 切
+for (const [scope, dir] of SCOPES) {
+  if (!existsSync(dir)) continue;
+  for (const file of readdirSync(dir)) {
+    if (!file.endsWith(".json")) continue;
+    const key = file.slice(0, -5);
     const cut = key.lastIndexOf("-");
     if (cut < 1) continue;
     const bookId = key.slice(0, cut).toUpperCase();
     const chapter = Number(key.slice(cut + 1));
     if (!Number.isInteger(chapter) || chapter < 1) continue;
+    const list = JSON.parse(readFileSync(path.join(dir, file), "utf8"));
+    if (!Array.isArray(list)) continue;
     for (const t of list) {
       const verse = Number(t?.verse);
       const start = Number(t?.start);
@@ -46,17 +43,20 @@ for (const scope of KEEP_SCOPES) {
   }
 }
 
+mkdirSync(path.dirname(OUT), { recursive: true });
+mkdirSync(path.dirname(OUT_ANDROID), { recursive: true });
 if (existsSync(OUT)) unlinkSync(OUT);
 
 const esc = (s) => `'${String(s).replace(/'/g, "''")}'`;
+const scopeNames = SCOPES.map(([s]) => s);
 const sqlPath = path.join(ROOT, "tmp-timings.sql");
 const chunks = [
   "PRAGMA journal_mode=OFF;",
   "BEGIN;",
   `CREATE TABLE meta (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);`,
   `INSERT INTO meta VALUES ('format','askbible-verse-timings-v1');`,
-  `INSERT INTO meta VALUES ('source','verse-timings-bundle.json');`,
-  `INSERT INTO meta VALUES ('scopes',${esc(KEEP_SCOPES.join(","))});`,
+  `INSERT INTO meta VALUES ('source','public/verse-timings');`,
+  `INSERT INTO meta VALUES ('scopes',${esc(scopeNames.join(","))});`,
   `CREATE TABLE timing (
      scope TEXT NOT NULL, book_id TEXT NOT NULL, chapter INTEGER NOT NULL,
      verse INTEGER NOT NULL, start_sec REAL NOT NULL, end_sec REAL NOT NULL,
@@ -74,7 +74,8 @@ chunks.push("VACUUM;");
 writeFileSync(sqlPath, chunks.join("\n"));
 execFileSync("sqlite3", [OUT], { input: readFileSync(sqlPath, "utf8"), stdio: ["pipe", "pipe", "inherit"] });
 unlinkSync(sqlPath);
+copyFileSync(OUT, OUT_ANDROID);
 
 const size = (statSync(OUT).size / 1024 / 1024).toFixed(1);
-const perScope = KEEP_SCOPES.map((s) => `${s} ${rows.filter((r) => r[0] === s).length}`).join(" · ");
+const perScope = scopeNames.map((s) => `${s} ${rows.filter((r) => r[0] === s).length}`).join(" · ");
 console.log(`verse-timings.sqlite 生成：${rows.length} 条（${perScope}），${size} MB`);

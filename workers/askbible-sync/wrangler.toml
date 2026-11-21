@@ -1,0 +1,18 @@
+name = "askbible-sync"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+workers_dev = true
+preview_urls = false
+
+routes = [
+  { pattern = "askbible-sync.joshlabs.app", custom_domain = true }
+]
+
+[vars]
+FROM_EMAIL = "AskBible.me <hello@cabinetx.app>"
+DEV_MODE = "0"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "askbible-sync"
+database_id = "c2c72372-a3da-44ad-978d-02cb186a1c5a"

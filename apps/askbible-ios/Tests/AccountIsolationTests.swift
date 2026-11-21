@@ -1,5 +1,6 @@
 import XCTest
 import Foundation
+import SQLite3
 
 /// Intercepts every request, including logout/account deletion. Tests never contact a real account.
 private final class AccountURLProtocol: URLProtocol {
@@ -37,8 +38,7 @@ final class AccountIsolationTests: XCTestCase {
         engines = []
         defaults.removePersistentDomain(forName: suiteName)
         clearTestRunnerStores()
-        // Shared URLSession may still deliver a best-effort logout; keep all requests intercepted.
-        AccountURLProtocol.handler = { $0.reply(200) }
+        AccountURLProtocol.handler = { $0.reply(200, ["ok": true]) }
     }
 
     private func clearTestRunnerStores() {
@@ -52,35 +52,56 @@ final class AccountIsolationTests: XCTestCase {
         AccountURLProtocol.handler = { request in Task { @MainActor in body(request) } }
     }
 
+    private func normalizedPath(_ url: URL) -> String {
+        let p = url.path
+        return p.hasPrefix("/api/sync/") ? String(p.dropFirst("/api/sync".count)) : p
+    }
+
     private func defaultReply(_ request: AccountURLProtocol) {
-        let path = request.request.url!.path
-        if path.contains("askbible_profiles") {
-            request.reply(200, [["display_name": "Test", "locale": "en"]])
-        } else if path.contains("member_reading_sync_documents") {
-            request.reply(200, [])
-        } else if path == "/auth/v1/logout" {
-            request.reply(200)
+        let path = normalizedPath(request.request.url!)
+        let method = request.request.httpMethod ?? "GET"
+        if path == "/v1/sync/reading" && method == "GET" {
+            request.reply(200, ["ok": true, "doc": NSNull()])
+        } else if path == "/v1/sync/reading" && method == "POST" {
+            request.reply(200, ["ok": true, "doc": ["revision": "rev-1", "updatedAt": "2026-11-20T00:00:00.000Z", "blobs": [:]]])
+        } else if path == "/v1/auth/profile" && method == "PATCH" {
+            request.reply(200, ["ok": true])
+        } else if path == "/v1/auth/logout" {
+            request.reply(200, ["ok": true])
         } else {
-            XCTFail("Unexpected intercepted request: \(path)")
+            XCTFail("Unexpected intercepted request: \(method) \(path)")
             request.reply(500)
         }
     }
 
-    private func session(_ id: String = "A", expiring: Bool = false) -> MemberSession {
-        MemberSession(sessionToken: "token-\(id)",
-                      expiresAt: ISO8601DateFormatter.millis.string(from: Date().addingTimeInterval(expiring ? 30 : 3600)),
-                      user: MemberUser(id: id, email: "\(id)@example.invalid", name: "Test", locale: "en"),
-                      refreshToken: "refresh-\(id)")
+    private func session(_ id: String = "A", expiringSoon: Bool = false) -> MemberSession {
+        MemberSession(
+            sessionToken: "token-\(id)",
+            expiresAt: ISO8601DateFormatter.millis.string(from: Date().addingTimeInterval(expiringSoon ? 3600 : 7 * 86_400)),
+            user: MemberUser(id: id, email: "\(id)@example.invalid", name: "Test", locale: "en")
+        )
     }
 
-    private func auth(_ id: String = "A", expiring: Bool = false) throws -> MemberAuthStore {
-        defaults.set(try JSONEncoder().encode(session(id, expiring: expiring)), forKey: MemberAuthRules.sessionKey)
+    private func auth(_ id: String = "A", expiringSoon: Bool = false) throws -> MemberAuthStore {
+        defaults.set(try JSONEncoder().encode(session(id, expiringSoon: expiringSoon)), forKey: MemberAuthRules.sessionKey)
         return MemberAuthStore(defaults: defaults)
     }
 
-    private func tokenReply(_ id: String = "A") -> [String: Any] {
-        ["access_token": "fresh-\(id)", "refresh_token": "next-\(id)", "expires_at": Date().timeIntervalSince1970 + 3600,
-         "user": ["id": id, "email": "\(id)@example.invalid"]]
+    private func otpSessionReply(_ id: String = "A") -> [String: Any] {
+        [
+            "ok": true,
+            "sessionToken": "fresh-\(id)",
+            "expiresAt": ISO8601DateFormatter.millis.string(from: Date().addingTimeInterval(365 * 86_400)),
+            "user": ["id": id, "email": "\(id)@example.invalid", "name": "Test"],
+        ]
+    }
+
+    private func sessionVerifyReply(_ id: String = "A") -> [String: Any] {
+        [
+            "ok": true,
+            "expiresAt": ISO8601DateFormatter.millis.string(from: Date().addingTimeInterval(365 * 86_400)),
+            "user": ["id": id, "email": "\(id)@example.invalid", "name": "Test"],
+        ]
     }
 
     private func sync(_ auth: MemberAuthStore) -> (MemberReadingSyncEngine, VerseHighlightStore) {
@@ -92,17 +113,31 @@ final class AccountIsolationTests: XCTestCase {
         return (engine, highlights)
     }
 
-    func testTransientRefreshFailuresDoNotSignOutTheCurrentAccount() async throws {
+    func testTransientVerifyFailuresDoNotSignOutTheCurrentAccount() async throws {
         for status in [429, 503] {
-            let auth = try auth(expiring: true)
+            let auth = try auth(expiringSoon: true)
             route { request in
-                if request.request.url!.path == "/auth/v1/token" { request.reply(status, ["error": "temporarily unavailable"]) }
-                else { self.defaultReply(request) }
+                if self.normalizedPath(request.request.url!) == "/v1/auth/session" {
+                    request.reply(status, ["error": "temporarily unavailable"])
+                } else {
+                    self.defaultReply(request)
+                }
             }
-            _ = await auth.ensureFreshToken()
+            let token = await auth.ensureFreshToken()
+            XCTAssertEqual(token, "token-A")
             XCTAssertEqual(auth.user?.id, "A", "HTTP \(status) must preserve the account")
             XCTAssertEqual(MemberAuthStore(defaults: defaults).user?.id, "A")
         }
+    }
+
+    func testLegacyV1JwtSessionIsCleanlyDroppedWithoutDeletingLocalStores() throws {
+        let legacyJwt = """
+        {"sessionToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJBIn0.sig","expiresAt":"2030-01-01T00:00:00.000Z","user":{"id":"A","email":"a@example.invalid","name":"A"}}
+        """.data(using: .utf8)!
+        defaults.set(legacyJwt, forKey: MemberAuthRules.sessionKey)
+        let store = MemberAuthStore(defaults: defaults)
+        XCTAssertNil(store.user)
+        XCTAssertNil(defaults.data(forKey: MemberAuthRules.sessionKey))
     }
 
     func testVerifyCannotRestoreSessionAfterSignOut() async throws {
@@ -110,126 +145,90 @@ final class AccountIsolationTests: XCTestCase {
         let started = expectation(description: "verify suspended")
         var held: AccountURLProtocol?
         route { request in
-            if request.request.url!.path == "/auth/v1/user" { held = request; started.fulfill() }
-            else { self.defaultReply(request) }
+            if self.normalizedPath(request.request.url!) == "/v1/auth/session" {
+                held = request; started.fulfill()
+            } else {
+                self.defaultReply(request)
+            }
         }
         let operation = Task { await auth.verifyRemote() }
         await fulfillment(of: [started], timeout: 5)
         auth.signOut()
-        held!.reply(200, ["id": "A", "email": "A@example.invalid"])
+        held!.reply(200, sessionVerifyReply("A"))
         await operation.value
         XCTAssertNil(auth.user)
         XCTAssertNil(defaults.data(forKey: MemberAuthRules.sessionKey))
     }
 
-    func testOlderSignInCannotReplaceNewerAccount() async throws {
+    func testOlderOtpSignInCannotReplaceNewerAccount() async throws {
         let auth = MemberAuthStore(defaults: defaults)
         let started = expectation(description: "first login suspended")
         var held: AccountURLProtocol?
         var calls = 0
         route { request in
-            if request.request.url!.path == "/auth/v1/token" {
+            if self.normalizedPath(request.request.url!) == "/v1/auth/otp/verify" {
                 calls += 1
                 if calls == 1 { held = request; started.fulfill() }
-                else { request.reply(200, self.tokenReply("B")) }
-            } else { self.defaultReply(request) }
+                else { request.reply(200, self.otpSessionReply("B")) }
+            } else {
+                self.defaultReply(request)
+            }
         }
-        let first = Task { await auth.signIn(email: "A@example.invalid", password: "test", locale: "en") }
+        let first = Task { await auth.verifyOtp(email: "A@example.invalid", code: "123456", locale: "en") }
         await fulfillment(of: [started], timeout: 5)
-        let secondError = await auth.signIn(email: "B@example.invalid", password: "test", locale: "en")
+        let secondError = await auth.verifyOtp(email: "B@example.invalid", code: "654321", locale: "en")
         XCTAssertNil(secondError)
-        held!.reply(200, tokenReply("A"))
+        held!.reply(200, otpSessionReply("A"))
         _ = await first.value
         XCTAssertEqual(auth.user?.id, "B")
         XCTAssertEqual(MemberAuthStore(defaults: defaults).user?.id, "B")
     }
 
-    func testConcurrentRefreshUsesOneRequest() async throws {
-        let auth = try auth(expiring: true)
-        let started = expectation(description: "refresh suspended")
+    func testConcurrentSlidingVerifyUsesOneRequest() async throws {
+        let auth = try auth(expiringSoon: true)
+        let started = expectation(description: "verify suspended")
         var held: AccountURLProtocol?
-        var refreshCalls = 0
+        var verifyCalls = 0
         route { request in
-            if request.request.url!.path == "/auth/v1/token" {
-                refreshCalls += 1; held = request; started.fulfill()
-            } else { self.defaultReply(request) }
+            if self.normalizedPath(request.request.url!) == "/v1/auth/session" {
+                verifyCalls += 1; held = request; started.fulfill()
+            } else {
+                self.defaultReply(request)
+            }
         }
         let first = Task { await auth.ensureFreshToken() }
         await fulfillment(of: [started], timeout: 5)
         let second = Task { await auth.ensureFreshToken() }
-        // Give the second caller a turn while the first request remains suspended.
         await Task.yield()
-        held!.reply(200, tokenReply())
+        held!.reply(200, sessionVerifyReply("A"))
         let firstToken = await first.value
         let secondToken = await second.value
-        XCTAssertEqual(firstToken, "fresh-A")
-        XCTAssertEqual(secondToken, "fresh-A")
-        XCTAssertEqual(refreshCalls, 1)
+        XCTAssertEqual(firstToken, "token-A")
+        XCTAssertEqual(secondToken, "token-A")
+        XCTAssertEqual(verifyCalls, 1)
     }
 
-    func testRenameDuringRefreshPreservesNameAndRotatedCredentials() async throws {
-        let auth = try auth(expiring: true)
-        let started = expectation(description: "refresh suspended")
+    func testRenameDuringVerifyPreservesNewDisplayName() async throws {
+        let auth = try auth(expiringSoon: true)
+        let started = expectation(description: "verify suspended")
         var held: AccountURLProtocol?
-        var refreshCalls = 0
         route { request in
-            if request.request.url!.path == "/auth/v1/token" {
-                refreshCalls += 1
-                if refreshCalls == 1 { held = request; started.fulfill() }
-                else { request.reply(400, ["error": "refresh token already used"]) }
-            } else { self.defaultReply(request) }
+            if self.normalizedPath(request.request.url!) == "/v1/auth/session" {
+                held = request; started.fulfill()
+            } else {
+                self.defaultReply(request)
+            }
         }
         let first = Task { await auth.ensureFreshToken() }
         await fulfillment(of: [started], timeout: 5)
         let renamed = await auth.updateDisplayName("New Name")
         XCTAssertTrue(renamed)
-        let second = Task { await auth.ensureFreshToken() }
-        await Task.yield()
-        held!.reply(200, tokenReply())
-        let firstToken = await first.value
-        let secondToken = await second.value
-        XCTAssertEqual(firstToken, "fresh-A")
-        XCTAssertEqual(secondToken, "fresh-A")
-        XCTAssertEqual(refreshCalls, 1)
+        held!.reply(200, sessionVerifyReply("A"))
+        _ = await first.value
         XCTAssertEqual(auth.user?.name, "New Name")
         let stored = try XCTUnwrap(defaults.data(forKey: MemberAuthRules.sessionKey))
         let persisted = try JSONDecoder().decode(MemberSession.self, from: stored)
-        XCTAssertEqual(persisted.sessionToken, "fresh-A")
-        XCTAssertEqual(persisted.refreshToken, "next-A")
         XCTAssertEqual(persisted.user.name, "New Name")
-    }
-
-    func testCancelledRefreshWaiterRetainsRotatedCredentialsForCurrentAccount() async throws {
-        let auth = try auth(expiring: true)
-        let started = expectation(description: "refresh suspended")
-        var held: AccountURLProtocol?
-        route { request in
-            if request.request.url!.path == "/auth/v1/token" { held = request; started.fulfill() }
-            else { self.defaultReply(request) }
-        }
-        let operation = Task { await auth.ensureFreshToken() }
-        await fulfillment(of: [started], timeout: 5)
-        operation.cancel()
-        held!.reply(200, tokenReply())
-        _ = await operation.value
-        XCTAssertEqual(auth.sessionToken, "fresh-A")
-        XCTAssertEqual(MemberAuthStore(defaults: defaults).sessionToken, "fresh-A")
-    }
-
-    func testRefreshCannotRestoreSessionAfterSignOut() async throws {
-        let auth = try auth(expiring: true)
-        let started = expectation(description: "refresh suspended")
-        route { request in
-            if request.request.url!.path == "/auth/v1/token" { started.fulfill() }
-            else { self.defaultReply(request) }
-        }
-        let operation = Task { await auth.ensureFreshToken() }
-        await fulfillment(of: [started], timeout: 5)
-        auth.signOut()
-        let token = await operation.value
-        XCTAssertNil(token)
-        XCTAssertNil(auth.user)
-        XCTAssertNil(MemberAuthStore(defaults: defaults).user)
     }
 
     func testLatePullCannotRestoreClearedReadingData() async throws {
@@ -238,14 +237,23 @@ final class AccountIsolationTests: XCTestCase {
         let started = expectation(description: "pull suspended")
         var held: AccountURLProtocol?
         route { request in
-            if request.request.url!.path.contains("member_reading_sync_documents") { held = request; started.fulfill() }
-            else { self.defaultReply(request) }
+            if self.normalizedPath(request.request.url!) == "/v1/sync/reading" {
+                held = request; started.fulfill()
+            } else {
+                self.defaultReply(request)
+            }
         }
         let operation = Task { await engine.run(reason: "login") }
         await fulfillment(of: [started], timeout: 5)
         auth.signOut()
         engine.resetForAccountChange()
-        held!.reply(200, [["revision": "old", "blobs": ["highlights": ["value": ["cuv:GEN:1:1": [["i": 0, "c": "#FFB103"]]]]]]])
+        held!.reply(200, [
+            "ok": true,
+            "doc": [
+                "revision": "old",
+                "blobs": ["highlights": ["value": ["cuv:GEN:1:1": [["i": 0, "c": "#FFB103"]]]]],
+            ],
+        ])
         let outcome = await operation.value
         XCTAssertEqual(outcome, .skipped)
         XCTAssertTrue(highlights.store.isEmpty)
@@ -263,20 +271,29 @@ final class AccountIsolationTests: XCTestCase {
         var held: AccountURLProtocol?
         var writes = 0
         route { request in
-            if request.request.url!.path.contains("member_reading_sync_documents"), request.request.httpMethod == "POST" {
+            let path = self.normalizedPath(request.request.url!)
+            if path == "/v1/sync/reading", request.request.httpMethod == "POST" {
                 writes += 1; held = request; started.fulfill()
-            } else if request.request.url!.path == "/auth/v1/token" {
-                request.reply(200, self.tokenReply("B"))
-            } else { self.defaultReply(request) }
+            } else if path == "/v1/auth/otp/verify" {
+                request.reply(200, self.otpSessionReply("B"))
+            } else {
+                self.defaultReply(request)
+            }
         }
         let operation = Task { await engine.run(reason: "login") }
         await fulfillment(of: [started], timeout: 5)
         auth.signOut()
         engine.resetForAccountChange()
-        let loginError = await auth.signIn(email: "B@example.invalid", password: "test", locale: "en")
+        let loginError = await auth.verifyOtp(email: "B@example.invalid", code: "123456", locale: "en")
         XCTAssertNil(loginError)
         highlights.paint(translationId: "cuv", bookId: "JHN", chapter: 1, verse: 1, range: 0...1, color: "#FFB103")
-        held!.reply(201)
+        held!.reply(200, [
+            "ok": true,
+            "doc": [
+                "revision": "late-A",
+                "blobs": ["highlights": ["value": ["cuv:GEN:1:1": [["i": 0, "c": "#FFB103"]]]]],
+            ],
+        ])
         let outcome = await operation.value
         XCTAssertEqual(outcome, .skipped)
         XCTAssertEqual(writes, 1)
@@ -310,20 +327,60 @@ final class AccountIsolationTests: XCTestCase {
         XCTAssertFalse(VerseHighlightStore().store.isEmpty)
     }
 
-    func testHighlightOnlyGuestProgressIsUploaded() async throws {
+    func testHighlightOnlyGuestProgressIsUploadedInSingleRoundTrip() async throws {
         let auth = try auth()
         let (engine, highlights) = sync(auth)
         highlights.paint(translationId: "cuv", bookId: "GEN", chapter: 1, verse: 1, range: 0...2, color: "#FFB103")
         engine.cancelPendingWork()
         var writes = 0
         route { request in
-            if request.request.url!.path.contains("member_reading_sync_documents"), request.request.httpMethod == "POST" {
-                writes += 1; request.reply(201)
-            } else { self.defaultReply(request) }
+            let path = self.normalizedPath(request.request.url!)
+            if path == "/v1/sync/reading", request.request.httpMethod == "POST" {
+                writes += 1
+                request.reply(200, [
+                    "ok": true,
+                    "doc": [
+                        "revision": "rev-merged",
+                        "updatedAt": "2026-11-20T00:00:00.000Z",
+                        "blobs": ["highlights": ["updatedAt": "2026-11-20T00:00:00.000Z", "value": ["cuv:GEN:1:1": [["i": 0, "c": "#FFB103"]]]]],
+                    ],
+                ])
+            } else {
+                self.defaultReply(request)
+            }
         }
         let outcome = await engine.run(reason: "login")
         XCTAssertEqual(outcome, .ok)
-        XCTAssertGreaterThan(writes, 0)
+        XCTAssertEqual(writes, 1)
         XCTAssertFalse(highlights.store.isEmpty)
+    }
+
+    func testPackStoreValidatesSQLitePagesAndSha256BeforeAtomicSwap() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("packstore-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let validSrc = dir.appendingPathComponent("valid.sqlite")
+        var db: OpaquePointer?
+        XCTAssertEqual(sqlite3_open(validSrc.path, &db), SQLITE_OK)
+        XCTAssertEqual(sqlite3_exec(db, "CREATE TABLE meta(key TEXT, value TEXT); INSERT INTO meta VALUES('v','1');", nil, nil, nil), SQLITE_OK)
+        sqlite3_close(db)
+
+        XCTAssertTrue(PackStore.isValidSQLiteFile(validSrc))
+        let sha = try XCTUnwrap(PackStore.sha256Hex(of: validSrc))
+
+        let dest = dir.appendingPathComponent("installed.sqlite")
+        let tmpCopy1 = dir.appendingPathComponent("dl1.tmp")
+        try FileManager.default.copyItem(at: validSrc, to: tmpCopy1)
+        try PackStore.installSQLiteAtomically(from: tmpCopy1, to: dest, expectedSha256: sha)
+        XCTAssertTrue(PackStore.isValidSQLiteFile(dest))
+
+        // Corrupt / truncated download must never overwrite the already-installed valid SQLite pack
+        let truncated = dir.appendingPathComponent("truncated.tmp")
+        let raw = try Data(contentsOf: dest)
+        try raw.prefix(raw.count - 128).write(to: truncated)
+        XCTAssertFalse(PackStore.isValidSQLiteFile(truncated))
+        XCTAssertThrowsError(try PackStore.installSQLiteAtomically(from: truncated, to: dest, expectedSha256: sha))
+        XCTAssertEqual(PackStore.sha256Hex(of: dest), sha)
     }
 }

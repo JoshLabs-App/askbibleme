@@ -95,7 +95,6 @@ struct NavDrawerView: View {
             menuRow(SiteCopy.t("auth.drawerLogout", locale), action: onLogout)
         } else {
             menuRow(SiteCopy.t("auth.pageTitle", locale), action: onLogin)
-            menuRow(SiteCopy.t("native.register", locale), action: onRegister)
         }
         reminderRow
         menuRow(SiteCopy.t("native.sendFeedback", locale), detail: Self.supportEmail, action: onFeedback)

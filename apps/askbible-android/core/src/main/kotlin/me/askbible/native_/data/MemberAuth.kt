@@ -1,6 +1,5 @@
 package me.askbible.native_.data
 
-import org.json.JSONArray
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.net.HttpURLConnection
@@ -9,112 +8,110 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 /**
- * 会员登录（RN src/auth：memberSession / supabaseMemberAuth / memberAuthSessionCommit）。
- * RN 用 supabase-js 直连 Supabase（不经 askbible.me）；这里用同一套 GoTrue / PostgREST 接口手写请求。
- * 本机会话 JSON 与 RN 同形（sessionToken / expiresAt / user），键也一样。与 iOS MemberAuth.swift 同构。
+ * 会员登录与读经同步客户端（DECISIONS D-44：去 Supabase → Cloudflare Worker `askbible-sync` + D1）。
+ * 支持：6 位邮箱验证码登录、原生 ID Token 直验、会话滑动续期、修改昵称、原子注销账户、服务端单点权威合并读经同步。
+ * 与 iOS `AskBibleSyncClient` 同构。
  */
-data class MemberUser(val id: String, val email: String, val name: String, val locale: String? = null, val createdAt: String? = null)
+data class MemberUser(
+    val id: String,
+    val email: String,
+    val name: String,
+    val locale: String? = null,
+    val createdAt: String? = null,
+    val isAdmin: Boolean? = null,
+)
 
-/** refreshToken：GoTrue refresh_token，access token 一小时过期，RN 没存所以一小时就被登出；原生存下来到期自动续（RN 读这份 JSON 会忽略这个键） */
-data class MemberSession(val sessionToken: String, val expiresAt: String, val user: MemberUser, val refreshToken: String? = null) {
+data class MemberSession(
+    val sessionToken: String,
+    val expiresAt: String,
+    val user: MemberUser,
+    val refreshToken: String? = null,
+) {
     fun toJson(): String = JSONObject()
-        .put("sessionToken", sessionToken).put("expiresAt", expiresAt)
-        .put("user", JSONObject().put("id", user.id).put("email", user.email).put("name", user.name)
-            .put("locale", user.locale ?: JSONObject.NULL).put("createdAt", user.createdAt ?: JSONObject.NULL))
+        .put("sessionToken", sessionToken)
+        .put("expiresAt", expiresAt)
+        .put(
+            "user",
+            JSONObject()
+                .put("id", user.id)
+                .put("email", user.email)
+                .put("name", user.name)
+                .put("locale", user.locale ?: JSONObject.NULL)
+                .put("createdAt", user.createdAt ?: JSONObject.NULL)
+                .also { u -> user.isAdmin?.let { u.put("isAdmin", it) } }
+        )
         .also { o -> refreshToken?.let { o.put("refreshToken", it) } }
         .toString()
 }
 
-/** 纯规则（check:member-auth 对拍）：错误文案映射、显示名回退、会话解析、称呼校验 */
 object MemberAuthRules {
     const val SESSION_KEY = "askbible.mobile.member-session.v1"
     const val DISPLAY_NAME_MAX_LEN = 24
 
-    /** RN mapAuthErrorMessage：GoTrue 的英文错误 → 中文提示 + code */
     fun mapAuthError(message: String): Pair<String, String> {
         val m = message.trim().ifEmpty { "auth_failed" }
         fun has(p: String) = Regex(p, RegexOption.IGNORE_CASE).containsMatchIn(m)
-        if (has("invalid login credentials|invalid_credentials")) return "邮箱或密码不正确。" to "invalid_credentials"
-        if (has("email not confirmed")) return "请先完成邮箱验证后再登录。" to "email_not_confirmed"
-        if (has("user already registered|already been registered")) return "该邮箱已注册。" to "email_taken"
+        if (has("invalid_email")) return "请输入有效的邮箱地址。" to "invalid_email"
+        if (has("invalid_otp")) return "验证码不正确，请核对后重试。" to "invalid_otp"
+        if (has("otp_expired")) return "验证码已过期，请重新获取。" to "otp_expired"
+        if (has("otp_too_many_attempts")) return "尝试次数过多，请重新获取验证码。" to "otp_too_many_attempts"
         if (has("network request failed|failed to fetch|network error|timed out|failed to connect")) return "network" to "network"
         return m to "auth_failed"
     }
 
-    /** RN displayNameFromUser：优先传入的名字，再看 user_metadata 的 full_name / name / display_name，最后邮箱、id */
-    fun displayName(email: String, id: String, metadata: Map<String, Any?>, fallback: String?): String {
-        fallback?.trim()?.takeIf { it.isNotEmpty() }?.let { return it }
-        for (k in listOf("full_name", "name", "display_name")) {
-            (metadata[k] as? String)?.trim()?.takeIf { it.isNotEmpty() }?.let { return it }
-        }
-        return email.ifEmpty { id }
-    }
-
-    /** RN readMemberSession：字段齐全且未过期才算有会话 */
-    fun parseSession(raw: String, nowMs: Long = System.currentTimeMillis()): MemberSession? = parseSession(raw, nowMs, allowExpired = false)
-
-    /** allowExpired：过期但带 refresh_token 的会话也读出来（启动后先续期再校验） */
-    fun parseSession(raw: String, nowMs: Long, allowExpired: Boolean): MemberSession? {
+    fun parseSession(raw: String, nowMs: Long = System.currentTimeMillis()): MemberSession? {
         val o = try { JSONObject(raw) } catch (_: Exception) { return null }
         val token = o.optString("sessionToken").trim()
+        // 旧版 v1 JWT 含 `.` 分段，升到 v2 时静默丢弃旧 token（保留本机读经进度，重新登录即无缝合并同 UUID 账户）
+        if (token.isEmpty() || token.contains('.')) return null
         val expiresAt = o.optString("expiresAt")
         val u = o.optJSONObject("user") ?: return null
-        val id = u.optString("id"); val email = u.optString("email")
-        if (token.isEmpty() || expiresAt.isEmpty() || id.isEmpty() || !u.has("email")) return null
-        val refresh = (o.opt("refreshToken") as? String)?.trim()?.ifEmpty { null }
+        val id = u.optString("id")
+        val email = u.optString("email")
+        if (expiresAt.isEmpty() || id.isEmpty() || !u.has("email")) return null
         val exp = parseIso(expiresAt) ?: return null
-        if (exp <= nowMs && !(allowExpired && refresh != null)) return null
+        if (exp <= nowMs) return null
         val name = if (u.has("name") && !u.isNull("name")) u.getString("name") else email
         val created = if (u.isNull("createdAt")) null else u.optString("createdAt").trim().ifEmpty { null }
         val locale = if (u.isNull("locale")) null else u.optString("locale")
-        return MemberSession(token, expiresAt, MemberUser(id, email, name, locale, created), refresh)
+        val isAdmin = if (u.has("isAdmin") && !u.isNull("isAdmin")) u.optBoolean("isAdmin") else null
+        return MemberSession(token, expiresAt, MemberUser(id, email, name, locale, created, isAdmin))
     }
 
-    /** 还有多少秒过期（已过期为负） */
-    fun secondsUntilExpiry(s: MemberSession, nowMs: Long = System.currentTimeMillis()): Double = ((parseIso(s.expiresAt) ?: nowMs) - nowMs) / 1000.0
+    fun secondsUntilExpiry(s: MemberSession, nowMs: Long = System.currentTimeMillis()): Double =
+        ((parseIso(s.expiresAt) ?: nowMs) - nowMs) / 1000.0
 
-    /** JS Date.toISOString() 带毫秒；有的接口不带 */
     fun parseIso(s: String): Long? = try { OffsetDateTime.parse(s).toInstant().toEpochMilli() } catch (_: Exception) { null }
 
-    /** RN normalizeExploreDisplayName / isValidExploreDisplayName */
     fun normalizeDisplayName(raw: String): String = raw.trim().replace(Regex("\\s+"), " ")
-    /**
-     * 抬头 / 菜单里显示的账号名：没设昵称时 name 就是邮箱，整串太长（Josh 2026-09-10「超长，不好看」），
-     * 取 @ 前面那段，再长就截断。只用于显示，不进对拍规则。
-     */
+
     fun shortAccountName(raw: String): String {
         val n = normalizeDisplayName(raw)
         val base = n.substringBefore('@')
         return if (base.length > 14) base.take(13) + "\u2026" else base
     }
 
-    fun isValidDisplayName(raw: String): Boolean { val n = normalizeDisplayName(raw); return n.isNotEmpty() && n.length <= DISPLAY_NAME_MAX_LEN }
+    fun isValidDisplayName(raw: String): Boolean {
+        val n = normalizeDisplayName(raw)
+        return n.isNotEmpty() && n.length <= DISPLAY_NAME_MAX_LEN
+    }
 
-    /** 探索页抬头：登录了「你好，名字」，没登录「请登录，解锁更多」 */
     fun greeting(user: MemberUser?): String {
         user ?: return "请登录，解锁更多"
         val n = normalizeDisplayName(user.name)
         return "你好，${n.ifEmpty { "用户" }}"
     }
 
-    /** JS Date.toISOString() 同款：永远带毫秒（ISO_INSTANT 在毫秒为 0 时会省掉） */
     val ISO_MILLIS: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").withZone(ZoneOffset.UTC)
     fun isoNow(): String = ISO_MILLIS.format(Instant.now())
 
-    /** GoTrue 的 expires_at（unix 秒）→ ISO；缺了按一小时 */
-    fun expiresAtIso(expiresAtSeconds: Double?, nowMs: Long = System.currentTimeMillis()): String {
-        val ms = if (expiresAtSeconds != null) (expiresAtSeconds * 1000).toLong() else nowMs + 3_600_000
+    fun expiresAtIso(expiresAtSeconds: Double? = null, nowMs: Long = System.currentTimeMillis()): String {
+        val ms = if (expiresAtSeconds != null) (expiresAtSeconds * 1000).toLong() else nowMs + 365L * 86_400_000L
         return ISO_MILLIS.format(Instant.ofEpochMilli(ms))
     }
-}
-
-/** Supabase 直连（与 RN app.config extra.supabaseUrl / anon key 同一套；anon key 是公开的发布密钥，RN 包里也带着） */
-object SupabaseAuthConfig {
-    /** 当前 api 线路（防封换线，见 Endpoints.kt）；默认仍是 supabase.co，被干扰时换到自家反代 */
-    val URL: String get() = Endpoints.apiBase
-    const val ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnb2JhZGhkeWxhcmhzc3VkcGxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyMTMwMDAsImV4cCI6MjA5Njc4OTAwMH0.5EqC5hJFmydZaVBmpXJk1ddJNGX_fY2hN83k5IzAO3I"
 }
 
 sealed class MemberAuthResult {
@@ -122,18 +119,40 @@ sealed class MemberAuthResult {
     data class Failed(val error: String, val code: String) : MemberAuthResult()
 }
 
-/** GoTrue（/auth/v1）+ PostgREST（/rest/v1/askbible_profiles）请求；阻塞式，调用方放 IO 线程；失败给 RN 同款文案 */
-object SupabaseAuthClient {
+sealed class OtpSendResult {
+    data class Ok(val expiresInSec: Int) : OtpSendResult()
+    data class Failed(val error: String, val code: String) : OtpSendResult()
+}
+
+object AskBibleSyncClient {
+    data class VerifiedSession(val user: MemberUser, val expiresAt: String)
+    sealed class VerifyOutcome {
+        data class Ok(val session: VerifiedSession) : VerifyOutcome()
+        object Unauthorized : VerifyOutcome()
+        object TransientFailure : VerifyOutcome()
+    }
+
+    data class SyncDocument(val revision: String, val updatedAt: String, val blobs: JSONObject)
+    sealed class SyncFetch {
+        data class Ok(val doc: SyncDocument?) : SyncFetch()
+        object Unauthorized : SyncFetch()
+        data class Failed(val message: String) : SyncFetch()
+        object Network : SyncFetch()
+    }
+
+    @Volatile var deviceId: String = UUID.randomUUID().toString()
+
     private class Response(val status: Int, val body: String)
 
-    private fun request(path: String, method: String, token: String? = null, body: JSONObject? = null, extra: Map<String, String> = emptyMap(), timeoutMs: Int = 15_000): Response {
-        val conn = URL(SupabaseAuthConfig.URL + path).openConnection() as HttpURLConnection
+    private fun request(path: String, method: String, token: String? = null, body: JSONObject? = null, timeoutMs: Int = 20_000): Response {
+        val conn = URL(Endpoints.apiBase + path).openConnection() as HttpURLConnection
         conn.requestMethod = method
-        conn.connectTimeout = 15_000; conn.readTimeout = timeoutMs
-        conn.setRequestProperty("apikey", SupabaseAuthConfig.ANON_KEY)
+        conn.connectTimeout = 15_000
+        conn.readTimeout = timeoutMs
         conn.setRequestProperty("Accept", "application/json")
-        conn.setRequestProperty("Authorization", "Bearer ${token ?: SupabaseAuthConfig.ANON_KEY}")
-        for ((k, v) in extra) conn.setRequestProperty(k, v)
+        conn.setRequestProperty("X-Platform", "android")
+        conn.setRequestProperty("X-Device-Id", deviceId)
+        if (!token.isNullOrEmpty()) conn.setRequestProperty("Authorization", "Bearer $token")
         if (body != null) {
             conn.setRequestProperty("Content-Type", "application/json")
             conn.doOutput = true
@@ -150,183 +169,165 @@ object SupabaseAuthClient {
 
     private fun errorMessage(o: JSONObject?, status: Int): String {
         o ?: return "HTTP $status"
-        for (k in listOf("error_description", "msg", "message", "error")) o.optString(k).takeIf { it.isNotEmpty() }?.let { return it }
+        for (k in listOf("error", "message", "msg")) o.optString(k).takeIf { it.isNotEmpty() }?.let { return it }
         return "HTTP $status"
     }
 
-    private fun metadata(u: JSONObject): Map<String, Any?> {
-        val m = u.optJSONObject("user_metadata") ?: return emptyMap()
-        return m.keys().asSequence().associateWith { m.opt(it) }
-    }
+    private fun errorCode(o: JSONObject?, fallback: String): String =
+        o?.optString("code")?.takeIf { it.isNotEmpty() } ?: fallback
 
-    /** 把 GoTrue 的 session JSON 变成本机会话（顺手保证 askbible_profiles 有一行） */
-    private fun session(o: JSONObject, fallbackName: String?, locale: String?): MemberSession? {
-        val token = o.optString("access_token").ifEmpty { return null }
-        val u = o.optJSONObject("user") ?: return null
+    private fun parseUser(u: JSONObject): MemberUser? {
         val id = u.optString("id").ifEmpty { return null }
         val email = u.optString("email")
-        val expiresAt = MemberAuthRules.expiresAtIso(if (o.has("expires_at")) o.optDouble("expires_at") else null)
-        val created = u.optString("created_at").trim().ifEmpty { null }
-        val fallback = MemberAuthRules.displayName(email, id, metadata(u), fallbackName)
-        val profile = ensureProfile(token, id, fallback, locale)
-        return MemberSession(token, expiresAt, MemberUser(id, email, profile?.displayName ?: fallback, profile?.locale, created),
-                             o.optString("refresh_token").ifEmpty { null })
+        val name = u.optString("name").trim().ifEmpty { email }
+        val locale = if (u.isNull("locale")) null else u.optString("locale").ifEmpty { null }
+        val created = if (u.isNull("createdAt")) null else u.optString("createdAt").trim().ifEmpty { null }
+        val isAdmin = if (u.has("isAdmin") && !u.isNull("isAdmin")) u.optBoolean("isAdmin") else null
+        return MemberUser(id, email, name, locale, created, isAdmin)
     }
 
-    /** 用 refresh_token 换一对新 token（grant_type=refresh_token）；refresh_token 作废 → Failed(code = refresh_failed) */
-    fun refresh(refreshToken: String, locale: String?): MemberAuthResult = try {
-        val r = request("/auth/v1/token?grant_type=refresh_token", "POST", body = JSONObject().put("refresh_token", refreshToken), timeoutMs = 30_000)
-        val o = json(r.body)
-        val s = if (r.status in 200..299 && o != null) session(o, null, locale) else null
-        if (s != null) MemberAuthResult.Ok(s) else {
-            val msg = errorMessage(o, r.status)
-            if (r.status == 429 || r.status >= 500 || MemberOAuthRules.isNetworkMessage(msg)) MemberAuthResult.Failed("network", "network") else MemberAuthResult.Failed(msg, "refresh_failed")
-        }
-    } catch (_: Exception) { MemberAuthResult.Failed("network", "network") }
+    private fun parseSessionResponse(o: JSONObject): MemberSession? {
+        val token = o.optString("sessionToken").trim().ifEmpty { return null }
+        val u = o.optJSONObject("user") ?: return null
+        val user = parseUser(u) ?: return null
+        val expiresAt = o.optString("expiresAt").ifEmpty { MemberAuthRules.expiresAtIso() }
+        return MemberSession(token, expiresAt, user)
+    }
 
-    fun signIn(email: String, password: String, locale: String?): MemberAuthResult = try {
-        val r = request("/auth/v1/token?grant_type=password", "POST", body = JSONObject().put("email", email.trim()).put("password", password))
-        val o = json(r.body)
-        val s = if (r.status in 200..299 && o != null) session(o, null, locale) else null
-        if (s != null) MemberAuthResult.Ok(s) else MemberAuthRules.mapAuthError(errorMessage(o, r.status)).let { MemberAuthResult.Failed(it.first, it.second) }
-    } catch (_: Exception) { MemberAuthResult.Failed("network", "network") }
-
-    fun signUp(email: String, password: String, name: String, locale: String?): MemberAuthResult = try {
-        val data = JSONObject()
-        val n = name.trim()
-        if (n.isNotEmpty()) { data.put("name", n); data.put("display_name", n) }
-        locale?.trim()?.takeIf { it.isNotEmpty() }?.let { data.put("locale", it) }
-        val r = request("/auth/v1/signup", "POST", body = JSONObject().put("email", email.trim()).put("password", password).put("data", data))
-        val o = json(r.body)
-        when {
-            r.status !in 200..299 || o == null -> MemberAuthRules.mapAuthError(errorMessage(o, r.status)).let { MemberAuthResult.Failed(it.first, it.second) }
-            o.has("access_token") -> session(o, n, locale)?.let { MemberAuthResult.Ok(it) } ?: MemberAuthResult.Failed("注册失败", "register_failed")
-            // 没给 session 只给了 user：要先点邮件里的验证链接
-            o.has("id") || o.has("user") -> MemberAuthResult.Failed("请查收验证邮件后再登录。", "email_confirmation_required")
-            else -> MemberAuthResult.Failed("注册失败", "register_failed")
-        }
-    } catch (_: Exception) { MemberAuthResult.Failed("network", "network") }
-
-    data class Profile(val displayName: String?, val locale: String?)
-
-    /** askbible_profiles.is_admin：管理员账号才看得到还没公开的功能（每日灵修）。取不到（断网等）回 null，调用方沿用上次的结果 */
-    fun fetchIsAdmin(token: String, userId: String): Boolean? = try {
-        val r = request("/rest/v1/askbible_profiles?select=is_admin&user_id=eq.$userId", "GET", token)
-        if (r.status != 200) null else JSONArray(r.body).let { rows -> rows.length() > 0 && rows.getJSONObject(0).optBoolean("is_admin", false) }
-    } catch (_: Exception) { null }
-
-    fun fetchProfile(token: String, userId: String): Profile? = try {
-        val r = request("/rest/v1/askbible_profiles?select=display_name,locale&user_id=eq.$userId", "GET", token)
-        if (r.status != 200) null else {
-            val rows = JSONArray(r.body)
-            if (rows.length() == 0) null else {
-                val row = rows.getJSONObject(0)
-                Profile(row.optString("display_name").trim().ifEmpty { null }, row.optString("locale").trim().ifEmpty { null })
+    /** 1. 发送 6 位邮箱验证码 */
+    fun sendOtp(email: String, locale: String?): OtpSendResult = try {
+        val clean = email.trim().lowercase()
+        if (!clean.contains("@") || !clean.contains(".")) {
+            OtpSendResult.Failed("请输入有效的邮箱地址。", "invalid_email")
+        } else {
+            val body = JSONObject().put("email", clean)
+            if (!locale.isNullOrBlank()) body.put("locale", locale)
+            val r = request("/v1/auth/otp/send", "POST", body = body)
+            val o = json(r.body)
+            if (r.status in 200..299 && o?.optBoolean("ok", true) != false) {
+                OtpSendResult.Ok(o?.optInt("expiresInSec", 600) ?: 600)
+            } else {
+                OtpSendResult.Failed(errorMessage(o, r.status), errorCode(o, "otp_send_failed"))
             }
         }
-    } catch (_: Exception) { null }
+    } catch (_: Exception) { OtpSendResult.Failed("network", "network") }
 
-    /** RN ensureOwnProfile：已有显示名且 locale 不变就不写；否则 upsert（on_conflict=user_id） */
-    fun ensureProfile(token: String, userId: String, displayName: String, locale: String?): Profile? {
-        val existing = fetchProfile(token, userId)
-        val loc = (locale ?: "").trim().take(24)
-        if (existing?.displayName != null && (loc.isEmpty() || loc == (existing.locale ?: ""))) return existing
-        val row = JSONObject().put("user_id", userId).put("display_name", existing?.displayName ?: displayName)
-            .put("updated_at", MemberAuthRules.isoNow())
-        if (loc.isNotEmpty()) row.put("locale", loc)
-        try { request("/rest/v1/askbible_profiles?on_conflict=user_id", "POST", token, row, mapOf("Prefer" to "resolution=merge-duplicates,return=minimal")) } catch (_: Exception) {}
-        return fetchProfile(token, userId) ?: existing
-    }
+    /** 2. 校验 6 位验证码并建立会话 */
+    fun verifyOtp(email: String, code: String, name: String?, locale: String?): MemberAuthResult = try {
+        val clean = email.trim().lowercase()
+        val digits = code.filter { it.isDigit() }
+        if (digits.length != 6) {
+            MemberAuthResult.Failed("请输入 6 位数字验证码。", "invalid_otp")
+        } else {
+            val body = JSONObject()
+                .put("email", clean)
+                .put("code", digits)
+                .put("deviceId", deviceId)
+                .put("platform", "android")
+            name?.trim()?.takeIf { it.isNotEmpty() }?.let { body.put("displayName", it) }
+            locale?.trim()?.takeIf { it.isNotEmpty() }?.let { body.put("locale", it) }
+            val r = request("/v1/auth/otp/verify", "POST", body = body)
+            val o = json(r.body)
+            val s = if (r.status in 200..299 && o != null) parseSessionResponse(o) else null
+            if (s != null) MemberAuthResult.Ok(s)
+            else MemberAuthResult.Failed(errorMessage(o, r.status), errorCode(o, "invalid_otp"))
+        }
+    } catch (_: Exception) { MemberAuthResult.Failed("network", "network") }
 
-    /** 改称呼：写 askbible_profiles.display_name */
-    fun updateDisplayName(token: String, userId: String, name: String): Boolean = try {
-        val row = JSONObject().put("user_id", userId).put("display_name", name).put("updated_at", MemberAuthRules.isoNow())
-        request("/rest/v1/askbible_profiles?on_conflict=user_id", "POST", token, row, mapOf("Prefer" to "resolution=merge-duplicates,return=minimal")).status in 200..299
+    /** 3. 原生 Apple / Google ID Token 直验 */
+    fun signInWithOAuthIdToken(provider: String, idToken: String, nonce: String?, fallbackName: String?, locale: String?): MemberAuthResult = try {
+        val body = JSONObject()
+            .put("idToken", idToken)
+            .put("deviceId", deviceId)
+            .put("platform", "android")
+        if (!nonce.isNullOrEmpty()) body.put("nonce", nonce)
+        if (!fallbackName.isNullOrBlank()) body.put("displayName", fallbackName.trim())
+        if (!locale.isNullOrBlank()) body.put("locale", locale.trim())
+        val path = if (provider == "apple") "/v1/auth/oauth/apple" else "/v1/auth/oauth/google"
+        val r = request(path, "POST", body = body, timeoutMs = 30_000)
+        val o = json(r.body)
+        val s = if (r.status in 200..299 && o != null) parseSessionResponse(o) else null
+        when {
+            s != null -> MemberAuthResult.Ok(s)
+            r.status == 429 || r.status >= 500 -> MemberAuthResult.Failed("network", "network")
+            else -> {
+                val msg = errorMessage(o, r.status)
+                if (MemberOAuthRules.isNetworkMessage(msg)) MemberAuthResult.Failed("network", "network")
+                else MemberAuthResult.Failed(msg, MemberOAuthRules.idTokenFailureCode(provider, msg))
+            }
+        }
+    } catch (_: Exception) { MemberAuthResult.Failed("network", "network") }
+
+    /** 4. 校验并滑动续期会话：401/403 返回 Unauthorized；429/5xx 或断网返回 TransientFailure（保留本机会话） */
+    fun verify(token: String): VerifyOutcome = try {
+        val r = request("/v1/auth/session", "GET", token)
+        when {
+            r.status == 401 || r.status == 403 -> VerifyOutcome.Unauthorized
+            r.status == 200 -> {
+                val o = json(r.body)
+                val user = o?.optJSONObject("user")?.let { parseUser(it) }
+                if (user != null) {
+                    val expiresAt = o.optString("expiresAt").ifEmpty { MemberAuthRules.expiresAtIso() }
+                    VerifyOutcome.Ok(VerifiedSession(user, expiresAt))
+                } else VerifyOutcome.TransientFailure
+            }
+            else -> VerifyOutcome.TransientFailure
+        }
+    } catch (_: Exception) { VerifyOutcome.TransientFailure }
+
+    /** 5. 修改昵称 */
+    fun updateDisplayName(token: String, name: String, locale: String? = null): Boolean = try {
+        val body = JSONObject().put("name", name)
+        if (!locale.isNullOrBlank()) body.put("locale", locale)
+        request("/v1/auth/profile", "PATCH", token, body).status in 200..299
     } catch (_: Exception) { false }
 
-    /** RN pullMemberProfileFromSupabase：token 还有效就返回最新用户；401/403 返回 null（会话作废）；网络问题抛错 */
-    fun verify(token: String): MemberUser? {
-        val r = request("/auth/v1/user", "GET", token)
-        if (r.status == 401 || r.status == 403) return null
-        val u = json(r.body)
-        val id = u?.optString("id").orEmpty(); val email = u?.optString("email").orEmpty()
-        if (r.status != 200 || u == null || id.isEmpty() || email.isEmpty()) throw IllegalStateException("HTTP ${r.status}")
-        val profile = fetchProfile(token, id)
-        val created = u.optString("created_at").trim().ifEmpty { null }
-        return MemberUser(id, email, profile?.displayName ?: MemberAuthRules.displayName(email, id, metadata(u), null), profile?.locale, created)
+    /** 6. 退出当前设备会话 */
+    fun signOut(token: String) {
+        try { request("/v1/auth/logout", "POST", token) } catch (_: Exception) {}
     }
 
-    /** RN supabase.auth.signInWithIdToken：Apple / Google 原生凭证 → 会话（grant_type=id_token；nonce 传原文） */
-    fun signInWithIdToken(provider: String, idToken: String, nonce: String?, fallbackName: String?, locale: String?): MemberAuthResult = try {
-        val body = JSONObject().put("provider", provider).put("id_token", idToken)
-        if (!nonce.isNullOrEmpty()) body.put("nonce", nonce)
-        // GoTrue 验 id_token 要去拿对方公钥，实测 18 秒以上；15 秒就当断网会误报（与 iOS 同）
-        val r = request("/auth/v1/token?grant_type=id_token", "POST", body = body, timeoutMs = 90_000)
+    /** 7. 原子删除账户（云端 D1 同步文档 + 会话 + 用户一并清除） */
+    fun deleteAccount(token: String): String? = try {
+        val r = request("/v1/auth/account", "DELETE", token, timeoutMs = 20_000)
         val o = json(r.body)
-        val s = if (r.status in 200..299 && o != null) session(o, fallbackName, locale) else null
-        if (s != null) MemberAuthResult.Ok(s) else {
-            val msg = errorMessage(o, r.status)
-            if (MemberOAuthRules.isNetworkMessage(msg)) MemberAuthResult.Failed("network", "network")
-            else MemberAuthResult.Failed(msg, MemberOAuthRules.idTokenFailureCode(provider, msg))
-        }
-    } catch (_: Exception) { MemberAuthResult.Failed("network", "network") }
+        if (r.status == 200 && o?.optBoolean("ok", true) != false) null
+        else o?.optString("code")?.takeIf { it.isNotEmpty() }
+            ?: o?.optString("error")?.takeIf { it.isNotEmpty() }
+            ?: "network"
+    } catch (_: Exception) { "network" }
 
-    /** RN exchangeCodeForSession：浏览器 OAuth 回调里的 code + 本机 verifier → 会话（grant_type=pkce） */
-    fun exchangeCode(code: String, verifier: String, locale: String?): MemberAuthResult = try {
-        val r = request("/auth/v1/token?grant_type=pkce", "POST", body = JSONObject().put("auth_code", code).put("code_verifier", verifier), timeoutMs = 90_000)
-        val o = json(r.body)
-        val s = if (r.status in 200..299 && o != null) session(o, null, locale) else null
-        if (s != null) MemberAuthResult.Ok(s) else {
-            val msg = errorMessage(o, r.status)
-            if (MemberOAuthRules.isNetworkMessage(msg)) MemberAuthResult.Failed("network", "network") else MemberAuthResult.Failed(msg, "google_failed")
-        }
-    } catch (_: Exception) { MemberAuthResult.Failed("network", "network") }
+    // ---- 会员读经同步（Worker 单点权威合并） ----
 
-    /** RN setSession（回调直接带 access_token 的 implicit 分支）：拿 token 取用户后组会话 */
-    fun sessionFromTokens(accessToken: String, locale: String?): MemberAuthResult = try {
-        val r = request("/auth/v1/user", "GET", accessToken)
-        val u = json(r.body)
-        val s = if (r.status == 200 && u != null) session(JSONObject().put("access_token", accessToken).put("user", u), null, locale) else null
-        if (s != null) MemberAuthResult.Ok(s) else MemberAuthResult.Failed(errorMessage(u, r.status), "google_failed")
-    } catch (_: Exception) { MemberAuthResult.Failed("network", "network") }
-
-    // ---- 会员读经进度同步文档（RN memberReadingSyncApi：PostgREST member_reading_sync_documents，RLS 只看得到自己那行） ----
-
-    data class SyncDocument(val revision: String, val updatedAt: String, val blobs: JSONObject)
-    sealed class SyncFetch {
-        data class Ok(val doc: SyncDocument?) : SyncFetch()
-        object Unauthorized : SyncFetch()
-        data class Failed(val message: String) : SyncFetch()
-        object Network : SyncFetch()
+    private fun parseSyncDoc(raw: Any?): SyncDocument? {
+        val d = raw as? JSONObject ?: return null
+        return SyncDocument(
+            d.optString("revision", "0"),
+            d.optString("updatedAt", ""),
+            d.optJSONObject("blobs") ?: JSONObject()
+        )
     }
 
-    /** 拉自己的同步文档；没有就 Ok(null)（RN readRemoteDocument + emptyOkResponse） */
-    fun fetchSyncDocument(token: String, userId: String): SyncFetch = try {
-        val r = request("/rest/v1/member_reading_sync_documents?select=user_id,schema_version,revision,updated_at,blobs&user_id=eq.$userId", "GET", token, timeoutMs = 30_000)
+    fun fetchSyncDocument(token: String): SyncFetch = try {
+        val r = request("/v1/sync/reading", "GET", token, timeoutMs = 30_000)
+        val o = json(r.body)
         when {
             r.status == 401 || r.status == 403 -> SyncFetch.Unauthorized
-            r.status != 200 -> SyncFetch.Failed(errorMessage(json(r.body), r.status))
-            else -> {
-                val rows = try { JSONArray(r.body) } catch (_: Exception) { JSONArray() }
-                if (rows.length() == 0) SyncFetch.Ok(null) else {
-                    val row = rows.getJSONObject(0)
-                    SyncFetch.Ok(SyncDocument(row.optString("revision", "0"), row.optString("updated_at", ""), row.optJSONObject("blobs") ?: JSONObject()))
-                }
-            }
+            r.status != 200 || o?.optBoolean("ok", true) == false -> SyncFetch.Failed(errorMessage(o, r.status))
+            o == null || o.isNull("doc") -> SyncFetch.Ok(null)
+            else -> SyncFetch.Ok(parseSyncDoc(o.opt("doc")))
         }
     } catch (_: Exception) { SyncFetch.Network }
 
-    /** 写回合并后的文档（upsert on user_id；RN memberReadingSyncPushSupabase） */
-    fun upsertSyncDocument(token: String, userId: String, revision: String, updatedAt: String, blobs: JSONObject): SyncFetch = try {
-        val row = JSONObject().put("user_id", userId).put("schema_version", 1).put("revision", revision).put("updated_at", updatedAt).put("blobs", blobs)
-        val r = request("/rest/v1/member_reading_sync_documents?on_conflict=user_id", "POST", token, row,
-                        mapOf("Prefer" to "resolution=merge-duplicates,return=minimal"), timeoutMs = 30_000)
+    fun pushSyncDocument(token: String, blobs: JSONObject, replace: Boolean = false): SyncFetch = try {
+        val body = JSONObject().put("blobs", blobs)
+        if (replace) body.put("replace", true)
+        val r = request("/v1/sync/reading", "POST", token, body, timeoutMs = 30_000)
+        val o = json(r.body)
         when {
             r.status == 401 || r.status == 403 -> SyncFetch.Unauthorized
-            r.status !in 200..299 -> SyncFetch.Failed(errorMessage(json(r.body), r.status))
-            else -> SyncFetch.Ok(SyncDocument(revision, updatedAt, blobs))
+            r.status !in 200..299 || o?.optBoolean("ok", true) == false -> SyncFetch.Failed(errorMessage(o, r.status))
+            else -> SyncFetch.Ok(parseSyncDoc(o?.opt("doc")))
         }
     } catch (_: Exception) { SyncFetch.Network }
-
-    fun signOut(token: String) { try { request("/auth/v1/logout", "POST", token) } catch (_: Exception) {} }
 }

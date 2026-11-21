@@ -14,11 +14,11 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const registry = JSON.parse(readFileSync(path.join(ROOT, "data/bible-reading-plans/registry.json"), "utf8"));
-const zh = JSON.parse(readFileSync(path.join(ROOT, "apps/askbible-mobile/assets/content/zh-CN.json"), "utf8"));
+const zh = JSON.parse(readFileSync(path.join(ROOT, "locales/zh-CN.json"), "utf8"));
 // 手机版精简文案（短句 / 要点 / 图标名），见 data/bible-reading-plans/mobile-brief.zh-CN.json
 const brief = JSON.parse(readFileSync(path.join(ROOT, "data/bible-reading-plans/mobile-brief.zh-CN.json"), "utf8"));
 const briefEn = JSON.parse(readFileSync(path.join(ROOT, "data/bible-reading-plans/mobile-brief.en.json"), "utf8"));
-const en = JSON.parse(readFileSync(path.join(ROOT, "apps/askbible-mobile/assets/content/en.json"), "utf8"));
+const en = JSON.parse(readFileSync(path.join(ROOT, "locales/en.json"), "utf8"));
 const flat = {}; const flatEn = {};
 (function walk(o, p, out) { for (const [k, v] of Object.entries(o)) { const key = p ? `${p}.${k}` : k; if (v && typeof v === "object") walk(v, key, out); else out[key] = String(v); } })(zh, "", flat);
 (function walk(o, p, out) { for (const [k, v] of Object.entries(o)) { const key = p ? `${p}.${k}` : k; if (v && typeof v === "object") walk(v, key, out); else out[key] = String(v); } })(en, "", flatEn);

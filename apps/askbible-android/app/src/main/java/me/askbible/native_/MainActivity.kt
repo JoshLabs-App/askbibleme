@@ -86,8 +86,8 @@ import me.askbible.native_.ui.LoginScreen
 import kotlinx.coroutines.launch
 import me.askbible.native_.data.MemberAuthStore
 import me.askbible.native_.data.MemberReadingSyncEngine
+import me.askbible.native_.data.PackStore
 import me.askbible.native_.data.ReadingActivityStore
-import me.askbible.native_.data.OAuthCallbackBus
 import java.time.LocalDate
 import androidx.compose.runtime.mutableIntStateOf
 import me.askbible.native_.data.BookRef
@@ -139,7 +139,6 @@ class MainActivity : ComponentActivity() {
         EndpointsStore.attach(this)
         // 全量在线译本目录先读盘：记住的远端译本要在 TranslationPrefs 解析之前就认得
         me.askbible.native_.data.RemoteTranslations.attach(cacheDir)
-        OAuthCallbackBus.deliver(intent?.dataString)
         // 商店版：Play 官方的应用内更新（web 变体里是空操作）
         PlayUpdateGate.start(this)
         // 记下「首次运行」时间，好评邀请要用（装机满 3 天才问）
@@ -155,17 +154,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /** 回前台重探一次线路（Endpoints 自己限 10 分钟一次） */
+    /** 回前台重探一次线路并后台检查离线包 SHA-256 静默热更 */
     override fun onStart() {
         super.onStart()
         EndpointsStore.refreshInBackground()
-    }
-
-    /** 浏览器 OAuth 回调（askbible://auth/callback?code=…）：singleTask 下回到这里 */
-    override fun onNewIntent(intent: android.content.Intent) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-        OAuthCallbackBus.deliver(intent.dataString)
+        PackStore.refreshInstalledPacksInBackground(this)
     }
 }
 
@@ -223,7 +216,7 @@ private fun RootScreen() {
     var pickingBook by remember { mutableStateOf<BookRef?>(null) }
     var openedBook by remember { mutableStateOf<BookRef?>(null) }
     var exploreArticle by remember { mutableStateOf<ExploreArticle?>(null) }
-    // 会员登录（Supabase 直连；RN MemberAuthProvider）；登录 / 注册页盖在整个壳上（RN 是 stack 路由，无底栏）
+    // 会员登录（AskBible Sync Worker + D1，D-44）；登录页盖在整个壳上（无底栏）
     val auth = remember { MemberAuthStore(context) }
     var authRoute by remember { mutableStateOf<String?>(null) }
     /** 首页左上的用户菜单 */
@@ -244,20 +237,7 @@ private fun RootScreen() {
     // 首页回归卡正占着顶部：勋章 / 升级横幅让位，等它退场再弹（Josh 2026-09-18）
     /** 首页闲置收起（D-28）：底栏藏起，HomeScreen 里齿轮和常用键压淡 */
     var homeChromeHidden by remember { mutableStateOf(false) }
-    // 浏览器 OAuth 回调：拿到 code 就换会话（RN useMemberAuthGoogleDeepLink）
-    val oauthCallback = OAuthCallbackBus.url
-    LaunchedEffect(oauthCallback) {
-        val u = oauthCallback ?: return@LaunchedEffect
-        OAuthCallbackBus.url = null
-        auth.handleOAuthCallback(u)
-    }
-    // 从浏览器回来却没带回调（用户关掉了登录页）：等一下没有回调就当取消，按钮别一直转
     val lifecycle = androidx.compose.ui.platform.LocalLifecycleOwner.current.lifecycle
-    DisposableEffect(lifecycle) {
-        val observer = androidx.lifecycle.LifecycleEventObserver { _, event -> if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) auth.onResumedFromBrowser() }
-        lifecycle.addObserver(observer)
-        onDispose { lifecycle.removeObserver(observer) }
-    }
     val bookmarks = remember { VerseBookmarkStore(context) }
     val searchPrefs = remember { SearchPrefs(context) }
     // 经文搜索 / 收藏页：盖在读经 Tab 当前内容之上，关掉就回到原来的页

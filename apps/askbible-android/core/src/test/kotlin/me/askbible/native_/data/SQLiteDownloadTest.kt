@@ -26,11 +26,24 @@ class SQLiteDownloadTest {
 
     @Test fun completeDatabaseIsInstalledByteForByte() {
         val bytes = fixture.readBytes()
+        val expectedSha = SQLiteDownload.sha256Hex(fixture)
         withResponse(bytes) { url, destination ->
-            SQLiteDownload.install(url, destination)
+            SQLiteDownload.install(url, destination, expectedSha256 = expectedSha, expectedSizeBytes = bytes.size.toLong())
             assertArrayEquals(bytes, destination.readBytes())
             assertTrue(SQLiteDownload.isComplete(destination))
+            assertEquals(expectedSha, SQLiteDownload.sha256Hex(destination))
             assertEquals(listOf(destination.name), destination.parentFile!!.list()!!.toList())
+        }
+    }
+
+    @Test fun sha256MismatchIsRejectedWithoutOverwritingExistingPack() {
+        val bytes = fixture.readBytes()
+        withResponse(bytes) { url, destination ->
+            destination.writeBytes(bytes)
+            assertThrows(java.io.IOException::class.java) {
+                SQLiteDownload.install(url, destination, expectedSha256 = "0".repeat(64))
+            }
+            assertArrayEquals(bytes, destination.readBytes())
         }
     }
 

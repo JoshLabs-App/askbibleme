@@ -24,31 +24,22 @@ const bundleText = read("data/explore-featured-articles/bundle.json");
 const bundle = JSON.parse(bundleText);
 if (!Array.isArray(bundle.articles) || bundle.articles.length === 0) throw new Error("文章包为空");
 
-const iconsTs = read("apps/askbible-mobile/src/explore/exploreFeaturedArticleIcons.ts");
-const iconBySlug = Object.fromEntries(
-  [...iconsTs.matchAll(/"([^"]+)":\s*"([^"]+)"/g)].map((m) => [m[1], m[2]]),
-);
+const iconCodeBySlug = {
+  "a-mnw5wdz7-14908d": 0xf0186,
+  "a-mnwkmd4g-cb4d00": 0xf0e85,
+  "article_1778108127353_fzymbc": 0xf018c,
+  "a-macarthur-lifelong-bible-reading": 0xf137b,
+};
+const FALLBACK_ICON_CODE = 0xf09ee;
 const slugsTs = read("lib/explore/explore-featured-article-slugs.ts");
 const proseBlock = slugsTs.match(/PROSE_LAYOUT_SLUGS\s*=\s*\[([\s\S]*?)\]/);
 if (!proseBlock) throw new Error("找不到 PROSE_LAYOUT_SLUGS");
 const proseSlugs = [...proseBlock[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
-const plannerTs = read("apps/askbible-mobile/src/explore/reading-planner/reading-planner-routes.ts");
-const plannerSlug = plannerTs.match(/READING_PLANNER_EXPLORE_ARTICLE_SLUG\s*=\s*"([^"]+)"/)?.[1];
-if (!plannerSlug) throw new Error("找不到 READING_PLANNER_EXPLORE_ARTICLE_SLUG");
-
-const glyphs = JSON.parse(
-  read("apps/askbible-mobile/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/MaterialCommunityIcons.json"),
-);
-const FALLBACK_ICON = "file-document-outline";
-const cp = (name) => {
-  const v = glyphs[name];
-  if (!v) throw new Error(`MaterialCommunityIcons 没有 ${name}`);
-  return v;
-};
+const plannerSlug = "article_1778108127353_fzymbc";
 
 const entries = bundle.articles.map((a) => {
-  const icon = iconBySlug[a.slug] ?? FALLBACK_ICON;
-  return { slug: a.slug, icon, code: cp(icon), prose: proseSlugs.includes(a.slug) };
+  const code = iconCodeBySlug[a.slug] ?? FALLBACK_ICON_CODE;
+  return { slug: a.slug, code, prose: proseSlugs.includes(a.slug) };
 });
 
 const swift = `import Foundation
@@ -64,7 +55,7 @@ ${entries.map((e) => `        Entry(slug: "${e.slug}", icon: "\\u{${e.code.toStr
 
     /// 读经计划器的占位文章：探索格子里不出现（RN gridFeaturedArticles 同样过滤）
     static let readingPlannerSlug = "${plannerSlug}"
-    static let fallbackIcon = "\\u{${cp(FALLBACK_ICON).toString(16)}}"
+    static let fallbackIcon = "\\u{${FALLBACK_ICON_CODE.toString(16)}}"
 
     static func entry(_ slug: String) -> Entry? { entries.first { $0.slug == slug } }
 }
@@ -92,7 +83,7 @@ ${entries.map((e) => `        Entry("${e.slug}", "${kotlinChar(e.code)}", ${e.pr
 
     /** 读经计划器的占位文章：探索格子里不出现（RN gridFeaturedArticles 同样过滤） */
     const val READING_PLANNER_SLUG = "${plannerSlug}"
-    const val FALLBACK_ICON = "${kotlinChar(cp(FALLBACK_ICON))}"
+    const val FALLBACK_ICON = "${kotlinChar(FALLBACK_ICON_CODE)}"
 
     fun entry(slug: String): Entry? = entries.firstOrNull { it.slug == slug }
 }

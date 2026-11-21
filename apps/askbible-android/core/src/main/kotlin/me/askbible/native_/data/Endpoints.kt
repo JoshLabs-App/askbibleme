@@ -24,10 +24,10 @@ object Endpoints {
     enum class Role(val key: String, val builtin: List<String>) {
         /** R2 桶 askbible-media：金句语音、音乐、场景、勋章图、每日灵修、整本库、更新检查 */
         MEDIA("media", listOf("https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/", "https://askbible-media.joshlabs.app/")),
-        /** 主站接口：在线译本、章节朗读地址解析、注销账号 */
-        SITE("site", listOf("https://askbible.me/", "https://askbible-site.joshlabs.app/")),
-        /** Supabase：登录、会员同步 */
-        API("api", listOf("https://tgobadhdylarhssudplc.supabase.co/", "https://askbible-sb.joshlabs.app/")),
+        /** 主站接口（Cloudflare Worker askbible-web）：在线译本、章节朗读地址解析 */
+        SITE("site", listOf("https://askbible.me/", "https://bible.joshlabs.app/", "https://askbible-site.joshlabs.app/")),
+        /** AskBible Sync（Cloudflare Worker askbible-sync + D1）：验证码登录、会员同步、注销账号 */
+        API("api", listOf("https://askbible-sync.joshlabs.app/", "https://askbible.me/api/sync/", "https://bible.joshlabs.app/api/sync/")),
     }
 
     /** 本地缓存（:app 里是 SharedPreferences）。没接的时候（对拍）就只用内置表。 */
@@ -113,7 +113,6 @@ object Endpoints {
 
     /**
      * 通不通只看「有没有 HTTP 响应」：被墙表现为 DNS 失败 / TLS 重置 / 超时，而不是 404。
-     * 所以探测文件没放的域（主站、Supabase）也照样算通。
      */
     private fun probe(host: String): Boolean = runCatching {
         val conn = (URL(host + PROBE_PATH).openConnection() as HttpURLConnection).apply {
@@ -124,10 +123,10 @@ object Endpoints {
         try { conn.responseCode < 500 } finally { conn.disconnect() }
     }.getOrDefault(false)
 
-    /** 从当前 media 域（桶根）拉候选表，存下来下次启动就生效 */
+    /** 从当前 media 域拉 `v2/endpoints.json` 候选表（与老版本根路径 `endpoints.json` 隔离），存下来下次启动就生效 */
     private fun fetchList() {
         runCatching {
-            val conn = (URL(host(Role.MEDIA) + "endpoints.json").openConnection() as HttpURLConnection).apply {
+            val conn = (URL(host(Role.MEDIA) + "v2/endpoints.json").openConnection() as HttpURLConnection).apply {
                 connectTimeout = 10_000; readTimeout = 10_000; useCaches = false
             }
             val body = try {
@@ -151,6 +150,6 @@ object Endpoints {
     }
 
     private fun normalized(s: String) = s.trim().let { if (it.endsWith("/") || it.isEmpty()) it else "$it/" }
-    private fun hostKey(r: Role) = "host.${r.key}"
-    private fun orderKey(r: Role) = "order.${r.key}"
+    private fun hostKey(r: Role) = "host.v2.${r.key}"
+    private fun orderKey(r: Role) = "order.v2.${r.key}"
 }

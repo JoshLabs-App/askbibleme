@@ -1,10 +1,10 @@
 {
-  "version": 1,
-  "updated": "2026-10-01",
-  "note": "防封换线的候选域表（docs/anti-block-endpoints.md、DECISIONS D-20）。三端各内置一份同样的默认值，启动后并发探测 candidates，取列表里最靠前那条通的并缓存；同时拉这个文件更新候选表。加新域只改这里再跑 npm run endpoints:push，不用发版。改完跑 npm run check:endpoints 核对三端内置表。",
+  "version": 2,
+  "updated": "2026-11-20",
+  "note": "防封换线的候选域表（docs/anti-block-endpoints.md、DECISIONS D-20 / D-44）。三端各内置一份同样的默认值，启动后并发探测 candidates，取列表里最靠前那条通的并缓存；同时拉这个文件更新候选表。加新域只改这里再跑 npm run endpoints:push，不用发版。",
   "roles": {
     "media": {
-      "note": "R2 桶 askbible-media。两条线是同一个桶。r2.dev 排第一是因为已发布的老版本只认它，新版默认行为和老版一致；要把自定义域提前，调这里的顺序即可。",
+      "note": "R2 桶 askbible-media。两条线是同一个桶。r2.dev 排第一保持老版本一致。",
       "probe": "healthz.txt",
       "candidates": [
         "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/",
@@ -12,19 +12,21 @@
       ]
     },
     "site": {
-      "note": "主站接口（在线译本、章节朗读地址解析、注销账号）。第二条是 Cloudflare Worker 反代（workers/site-proxy），只放行 /api/mobile/ 和 /api/read/。",
+      "note": "主站（Cloudflare Worker askbible-web）与备线域名。",
       "probe": "healthz.txt",
       "candidates": [
         "https://askbible.me/",
+        "https://bible.joshlabs.app/",
         "https://askbible-site.joshlabs.app/"
       ]
     },
     "api": {
-      "note": "Supabase 入口。第二条是 Cloudflare Worker 反代（workers/supabase-proxy）。不要把 *.workers.dev 写进来：国内整段不通（2026-10-01 实测 0/24）。",
+      "note": "AskBible Sync（Cloudflare Worker + D1，D-44 去 Supabase）。主线走 askbible-sync.joshlabs.app，备线走主站 /api/sync/ 同域转发。",
       "probe": "healthz.txt",
       "candidates": [
-        "https://tgobadhdylarhssudplc.supabase.co/",
-        "https://askbible-sb.joshlabs.app/"
+        "https://askbible-sync.joshlabs.app/",
+        "https://askbible.me/api/sync/",
+        "https://bible.joshlabs.app/api/sync/"
       ]
     }
   }

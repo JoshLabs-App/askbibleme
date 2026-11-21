@@ -35,12 +35,9 @@ final class InfoEditionDownloader: NSObject, ObservableObject, URLSessionDownloa
         }
     }
 
-    /// 文件头必须是 "SQLite format 3\0"，挡住 404 页面、截断文件
+    /// 文件头 + 页结构完整（委托 PackStore 统一校验，挡住 404 错误页与半截截断包）
     static func isValidSQLite(_ url: URL) -> Bool {
-        guard let h = try? FileHandle(forReadingFrom: url) else { return false }
-        defer { try? h.close() }
-        let head = h.readData(ofLength: 16)
-        return head == Data("SQLite format 3\u{0}".utf8)
+        PackStore.isValidSQLiteFile(url)
     }
 
     func downloadIfNeeded() {
@@ -63,15 +60,8 @@ final class InfoEditionDownloader: NSObject, ObservableObject, URLSessionDownloa
             DispatchQueue.main.async { self.state = .failed("HTTP \(http.statusCode)") }
             return
         }
-        guard Self.isValidSQLite(location) else {
-            DispatchQueue.main.async { self.state = .failed("invalid sqlite") }
-            return
-        }
         do {
-            if FileManager.default.fileExists(atPath: dest.path) {
-                try FileManager.default.removeItem(at: dest)
-            }
-            try FileManager.default.moveItem(at: location, to: dest)
+            try PackStore.installSQLiteAtomically(from: location, to: dest)
             DispatchQueue.main.async { InfoEditionDatabase.resetShared(); self.state = .done }
         } catch {
             DispatchQueue.main.async { self.state = .failed(error.localizedDescription) }

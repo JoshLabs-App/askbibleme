@@ -1,68 +1,136 @@
 import SwiftUI
 
-/// 圣经目录。双栏 + 六个彩色分组，右侧竖排在这一页是 6 个（比章页多搜索和历史）。
+/// 圣经目录（零遮挡对称双栏版）：顶部内嵌温润搜索框 + 上次阅读书签条，新约右栏完全无悬浮球遮挡。
 struct CatalogView: View {
     @Binding var size: ReadSize
     /// 读经展示语言：书名 / 分组 / 「圣经 · 旧约 · 新约」都按它（英文译本 → 英文面）
     var locale: AppLocale = .zhCN
+    var translationLabel: String = ""
+    var lastReadTitle: String? = nil
     /// 书卷名：在线译本用它自己那套（西语版本 → Génesis）；默认退回目录里的中英名
     var bookLabel: (BookRef) -> String = { $0.name(AppLocale.current) }
     var onOpenBook: (BookRef) -> Void = { _ in }
     var onOpenSettings: () -> Void = {}
     var onOpenSearch: () -> Void = {}
     var onOpenFavorites: () -> Void = {}
-    /// 右侧竖排最后一个「历史」：回到上次读到的那一章；没有记录时按钮变淡且点不动
     var onLastRead: (() -> Void)? = nil
 
-    @Environment(\.appTextSize) private var appSize
-    @ScaledMetric(relativeTo: .body) private var systemScale = 1.0
-    private var largeText: Bool { appTextScale(appSize, system: systemScale) >= 1.3 }
     @Environment(\.parchment) private var theme
-    /// 右侧竖排最后一个按钮的底边（全局坐标）：落在它上面的行要给图标让位
-    @State private var railBottom: CGFloat = 0
 
     var body: some View {
         GeometryReader { geo in
-            let safeTop = geo.safeAreaInsets.top
-            ZStack(alignment: .topTrailing) {
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 0) {
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 0) {
+                    // 顶栏：圣经标题 + 右侧轻量「译本」与「摘录」胶囊
+                    HStack(alignment: .center, spacing: 10) {
                         Text(ReadChrome.catalogTitle(locale))
                             .askFont(size: 30, weight: .bold)
                             .foregroundStyle(theme.ink)
-                            .padding(.top, safeTop + 42)
-
-                        HStack(spacing: 14) {
-                            Text(ReadChrome.testamentOld(locale))
-                                .askFont(size: 20, weight: .bold)
-                                .foregroundStyle(Color(parchment: 0x2F6291))
-                            // RN BibleCatalogOutlineContent：MaterialIcons notes 22，未开时 faint
-                            MaterialIcon(glyph: MI.notes, size: 22, color: theme.faint)
-                            Text(ReadChrome.testamentNew(locale))
-                                .askFont(size: 20, weight: .bold)
-                                .foregroundStyle(Color(parchment: 0xC1660B))
+                        Spacer()
+                        if !translationLabel.isEmpty {
+                            Button(action: onOpenSettings) {
+                                HStack(spacing: 4) {
+                                    Text(translationLabel)
+                                        .askFont(size: 12.5, weight: .semibold)
+                                        .lineLimit(1)
+                                    Image(systemName: "chevron.down")
+                                        .font(.system(size: 9.5, weight: .bold))
+                                }
+                                .foregroundStyle(theme.muted)
+                                .padding(.horizontal, 11)
+                                .padding(.vertical, 6)
+                                .background(Capsule().fill(theme.surface.opacity(0.82)))
+                                .overlay(Capsule().strokeBorder(theme.border, lineWidth: 1))
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .padding(.top, 18)
+                        Button(action: onOpenFavorites) {
+                            Image(systemName: "bookmark")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(theme.muted)
+                                .frame(width: 34, height: 34)
+                                .background(Circle().fill(theme.surface.opacity(0.82)))
+                                .overlay(Circle().strokeBorder(theme.border, lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(SiteCopy.t("pages.read.favoritesTitle", locale))
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 22)
 
-                        (largeText ? AnyLayout(VStackLayout(alignment: .leading, spacing: 14)) : AnyLayout(HStackLayout(alignment: .top, spacing: 14))) {
-                            column(BibleCatalog.oldTestament, railBottom: 0)
-                            // 右列顶上那几行正好压在右侧竖排下面：不让开的话点书卷会点到设置 / + / − 上
-                            column(BibleCatalog.newTestament, railBottom: railBottom)
+                    // 温润搜索入口条（提示支持输入 约 3:16 直达）
+                    Button(action: onOpenSearch) {
+                        HStack(spacing: 9) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(theme.muted)
+                            Text(AppLocale.pick("搜索经文，或输入如 约 3:16 直达…", "Search scripture or jump e.g. John 3:16…", locale))
+                                .askFont(size: 14)
+                                .foregroundStyle(theme.faint)
+                                .lineLimit(1)
+                            Spacer()
                         }
                         .padding(.horizontal, 14)
-                        // Josh 2026-09-10「让目录的左边距大一些」：只挪书卷两栏，标题那几行仍旧居中
-                        .padding(.leading, 10)
-                        .padding(.top, 16)
-                        // 目录页底下不再放读经计划区块（Josh 2026-09-09「圣经目录面下面不需要展示读经计划」），
-                        // 读经计划走底栏中央键。RN：72（SHELL_TAB_BAR_CLEARANCE）+ 安全区 + 120（渐隐区）
-                        .padding(.bottom, ShellMetrics.tabBarClearance + geo.safeAreaInsets.bottom + 120)
+                        .frame(height: 42)
+                        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(theme.surface.opacity(0.85)))
+                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(theme.border, lineWidth: 1))
+                        .contentShape(Rectangle())
                     }
-                }
-                .ignoresSafeArea(edges: .bottom)
-                .parchmentFade(.tabbar)
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 14)
 
-                rail(safeTop: safeTop)
+                    // 上次阅读书签条（有记录时优雅呈现）
+                    if let action = onLastRead, let title = lastReadTitle, !title.isEmpty {
+                        Button(action: action) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "bookmark.fill")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(theme.accentOt)
+                                Text(AppLocale.pick("继续上次阅读：\(title)", "Continue reading: \(title)", locale))
+                                    .askFont(size: 13.5, weight: .semibold)
+                                    .foregroundStyle(theme.ink)
+                                    .lineLimit(1)
+                                Spacer(minLength: 4)
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundStyle(theme.accentOt)
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 10)
+                            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(theme.accentOt.opacity(0.12)))
+                            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(theme.accentOt.opacity(0.35), lineWidth: 0.75))
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 10)
+                    }
+
+                    // 旧约 / 新约双栏列头 + 对称零遮挡目录
+                    HStack(alignment: .top, spacing: 18) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(ReadChrome.testamentOld(locale))
+                                .askFont(size: 19, weight: .bold)
+                                .foregroundStyle(Color(parchment: 0x2F6291))
+                                .padding(.bottom, 2)
+                            column(BibleCatalog.oldTestament, railBottom: 0)
+                        }
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(ReadChrome.testamentNew(locale))
+                                .askFont(size: 19, weight: .bold)
+                                .foregroundStyle(Color(parchment: 0xC1660B))
+                                .padding(.bottom, 2)
+                            column(BibleCatalog.newTestament, railBottom: 0)
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                    .padding(.bottom, ShellMetrics.tabBarClearance + geo.safeAreaInsets.bottom + 110)
+                }
             }
+            .ignoresSafeArea(edges: .bottom)
+            .parchmentFade(.tabbar)
             .background(ParchmentBackground(theme: theme).ignoresSafeArea())
         }
     }
@@ -72,14 +140,14 @@ struct CatalogView: View {
             ForEach(groups) { group in
                 Text(group.title(locale))
                     .askFont(size: 16, weight: .bold)
-                    .foregroundStyle(theme.isDark ? theme.ink : group.color)
+                    .foregroundStyle(group.color)
                     .padding(.top, 7)
                     .padding(.bottom, 3)
 
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(group.books) { book in
                         CatalogBookRow(
-                            book: book, color: theme.isDark ? theme.ink : group.color, theme: theme,
+                            book: book, color: group.color, theme: theme,
                             label: bookLabel(book),
                             fontSize: size.metrics.catalogBookSize * 0.85,
                             // RN 的 catalogBookLine：行高跟着字号档走，放大字号时行距也开，手指更好点
@@ -95,48 +163,6 @@ struct CatalogView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    /// 目录页右侧竖排：对齐安卓 `CatalogScreen.kt`（设置 / 搜索 / 收藏 / + / − / 历史，无玻璃胶囊）。
-    private func rail(safeTop: CGFloat) -> some View {
-        VStack(spacing: ShellMetrics.topChromeGap) {
-            railButton(MI.settings, action: onOpenSettings)
-            railButton(MI.search, action: onOpenSearch)
-            railButton(MI.bookmarkBorder, action: onOpenFavorites)
-            railLabel("+") { if let n = size.next { size = n } }
-            railLabel("\u{2212}") { if let p = size.previous { size = p } }
-            railButton(MI.history) { (onLastRead ?? {})() }
-                .opacity(onLastRead == nil ? 0.4 : 1)
-                .disabled(onLastRead == nil)
-        }
-        .padding(.top, safeTop + ShellMetrics.topChromeOffset)
-        .padding(.trailing, ShellMetrics.topChromeSideInset)
-        .background(GeometryReader { g in
-            Color.clear.onAppear { railBottom = g.frame(in: .global).maxY }
-                .onChange(of: g.frame(in: .global).maxY) { railBottom = $0 }
-        })
-    }
-
-    private func railButton(_ glyph: String, action: @escaping () -> Void = {}) -> some View {
-        Button(action: action) {
-            MaterialIcon(glyph: glyph, size: ShellMetrics.topChromeIcon, color: .white)
-                .frame(width: ShellMetrics.topChromeButton, height: ShellMetrics.topChromeButton)
-                .shellIconShadow()
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func railLabel(_ text: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(text)
-                .askFont(size: ShellMetrics.topChromeSizeLabel, weight: .medium)
-                .foregroundStyle(Color.white)
-                .frame(width: ShellMetrics.topChromeButton, height: ShellMetrics.topChromeButton)
-                .shellIconShadow()
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
     }
 }
 
@@ -518,12 +544,12 @@ private struct CatalogBookRow: View {
                 Text(label)
                     .askFont(size: fontSize)
                     .foregroundStyle(theme.ink)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(1)
                 Spacer(minLength: 2)
             }
             .padding(.horizontal, 5)
             .padding(.trailing, underRail ? railClearance : 0)
-            .frame(minHeight: max(44, rowHeight)).padding(.vertical, 4)
+            .frame(height: rowHeight)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

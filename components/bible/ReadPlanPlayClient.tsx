@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { ReadPlanDevotional } from "@/components/bible/ReadPlanDevotional";
-import { captureDevotionalPlanDay } from "@/lib/devotional/solid-joys";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { ReadNtDeepRepeatStagesBelowToday } from "@/components/bible/ReadNtDeepRepeatStagesBelowToday";
@@ -11,8 +9,10 @@ import { ReadScripturePlaybackDock } from "@/components/bible/ReadScripturePlayb
 import { useCuvChapterAudioVoice } from "@/components/bible/CuvChapterAudioVoiceContext";
 import { useReadBibleTranslationSettings } from "@/components/bible/ReadBibleTypographyProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import type { AppLocale } from "@/lib/i18n/config";
+import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
-import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
+import { IconPause, IconPlay } from "@/components/ui/MediaPlaybackIcons";
 import { useReadHomeScripturePlaybackReady } from "@/hooks/useReadHomeScripturePlaybackReady";
 import { useReadingHabitStats } from "@/hooks/useReadingHabitStats";
 import { planTitleKey, useTodayReadingPlan } from "@/hooks/useTodayReadingPlan";
@@ -55,7 +55,16 @@ type Props = {
 
 type QueueItem = { bookId: string; chapter: number; title: string };
 
-/** 今日读经计划页 — 对齐 App `ReadPlanPlayScreen`（月历 + 列表 + 内嵌播放坞）。 */
+function pickPlanCopy(zh: string, en: string, locale: AppLocale): string {
+  if (locale === "en") return en;
+  if (locale === "zh-TW") return toZhTwText(zh);
+  return zh;
+}
+
+const WEEKDAY_LABELS_ZH = ["一", "二", "三", "四", "五", "六", "日"];
+const WEEKDAY_LABELS_EN = ["M", "T", "W", "T", "F", "S", "S"];
+
+/** 今日同行页 — 对齐 iOS/Android `PlanPlayView`（7 日温和周条 + 可展开月历 + 连播今日 + 读写分离）。 */
 export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
   const router = useRouter();
   const { t, locale } = useLocale();
@@ -76,6 +85,7 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
   const resumeStartSecRef = useRef(0);
   const [starting, setStarting] = useState(false);
   const [viewAhead, setViewAhead] = useState(0);
+  const [monthExpanded, setMonthExpanded] = useState(false);
   const [browsePayload, setBrowsePayload] = useState<TodayReadingPlanPayload | null>(null);
   const [browseLoading, setBrowseLoading] = useState(false);
   const [confirmBusy, setConfirmBusy] = useState(false);
@@ -239,7 +249,6 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
     const viewDate = new Date();
     viewDate.setDate(viewDate.getDate() + viewAhead);
     markPlanPlayListenedDate(toLocalDateString(viewDate));
-    captureDevotionalPlanDay(viewDate);
   }, [viewAhead]);
 
   const syncPlanPlayAudioSession = useCallback(() => {
@@ -273,8 +282,6 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
         markViewDateListened();
         const startAtSec = resumeStartSecRef.current > 0 ? resumeStartSecRef.current : undefined;
         resumeStartSecRef.current = 0;
-        // Establish plan intent before playback can navigate to the chapter route.
-        setPlanFlowActive(true);
         await playScriptureChapter({
           bookId: target.bookId,
           chapter: target.chapter,
@@ -347,12 +354,6 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
     }
   }, [activeIndex, isPreparing, isScripturePlaying, playAtIndex, queue.length]);
 
-  const onOpenSearch = useCallback(() => {
-    const target = queue[activeIndex];
-    const q = target ? `?bookId=${encodeURIComponent(target.bookId)}&chapter=${target.chapter}` : "";
-    router.push(`/read/search${q}`);
-  }, [activeIndex, queue, router]);
-
   const onSelectCalendarAhead = useCallback((ahead: number) => {
     setViewAhead(ahead);
     setCursor(0);
@@ -378,21 +379,42 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
     [queue, router],
   );
 
-  const rowTapRef = useRef<{ index: number; at: number } | null>(null);
-  const onRowPress = useCallback(
-    (index: number) => {
-      const now = Date.now();
-      const last = rowTapRef.current;
-      if (last && last.index === index && now - last.at < 320) {
-        rowTapRef.current = null;
-        onReadChapter(index);
-        return;
-      }
-      rowTapRef.current = { index, at: now };
-      void playAtIndex(index);
-    },
-    [onReadChapter, playAtIndex],
-  );
+  const weekStrip = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const viewDate = new Date(today);
+    viewDate.setDate(today.getDate() + viewAhead);
+    const dayOfWeek = (viewDate.getDay() + 6) % 7; // Mon=0 .. Sun=6
+    const monday = new Date(viewDate);
+    monday.setDate(viewDate.getDate() - dayOfWeek);
+
+    let weekDoneCount = 0;
+    const days = Array.from({ length: 7 }, (_, idx) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + idx);
+      const diffMs = d.getTime() - today.getTime();
+      const ahead = Math.round(diffMs / 86_400_000);
+      const key = toLocalDateString(d);
+      const listened = listenedDates.has(key);
+      if (listened) weekDoneCount += 1;
+      return {
+        idx,
+        ahead,
+        dayNum: d.getDate(),
+        weekdayLabel: locale === "en" ? WEEKDAY_LABELS_EN[idx]! : WEEKDAY_LABELS_ZH[idx]!,
+        isToday: ahead === 0,
+        isSelected: ahead === viewAhead,
+        listened,
+      };
+    });
+
+    const monthTitle =
+      locale === "en"
+        ? viewDate.toLocaleDateString("en-US", { year: "numeric", month: "short" })
+        : `${viewDate.getFullYear()}年${viewDate.getMonth() + 1}月`;
+
+    return { days, weekDoneCount, monthTitle };
+  }, [listenedDates, locale, viewAhead]);
 
   const trackMeta =
     queue.length > 0
@@ -413,17 +435,22 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
 
   return (
     <div className="read-plan-play-screen relative flex min-h-0 flex-1 flex-col">
-      <div className="read-plan-play-screen__scroll mx-auto w-full max-w-[380px] flex-1 overflow-y-auto px-3 pb-4 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)]">
-        <header className="read-plan-play-screen__top-bar relative mb-3 flex min-h-10 items-center justify-center">
-          <h1 className="read-plan-play-screen__plan-title px-10 text-center text-[20px] font-bold leading-tight text-[var(--bc-read-book)]">
-            {planName}
-          </h1>
+      <div className="read-plan-play-screen__scroll mx-auto w-full max-w-[440px] flex-1 overflow-y-auto px-4 pb-6 pt-[calc(env(safe-area-inset-top,0px)+1rem)]">
+        <header className="read-plan-play-screen__top-bar mb-4 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="font-serif text-[26px] font-bold leading-tight tracking-tight text-[#231A12] dark:text-[#EDE2CF]">
+              {pickPlanCopy("今日同行", "Today's Walk", locale)}
+            </h1>
+            <p className="mt-1 truncate text-[13px] text-[#75614B] dark:text-[#A99A84]">
+              {planName}
+              {dayMeta ? ` · ${dayMeta}` : ""}
+            </p>
+          </div>
           <Link
             href="/read/plans"
-            className="read-plan-play-screen__settings absolute right-0 top-1/2 inline-flex -translate-y-1/2 p-1 text-[var(--bc-read-muted)]"
-            aria-label={t("pages.read.todayPlanChange")}
+            className="mt-0.5 inline-flex shrink-0 items-center rounded-full border border-[#D8C6AA] bg-[#FAF5EC]/90 px-3 py-1.5 text-[12px] font-semibold text-[#6E563A] no-underline transition hover:bg-[#F3E9D8] dark:border-[#3E3328] dark:bg-[#262019] dark:text-[#D5C3A8]"
           >
-            <ShellMaterialIcon name="settings" size={22} color="currentColor" />
+            {pickPlanCopy("换计划", "Plans", locale)}
           </Link>
         </header>
 
@@ -432,21 +459,208 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
         ) : !hasQueue ? (
           <p className="py-12 text-center text-sm text-[var(--bc-read-muted)]">{t("pages.read.todayPlanEmpty")}</p>
         ) : (
-          <div className="read-plan-play-screen__queue">
-            <ReadPlanPlayMonthCalendar
-              prefs={plan.prefs}
-              dayCount={plan.dayCount ?? plan.prefs.dayCount}
-              viewAhead={viewAhead}
-              onSelectAhead={onSelectCalendarAhead}
-              listenedDates={listenedDates}
-            />
+          <div className="read-plan-play-screen__queue space-y-4">
+            {/* 7 日温和周条（点击月份展开完整月历） */}
+            <section className="rounded-2xl border border-[#DFD0B8] bg-[#FAF5EC]/88 p-3.5 shadow-sm dark:border-[#3A3026] dark:bg-[#221C16]/90">
+              <div className="mb-2.5 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setMonthExpanded((prev) => !prev)}
+                  className="inline-flex items-center gap-1 border-0 bg-transparent p-0 text-[13px] font-semibold text-[#3C2E20] dark:text-[#E5D7C1]"
+                >
+                  <span>{weekStrip.monthTitle}</span>
+                  <span className="text-[11px] opacity-70">{monthExpanded ? "▴" : "▾"}</span>
+                </button>
+                <span className="text-[11.5px] text-[#8B7358] dark:text-[#9E8E78]">
+                  {locale === "en"
+                    ? `${weekStrip.weekDoneCount} quiet days this week`
+                    : pickPlanCopy(`本周相伴 ${weekStrip.weekDoneCount} 天`, "", locale)}
+                </span>
+              </div>
 
-      <div className="read-plan-play-screen__dock pointer-events-none flex justify-center px-3">
+              <div className="grid grid-cols-7 gap-1">
+                {weekStrip.days.map((d) => (
+                  <button
+                    key={d.ahead}
+                    type="button"
+                    onClick={() => onSelectCalendarAhead(d.ahead)}
+                    className="flex flex-col items-center gap-1 rounded-xl border-0 bg-transparent py-1 transition active:scale-95"
+                  >
+                    <span className="text-[11px] font-medium text-[#8B7358] dark:text-[#9E8E78]">
+                      {d.weekdayLabel}
+                    </span>
+                    <span
+                      className={[
+                        "flex h-8 w-8 items-center justify-center rounded-full text-[13px] tabular-nums transition",
+                        d.isSelected
+                          ? "bg-[#C1660B] font-bold text-[#FFFDF9] shadow-sm dark:bg-[#D9822B] dark:text-[#1A1511]"
+                          : d.isToday
+                            ? "border border-[#C1660B]/60 font-semibold text-[#231A12] dark:border-[#E2A84B]/60 dark:text-[#EDE2CF]"
+                            : "font-medium text-[#3C2E20] dark:text-[#D5C3A8]",
+                      ].join(" ")}
+                    >
+                      {d.dayNum}
+                    </span>
+                    <span
+                      className={[
+                        "h-1.5 w-1.5 rounded-full",
+                        d.listened
+                          ? "bg-[#C1660B] dark:bg-[#E2A84B]"
+                          : "bg-transparent",
+                      ].join(" ")}
+                      aria-hidden
+                    />
+                  </button>
+                ))}
+              </div>
+
+              {monthExpanded ? (
+                <div className="mt-3 border-t border-[#E6D9C3] pt-3 dark:border-[#362C22]">
+                  <ReadPlanPlayMonthCalendar
+                    prefs={plan.prefs}
+                    dayCount={plan.dayCount ?? plan.prefs.dayCount}
+                    viewAhead={viewAhead}
+                    onSelectAhead={onSelectCalendarAhead}
+                    listenedDates={listenedDates}
+                  />
+                </div>
+              ) : null}
+            </section>
+
+            {needsConfirm ? (
+              <button
+                type="button"
+                className="read-plan-play-screen__confirm w-full rounded-xl bg-[#231A12] px-4 py-2.5 text-sm font-semibold text-[#FAF5EC] disabled:opacity-50 dark:bg-[#E2A84B] dark:text-[#1A1511]"
+                disabled={confirmBusy}
+                onClick={() => void onConfirmDay()}
+              >
+                {confirmBusy ? t("pages.read.todayPlanLoading") : t("pages.read.planPlayConfirmDay")}
+              </button>
+            ) : null}
+
+            <div className="flex items-center justify-between gap-2 pt-1">
+              <div className="flex items-baseline gap-2">
+                <h2 className="font-serif text-[17px] font-semibold text-[#231A12] dark:text-[#EDE2CF]">
+                  {t("pages.read.todayPlanTitle")}
+                </h2>
+                {trackMeta ? (
+                  <span className="text-[12px] tabular-nums text-[#8B7358] dark:text-[#9E8E78]">
+                    {trackMeta}
+                  </span>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void onTogglePlay()}
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#C1660B] px-3.5 py-1.5 text-[12.5px] font-semibold text-[#FFFDF9] shadow-sm transition hover:bg-[#A85607] active:scale-[0.98] disabled:opacity-50 dark:bg-[#D9822B] dark:text-[#1A1511]"
+              >
+                {isScripturePlaying ? (
+                  <>
+                    <IconPause className="h-3.5 w-3.5" />
+                    <span>{pickPlanCopy("正在连播", "Playing", locale)}</span>
+                  </>
+                ) : (
+                  <>
+                    <IconPlay className="h-3.5 w-3.5 translate-x-[0.5px]" />
+                    <span>{pickPlanCopy("连播今日", "Play All", locale)}</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {browseLoading && queue.length === 0 ? (
+              <p className="py-3 text-center text-sm text-[var(--bc-read-muted)]">{t("pages.read.todayPlanLoading")}</p>
+            ) : null}
+
+            <ul className="read-plan-play-screen__list space-y-2">
+              {queue.map((item, index) => {
+                const active = activeIndex === index;
+                const rowPlaying = active && isScripturePlaying;
+                return (
+                  <li key={`${item.bookId}:${item.chapter}:${index}`}>
+                    <div
+                      className={[
+                        "flex items-center gap-2 rounded-2xl border px-3.5 py-2.5 transition",
+                        active
+                          ? "border-[#C1660B]/45 bg-[#FBF6EC] shadow-sm dark:border-[#E2A84B]/40 dark:bg-[#282119]"
+                          : "border-[#E3D5BE] bg-[#FAF5EC]/75 hover:bg-[#FAF5EC] dark:border-[#362C22] dark:bg-[#211B15]/80",
+                      ].join(" ")}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => onReadChapter(index)}
+                        className="flex min-w-0 flex-1 items-center gap-3 border-0 bg-transparent p-0 text-left"
+                      >
+                        <span
+                          className={[
+                            "w-6 shrink-0 text-[12.5px] tabular-nums",
+                            active
+                              ? "font-bold text-[#C1660B] dark:text-[#E2A84B]"
+                              : "text-[#8B7358] dark:text-[#9E8E78]",
+                          ].join(" ")}
+                        >
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate font-serif text-[16px] font-semibold text-[#231A12] dark:text-[#EDE2CF]">
+                            {item.title}
+                          </div>
+                          <div className="mt-0.5 text-[11.5px] text-[#8B7358] dark:text-[#9E8E78]">
+                            {pickPlanCopy("点按进入经文阅读", "Tap to read chapter", locale)}
+                          </div>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        aria-label={t("pages.read.planPlayPlayChapterAudio")}
+                        aria-pressed={rowPlaying}
+                        disabled={busy}
+                        onClick={() => {
+                          if (rowPlaying) {
+                            pauseScripturePlayback();
+                          } else {
+                            void playAtIndex(index);
+                          }
+                        }}
+                        className={[
+                          "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition active:scale-95 disabled:opacity-45",
+                          rowPlaying
+                            ? "border-[#C1660B] bg-[#C1660B] text-[#FFFDF9] dark:border-[#E2A84B] dark:bg-[#E2A84B] dark:text-[#1A1511]"
+                            : "border-[#D8C6AA] bg-[#F3E9D8] text-[#4E3B28] hover:bg-[#EADBC3] dark:border-[#3E3328] dark:bg-[#2C241C] dark:text-[#EDE2CF]",
+                        ].join(" ")}
+                      >
+                        {rowPlaying ? (
+                          <IconPause className="h-4 w-4" />
+                        ) : (
+                          <IconPlay className="h-4 w-4 translate-x-[0.5px]" />
+                        )}
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        {isNtDeepRepeat ? (
+          <ReadNtDeepRepeatStagesBelowToday
+            onStageSet={() => {
+              setViewAhead(0);
+              setCursor(0);
+            }}
+          />
+        ) : null}
+      </div>
+
+      <div className="read-plan-play-screen__dock pointer-events-none sticky bottom-0 z-20 flex justify-center px-3">
         <ReadScripturePlaybackDock
           visible={hasQueue}
           busy={busy}
           disabled={!hasQueue}
-          className="pointer-events-auto bg-[var(--bc-read-surface-solid,#f7efdf)]"
+          className="pointer-events-auto bg-[var(--bc-read-surface,rgba(250,246,238,0.96))] backdrop-blur-sm dark:bg-[#1E1914]/95"
           playing={isScripturePlaying}
           preparing={isPreparing}
           currentSec={currentSec}
@@ -456,9 +670,6 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
           loopMode={loopMode}
           onTogglePlay={() => void onTogglePlay()}
           onNext={() => void onNext()}
-          onRead={onOpenSearch}
-          readIconName="search"
-          readAccessibilityLabel={t("pages.read.chapterChromeSearch")}
           onCycleRate={() => setScripturePlaybackRate(nextScripturePlaybackRate(scripturePlaybackRate))}
           onCycleLoop={() => {
             const next =
@@ -471,120 +682,6 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
           }}
         />
       </div>
-
-            {needsConfirm ? (
-              <button
-                type="button"
-                className="read-plan-play-screen__confirm mb-3 w-full rounded-xl bg-[var(--bc-read-book)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
-                disabled={confirmBusy}
-                onClick={() => void onConfirmDay()}
-              >
-                {confirmBusy ? t("pages.read.todayPlanLoading") : t("pages.read.planPlayConfirmDay")}
-              </button>
-            ) : null}
-
-            <div className="read-plan-play-screen__queue-header mb-2 grid grid-cols-[1fr_auto_1fr] items-end gap-1">
-              <p className="text-[12px] text-[var(--bc-read-muted)]">{dayMeta ?? " "}</p>
-              <h2 className="text-center text-[15px] font-semibold text-[var(--bc-read-book)]">
-                {t("pages.read.todayPlanTitle")}
-              </h2>
-              <p className="text-right text-[12px] tabular-nums text-[var(--bc-read-muted)]">{trackMeta ?? " "}</p>
-            </div>
-
-            {browseLoading && queue.length === 0 ? (
-              <p className="py-3 text-center text-sm text-[var(--bc-read-muted)]">{t("pages.read.todayPlanLoading")}</p>
-            ) : null}
-
-            <ul className="read-plan-play-screen__list space-y-1">
-              {queue.map((item, index) => {
-                const active = activeIndex === index;
-                return (
-                  <li key={`${item.bookId}:${item.chapter}:${index}`}>
-                    <div
-                      role="button"
-                      tabIndex={0}
-                      className={[
-                        "read-plan-play-screen__row flex items-center gap-2 rounded-lg px-2 py-2.5",
-                        active ? "read-plan-play-screen__row--active" : "",
-                        busy ? "opacity-60" : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                      onClick={() => !busy && onRowPress(index)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          if (!busy) onRowPress(index);
-                        }
-                      }}
-                    >
-                      <span
-                        className={[
-                          "w-7 shrink-0 text-[13px] tabular-nums",
-                          active ? "font-bold text-[var(--bc-read-book)]" : "text-[var(--bc-read-muted)]",
-                        ].join(" ")}
-                      >
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
-                      <span
-                        className={[
-                          "min-w-0 flex-1 truncate text-[15px]",
-                          active ? "font-semibold text-[var(--bc-read-book)]" : "text-[var(--bc-read-book)]",
-                        ].join(" ")}
-                      >
-                        {item.title}
-                      </span>
-                      <div className="flex shrink-0 items-center gap-1">
-                        <button
-                          type="button"
-                          className="read-plan-play-screen__row-action inline-flex h-9 w-9 items-center justify-center rounded-full text-[var(--bc-read-muted)]"
-                          aria-label={t("pages.read.planPlayReadChapter")}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onReadChapter(index);
-                          }}
-                        >
-                          <ShellMaterialIcon name="menu-book" size={20} color="currentColor" />
-                        </button>
-                        <button
-                          type="button"
-                          className="read-plan-play-screen__row-action inline-flex h-9 w-9 items-center justify-center rounded-full text-[var(--bc-read-muted)] disabled:opacity-40"
-                          aria-label={t("pages.read.planPlayPlayChapterAudio")}
-                          aria-pressed={active && isScripturePlaying}
-                          disabled={busy}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            void playAtIndex(index);
-                          }}
-                        >
-                          <ShellMaterialIcon
-                            name={active && isScripturePlaying ? "graphic-eq" : "volume-up"}
-                            size={20}
-                            color="currentColor"
-                          />
-                        </button>
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        )}
-
-        <ReadPlanDevotional viewAhead={viewAhead} />
-
-        {isNtDeepRepeat ? (
-          <ReadNtDeepRepeatStagesBelowToday
-            onStageSet={() => {
-              setViewAhead(0);
-              setCursor(0);
-            }}
-          />
-        ) : null}
-      </div>
-
-
     </div>
   );
 }

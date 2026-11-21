@@ -2,12 +2,10 @@ import SwiftUI
 import UIKit
 import os
 
-/// A single selectable document for the whole chapter. UITextView owns both
-/// selection and scrolling, including dragging a handle beyond the visible page.
+/// 整章原生可选文档（1 步即选即染浮条 + 双语琥珀竖线夹注 + 无叠乘精准字号）。
 struct NativeChapterText: UIViewRepresentable {
-    @Environment(\.appTextSize) private var appSize
-    @ScaledMetric(relativeTo: .body) private var systemScale = 1.0
-    private var textScale: CGFloat { appTextScale(appSize, system: systemScale) }
+    /// 阅读器内字号完全由 Aa 7 档控制，不再叠乘全局 appTextSize 造成字号暴涨
+    private var textScale: CGFloat { 1.0 }
 
     let identity: String
     let groups: [[LoadedVerse]]
@@ -31,6 +29,11 @@ struct NativeChapterText: UIViewRepresentable {
     var onTapNumber: (Int) -> Void
     var onBookmark: ([Int]) -> Void
     var onHighlight: (Int) -> Void
+    /// 1 步即选即染回调：(节号, 节内字符范围, 颜料 hex 或 nil 表示擦除)
+    var onInstantPaint: (Int, ClosedRange<Int>, String?) -> Void = { _, _, _ in }
+    /// 打开羊皮卷金句书签图面板：(出处如「约翰福音 3:16」, 选中正文)
+    var onOpenShareCard: (String, String) -> Void = { _, _ in }
+    var onCopiedToast: () -> Void = {}
     var onReadVerses: ([Int]) -> Void
     var onReachedEnd: () -> Void
 
@@ -45,13 +48,12 @@ struct NativeChapterText: UIViewRepresentable {
     func updateUIView(_ view: ChapterTextView, context: Context) {
         let changedChapter = view.chapterIdentity != identity
         view.configuration = self
-        view.header.rootView = AnyView(header.environment(\.appTextSize, appSize).environment(\.parchment, theme))
-        view.footer.rootView = AnyView(footer.environment(\.appTextSize, appSize).environment(\.parchment, theme))
+        view.header.rootView = AnyView(header.environment(\.parchment, theme))
+        view.footer.rootView = AnyView(footer.environment(\.parchment, theme))
         let built = buildDocument()
         let selected = view.selectedRange
         let offset = view.contentOffset
-        // Attribute changes (audio, bookmarks, theme) must not replace the text or
-        // reset the user's selection, handles, or scroll position.
+
         if view.attributedText != built.text {
             view.textStorage.beginEditing()
             if view.text != built.text.string {
@@ -70,12 +72,16 @@ struct NativeChapterText: UIViewRepresentable {
         }
         view.verseRanges = built.ranges
         view.numberRanges = built.numbers
+        view.textRanges = built.textRanges
+        view.contrastRanges = built.contrastRanges
         view.tintColor = UIColor(theme.accentOt)
         view.setNeedsLayout()
+
         if changedChapter {
             view.chapterIdentity = identity
             view.selectedRange = NSRange(location: 0, length: 0)
             view.resignFirstResponder()
+            view.hidePopover()
             view.lastFocus = nil
             view.lastActive = nil
             view.lastVisibleVerses = []
@@ -94,12 +100,22 @@ struct NativeChapterText: UIViewRepresentable {
             view.lastActive = activeVerse
             if view.selectedRange.length == 0 { view.pendingVerse = activeVerse }
         }
+        view.refreshPopoverContent()
     }
 
-    private func buildDocument() -> (text: NSAttributedString, ranges: [(Int, NSRange)], numbers: [(Int, NSRange)]) {
+    private func buildDocument() -> (
+        text: NSAttributedString,
+        ranges: [(Int, NSRange)],
+        numbers: [(Int, NSRange)],
+        textRanges: [(Int, NSRange)],
+        contrastRanges: [NSRange]
+    ) {
         let out = NSMutableAttributedString(string: "")
         var ranges: [(Int, NSRange)] = []
         var numbers: [(Int, NSRange)] = []
+        var textRanges: [(Int, NSRange)] = []
+        var contrastRanges: [NSRange] = []
+
         for group in groups {
             let headings = group.first.flatMap { meta.headings[$0.number] } ?? []
             for heading in headings {
@@ -109,54 +125,83 @@ struct NativeChapterText: UIViewRepresentable {
                 style.paragraphSpacing = 16
                 out.append(NSAttributedString(string: locale.zh(heading) + "\n", attributes: [
                     .font: UIFont.systemFont(ofSize: (metrics.verseFontSize + 1) * textScale, weight: .semibold),
-                    .foregroundColor: UIColor(theme.ink), .paragraphStyle: style
+                    .foregroundColor: UIColor(Color(parchment: 0x70451F)),
+                    .paragraphStyle: style
                 ]))
             }
-            let built = ChapterFlowParagraph(verses: group, metrics: metrics, theme: theme, xrefVerses: xrefs, activeVerse: nil).build(scale: textScale)
-            let text = NSMutableAttributedString(attributedString: built.text)
-            for (number, range) in built.ranges where bookmarked.contains(number) {
-                text.addAttribute(.backgroundColor, value: UIColor(theme.verseBookmarkMarker), range: range)
-            }
-            for run in ChapterFlowParagraph.runs(highlights: highlights, textRanges: built.textRanges, fullRanges: built.ranges) {
-                text.addAttribute(.backgroundColor, value: run.color, range: run.range)
-            }
-            if let activeVerse, !bookmarked.contains(activeVerse),
-               let verse = group.first(where: { $0.number == activeVerse }),
-               let body = built.textRanges.first(where: { $0.verse == activeVerse })?.range,
-               let sentence = VerseSentences.sentence(at: activeProgress, in: verse.text),
-               sentence.upperBound < body.length {
-                text.addAttribute(.backgroundColor, value: ChapterFlowParagraph.FlowTextView.activeFill,
-                                  range: NSRange(location: body.location + sentence.lowerBound, length: sentence.count))
-            }
-            if let focusVerse {
-                let matches = ChapterFlowParagraph.keywordRanges(verse: focusVerse, keyword: focusKeyword, verses: group, textRanges: built.textRanges)
-                let marks = matches.isEmpty ? built.ranges.filter { $0.verse == focusVerse }.map(\.range) : matches
-                for range in marks { text.addAttribute(.backgroundColor, value: UIColor(theme.verseSearchFocusBg), range: range) }
-            }
-            let start = out.length
-            ranges += built.ranges.map { ($0.verse, NSRange(location: start + $0.range.location, length: $0.range.length)) }
-            numbers += built.numberRanges.map { ($0.verse, NSRange(location: start + $0.range.location, length: $0.range.length)) }
-            out.append(text)
-            out.append(NSAttributedString(string: "\n", attributes: [
-                .font: UIFont.systemFont(ofSize: metrics.verseFontSize * textScale),
-                .paragraphStyle: { let p = NSMutableParagraphStyle(); p.paragraphSpacing = 16; return p }()
-            ]))
-            for verse in group {
-                if let secondary = contrast[verse.number] {
-                    out.append(NSAttributedString(string: "\(verse.number)\u{2002}\(secondary)\n", attributes: [
-                        .font: UIFont.systemFont(ofSize: metrics.verseFontSize * 0.82 * textScale),
-                        .foregroundColor: UIColor(theme.muted)
+            let hasContrast = group.contains { contrast[$0.number] != nil }
+            let units: [[LoadedVerse]] = hasContrast ? group.map { [$0] } : [group]
+            for (unitIdx, unit) in units.enumerated() {
+                let built = ChapterFlowParagraph(verses: unit, metrics: metrics, theme: theme, xrefVerses: xrefs, activeVerse: nil).build(scale: textScale)
+                let text = NSMutableAttributedString(attributedString: built.text)
+                for (number, range) in built.ranges where bookmarked.contains(number) {
+                    text.addAttribute(.backgroundColor, value: UIColor(theme.verseBookmarkMarker).withAlphaComponent(0.32), range: range)
+                }
+                for run in ChapterFlowParagraph.runs(highlights: highlights, textRanges: built.textRanges, fullRanges: built.ranges) {
+                    text.addAttribute(.backgroundColor, value: run.color, range: run.range)
+                }
+                if let activeVerse, !bookmarked.contains(activeVerse),
+                   let verse = unit.first(where: { $0.number == activeVerse }),
+                   let body = built.textRanges.first(where: { $0.verse == activeVerse })?.range,
+                   let sentence = VerseSentences.sentence(at: activeProgress, in: verse.text),
+                   sentence.upperBound < body.length {
+                    text.addAttribute(.backgroundColor, value: ChapterFlowParagraph.FlowTextView.activeFill,
+                                      range: NSRange(location: body.location + sentence.lowerBound, length: sentence.count))
+                }
+                if let focusVerse {
+                    let matches = ChapterFlowParagraph.keywordRanges(verse: focusVerse, keyword: focusKeyword, verses: unit, textRanges: built.textRanges)
+                    let marks = matches.isEmpty ? built.ranges.filter { $0.verse == focusVerse }.map(\.range) : matches
+                    for range in marks { text.addAttribute(.backgroundColor, value: UIColor(theme.verseSearchFocusBg), range: range) }
+                }
+                let start = out.length
+                ranges += built.ranges.map { ($0.verse, NSRange(location: start + $0.range.location, length: $0.range.length)) }
+                numbers += built.numberRanges.map { ($0.verse, NSRange(location: start + $0.range.location, length: $0.range.length)) }
+                textRanges += built.textRanges.map { ($0.verse, NSRange(location: start + $0.range.location, length: $0.range.length)) }
+                out.append(text)
+
+                let isLastUnit = unitIdx == units.count - 1
+                let secondary = hasContrast ? unit.first.flatMap { contrast[$0.number] } : nil
+                if let secondary {
+                    let mainBreak = NSMutableParagraphStyle()
+                    mainBreak.paragraphSpacing = 6
+                    out.append(NSAttributedString(string: "\n", attributes: [
+                        .font: UIFont.systemFont(ofSize: metrics.verseFontSize * textScale),
+                        .paragraphStyle: mainBreak
+                    ]))
+                    // 古典双语琥珀夹注：不重复印节号，左侧微缩进 14pt 并配 2pt 暖琥珀竖线
+                    let secFontSize = max(13.5, metrics.verseFontSize * 0.84 * textScale)
+                    let secLineHeight = max(metrics.verseLineHeight * 0.80 * textScale, secFontSize * 1.42)
+                    let secStyle = NSMutableParagraphStyle()
+                    secStyle.firstLineHeadIndent = 14
+                    secStyle.headIndent = 14
+                    secStyle.minimumLineHeight = secLineHeight
+                    secStyle.maximumLineHeight = secLineHeight
+                    secStyle.paragraphSpacing = isLastUnit ? 18 : 12
+                    let cStart = out.length
+                    out.append(NSAttributedString(string: "\(secondary)\n", attributes: [
+                        .font: UIFont.systemFont(ofSize: secFontSize),
+                        .foregroundColor: UIColor(theme.muted),
+                        .paragraphStyle: secStyle
+                    ]))
+                    contrastRanges.append(NSRange(location: cStart, length: max(0, out.length - cStart - 1)))
+                } else {
+                    let spacing: CGFloat = isLastUnit ? 16 : 10
+                    out.append(NSAttributedString(string: "\n", attributes: [
+                        .font: UIFont.systemFont(ofSize: metrics.verseFontSize * textScale),
+                        .paragraphStyle: { let p = NSMutableParagraphStyle(); p.paragraphSpacing = spacing; return p }()
                     ]))
                 }
             }
         }
-        return (out, ranges, numbers)
+        return (out, ranges, numbers, textRanges, contrastRanges)
     }
 
-    final class ChapterTextView: UITextView, UITextViewDelegate, UIGestureRecognizerDelegate, UIEditMenuInteractionDelegate {
+    final class ChapterTextView: UITextView, UITextViewDelegate, UIGestureRecognizerDelegate {
         var configuration: NativeChapterText!
         var verseRanges: [(Int, NSRange)] = []
         var numberRanges: [(Int, NSRange)] = []
+        var textRanges: [(Int, NSRange)] = []
+        var contrastRanges: [NSRange] = []
         var chapterIdentity = ""
         var topToken = 0
         var lastFocus: Int?
@@ -165,43 +210,60 @@ struct NativeChapterText: UIViewRepresentable {
         var scrollTopPending = false
         let header = UIHostingController(rootView: AnyView(EmptyView()))
         let footer = UIHostingController(rootView: AnyView(EmptyView()))
+        let popover = UIHostingController(rootView: AnyView(EmptyView()))
         var lastVisibleVerses: [Int] = []
         private var initialLong: UILongPressGestureRecognizer!
-        private lazy var verseMenu = UIEditMenuInteraction(delegate: self)
         private var pendingMenu: DispatchWorkItem?
         private let selectionFill = CAShapeLayer()
+        private let contrastBarLayer = CAShapeLayer()
 
         init() {
             super.init(frame: .zero, textContainer: nil)
             isEditable = false
             isSelectable = true
             backgroundColor = .clear
-            layer.insertSublayer(selectionFill, at: 0)
+            layer.insertSublayer(contrastBarLayer, at: 0)
+            layer.insertSublayer(selectionFill, at: 1)
             textContainer.lineFragmentPadding = 0
             showsVerticalScrollIndicator = false
             alwaysBounceVertical = true
             delegate = self
-            addInteraction(verseMenu)
             accessibilityIdentifier = "read.chapter.text"
+
             header.view.backgroundColor = .clear
             footer.view.backgroundColor = .clear
+            popover.view.backgroundColor = .clear
+            popover.view.isHidden = true
             addSubview(header.view)
             addSubview(footer.view)
+            addSubview(popover.view)
+
             initialLong = UILongPressGestureRecognizer(target: self, action: #selector(beginSelection(_:)))
-            initialLong.minimumPressDuration = 0.45
+            initialLong.minimumPressDuration = 0.42
             initialLong.delegate = self
             addGestureRecognizer(initialLong)
-            let tap = UITapGestureRecognizer(target: self, action: #selector(tapNumber(_:)))
+
+            let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
             tap.delegate = self
             tap.cancelsTouchesInView = false
             addGestureRecognizer(tap)
-            // The initial long press selects a verse, rather than UIKit's word.
-            // Existing handles continue to use UIKit's own text interactions.
+
             for gesture in gestureRecognizers ?? [] where gesture !== initialLong && gesture is UILongPressGestureRecognizer {
                 gesture.require(toFail: initialLong)
             }
         }
         required init?(coder: NSCoder) { fatalError() }
+
+        override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+            // 由我们定制的深沉香木 1 步即选即染胶囊接管，不再叠加系统白色气泡菜单遮挡
+            false
+        }
+
+        override func buildMenu(with builder: any UIMenuBuilder) {
+            builder.remove(menu: .lookup)
+            builder.remove(menu: .share)
+            builder.remove(menu: .standardEdit)
+        }
 
         override func layoutSubviews() {
             let width = max(0, bounds.width - 40)
@@ -223,19 +285,47 @@ struct NativeChapterText: UIViewRepresentable {
                 pendingVerse = nil
                 scrollRangeToVisible(range)
             }
+            updateContrastBars()
             updateSelectionFill()
+            positionPopoverIfVisible()
             reportVisibleVerses()
         }
+
+        /// 为每一段双语对照绘制左侧 2pt 暖琥珀夹注细竖线
+        private func updateContrastBars() {
+            contrastBarLayer.frame = CGRect(origin: .zero, size: contentSize)
+            guard configuration != nil, !contrastRanges.isEmpty else {
+                contrastBarLayer.path = nil
+                return
+            }
+            let path = UIBezierPath()
+            for r in contrastRanges where r.length > 0 && NSMaxRange(r) <= textStorage.length {
+                let glyphs = layoutManager.glyphRange(forCharacterRange: r, actualCharacterRange: nil)
+                let rect = layoutManager.boundingRect(forGlyphRange: glyphs, in: textContainer)
+                guard rect.height > 2 else { continue }
+                let barRect = CGRect(
+                    x: textContainerInset.left + 2,
+                    y: textContainerInset.top + rect.minY + 3,
+                    width: 2.2,
+                    height: max(8, rect.height - 6)
+                )
+                path.append(UIBezierPath(roundedRect: barRect, cornerRadius: 1.1))
+            }
+            contrastBarLayer.fillColor = UIColor(configuration.theme.accentOt).withAlphaComponent(0.45).cgColor
+            contrastBarLayer.path = path.cgPath
+        }
+
         private func updateSelectionFill() {
             selectionFill.frame = CGRect(origin: .zero, size: contentSize)
             guard selectedRange.length > 0, let selectedTextRange else { selectionFill.path = nil; return }
             let path = UIBezierPath()
             for selection in selectionRects(for: selectedTextRange) where !selection.rect.isEmpty {
-                path.append(UIBezierPath(rect: selection.rect))
+                path.append(UIBezierPath(roundedRect: selection.rect.insetBy(dx: -1, dy: 0), cornerRadius: 4))
             }
-            selectionFill.fillColor = tintColor.withAlphaComponent(0.20).cgColor
+            selectionFill.fillColor = tintColor.withAlphaComponent(0.18).cgColor
             selectionFill.path = path.cgPath
         }
+
         private func reportVisibleVerses() {
             guard configuration != nil, !verseRanges.isEmpty else { return }
             let visible = CGRect(x: 0, y: contentOffset.y - textContainerInset.top,
@@ -251,9 +341,8 @@ struct NativeChapterText: UIViewRepresentable {
 
         override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
             if gestureRecognizer === initialLong {
-                // Let UIKit own interactions once a selection exists (including
-                // a stationary press on a selection handle).
                 let point = gestureRecognizer.location(in: self)
+                if !popover.view.isHidden, popover.view.frame.insetBy(dx: -8, dy: -8).contains(point) { return false }
                 guard verse(at: point) != nil else { return false }
                 guard selectedRange.length > 0, let selectedTextRange else { return true }
                 let start = caretRect(for: selectedTextRange.start).insetBy(dx: -24, dy: -24)
@@ -263,132 +352,250 @@ struct NativeChapterText: UIViewRepresentable {
             }
             return true
         }
+
         func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
             gestureRecognizer !== initialLong && otherGestureRecognizer !== initialLong
         }
+
         private func character(at point: CGPoint) -> Int? {
             let p = CGPoint(x: point.x - textContainerInset.left, y: point.y - textContainerInset.top)
             guard layoutManager.usedRect(for: textContainer).contains(p) else { return nil }
             return layoutManager.characterIndex(for: p, in: textContainer, fractionOfDistanceBetweenInsertionPoints: nil)
         }
+
         private func verse(at point: CGPoint) -> (Int, NSRange)? {
             guard let index = character(at: point) else { return nil }
             return verseRanges.first { NSLocationInRange(index, $0.1) }
         }
+
         @objc private func beginSelection(_ gesture: UILongPressGestureRecognizer) {
             guard gesture.state == .began, let (_, range) = verse(at: gesture.location(in: self)) else { return }
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
             becomeFirstResponder()
             selectedRange = range
-            presentSelectionMenu()
+            showPopoverNow()
         }
-        private func presentSelectionMenu() {
-            guard window != nil, let selectedTextRange, selectedRange.length > 0 else { return }
-            let visible = bounds.insetBy(dx: 20, dy: 12)
-            let rect = selectionRects(for: selectedTextRange).map(\.rect).first(where: { $0.intersects(visible) }) ?? caretRect(for: selectedTextRange.end)
-            let point = CGPoint(x: min(visible.maxX, max(visible.minX, rect.midX)),
-                                y: min(visible.maxY - 44, max(visible.minY + 44, rect.minY)))
-            let menu = UIEditMenuConfiguration(identifier: nil, sourcePoint: point)
-            menu.preferredArrowDirection = .down
-            verseMenu.presentEditMenu(with: menu)
+
+        @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
+            let pt = gesture.location(in: self)
+            // 点在浮动染色胶囊内部：交给 SwiftUI 按钮自己响应
+            if !popover.view.isHidden, popover.view.frame.insetBy(dx: -6, dy: -6).contains(pt) {
+                return
+            }
+            // 已有选区时轻点正文空白或其他地方：收起选区与胶囊
+            if selectedRange.length > 0 {
+                clearSelection()
+                return
+            }
+            guard let index = character(at: pt) else { return }
+            // 点在带串珠的节号上 → 开经文关联弹层
+            if let number = numberRanges.first(where: { NSLocationInRange(index, $0.1) })?.0,
+               configuration.xrefs.contains(number) {
+                configuration.onTapNumber(number)
+                return
+            }
+            // 轻点单节经文正文 → 直接选中该节并浮出 1 步染色胶囊（媲美 Apple Books 丝滑点选）
+            if let (_, vRange) = verseRanges.first(where: { NSLocationInRange(index, $0.1) }) {
+                UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+                becomeFirstResponder()
+                selectedRange = vRange
+                showPopoverNow()
+            }
         }
+
+        func clearSelection() {
+            pendingMenu?.cancel()
+            selectedRange = NSRange(location: 0, length: 0)
+            resignFirstResponder()
+            hidePopover()
+            updateSelectionFill()
+        }
+
+        func hidePopover() {
+            popover.view.isHidden = true
+        }
+
+        func stopSelection() {
+            pendingMenu?.cancel()
+            hidePopover()
+            resignFirstResponder()
+        }
+
+        private func schedulePopover() {
+            pendingMenu?.cancel()
+            guard selectedRange.length > 0 else {
+                hidePopover()
+                return
+            }
+            let work = DispatchWorkItem { [weak self] in
+                guard let self, self.selectedRange.length > 0 else { return }
+                if self.hasActiveGesture(self) || self.isDragging || self.isDecelerating {
+                    self.schedulePopover()
+                } else {
+                    self.showPopoverNow()
+                }
+            }
+            pendingMenu = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.18, execute: work)
+        }
+
         private func hasActiveGesture(_ view: UIView) -> Bool {
             (view.gestureRecognizers ?? []).contains { $0.state == .began || $0.state == .changed }
                 || view.subviews.contains { hasActiveGesture($0) }
         }
-        func stopSelection() {
-            pendingMenu?.cancel()
-            verseMenu.dismissMenu()
-            resignFirstResponder()
+
+        func refreshPopoverContent() {
+            guard configuration != nil, selectedRange.length > 0 else {
+                hidePopover()
+                return
+            }
+            let c = configuration!
+            let activeColor = dominantSelectedColor()
+            let nums = selectedNumbers
+            let isBookmarked = !nums.isEmpty && nums.allSatisfy { c.bookmarked.contains($0) }
+
+            popover.rootView = AnyView(
+                SelectionHighlightPopover(
+                    locale: c.locale,
+                    activeColor: activeColor,
+                    isBookmarked: isBookmarked,
+                    onPickColor: { [weak self] hex in
+                        self?.applyInstantHighlight(hex)
+                    },
+                    onCopy: { [weak self] in
+                        guard let self else { return }
+                        self.copy(nil)
+                        c.onCopiedToast()
+                        self.clearSelection()
+                    },
+                    onBookmark: { [weak self] in
+                        guard let self, !nums.isEmpty else { return }
+                        c.onBookmark(nums)
+                        self.clearSelection()
+                    },
+                    onShareCard: { [weak self] in
+                        guard let self, let snap = self.selectedSnapshot else { return }
+                        self.clearSelection()
+                        c.onOpenShareCard(snap.ref, snap.body)
+                    }
+                )
+            )
         }
-        private func scheduleSelectionMenu() {
-            pendingMenu?.cancel()
-            let work = DispatchWorkItem { [weak self] in
-                guard let self, self.selectedRange.length > 0 else { return }
-                if self.hasActiveGesture(self) || self.isDragging || self.isDecelerating {
-                    self.scheduleSelectionMenu()
-                } else {
-                    self.presentSelectionMenu()
+
+        private func showPopoverNow() {
+            guard window != nil, selectedRange.length > 0 else { hidePopover(); return }
+            refreshPopoverContent()
+            popover.view.isHidden = false
+            bringSubviewToFront(popover.view)
+            positionPopoverIfVisible()
+        }
+
+        private func positionPopoverIfVisible() {
+            guard !popover.view.isHidden, selectedRange.length > 0, let selectedTextRange else { return }
+            let rects = selectionRects(for: selectedTextRange).map(\.rect).filter { !$0.isEmpty }
+            let anchor = rects.first ?? caretRect(for: selectedTextRange.start)
+            let maxW = max(240, bounds.width - 24)
+            let size = popover.sizeThatFits(in: CGSize(width: maxW, height: 120))
+            let popW = min(maxW, max(252, size.width))
+            let popH = max(72, size.height)
+
+            let minVisibleY = contentOffset.y + adjustedContentInset.top + 54
+            let x = min(max(12, anchor.midX - popW / 2), bounds.width - popW - 12)
+            var y = anchor.minY - popH - 10
+            if y < minVisibleY {
+                let bottomAnchor = rects.last ?? anchor
+                y = bottomAnchor.maxY + 12
+            }
+            popover.view.frame = CGRect(x: x, y: y, width: popW, height: popH)
+        }
+
+        /// 判断当前选中区域是否整段已经是同一种高亮色（若是则再点该色即擦除）
+        private func dominantSelectedColor() -> String? {
+            guard configuration != nil, selectedRange.length > 0 else { return nil }
+            var found: String?
+            var count = 0
+            for (verse, bodyRange) in textRanges {
+                let inter = self.bodyIntersection(verse: verse, bodyRange: bodyRange)
+                guard let inter else { continue }
+                let byIdx = configuration.highlights[verse] ?? [:]
+                for i in inter {
+                    guard let col = byIdx[i] else { return nil }
+                    let norm = VerseHighlightRules.normalizeColor(col)
+                    if let f = found, f != norm { return nil }
+                    found = norm
+                    count += 1
                 }
             }
-            pendingMenu = work
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4, execute: work)
+            return count > 0 ? found : nil
         }
-        @objc private func tapNumber(_ gesture: UITapGestureRecognizer) {
-            guard selectedRange.length == 0, let index = character(at: gesture.location(in: self)),
-                  let number = numberRanges.first(where: { NSLocationInRange(index, $0.1) })?.0,
-                  configuration.xrefs.contains(number) else { return }
-            configuration.onTapNumber(number)
+
+        private func bodyIntersection(verse: Int, bodyRange: NSRange) -> ClosedRange<Int>? {
+            let inter = NSIntersectionRange(selectedRange, bodyRange)
+            if inter.length > 0 {
+                let s = max(0, inter.location - bodyRange.location)
+                let e = min(max(0, bodyRange.length - 1), s + inter.length - 1)
+                return s <= e ? (s...e) : nil
+            }
+            if let full = verseRanges.first(where: { $0.0 == verse })?.1,
+               NSIntersectionRange(selectedRange, full).length > 0,
+               bodyRange.length > 0 {
+                return 0...(bodyRange.length - 1)
+            }
+            return nil
         }
+
+        private func applyInstantHighlight(_ pickedHex: String) {
+            guard let c = configuration else { return }
+            let norm = VerseHighlightRules.normalizeColor(pickedHex)
+            let nextColor: String? = (dominantSelectedColor() == norm) ? nil : norm
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            for (verse, bodyRange) in textRanges {
+                if let localRange = bodyIntersection(verse: verse, bodyRange: bodyRange) {
+                    c.onInstantPaint(verse, localRange, nextColor)
+                }
+            }
+            clearSelection()
+        }
+
         func textViewDidChangeSelection(_ textView: UITextView) {
             updateSelectionFill()
-            scheduleSelectionMenu()
-            #if DEBUG
-            Logger(subsystem: "me.askbible", category: "Selection").notice("selection location=\(textView.selectedRange.location) length=\(textView.selectedRange.length)")
-            #endif
+            schedulePopover()
         }
+
         private var selectedNumbers: [Int] {
             verseRanges.filter { NSIntersectionRange($0.1, selectedRange).length > 0 }.map { $0.0 }
         }
-        private var clipboardText: String? {
+
+        private var selectedSnapshot: (ref: String, body: String)? {
             let source = text as NSString
             guard selectedRange.length > 0, NSMaxRange(selectedRange) <= source.length,
                   let first = selectedNumbers.first, let last = selectedNumbers.last else { return nil }
             let reference = first == last ? "\(first)" : "\(first)–\(last)"
-            // Section headings are editorial, so do not copy them as Scripture.
-            // Intersect each verse with the actual UTF-16 selection: partial first
-            // and last verses stay partial rather than silently expanding.
-            let body = verseRanges.compactMap { entry -> String? in
+            let body = textRanges.compactMap { entry -> String? in
                 let overlap = NSIntersectionRange(entry.1, selectedRange)
-                guard overlap.length > 0 else { return nil }
-                return source.substring(with: overlap).trimmingCharacters(in: .whitespacesAndNewlines)
-            }.filter { !$0.isEmpty }.joined(separator: "\n")
-            return "\(configuration.bookName) \(configuration.chapter):\(reference)\n\(body)"
-        }
-        override func copy(_ sender: Any?) {
-            guard let value = clipboardText else { return }
-            UIPasteboard.general.string = value
-        }
-        func editMenuInteraction(_ interaction: UIEditMenuInteraction, menuFor configuration: UIEditMenuConfiguration, suggestedActions: [UIMenuElement]) -> UIMenu? {
-            selectionMenu(suggestedActions)
-        }
-        func textView(_ textView: UITextView, editMenuForTextIn range: NSRange, suggestedActions: [UIMenuElement]) -> UIMenu? {
-            selectionMenu(suggestedActions)
-        }
-        private func selectionMenu(_ suggestedActions: [UIMenuElement]) -> UIMenu? {
-            let c = configuration!
-            let numbers = selectedNumbers
-            guard !numbers.isEmpty else { return UIMenu(children: suggestedActions) }
-            let remove = numbers.allSatisfy { c.bookmarked.contains($0) }
-            return UIMenu(children: [
-                UIAction(title: AppLocale.pick("复制", "Copy", c.locale), image: UIImage(systemName: "doc.on.doc")) { [weak self] _ in self?.copy(nil) },
-                UIAction(title: AppLocale.pick(remove ? "取消收藏" : "收藏", remove ? "Remove bookmark" : "Bookmark", c.locale), image: UIImage(systemName: remove ? "bookmark.slash" : "bookmark")) { [weak self] _ in
-                    c.onBookmark(numbers)
-                    if !remove { self?.copy(nil) }
-                },
-                UIAction(title: AppLocale.pick("划重点", "Highlight", c.locale), image: UIImage(systemName: "highlighter")) { _ in if let first = numbers.first { c.onHighlight(first) } },
-                UIAction(title: AppLocale.pick("分享", "Share", c.locale), image: UIImage(systemName: "square.and.arrow.up")) { [weak self] _ in
-                    guard let self, let value = self.clipboardText else { return }
-                    let sheet = UIActivityViewController(activityItems: [value], applicationActivities: nil)
-                    sheet.popoverPresentationController?.sourceView = self
-                    sheet.popoverPresentationController?.sourceRect = self.selectedTextRange.map { self.firstRect(for: $0) } ?? self.bounds
-                    var responder: UIResponder? = self
-                    while let current = responder {
-                        if let controller = current as? UIViewController { controller.present(sheet, animated: true); break }
-                        responder = current.next
-                    }
+                if overlap.length > 0 {
+                    return source.substring(with: overlap).trimmingCharacters(in: .whitespacesAndNewlines)
                 }
-            ])
+                if let full = verseRanges.first(where: { $0.0 == entry.0 })?.1,
+                   NSIntersectionRange(selectedRange, full).length > 0,
+                   NSMaxRange(entry.1) <= source.length {
+                    return source.substring(with: entry.1).trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+                return nil
+            }.filter { !$0.isEmpty }.joined(separator: "\n")
+            guard !body.isEmpty else { return nil }
+            return ("\(configuration.bookName) \(configuration.chapter):\(reference)", body)
         }
+
+        override func copy(_ sender: Any?) {
+            guard let snap = selectedSnapshot else { return }
+            UIPasteboard.general.string = "\(snap.ref) \(snap.body)"
+        }
+
         func scrollViewDidScroll(_ scrollView: UIScrollView) {
             guard configuration != nil, !verseRanges.isEmpty else { return }
-            // While selecting, keep the final verse on screen instead of scrolling
-            // the selection handles into the hosted post-reading material.
             if selectedRange.length > 0 {
-                let end = textContainerInset.top + layoutManager.usedRect(for: textContainer).height
-                let maximum = max(-adjustedContentInset.top, end - bounds.height + 24)
-                if contentOffset.y > maximum + 0.5 {
-                    setContentOffset(CGPoint(x: contentOffset.x, y: maximum), animated: false)
-                }
+                positionPopoverIfVisible()
             }
             reportVisibleVerses()
             if footer.view.frame.minY > 0, contentOffset.y + bounds.height - adjustedContentInset.bottom >= footer.view.frame.minY {
@@ -396,5 +603,85 @@ struct NativeChapterText: UIViewRepresentable {
                 DispatchQueue.main.async { callback() }
             }
         }
+    }
+}
+
+/// 1 步即选即染深沉香木浮动胶囊（四色颜料圆点 + 复制 · 收藏 · 书签图）
+private struct SelectionHighlightPopover: View {
+    let locale: AppLocale
+    let activeColor: String?
+    let isBookmarked: Bool
+    var onPickColor: (String) -> Void
+    var onCopy: () -> Void
+    var onBookmark: () -> Void
+    var onShareCard: () -> Void
+
+    var body: some View {
+        VStack(spacing: 9) {
+            HStack(spacing: 16) {
+                ForEach(VerseHighlightRules.palette, id: \.self) { hex in
+                    let isCurrent = activeColor == hex
+                    Button { onPickColor(hex) } label: {
+                        ZStack {
+                            Circle()
+                                .fill(Color(hex: hex))
+                                .frame(width: 28, height: 28)
+                                .overlay(
+                                    Circle().strokeBorder(.white.opacity(isCurrent ? 0.95 : 0.22), lineWidth: isCurrent ? 2 : 0.75)
+                                )
+                            if isCurrent {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundStyle(Color(rgb: 0x1C1410))
+                            }
+                        }
+                        .contentShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            HStack(spacing: 14) {
+                actionText(AppLocale.pick("复制", "Copy", locale), action: onCopy)
+                dot
+                actionText(
+                    isBookmarked
+                    ? AppLocale.pick("取消收藏", "Saved", locale)
+                    : AppLocale.pick("收藏", "Save", locale),
+                    highlight: isBookmarked,
+                    action: onBookmark
+                )
+                dot
+                actionText(AppLocale.pick("书签图", "Card", locale), highlight: true, action: onShareCard)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 11)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color(rgb: 0x241A13, opacity: 0.96))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.14), lineWidth: 0.75)
+                )
+        )
+        .shadow(color: .black.opacity(0.28), radius: 12, y: 5)
+    }
+
+    private var dot: some View {
+        Text("·")
+            .font(.system(size: 12, weight: .bold))
+            .foregroundStyle(.white.opacity(0.35))
+    }
+
+    private func actionText(_ title: String, highlight: Bool = false, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 12.5, weight: .semibold))
+                .foregroundStyle(highlight ? Color(rgb: 0xFFB103) : Color(rgb: 0xF4EBE1))
+                .padding(.vertical, 2)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }

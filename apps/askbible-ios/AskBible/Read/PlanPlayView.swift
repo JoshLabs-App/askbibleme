@@ -32,8 +32,8 @@ struct PlanPlayView: View {
 
     @Environment(\.parchment) private var theme
     @State private var confirmBusy = false
-    @State private var lastRowTap: (index: Int, at: Date)?
     @State private var stageToConfirm: Int?
+    @State private var monthExpanded = false
 
     private var prefs: ReadingPlanPrefs { store.prefs }
     private var committedAhead: Int { prefs.ahead }
@@ -44,20 +44,19 @@ struct PlanPlayView: View {
     private var dayCount: Int? { ReadingPlanCatalog.plan(id: prefs.planId)?.dayCount ?? prefs.dayCount }
     private var planName: String { locale.zh(ReadingPlanCatalog.plan(id: prefs.planId)?.title ?? PlanCopy.t("pages.read.planPlayTitle")) }
     private var dayMeta: String { locale.zh(PlanCopy.f("pages.read.todayPlanDayMeta", ["n": "\(PlanPlay.planDayNumber(prefs, dayCount: dayCount, contentAhead: contentAhead, tripleBaseDay: store.triplePlanDay()))"])) }
+    private var allDoneDates: Set<String> { store.listenedDates.union(habitDates) }
 
     var body: some View {
         GeometryReader { geo in
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
-                    topBar.padding(.top, 8)
+                    topBar.padding(.top, 14)
                     if queue.isEmpty && !browsingAway {
                         Text(locale.zh(PlanCopy.t("pages.read.todayPlanEmpty")))
                             .askFont(size: 16).foregroundStyle(theme.muted)
                             .frame(maxWidth: .infinity).padding(.top, 48)
                     } else {
-                        PlanMonthCalendar(locale: locale, prefs: prefs, dayCount: dayCount, viewAhead: viewAhead,
-                                          listened: store.listenedDates.union(habitDates), onSelectAhead: { a in viewAhead = a; cursor = 0 })
-                            .padding(.top, 8)
+                        weekStripCard.padding(.top, 14)
                         if needsConfirm {
                             Button {
                                 guard !confirmBusy else { return }
@@ -66,23 +65,23 @@ struct PlanPlayView: View {
                                 confirmBusy = false
                             } label: {
                                 Text(locale.zh(PlanCopy.t(confirmBusy ? "pages.read.todayPlanLoading" : "pages.read.planPlayConfirmDay")))
-                                    .askFont(size: 16, weight: .semibold).foregroundStyle(Color(parchment: 0xF5EFE4))
-                                    .frame(maxWidth: .infinity).frame(height: 46)
+                                    .askFont(size: 15, weight: .semibold).foregroundStyle(Color(parchment: 0xF5EFE4))
+                                    .frame(maxWidth: .infinity).frame(height: 44)
                                     .background(RoundedRectangle(cornerRadius: 12).fill(theme.ink))
                             }
-                            .buttonStyle(.plain).opacity(confirmBusy ? 0.35 : 1).padding(.top, 12)
+                            .buttonStyle(.plain).opacity(confirmBusy ? 0.35 : 1).padding(.top, 10)
                         }
-                        queueHeader.padding(.top, 18)
+                        queueHeader.padding(.top, 20)
                         if queue.isEmpty {
                             Text(locale.zh(PlanCopy.t("pages.read.todayPlanEmpty")))
                                 .askFont(size: 15).foregroundStyle(theme.muted).frame(maxWidth: .infinity).padding(.vertical, 20)
                         } else {
-                            VStack(spacing: 4) {
+                            VStack(spacing: 10) {
                                 ForEach(Array(queue.enumerated()), id: \.offset) { i, p in
                                     queueRow(index: i, pointer: p)
                                 }
                             }
-                            .padding(.top, 8)
+                            .padding(.top, 12)
                         }
                     }
                     if showDevotional {
@@ -94,7 +93,7 @@ struct PlanPlayView: View {
                     }
                 }
                 .padding(.horizontal, 20)
-                .padding(.bottom, 20)
+                .padding(.bottom, 24)
             }
             .shellBottomInset(hasDock: !queue.isEmpty)
             .background(ParchmentBackground(theme: theme).ignoresSafeArea())
@@ -112,90 +111,232 @@ struct PlanPlayView: View {
         }
     }
 
-    // MARK: 顶栏：计划名居中 + 齿轮（→ 计划目录）
+    // MARK: 顶栏：「今日同行」左对齐 + 副标题（计划名 · 第N天） + 右侧「换计划」胶囊
 
     private var topBar: some View {
-        ZStack {
-            Text(planName)
-                .askFont(size: 20, weight: .bold).foregroundStyle(theme.ink)
-                .multilineTextAlignment(.center).lineLimit(2)
-                .frame(maxWidth: .infinity).padding(.horizontal, 44)
-            HStack {
-                Spacer()
-                Button(action: onOpenPlans) {
-                    MaterialIcon(glyph: MI.settings, size: 22, color: theme.muted)
-                        .frame(width: 40, height: 40).contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(locale.zh(PlanCopy.t("pages.read.todayPlanChange")))
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(AppLocale.pick("今日同行", "Today's Walk", locale))
+                    .askFont(size: 26, weight: .bold)
+                    .foregroundStyle(theme.ink)
+                Text("\(planName) · \(dayMeta)")
+                    .askFont(size: 13.5, weight: .medium)
+                    .foregroundStyle(theme.muted)
+                    .lineLimit(1)
             }
+            Spacer(minLength: 8)
+            Button(action: onOpenPlans) {
+                Text(AppLocale.pick("换计划", "Plans", locale))
+                    .askFont(size: 13, weight: .semibold)
+                    .foregroundStyle(theme.muted)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(Capsule().fill(theme.surface.opacity(0.75)))
+                    .overlay(Capsule().strokeBorder(theme.border, lineWidth: 1))
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(locale.zh(PlanCopy.t("pages.read.todayPlanChange")))
         }
-        .frame(minHeight: 40)
     }
 
-    // MARK: 列表抬头：第 N 天 · 今日读经 · i / n
+    // MARK: 7 日温和周历条（点月份可下拉展开整月日历）
+
+    private var weekStripCard: some View {
+        let today = Date()
+        let selectedDate = PlanDates.addDays(today, viewAhead)
+        let cal = Calendar.current
+        let ym = cal.dateComponents([.year, .month], from: selectedDate)
+        let monthTitle = PlanPlay.monthLabel(locale: locale, year: ym.year ?? 2026, month: ym.month ?? 1)
+        let weekday = cal.component(.weekday, from: selectedDate) // 1 = Sun ... 7 = Sat
+        let mondayOffset = (weekday + 5) % 7 // 0 = Mon ... 6 = Sun
+        let weekStartAhead = viewAhead - mondayOffset
+        let weekLabels = locale == .en ? ["M", "T", "W", "T", "F", "S", "S"] : ["一", "二", "三", "四", "五", "六", "日"]
+        let doneOlive = theme.isDark ? Color(rgb: 0xA8BC72) : Color(rgb: 0x65775C)
+
+        var weekDoneCount = 0
+        for step in 0..<7 {
+            let d = PlanDates.addDays(today, weekStartAhead + step)
+            if allDoneDates.contains(PlanPlay.isoDate(d)) { weekDoneCount += 1 }
+        }
+
+        return VStack(spacing: 12) {
+            HStack {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.25)) { monthExpanded.toggle() }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(monthTitle)
+                            .askFont(size: 14, weight: .bold)
+                            .foregroundStyle(theme.ink)
+                        Image(systemName: monthExpanded ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(theme.accentOt)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                Text(locale == .en ? "\(weekDoneCount) days this week" : "本周相伴 \(weekDoneCount) 天")
+                    .askFont(size: 12.5, weight: .medium)
+                    .foregroundStyle(doneOlive)
+            }
+
+            HStack(spacing: 4) {
+                ForEach(0..<7, id: \.self) { step in
+                    let cellAhead = weekStartAhead + step
+                    let cellDate = PlanDates.addDays(today, cellAhead)
+                    let dayNum = cal.component(.day, from: cellDate)
+                    let isToday = cellAhead == 0
+                    let isSelected = cellAhead == viewAhead
+                    let isDone = allDoneDates.contains(PlanPlay.isoDate(cellDate))
+                    let selectable = PlanPlay.isAheadSelectable(prefs, dayCount: dayCount, ahead: cellAhead)
+
+                    Button {
+                        if selectable { viewAhead = cellAhead; cursor = 0 }
+                    } label: {
+                        VStack(spacing: 5) {
+                            Text(weekLabels[step])
+                                .askFont(size: 11, weight: .medium)
+                                .foregroundStyle(isSelected ? theme.canvas.opacity(0.8) : theme.muted)
+                            Text("\(dayNum)")
+                                .askFont(size: 15, weight: .bold).monospacedDigit()
+                                .foregroundStyle(isSelected ? theme.canvas : theme.ink)
+                            Circle()
+                                .fill(isDone ? (isSelected ? Brand.logo : doneOlive) : Color.clear)
+                                .frame(width: 5, height: 5)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule()
+                                .fill(isSelected ? theme.ink : (isToday ? theme.accentOt.opacity(0.14) : Color.clear))
+                        )
+                        .opacity(!selectable && !isDone ? 0.38 : 1)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!selectable)
+                }
+            }
+
+            if monthExpanded {
+                Divider().overlay(theme.border)
+                PlanMonthCalendar(
+                    locale: locale, prefs: prefs, dayCount: dayCount, viewAhead: viewAhead,
+                    listened: allDoneDates,
+                    onSelectAhead: { a in viewAhead = a; cursor = 0 }
+                )
+                .padding(.top, 2)
+            }
+        }
+        .padding(14)
+        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(theme.surface))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(theme.border, lineWidth: 1))
+    }
+
+    // MARK: 列表抬头：今日经文 + 右侧「▶ 连播今日」主胶囊
 
     private var queueHeader: some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text(dayMeta).askFont(size: 14, weight: .medium).foregroundStyle(theme.muted)
+        HStack(alignment: .center) {
+            Text(locale.zh(PlanCopy.t("pages.read.todayPlanTitle")))
+                .askFont(size: 18, weight: .bold)
+                .foregroundStyle(theme.ink)
             Spacer()
-            Text(locale.zh(PlanCopy.t("pages.read.todayPlanTitle"))).askFont(size: 16, weight: .semibold).foregroundStyle(theme.ink)
-            Spacer()
-            Text(queue.isEmpty ? " " : PlanCopy.f("pages.read.planPlayTrackMeta", ["current": "\(activeIndex + 1)", "total": "\(queue.count)"]))
-                .askFont(size: 14, weight: .medium).monospacedDigit().foregroundStyle(theme.muted)
+            if !queue.isEmpty {
+                Button {
+                    onPlayChapter(0)
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "play.fill")
+                            .font(.system(size: 10, weight: .bold))
+                        Text(AppLocale.pick("连播今日", "Play today", locale))
+                            .askFont(size: 13, weight: .semibold)
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background(Capsule().fill(theme.accentOt))
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
         }
     }
 
     private func chapterTitle(_ p: PlanPointer) -> String {
         guard let b = BibleCatalog.book(id: p.bookId) else { return "\(p.bookId) \(p.chapter)" }
-        return "\(bookLabel(b)) \(p.chapter)"
+        return ReadChrome.chapterTitle(bookName: bookLabel(b), chapter: p.chapter, locale: locale)
     }
 
-    /// 单击点播；同一行 320ms 内再点 → 进阅读页（RN onRowPress）
-    private func rowTapped(_ index: Int) {
-        let now = Date()
-        if let last = lastRowTap, last.index == index, now.timeIntervalSince(last.at) < 0.32 {
-            lastRowTap = nil
-            onReadChapter(index)
-            return
-        }
-        lastRowTap = (index, now)
-        onPlayChapter(index)
-    }
-
+    /// 职责分明的章节卡片：点左侧主体 = 直接进入该章安静阅读；点右侧 44pt 独立圆钮 = 播放该章朗读（废除 320ms 双击陷阱）
     private func queueRow(index: Int, pointer p: PlanPointer) -> some View {
         let active = index == activeIndex
         let busy = audio.isLoading && audio.wantsPlayback
+        let bookIntro = BiblePanorama.shared.introductions[p.bookId]
+        let subtitle = bookIntro.map { AppLocale.pick($0.zh, $0.en, locale) } ?? ""
+
         return HStack(spacing: 12) {
-            Text(String(format: "%02d", index + 1))
-                .askFont(size: 13, weight: active ? .bold : .medium).monospacedDigit()
-                .foregroundStyle(active ? theme.ink : theme.faint)
-                .frame(width: 26, alignment: .trailing)
-            Text(chapterTitle(p))
-                .askFont(size: 17, weight: active ? .bold : .medium)
-                .foregroundStyle(active ? theme.ink : theme.inkSoft)
-                .lineLimit(1)
-            Spacer(minLength: 8)
-            HStack(spacing: 2) {
-                Button { onReadChapter(index) } label: {
-                    MaterialIcon(glyph: MI.menuBook, size: 20, color: theme.muted).frame(width: 36, height: 36).contentShape(Rectangle())
+            Button {
+                onReadChapter(index)
+            } label: {
+                HStack(spacing: 12) {
+                    Text(String(format: "%02d", index + 1))
+                        .askFont(size: 15, weight: .bold).monospacedDigit()
+                        .foregroundStyle(active ? theme.ink : theme.faint)
+                        .frame(width: 26, alignment: .leading)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(chapterTitle(p))
+                            .askFont(size: 16.5, weight: .bold)
+                            .foregroundStyle(theme.ink)
+                            .lineLimit(1)
+                        if !subtitle.isEmpty {
+                            Text(subtitle)
+                                .askFont(size: 12)
+                                .foregroundStyle(theme.muted)
+                                .lineLimit(1)
+                        }
+                    }
+                    Spacer(minLength: 4)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(locale.zh(PlanCopy.t("pages.read.planPlayReadChapter")))
-                Button { onPlayChapter(index) } label: {
-                    MaterialIcon(glyph: active && activePlaying ? MI.graphicEq : MI.volumeUp, size: 20, color: theme.muted).frame(width: 36, height: 36).contentShape(Rectangle())
-                }
-                .buttonStyle(.plain).disabled(busy).opacity(busy ? 0.35 : 1)
-                .accessibilityLabel(locale.zh(PlanCopy.t("pages.read.planPlayPlayChapterAudio")))
+                .padding(.vertical, 6)
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel(locale.zh(PlanCopy.t("pages.read.planPlayReadChapter")))
+
+            Button {
+                onPlayChapter(index)
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(active && activePlaying ? theme.ink : theme.accentOt.opacity(0.15))
+                    Image(systemName: active && activePlaying ? "waveform" : "play.fill")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(active && activePlaying ? Brand.logo : theme.accentOt)
+                }
+                .frame(width: 44, height: 44)
+                .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .disabled(busy)
+            .opacity(busy ? 0.35 : 1)
+            .accessibilityLabel(locale.zh(PlanCopy.t("pages.read.planPlayPlayChapterAudio")))
         }
-        .padding(.leading, active ? 18 : 12).padding(.trailing, active ? 8 : 2)
-        .padding(.vertical, 6)
-        .background(RoundedRectangle(cornerRadius: 10).fill(active ? theme.surface.opacity(0.85) : Color.clear))
-        .padding(.horizontal, active ? -6 : 0)
-        .contentShape(Rectangle())
-        .onTapGesture { if !busy { rowTapped(index) } }
-        .opacity(busy && !active ? 0.7 : 1)
+        .padding(.leading, 14)
+        .padding(.trailing, 10)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(active ? theme.surface : theme.surface.opacity(0.52))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(active ? theme.accentOt : theme.border, lineWidth: active ? 1.2 : 0.75)
+        )
+        .opacity(busy && !active ? 0.75 : 1)
     }
 
     // MARK: 深读 52 阶（RN ReadNtDeepRepeatStagesBelowToday）：点选某阶设为今日

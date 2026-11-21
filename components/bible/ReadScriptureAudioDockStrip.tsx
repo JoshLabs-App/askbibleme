@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useCallback } from "react";
+import { usePathname } from "next/navigation";
 import { ReadScripturePlaybackDock } from "@/components/bible/ReadScripturePlaybackDock";
 import { useReadBibleTranslationSettings } from "@/components/bible/ReadBibleTypographyProvider";
-import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { useReadChapterPageAudioAvailable } from "@/hooks/useReadChapterPageAudioAvailable";
 import { isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
@@ -21,11 +20,8 @@ type Props = { placement: Placement };
 
 /** 读经章页播放坞 — 对齐 App `ReadScriptureAudioDockStrip`。 */
 export function ReadScriptureAudioDockStrip({ placement }: Props) {
-  const { t } = useLocale();
-  const router = useRouter();
   const pathname = usePathname() ?? "";
-  const { chapterAudioTranslationId, translation, translationCatalogReady } =
-    useReadBibleTranslationSettings();
+  const { chapterAudioTranslationId } = useReadBibleTranslationSettings();
   const readChapterAudioAvailable = useReadChapterPageAudioAvailable();
   const onChapterPage = parseReadChapterPathname(pathname) !== null;
 
@@ -55,12 +51,6 @@ export function ReadScriptureAudioDockStrip({ placement }: Props) {
     playing: playing && scriptureActive,
     scripturePreparing: preparing,
   });
-
-  const onOpenSearch = useCallback(() => {
-    const route = parseReadChapterPathname(pathname);
-    const q = route ? `?bookId=${encodeURIComponent(route.bookId)}&chapter=${route.chapter}` : "";
-    router.push(`/read/search${q}`);
-  }, [pathname, router]);
 
   const onTogglePlay = useCallback(() => {
     if (playing && scriptureActive) {
@@ -122,7 +112,6 @@ export function ReadScriptureAudioDockStrip({ placement }: Props) {
   return (
     <ReadScripturePlaybackDock
       visible
-      className="read-scripture-dock--surface px-5 pt-1 pb-0.5"
       busy={preparing}
       playing={playing && scriptureActive}
       preparing={preparing}
@@ -133,9 +122,6 @@ export function ReadScriptureAudioDockStrip({ placement }: Props) {
       loopMode={loopMode}
       onTogglePlay={onTogglePlay}
       onNext={onNext}
-      onRead={onOpenSearch}
-      readIconName="search"
-      readAccessibilityLabel={t("pages.read.chapterChromeSearch")}
       onCycleRate={onCycleRate}
       onCycleLoop={onCycleLoop}
     />

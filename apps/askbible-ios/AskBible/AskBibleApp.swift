@@ -91,8 +91,14 @@ struct RootView: View {
     @State private var listenChapter: (book: BookRef, chapter: Int)?
     /// 章页是从计划页开的：返回回计划 Tab、不停播
     @State private var chapterFromPlan = false
+    /// 章页是从首页「读上下文 ›」点进来的：返回直接回首页风景
+    @State private var chapterFromHome = false
     /// 章页是从搜索结果点进来的：记下当时的关键词，返回时回到搜索页并恢复结果
     @State private var searchReturnQuery: String?
+    /// 串珠跳转来源：在串珠弹层跳往另一章时记录原位置，支持左上「↩ 回 原书卷 章:节」一键归位
+    @State private var xrefReturnOrigin: (book: BookRef, chapter: Int, verse: Int)?
+    /// 羊皮卷金句书签分享卡弹层载荷
+    @State private var shareCardPayload: VerseSharePayload?
     /// 探索页当前打开的文章（计划目录页的「麦克阿瑟研经法」链接要能直接打开一篇）
     @State private var exploreArticle: ExploreArticle?
     /// 登录 / 注册页：盖在整个壳上的全屏页（RN 是 stack 路由，无底栏）
@@ -242,13 +248,30 @@ struct RootView: View {
     }
 
     private func shareVerse(_ v: LoadedVerse, in opened: (book: BookRef, chapter: Int)) {
-        let text = VerseShareText.share(bookName: opened.book.name(displayLocale), chapter: opened.chapter, verse: v.number, text: v.text)
-        let vc = UIActivityViewController(activityItems: [text], applicationActivities: nil)
-        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
-        var top = scene?.keyWindow?.rootViewController
-        while let presented = top?.presentedViewController { top = presented }
-        vc.popoverPresentationController?.sourceView = top?.view
-        top?.present(vc, animated: true)
+        let ref = "\(opened.book.name(displayLocale)) \(opened.chapter):\(v.number)"
+        shareCardPayload = VerseSharePayload(
+            reference: ref,
+            translationName: store.translation.label(appLocale),
+            text: v.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+    }
+
+    private func openVerseByKey(_ rawKey: String, fromHome: Bool = false) {
+        guard let loc = GoldenVerseAudioSource.parseVerseKey(rawKey),
+              let b = BibleCatalog.book(id: loc.bookId) else { return }
+        planFlowActive = false
+        listenChapter = nil
+        chapterFromPlan = false
+        chapterFromHome = fromHome
+        xrefReturnOrigin = nil
+        openedBook = nil
+        showSearch = false
+        showFavorites = false
+        searchReturnQuery = nil
+        focusKeyword = nil
+        focusVerse = loc.verse
+        openedChapter = (b, loc.chapter)
+        tab = .read
     }
 
     /// 轻提示：进 160ms · 停 1400ms · 出 220ms（RN ReadVerseBookmarkFeedback）
@@ -375,6 +398,17 @@ struct RootView: View {
         content
             .environmentObject(store)
             .environmentObject(achievements)
+            .onOpenURL { url in
+                guard url.scheme?.lowercased() == "askbible",
+                      let comps = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return }
+                OnboardingPrefs.complete()
+                showWelcome = false
+                homeChromeHidden = false
+                if url.host?.lowercased() == "verse",
+                   let key = comps.queryItems?.first(where: { $0.name == "key" })?.value {
+                    openVerseByKey(key, fromHome: false)
+                }
+            }
             .onReceive(NotificationCenter.default.publisher(for: NSLocale.currentLocaleDidChangeNotification)) { _ in
                 deviceLocale = .device
                 if localeOverride == nil { AppLocale.current = deviceLocale }
@@ -571,12 +605,13 @@ struct RootView: View {
                     )
                 }
             }
-            if let book = openedBook, openedChapter == nil {
+            if let book = openedBook {
                 ChapterPickerSheet(
                     book: book,
                     chapterCount: store.chapterCount(
                         translationId: store.translation.id, bookId: book.id),
                     onPick: { chapter in
+                        xrefReturnOrigin = nil
                         openedChapter = (book, chapter)
                         openedBook = nil
                     },
@@ -584,11 +619,13 @@ struct RootView: View {
                     locale: titleLocale,
                     bookLabel: bookLabel
                 )
+                .zIndex(21)
             }
 
             if showTranslationPanel {
                 // 界面文案目前只有中文：面板里的译本名与分组名按中文界面走（系统英文时不混一行英文），繁体系统给繁体
                 TranslationPanel(locale: appLocale, onClose: { showTranslationPanel = false })
+                    .zIndex(22)
             }
 
             if let v = xrefVerse, let opened = openedChapter {
@@ -604,12 +641,26 @@ struct RootView: View {
                     onOpen: { ref in
                         xrefVerse = nil
                         if let b = BibleCatalog.book(id: ref.bookId) {
+                            xrefReturnOrigin = (opened.book, opened.chapter, v)
+                            focusKeyword = nil
+                            focusVerse = ref.verseStart
                             openedChapter = (b, ref.chapter)
                         }
                     },
                     onClose: { xrefVerse = nil },
                     locale: displayLocale
                 )
+                .zIndex(22)
+            }
+
+            if let payload = shareCardPayload {
+                VerseShareCardSheet(
+                    payload: payload,
+                    locale: appLocale,
+                    onCopied: { showToast(SiteCopy.t("pages.read.verseCopied", appLocale)) },
+                    onClose: { shareCardPayload = nil }
+                )
+                .zIndex(28)
             }
 
             if let v = actionVerse, let opened = openedChapter {
@@ -856,6 +907,25 @@ struct RootView: View {
                 },
                 onOpenMenu: { showMenu = true },
                 onOpenMusic: { homeChromeHidden = false; showHomeMusic = true },
+                onOpenVerseContext: { openVerseByKey(home.verseKey, fromHome: true) },
+                onBookmarkVerse: {
+                    if let loc = GoldenVerseAudioSource.parseVerseKey(home.verseKey),
+                       let b = BibleCatalog.book(id: loc.bookId) {
+                        let added = bookmarks.toggle(
+                            bookId: b.id,
+                            bookName: b.name(displayLocale),
+                            chapter: loc.chapter,
+                            verse: loc.verse,
+                            translationId: store.translation.id,
+                            text: home.verse.text
+                        )
+                        if added {
+                            UIPasteboard.general.string = "\(home.verse.reference) \(home.verse.text)"
+                        }
+                        UINotificationFeedbackGenerator().notificationOccurred(added ? .success : .warning)
+                        showToast(SiteCopy.t(added ? "pages.read.verseBookmarkSaved" : "pages.read.verseBookmarkRemoved", appLocale))
+                    }
+                },
                 onChromeHidden: { hidden in withAnimation(.easeInOut(duration: 0.3)) { homeChromeHidden = hidden } }
             )
             }
@@ -871,20 +941,20 @@ struct RootView: View {
                            onOpenHit: { hit, keyword in
                                showSearch = false
                                guard let b = BibleCatalog.book(id: hit.bookId) else { return }
-                               planFlowActive = false; listenChapter = nil; chapterFromPlan = false; openedBook = nil
-                               focusVerse = hit.verse; focusKeyword = keyword; searchReturnQuery = keyword
+                               planFlowActive = false; listenChapter = nil; chapterFromPlan = false; chapterFromHome = false; xrefReturnOrigin = nil; openedBook = nil
+                               focusVerse = hit.verse; focusKeyword = keyword.isEmpty ? nil : keyword; searchReturnQuery = keyword.isEmpty ? nil : keyword
                                openedChapter = (b, hit.chapter)
                            })
                 .edgeSwipeBack { showSearch = false }
             } else if showFavorites {
-                FavoritesView(bookmarks: bookmarks, size: readSize, locale: displayLocale,
+                FavoritesView(bookmarks: bookmarks, highlights: highlights, size: readSize, locale: displayLocale,
                               onBack: { showFavorites = false },
-                              onOpen: { item in
+                              onOpenVerse: { bookId, ch, vs in
                                   showFavorites = false
-                                  guard let b = BibleCatalog.book(id: item.bookId) else { return }
-                                  planFlowActive = false; listenChapter = nil; chapterFromPlan = false; openedBook = nil
-                                  focusVerse = item.verse; focusKeyword = nil
-                                  searchReturnQuery = nil; openedChapter = (b, item.chapter)
+                                  guard let b = BibleCatalog.book(id: bookId) else { return }
+                                  planFlowActive = false; listenChapter = nil; chapterFromPlan = false; chapterFromHome = false; xrefReturnOrigin = nil; openedBook = nil
+                                  focusVerse = vs; focusKeyword = nil
+                                  searchReturnQuery = nil; openedChapter = (b, ch)
                               })
                 .edgeSwipeBack { showFavorites = false }
             } else if let opened = openedChapter {
@@ -899,7 +969,13 @@ struct RootView: View {
                     size: $readSize,
                     onBack: {
                         highlighting = false
+                        xrefReturnOrigin = nil
                         openedChapter = nil
+                        if chapterFromHome {
+                            chapterFromHome = false
+                            tab = .home
+                            return
+                        }
                         // 从计划页进来的章页：回计划 Tab、不停播（RN 返回上一页仍在放）
                         if chapterFromPlan {
                             chapterFromPlan = false; planFlowHost = .listen; tab = .plan
@@ -934,11 +1010,33 @@ struct RootView: View {
                                          chapter: opened.chapter, verse: verse, range: range,
                                          color: erasing ? nil : highlightColor)
                     },
-                    onOpenCatalog: { searchReturnQuery = nil; openedChapter = nil; openedBook = nil; planFlowActive = false; listenChapter = nil; chapterFromPlan = false },
+                    onInstantPaint: { verse, range, hex in
+                        highlights.paint(translationId: store.translation.id, bookId: opened.book.id,
+                                         chapter: opened.chapter, verse: verse, range: range, color: hex)
+                    },
+                    onOpenShareCard: { ref, bodyText in
+                        shareCardPayload = VerseSharePayload(
+                            reference: ref,
+                            translationName: store.translation.label(appLocale),
+                            text: bodyText
+                        )
+                    },
+                    onCopiedToast: { showToast(SiteCopy.t("pages.read.verseCopied", appLocale)) },
+                    xrefReturnLabel: xrefReturnOrigin.map { "\($0.book.name(displayLocale)) \($0.chapter):\($0.verse)" },
+                    onReturnXrefOrigin: {
+                        if let orig = xrefReturnOrigin {
+                            xrefReturnOrigin = nil
+                            focusKeyword = nil
+                            focusVerse = orig.verse
+                            openedChapter = (orig.book, orig.chapter)
+                        }
+                    },
+                    onOpenChapterPicker: { openedBook = opened.book },
+                    onOpenCatalog: { searchReturnQuery = nil; xrefReturnOrigin = nil; chapterFromHome = false; openedChapter = nil; openedBook = nil; planFlowActive = false; listenChapter = nil; chapterFromPlan = false },
                     onNavigate: { id, ch in
                         // 结尾的上一章 / 下一章：手动翻页就退出计划流
                         guard let b = BibleCatalog.book(id: id) else { return }
-                        planFlowActive = false; listenChapter = nil; chapterFromPlan = false
+                        planFlowActive = false; listenChapter = nil; chapterFromPlan = false; chapterFromHome = false; xrefReturnOrigin = nil
                         openedChapter = (b, ch)
                     },
                     onReachedEnd: {
@@ -957,16 +1055,21 @@ struct RootView: View {
                 CatalogView(
                     size: $readSize,
                     locale: titleLocale,
+                    translationLabel: store.translation.label(appLocale),
+                    lastReadTitle: activity.lastPosition.flatMap { last in
+                        BibleCatalog.book(id: last.bookId).map { b in
+                            ReadChrome.chapterTitle(bookName: bookLabel(b), chapter: last.chapter, locale: titleLocale)
+                        }
+                    },
                     bookLabel: bookLabel,
                     onOpenBook: { openedBook = $0 },
                     onOpenSettings: { showTranslationPanel = true },
                     onOpenSearch: { searchRef = nil; showSearch = true },
                     onOpenFavorites: { showFavorites = true },
-                    // 右侧竖排最后一个「历史」：回到上次读到的那一章（RN onLastRead）
                     onLastRead: activity.lastPosition.flatMap { last in
                         BibleCatalog.book(id: last.bookId).map { b in
                             {
-                                planFlowActive = false; listenChapter = nil; chapterFromPlan = false
+                                planFlowActive = false; listenChapter = nil; chapterFromPlan = false; chapterFromHome = false; xrefReturnOrigin = nil
                                 focusVerse = nil; focusKeyword = nil
                                 openedBook = nil
                                 searchReturnQuery = nil; openedChapter = (b, last.chapter)
@@ -983,9 +1086,9 @@ struct RootView: View {
                            onOpenHit: { hit, keyword in
                                showSearch = false
                                guard let b = BibleCatalog.book(id: hit.bookId) else { return }
-                               planFlowActive = false; listenChapter = nil; openedBook = nil
+                               planFlowActive = false; listenChapter = nil; openedBook = nil; xrefReturnOrigin = nil; chapterFromHome = false
                                chapterFromPlan = true; planFlowHost = .chapter
-                               focusVerse = hit.verse; focusKeyword = keyword; searchReturnQuery = keyword
+                               focusVerse = hit.verse; focusKeyword = keyword.isEmpty ? nil : keyword; searchReturnQuery = keyword.isEmpty ? nil : keyword
                                openedChapter = (b, hit.chapter)
                                tab = .read
                            })
@@ -1010,7 +1113,7 @@ struct RootView: View {
                                    onBack: { planRoute = .plans },
                                    onOpenPlan: { planRoute = .planDetail($0) },
                                    onOpenChapter: { p in
-                                       chapterFromPlan = true; planFlowHost = .chapter; planFlowActive = false; listenChapter = nil
+                                       chapterFromPlan = true; chapterFromHome = false; xrefReturnOrigin = nil; planFlowHost = .chapter; planFlowActive = false; listenChapter = nil
                                        openPlanChapter(p, autoPlay: false)
                                        tab = .read
                                    },
@@ -1024,10 +1127,10 @@ struct RootView: View {
                         onOpenSettings: { showMenu = true },
                         size: readSize,
                         bookmarks: bookmarks,
+                        highlights: highlights,
                         onOpenVerse: { id, ch, verse in
-                            // 探索页的收藏：跳到读经 Tab 的那一节
                             guard let b = BibleCatalog.book(id: id) else { return }
-                            planFlowActive = false; listenChapter = nil; chapterFromPlan = false
+                            planFlowActive = false; listenChapter = nil; chapterFromPlan = false; chapterFromHome = false; xrefReturnOrigin = nil
                             openedBook = nil
                             focusVerse = verse; focusKeyword = nil
                             searchReturnQuery = nil; openedChapter = (b, ch)
@@ -1035,9 +1138,8 @@ struct RootView: View {
                         },
                         onOpenFavorites: { showFavorites = true; tab = .read },
                         onOpenChapter: { id, ch in
-                // 文章里的经文链接：切到读经 Tab 直接开章
                 guard let b = BibleCatalog.book(id: id) else { return }
-                planFlowActive = false; listenChapter = nil; chapterFromPlan = false
+                planFlowActive = false; listenChapter = nil; chapterFromPlan = false; chapterFromHome = false; xrefReturnOrigin = nil
                 openedBook = nil
                 searchReturnQuery = nil; openedChapter = (b, ch)
                 tab = .read
@@ -1049,7 +1151,7 @@ struct RootView: View {
                         .environmentObject(achievements)
                         .toolbar {
                             ToolbarItem(placement: .topBarTrailing) {
-                                Button(SiteCopy.t("native.closeMenu", appLocale)) { showAchievements = false }
+                                Button(SiteCopy.t("native.done", appLocale)) { showAchievements = false }
                             }
                         }
                 }

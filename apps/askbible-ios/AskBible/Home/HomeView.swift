@@ -13,6 +13,8 @@ struct HomeView: View {
     var onPressAlbum: (String) -> Void
     var onOpenMenu: () -> Void = {}
     var onOpenMusic: () -> Void = {}
+    var onOpenVerseContext: () -> Void = {}
+    var onBookmarkVerse: () -> Void = {}
     var onChromeHidden: (Bool) -> Void = { _ in }
 
     @Environment(\.scenePhase) private var scenePhase
@@ -66,55 +68,83 @@ struct HomeView: View {
                             touch(); onOpenMusic()
                         }
                     })
-                verseBlock.padding(.horizontal, 22).padding(.top, geo.safeAreaInsets.top + 99)
-                    .allowsHitTesting(false)
+                verseBlock
+                    .padding(.horizontal, 24)
+                    .padding(.top, geo.safeAreaInsets.top + 112)
                 if !toolsOpen {
                     VStack(spacing: 0) {
                         Spacer(minLength: 0)
                         VStack(spacing: 14) {
                             if albumsOpen {
-                                albumOptions { album in music.selectAlbum(album); closeAlbums() }
-                                    .padding(14).frame(maxWidth: 340)
-                                    .foregroundStyle(ink)
-                                    .background(colorScheme == .dark ? Color(rgb: 0x28251f) : Color(rgb: 0xf7f0e4), in: RoundedRectangle(cornerRadius: 22))
-                                    .shadow(color: .black.opacity(0.16), radius: 14, y: 4)
-                                    .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .bottom)))
+                                VStack(spacing: 10) {
+                                    HStack {
+                                        Text(copy("切换陪伴心境", "Choose mood"))
+                                            .askFont(size: 12, weight: .semibold)
+                                            .foregroundStyle(ink.opacity(0.68))
+                                        Spacer()
+                                        Button {
+                                            closeAlbums(); onOpenMusic()
+                                        } label: {
+                                            HStack(spacing: 3) {
+                                                Text(copy("完整曲库", "All tracks"))
+                                                Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold))
+                                            }
+                                            .askFont(size: 12, weight: .semibold)
+                                            .foregroundStyle(Color(rgb: 0xD97707))
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                    albumOptions { album in music.selectAlbum(album); closeAlbums() }
+                                }
+                                .padding(14).frame(maxWidth: 340)
+                                .foregroundStyle(ink)
+                                .background(colorScheme == .dark ? Color(rgb: 0x28251f) : Color(rgb: 0xf7f0e4), in: RoundedRectangle(cornerRadius: 22))
+                                .shadow(color: .black.opacity(0.22), radius: 16, y: 6)
+                                .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .bottom)))
                             }
-                            HStack(spacing: 32) {
+
+                            // 单排对称三触点：音乐(含当前心境) · 朗读 · 境况
+                            HStack(spacing: 34) {
                                 musicControl
-                                soundButton(MI.volumeUp, title: copy("朗读", "Read aloud"), on: home.voiceOn, id: "home.voice") {
+                                circleControl(
+                                    symbol: "speaker.wave.2.fill",
+                                    title: copy("朗读", "Read aloud"),
+                                    active: home.voiceOn,
+                                    id: "home.voice"
+                                ) {
                                     touch(); home.toggleVoice()
                                 }
-                                .disabled(!home.voiceAvailable).opacity(home.voiceAvailable ? 1 : 0.35)
-                            }
-                            HStack(spacing: 24) {
-                                Button { touch(); music.next() } label: {
-                                    HStack(spacing: 6) {
-                                        MaterialIcon(glyph: MI.skipNext, size: 20, color: .white)
-                                        Text(copy("下一首", "Next track"))
-                                    }
-                                    .frame(minHeight: 44)
+                                .disabled(!home.voiceAvailable)
+                                .opacity(home.voiceAvailable ? 1 : 0.38)
+
+                                circleControl(
+                                    symbol: "slider.horizontal.3",
+                                    title: copy("境况", "Ambience"),
+                                    active: ambient.isOn || sleepTimerMinutes > 0,
+                                    id: "home.ambience"
+                                ) {
+                                    setTools(true)
                                 }
-                                .disabled(music.nextTrack == nil)
-                                .accessibilityIdentifier("home.music.next")
-                                Button { touch(); onOpenMusic() } label: {
-                                    HStack(spacing: 6) {
-                                        MaterialIcon(glyph: MI.musicNote, size: 20, color: .white)
-                                        Text(copy("选音乐", "Choose music"))
-                                    }
-                                    .frame(minHeight: 44)
-                                }
-                                .accessibilityIdentifier("home.music.choose")
                             }
-                            .buttonStyle(.plain).askFont(size: 13)
-                            .foregroundStyle(.white.opacity(0.85)).verseTextShadow()
+
+                            // 底部微光呼吸条：提示可上拉或轻点调环境音与画面
+                            Button { setTools(true) } label: {
+                                Capsule()
+                                    .fill(.white.opacity(0.46))
+                                    .frame(width: 34, height: 4)
+                                    .padding(.vertical, 6)
+                                    .padding(.horizontal, 20)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(copy("打开境况面板", "Open ambience adjustments"))
                         }
                         .gesture(DragGesture(minimumDistance: 20).onEnded { g in
                             if g.translation.height < -35 && abs(g.translation.height) > abs(g.translation.width) { setTools(true) }
                         })
                     }
-                    .padding(.bottom, 128 + lockedBottomInset)
-                    .opacity(chromeVisible ? 1 : 0.55)
+                    .padding(.bottom, 102 + lockedBottomInset)
+                    .opacity(chromeVisible ? 1 : 0.52)
                 }
                 if toolsOpen {
                     VStack(spacing: 0) {
@@ -157,16 +187,51 @@ struct HomeView: View {
         idleEpoch += 1
     }
     private var verseBlock: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 14) {
             Text(home.verse.text)
                 .askFont(size: HomeVerseTypography.bodySize(scale: prefs.textScale), weight: .bold)
-                .foregroundStyle(.white).multilineTextAlignment(.center)
+                .foregroundStyle(.white)
+                .multilineTextAlignment(.center)
                 .lineSpacing(HomeVerseTypography.bodyLineHeight(scale: prefs.textScale) - HomeVerseTypography.bodySize(scale: prefs.textScale))
                 .verseTextShadow()
-            Text(home.verse.reference)
-                .askFont(size: HomeVerseTypography.refSize(scale: prefs.textScale), weight: .bold)
-                .foregroundStyle(.white).kerning(0.1)
-                .padding(.top, HomeVerseTypography.refTopGap(scale: prefs.textScale)).verseTextShadow()
+                .onTapGesture(count: 2) {
+                    touch()
+                    onBookmarkVerse()
+                }
+                .onTapGesture(count: 1) {
+                    withAnimation(.easeInOut(duration: 0.3)) { chromeVisible.toggle() }
+                    onChromeHidden(!chromeVisible)
+                    idleEpoch += 1
+                }
+
+            Button {
+                touch()
+                onOpenVerseContext()
+            } label: {
+                HStack(spacing: 6) {
+                    Text(home.verse.reference)
+                        .askFont(size: max(13, HomeVerseTypography.refSize(scale: prefs.textScale) * 0.78), weight: .semibold)
+                        .foregroundStyle(.white.opacity(0.96))
+                    Text("·")
+                        .askFont(size: 12, weight: .bold)
+                        .foregroundStyle(.white.opacity(0.48))
+                    Text(copy("读上下文", "Read context"))
+                        .askFont(size: 12, weight: .semibold)
+                        .foregroundStyle(Color(rgb: 0xFFE3A3))
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 9.5, weight: .bold))
+                        .foregroundStyle(Color(rgb: 0xFFE3A3))
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
+                .background(
+                    Capsule()
+                        .fill(Color.black.opacity(0.36))
+                        .overlay(Capsule().strokeBorder(.white.opacity(0.24), lineWidth: 0.75))
+                )
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("home.verse.context")
         }
     }
     private func closeAlbums() {
@@ -178,42 +243,84 @@ struct HomeView: View {
         withAnimation(.easeInOut(duration: 0.2)) { albumsOpen = true }
     }
     private var musicControl: some View {
-        let g = MusicAlbumGlyph.glyph(music.album)
-        return VStack(spacing: 6) {
-            MaterialIcon(glyph: g.glyph, size: 28, color: music.isPlaying ? Brand.logo : .white, community: g.community)
-            Text(copy("音乐", "Music")).askFont(size: 12)
-        }
-        .foregroundStyle(music.isPlaying ? Brand.logo : .white).verseTextShadow()
-        .frame(minWidth: 72, minHeight: 72).contentShape(Rectangle())
-        // 长按和短按互斥：展开专辑时不顺带播放或暂停。
-        .gesture(LongPressGesture(minimumDuration: 0.45).exclusively(before: TapGesture()).onEnded { result in
-            switch result {
-            case .first(true): openAlbums()
-            case .second: touch(); onPressAlbum(music.album)
-            default: break
+        VStack(spacing: 7) {
+            ZStack {
+                Circle()
+                    .fill(music.isPlaying ? Brand.logo : Color.black.opacity(0.28))
+                    .overlay(Circle().strokeBorder(.white.opacity(music.isPlaying ? 0 : 0.22), lineWidth: 0.75))
+                Image(systemName: albumSymbol(music.album))
+                    .font(.system(size: 21, weight: .semibold))
+                    .foregroundStyle(music.isPlaying ? Color(rgb: 0x1C1410) : .white)
             }
-        })
-        .accessibilityElement(children: .ignore)
+            .frame(width: 52, height: 52)
+            .gesture(LongPressGesture(minimumDuration: 0.4).exclusively(before: TapGesture()).onEnded { result in
+                switch result {
+                case .first(true): openAlbums()
+                case .second: touch(); onPressAlbum(music.album)
+                default: break
+                }
+            })
+
+            Button {
+                if albumsOpen { closeAlbums() } else { openAlbums() }
+            } label: {
+                HStack(spacing: 3) {
+                    Text(copy(music.album, albumEnglish(music.album)))
+                        .askFont(size: 12, weight: .medium)
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 9, weight: .bold))
+                        .opacity(0.8)
+                }
+                .foregroundStyle(.white.opacity(0.92))
+                .verseTextShadow()
+                .padding(.horizontal, 4)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(minWidth: 72)
+        .accessibilityElement(children: .combine)
         .accessibilityLabel(copy("音乐", "Music"))
         .accessibilityValue(copy(music.album, albumEnglish(music.album)) + " · " + (music.isPlaying ? copy("开启", "On") : copy("关闭", "Off")))
-        .accessibilityHint(copy("长按选择专辑", "Touch and hold to choose an album"))
-        .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("home.music")
-        .accessibilityAction { touch(); onPressAlbum(music.album) }
-        .accessibilityAction(named: copy("选择专辑", "Choose album")) { openAlbums() }
+    }
+
+    private func circleControl(symbol: String, title: String, active: Bool, id: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 7) {
+                ZStack {
+                    Circle()
+                        .fill(active ? Brand.logo : Color.black.opacity(0.28))
+                        .overlay(Circle().strokeBorder(.white.opacity(active ? 0 : 0.22), lineWidth: 0.75))
+                    Image(systemName: symbol)
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(active ? Color(rgb: 0x1C1410) : .white)
+                }
+                .frame(width: 52, height: 52)
+                Text(title)
+                    .askFont(size: 12, weight: .medium)
+                    .foregroundStyle(.white.opacity(0.92))
+                    .verseTextShadow()
+            }
+            .frame(minWidth: 72)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityValue(active ? copy("开启", "On") : copy("关闭", "Off"))
+        .accessibilityIdentifier(id)
     }
     private func albumOptions(onSelect: @escaping (String) -> Void) -> some View {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
                         ForEach(MusicCatalog.albums, id: \.self) { album in
                             let selected = music.album == album
-                            let g = MusicAlbumGlyph.glyph(album)
                             Button { onSelect(album) } label: {
-                                VStack(spacing: 6) {
-                                    MaterialIcon(glyph: g.glyph, size: 24, color: ink, community: g.community)
+                                VStack(spacing: 7) {
+                                    Image(systemName: albumSymbol(album)).font(.system(size: 23))
                                     Text(copy(album, albumEnglish(album)))
                                         .askFont(size: 12).multilineTextAlignment(.center)
                                 }
-                                .frame(maxWidth: .infinity, minHeight: 64)
+                                .frame(maxWidth: .infinity, minHeight: 68)
                                 .padding(.vertical, 6)
                                 .background(selected ? Brand.logo.opacity(0.22) : ink.opacity(0.05), in: RoundedRectangle(cornerRadius: 14))
                                 .overlay(RoundedRectangle(cornerRadius: 14).stroke(selected ? Color(rgb: 0xb88a35) : .clear, lineWidth: 1))
@@ -225,14 +332,14 @@ struct HomeView: View {
                         }
                     }
     }
-    private func soundButton(_ glyph: String, title: String, on: Bool, id: String, action: @escaping () -> Void) -> some View {
+    private func soundButton(_ symbol: String, title: String, on: Bool, id: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 6) {
-                MaterialIcon(glyph: glyph, size: 28, color: on ? Brand.logo : .white)
+                Image(systemName: symbol).font(.system(size: 26))
                 Text(title).askFont(size: 12)
             }
             .foregroundStyle(on ? Brand.logo : .white).verseTextShadow()
-            .frame(minWidth: 72, minHeight: 72).contentShape(Rectangle())
+            .frame(minWidth: 64, minHeight: 64).contentShape(Rectangle())
         }
         .buttonStyle(.plain).accessibilityLabel(title)
         .accessibilityValue(on ? copy("开启", "On") : copy("关闭", "Off"))
@@ -263,11 +370,11 @@ struct HomeView: View {
                         HStack(spacing: 10) {
                             ForEach(AmbientScenes.slots) { slot in
                                 Button { onToggleAmbient(slot.id) } label: {
-                                    VStack(spacing: 6) {
-                                        MaterialIcon(glyph: ambientGlyph(slot.id), size: 24, color: ink, community: true)
+                                    VStack(spacing: 7) {
+                                        Image(systemName: ambientSymbol(slot.id)).font(.system(size: 23))
                                         Text(copy(slot.label, slot.labelEn)).askFont(size: 12)
                                     }
-                                    .frame(minWidth: 74, minHeight: 64).padding(.horizontal, 6)
+                                    .frame(minWidth: 64, minHeight: 68).padding(.horizontal, 6)
                                     .background(ambient.slotId == slot.id ? Brand.logo.opacity(0.22) : ink.opacity(0.05), in: RoundedRectangle(cornerRadius: 14))
                                 }.buttonStyle(.plain)
                                 .accessibilityLabel(copy(slot.label, slot.labelEn))
@@ -316,9 +423,6 @@ struct HomeView: View {
                             Image(systemName: "chevron.right").font(.caption)
                         }.frame(minHeight: 44)
                     }.buttonStyle(.plain)
-                    Button { setTools(false); onOpenMenu() } label: {
-                        HStack { Text(copy("更多设置", "More settings")); Spacer(); Image(systemName: "chevron.right") }.frame(minHeight: 44)
-                    }.buttonStyle(.plain)
                 }.padding(.horizontal, 24).padding(.bottom, 36)
             }
         }
@@ -329,17 +433,28 @@ struct HomeView: View {
     private func sectionTitle(_ title: String) -> some View {
         HStack { Text(title).askFont(size: 13, weight: .medium); Rectangle().fill(ink.opacity(0.12)).frame(height: 1) }
     }
-    private func ambientGlyph(_ id: String) -> String {
+    private func ambientSymbol(_ id: String) -> String {
         switch id {
-        case "scene-water": return MCI.water
-        case "scene-rain": return MCI.weatherRainy
-        case "scene-birds": return MCI.bird
-        case "scene-white-noise": return MCI.radioTower
-        case "scene-wind": return MCI.weatherWindy
-        case "scene-fire": return MCI.fire
-        case "scene-waves": return MCI.waves
-        case "scene-thunder": return MCI.weatherLightning
-        default: return MCI.coffee
+        case "scene-water": return "drop"
+        case "scene-rain": return "cloud.rain"
+        case "scene-birds": return "bird"
+        case "scene-white-noise": return "waveform"
+        case "scene-wind": return "wind"
+        case "scene-fire": return "flame"
+        case "scene-waves": return "water.waves"
+        case "scene-thunder": return "cloud.bolt.rain"
+        default: return "cup.and.saucer"
+        }
+    }
+    private func albumSymbol(_ album: String) -> String {
+        switch album {
+        case "安静": return "leaf"
+        case "下午茶": return "cup.and.saucer"
+        case "赞美诗": return "music.note.list"
+        case "钢琴": return "pianokeys"
+        case "睡眠": return "moon.stars"
+        case "专注工作": return "deskclock"
+        default: return "music.note"
         }
     }
     private func albumEnglish(_ album: String) -> String {

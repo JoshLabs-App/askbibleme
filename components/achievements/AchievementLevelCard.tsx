@@ -2,42 +2,18 @@
 
 import Link from "next/link";
 import { XPBar } from "@/components/achievements/XPBar";
-import { useLocale } from "@/components/i18n/LocaleProvider";
-import { achCopy } from "@/lib/achievements/achievement-copy";
 
 /**
- * 探索页的等级条卡片（对齐 iOS `ExploreView` 里那块）：
- * 整条可点进成就页，下面一行副标题 + 右箭头。
+ * 书房「手抄本藏书票与书卷火漆印」卡片（对齐 iOS ExploreView / Android ExploreScreen）：
+ * 整张卡片可点进 66 卷书卷印鉴墙。
  */
 export function AchievementLevelCard() {
-  const { locale } = useLocale();
-
   return (
     <Link
       href="/explore/achievements"
-      className="block no-underline"
-      style={{
-        padding: 14,
-        borderRadius: 16,
-        backgroundColor: "rgba(255,252,245,0.92)",
-        border: "1px solid #F2E4CF",
-      }}
+      className="block rounded-[20px] border border-[#D8C6AA] bg-[#FAF5EC]/92 p-4 no-underline transition hover:border-[#C1660B]/45 dark:border-[#3E3328] dark:bg-[#262019]/92"
     >
-      <div className="flex flex-col gap-2">
-        <XPBar />
-        <div className="flex items-center gap-1" style={{ color: "#7A633A", fontSize: 12 }}>
-          <span>{achCopy("native.achievementsSub", locale)}</span>
-          <ChevronRight />
-        </div>
-      </div>
+      <XPBar />
     </Link>
-  );
-}
-
-function ChevronRight() {
-  return (
-    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden>
-      <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   );
 }

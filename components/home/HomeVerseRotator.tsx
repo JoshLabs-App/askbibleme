@@ -582,7 +582,17 @@ export function HomeVerseRotator({
           }
           data-golden-fit={isGoldenVerses ? "ref" : undefined}
         >
-          {HOME_VERSES[safeIndex]?.ref ?? ""}
+          {isNature && !isGoldenVerses && readChapterHref ? (
+            <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-black/35 px-3.5 py-1.5 text-[12.5px] font-semibold tracking-normal text-white/95 shadow-sm backdrop-blur-sm">
+              <span>{HOME_VERSES[safeIndex]?.ref ?? ""}</span>
+              <span className="text-white/45" aria-hidden>·</span>
+              <span className="text-[#FFE3A3]">
+                {locale === "en" ? "Read context ›" : locale === "zh-TW" ? "讀上下文 ›" : "读上下文 ›"}
+              </span>
+            </span>
+          ) : (
+            HOME_VERSES[safeIndex]?.ref ?? ""
+          )}
         </footer>
         {showSecondary ? (
           <div className={secondaryBlockMargin}>

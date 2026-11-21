@@ -67,7 +67,7 @@ struct PlaybackDock: View {
 
     private var transport: some View {
         HStack(spacing: 0) {
-            glyphButton(MI.search, size: ShellMetrics.loopIconSize, frame: ShellMetrics.loopButtonSize, action: onSearch)
+            Color.clear.frame(width: ShellMetrics.loopButtonSize, height: ShellMetrics.loopButtonSize)
 
             Spacer(minLength: 0)
 

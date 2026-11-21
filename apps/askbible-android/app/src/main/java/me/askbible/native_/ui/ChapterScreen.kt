@@ -70,6 +70,10 @@ import me.askbible.native_.data.Parchment
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.border
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.material3.DropdownMenuItem
 import me.askbible.native_.data.TranslationDelivery
 import me.askbible.native_.data.ScriptureTranslation
 import me.askbible.native_.data.ReadChrome
@@ -97,6 +101,13 @@ fun ChapterScreen(
     foreignText: Boolean = false,
     /** 当前主译本 id（判断是不是下载型，给提示用） */
     translationId: String = "",
+    translationLabel: String = "",
+    secondaryLabel: String? = null,
+    onSelectSize: (ReadSize) -> Unit = {},
+    onToggleBilingual: (Boolean) -> Unit = {},
+    onOpenChapterPicker: () -> Unit = {},
+    xrefReturnLabel: String? = null,
+    onReturnXrefOrigin: () -> Unit = {},
     /** 在线 / 下载型译本取数中 / 取不到（内置译本瞬时读库，不会看到） */
     loading: Boolean = false,
     failed: Boolean = false,
@@ -183,6 +194,7 @@ fun ChapterScreen(
     var searchFocus by remember(bookId, chapter, focusVerse) { mutableStateOf(focusVerse) }
     // 章末「读后两版」当前展开的是哪一版；换章清空
     var activeEdition by remember(bookId, chapter) { mutableStateOf<InfoEditionVariant?>(null) }
+    var showTypographySheet by remember { mutableStateOf(false) }
     // 换章回到顶部：LazyColumn 状态跨章复用，不主动滚回去会停在上一章的位置（计划流顺章时标题在屏外）
     // Chapter-keyed saved state starts new chapters at the top and restores map returns.
 
@@ -375,8 +387,37 @@ fun ChapterScreen(
             }
         }
 
-        TopChrome(theme, onBack, onOpenSettings, onSizeUp, onSizeDown, onOpenSearch, onOpenFavorites)
+        TopChrome(
+            theme = theme,
+            locale = uiLocale,
+            bookName = bookName,
+            chapter = chapter,
+            translationLabel = translationLabel,
+            bilingualLabel = secondaryLabel,
+            xrefReturnLabel = xrefReturnLabel,
+            onBack = onBack,
+            onReturnXrefOrigin = onReturnXrefOrigin,
+            onOpenChapterPicker = onOpenChapterPicker,
+            onOpenSettings = onOpenSettings,
+            onOpenPanorama = onOpenPanorama,
+            onOpenSearch = onOpenSearch,
+            onOpenFavorites = onOpenFavorites,
+            onOpenTypography = { showTypographySheet = true },
+        )
 
+        if (showTypographySheet) {
+            ReaderTypographySheet(
+                size = size,
+                onSelectSize = onSelectSize,
+                bilingualEnabled = secondaryLabel != null,
+                secondaryLabel = secondaryLabel,
+                onToggleBilingual = onToggleBilingual,
+                onOpenFullTranslations = onOpenSettings,
+                locale = uiLocale,
+                theme = theme,
+                onClose = { showTypographySheet = false },
+            )
+        }
     }
 }
 
@@ -425,7 +466,7 @@ private fun ParagraphBlock(
             Text(
                 h,
                 Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 18.dp, bottom = 16.dp),
-                color = theme.muted.toColor(),
+                color = Color(0xFF70451F).copy(alpha = 0.92f),
                 fontSize = (m.verseFontSize + 1).sp,
                 lineHeight = (m.verseLineHeight + 2).sp,
                 fontWeight = FontWeight.SemiBold,
@@ -433,22 +474,41 @@ private fun ParagraphBlock(
                 textAlign = TextAlign.Center,
             )
         }
-        ChapterFlowParagraph(group, m, theme, xrefVerses, activeVerse, activeVerseProgress, bookmarked, searchFocus,
-                             onTapVerseNumber, onDoubleTapVerse, onLongPressVerse, onVerseBounds,
-                             tapWholeVerse = tapWholeVerse,
-                             highlights = highlights, paintColor = paintColor, eraseMode = eraseMode, onPaint = onPaint,
-                             paintDispatch = paintDispatch, searchKeyword = searchKeyword)
-        // 副译本对照行：0.82× 字号，muted，上距 7（verseContrast）
-        for (v in group) {
-            val line = contrast[v.number] ?: continue
-            val cfs = m.verseFontSize * 0.82f
-            Text(
-                "${v.number} $line",
-                Modifier.fillMaxWidth().padding(top = 7.dp),
-                color = theme.muted.toColor(),
-                fontSize = cfs.sp,
-                lineHeight = maxOf(m.verseLineHeight * 0.78f, cfs * 1.2f).sp,
-            )
+        @Composable
+        fun flow(verses: List<LoadedVerse>) =
+            ChapterFlowParagraph(verses, m, theme, xrefVerses, activeVerse, activeVerseProgress, bookmarked, searchFocus,
+                                 onTapVerseNumber, onDoubleTapVerse, onLongPressVerse, onVerseBounds,
+                                 tapWholeVerse = tapWholeVerse,
+                                 highlights = highlights, paintColor = paintColor, eraseMode = eraseMode, onPaint = onPaint,
+                                 paintDispatch = paintDispatch, searchKeyword = searchKeyword)
+        if (group.none { contrast[it.number] != null }) {
+            flow(group)
+        } else {
+            // 古典旁注式双语排版（对齐 iOS NativeChapterText）：取消重复节号，左侧 2dp 暖琥珀竖线 + 12dp 缩进
+            group.forEachIndexed { i, v ->
+                if (i > 0) Spacer(Modifier.height(12.dp))
+                flow(listOf(v))
+                val line = contrast[v.number] ?: return@forEachIndexed
+                val cfs = m.verseFontSize * 0.84f
+                val barColor = theme.accentOt.toColor().copy(alpha = 0.55f)
+                Text(
+                    line,
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 6.dp, start = 16.dp)
+                        .drawBehind {
+                            drawLine(
+                                color = barColor,
+                                start = Offset(-10.dp.toPx(), 4.dp.toPx()),
+                                end = Offset(-10.dp.toPx(), this.size.height - 2.dp.toPx()),
+                                strokeWidth = 2.dp.toPx(),
+                            )
+                        },
+                    color = theme.muted.toColor(),
+                    fontSize = cfs.sp,
+                    lineHeight = maxOf(m.verseLineHeight * 0.80f, cfs * 1.32f).sp,
+                )
+            }
         }
     }
 }
@@ -538,63 +598,150 @@ private fun EndingSection(
 }
 
 /**
- * 左上返回 + 右上竖排。位置来自 ShellMetrics（readTopChrome.ts）：
- * 按钮 50、图标 32、间距 5、边距 8；加减号是 32sp 文字不是图标。
+ * 阅读页顶部零遮挡极简栏（与 iOS ChapterView 对齐）：
+ * 移除右侧竖排 5 颗白球遮挡正文，改为左上返回 + 串珠一键归位胶囊 + 中央「书名 章 · 译本 ▾」下拉菜单 + 右上「Aa」。
  */
 @Composable
 private fun TopChrome(
     theme: Parchment,
+    locale: AppLocale,
+    bookName: String,
+    chapter: Int,
+    translationLabel: String,
+    bilingualLabel: String?,
+    xrefReturnLabel: String?,
     onBack: () -> Unit,
+    onReturnXrefOrigin: () -> Unit,
+    onOpenChapterPicker: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenPanorama: () -> Unit = {},
-    onSizeUp: () -> Unit,
-    onSizeDown: () -> Unit,
-    onOpenSearch: () -> Unit = {},
-    onOpenFavorites: () -> Unit = {},
+    onOpenPanorama: () -> Unit,
+    onOpenSearch: () -> Unit,
+    onOpenFavorites: () -> Unit,
+    onOpenTypography: () -> Unit,
 ) {
+    var menuExpanded by remember { mutableStateOf(false) }
+    val ink = theme.ink.toColor()
+    val pillBg = theme.surface.toColor().copy(alpha = 0.90f)
+    val pillBorder = theme.border.toColor()
+
     Row(
-        Modifier.fillMaxWidth()
+        Modifier
+            .fillMaxWidth()
             .statusBarsPadding()
-            .padding(horizontal = ShellMetrics.topChromeSideInset.dp,
-                     vertical = ShellMetrics.topChromeOffset.dp),
-        verticalAlignment = Alignment.Top,
+            .padding(horizontal = 14.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        // RN 的返回是 React Navigation HeaderBackButton：Android 上就是 Material arrow-back
-        ChromeIcon(MI.ARROW_BACK, onBack)
-        Spacer(Modifier.weight(1f))
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(ShellMetrics.topChromeGap.dp),
+        // 左：返回圆钮
+        Box(
+            Modifier
+                .size(38.dp)
+                .clip(CircleShape)
+                .background(pillBg)
+                .border(1.dp, pillBorder, CircleShape)
+                .clickableNoRipple(onBack),
+            contentAlignment = Alignment.Center,
         ) {
-            ChromeIcon(MI.SETTINGS, onOpenSettings)
-            ChromeIcon(MI.SEARCH, onOpenSearch)
-            ChromeIcon(MI.BOOKMARK_BORDER, onOpenFavorites)
-            ChromeLabel("+", onSizeUp)
-            ChromeLabel("−", onSizeDown)
+            MaterialIcon(MI.CHEVRON_LEFT, 22f, ink)
         }
-    }
-}
 
-@Composable
-private fun ChromeIcon(glyph: String, onClick: () -> Unit) {
-    Box(
-        Modifier.size(ShellMetrics.topChromeButton.dp).clickableNoRipple(onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        MaterialIcon(glyph, ShellMetrics.topChromeIcon, Color.White, shadow = true)
-    }
-}
+        // 串珠跳转来源一键归位胶囊
+        if (!xrefReturnLabel.isNullOrEmpty()) {
+            Row(
+                Modifier
+                    .height(34.dp)
+                    .clip(CircleShape)
+                    .background(theme.accentOt.toColor().copy(alpha = 0.14f))
+                    .border(1.dp, theme.accentOt.toColor().copy(alpha = 0.45f), CircleShape)
+                    .clickableNoRipple(onReturnXrefOrigin)
+                    .padding(horizontal = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(3.dp),
+            ) {
+                MaterialIcon(MI.REPLAY, 14f, theme.accentOt.toColor())
+                Text(
+                    AppLocale.pick("回 $xrefReturnLabel", xrefReturnLabel, locale),
+                    color = ink,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                )
+            }
+        }
 
-@Composable
-private fun ChromeLabel(text: String, onClick: () -> Unit) {
-    Box(
-        Modifier.size(ShellMetrics.topChromeButton.dp).clickableNoRipple(onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        // 与旁边的图标一样带投影（Josh 真机：「右边 + - 没有阴影」）
-        Text(text, color = Color.White,
-             fontSize = ShellMetrics.topChromeSizeLabel.sp, fontWeight = FontWeight.Medium,
-             style = androidx.compose.ui.text.TextStyle(shadow = ShellIconShadow))
+        Spacer(Modifier.weight(1f))
+
+        // 中央：「书卷 章 · 译本 ▾」多功能胶囊
+        Box {
+            val verSummary = if (bilingualLabel != null) {
+                AppLocale.pick("对照($bilingualLabel)", "Parallel", locale)
+            } else {
+                translationLabel
+            }
+            Row(
+                Modifier
+                    .height(36.dp)
+                    .clip(CircleShape)
+                    .background(pillBg)
+                    .border(1.dp, pillBorder, CircleShape)
+                    .clickableNoRipple { menuExpanded = true }
+                    .padding(horizontal = 13.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    if (verSummary.isEmpty()) "$bookName $chapter" else "$bookName $chapter · $verSummary",
+                    color = ink,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                MaterialIcon(MI.EXPAND_MORE, 15f, theme.accentOt.toColor())
+            }
+
+            DropdownMenu(
+                expanded = menuExpanded,
+                onDismissRequest = { menuExpanded = false },
+                modifier = Modifier.background(theme.surfaceSolid.toColor()),
+            ) {
+                DropdownMenuItem(
+                    text = { Text(AppLocale.pick("选章（$bookName）", "Select Chapter", locale), color = ink) },
+                    onClick = { menuExpanded = false; onOpenChapterPicker() },
+                )
+                DropdownMenuItem(
+                    text = { Text(AppLocale.pick("切换圣经译本 / 双语对照", "Translations & Parallel", locale), color = ink) },
+                    onClick = { menuExpanded = false; onOpenSettings() },
+                )
+                DropdownMenuItem(
+                    text = { Text(AppLocale.pick("搜索本章与全书", "Search Scripture", locale), color = ink) },
+                    onClick = { menuExpanded = false; onOpenSearch() },
+                )
+                DropdownMenuItem(
+                    text = { Text(AppLocale.pick("摘录与印记", "Notes & Highlights", locale), color = ink) },
+                    onClick = { menuExpanded = false; onOpenFavorites() },
+                )
+                DropdownMenuItem(
+                    text = { Text(AppLocale.pick("在救赎全景中定位本章", "Locate in Redemption Story", locale), color = ink) },
+                    onClick = { menuExpanded = false; onOpenPanorama() },
+                )
+            }
+        }
+
+        Spacer(Modifier.weight(1f))
+
+        // 右：「Aa」排版与对照抽屉按钮
+        Box(
+            Modifier
+                .size(38.dp)
+                .clip(CircleShape)
+                .background(pillBg)
+                .border(1.dp, pillBorder, CircleShape)
+                .clickableNoRipple(onOpenTypography),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("Aa", color = ink, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        }
     }
 }
 

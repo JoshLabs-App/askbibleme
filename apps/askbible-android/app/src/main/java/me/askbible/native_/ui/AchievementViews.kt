@@ -135,7 +135,7 @@ fun MedalIcon(
     tier: Int = 0,
     tierCount: Int = 1,
     size: Dp = 64.dp,
-    theme: Parchment = LocalParchment.current,
+    theme: Parchment = Parchment.light,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -180,148 +180,126 @@ fun MedalIcon(
 }
 
 /**
- * 常驻等级条：称号 + 等级 + 会动的 XP 进度 + 连续天数倍率。
- * 「一直在涨」的主要载体——XP 变化时条子推进，倍率 > 1 时挂一颗火苗角标。
+ * 去游戏化「手抄本藏书票」（对齐 iOS XPBar / ScriptoriumBookplate）：
+ * 移除 Lv.X、XP 进度条与火焰连击倍率，展示「安静相伴(天) | 已读章节 | 书卷火漆印 X/66」及 5 枚代表性书卷浮雕印。
  */
 @Composable
 fun XPBar(
     ach: AchievementStore,
     locale: AppLocale = AppLocale.current,
-    theme: Parchment = LocalParchment.current,
+    theme: Parchment = Parchment.light,
     compact: Boolean = false,
+    readDaysOverride: Int? = null,
 ) {
-    val progress by animateFloatAsState(ach.levelProgress, tween(420), label = "xp")
-    Column(verticalArrangement = Arrangement.spacedBy(if (compact) 4.dp else 6.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Lv.${ach.level}", color = XPGold,
-                 fontSize = (if (compact) 12 else 14).sp, fontWeight = FontWeight.ExtraBold)
-            Spacer(Modifier.width(8.dp))
-            Text(MedalLevels.title(ach.level, locale), color = theme.muted.toColor(),
-                 fontSize = (if (compact) 12 else 14).sp, fontWeight = FontWeight.SemiBold)
-            Spacer(Modifier.weight(1f))
-            if (ach.streakMultiplier > 1.001) {
-                Row(
-                    Modifier.clip(CircleShape).background(StreakOrange.copy(alpha = 0.12f))
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(Icons.Filled.LocalFireDepartment, null, Modifier.size(11.dp), tint = StreakOrange)
-                    Spacer(Modifier.width(2.dp))
-                    Text("×%.2f".format(ach.streakMultiplier), color = StreakOrange,
-                         fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                }
-                Spacer(Modifier.width(8.dp))
-            }
-            Text("${ach.xpInLevel} / ${ach.xpForLevel}", color = theme.faint.toColor(),
-                 fontSize = (if (compact) 11 else 12).sp, fontWeight = FontWeight.Medium)
-        }
-        Box(
-            Modifier.fillMaxWidth().height(if (compact) 6.dp else 8.dp)
-                .clip(CircleShape).background(theme.border.toColor().copy(alpha = 0.3f))
-        ) {
-            Box(
-                Modifier.fillMaxWidth(progress.coerceAtLeast(0.02f)).height(if (compact) 6.dp else 8.dp)
-                    .clip(CircleShape)
-                    .background(Brush.horizontalGradient(listOf(XPGoldSoft, XPGold)))
+    val calmDays = maxOf(readDaysOverride ?: 0, ach.streakDays)
+    val previewBookIds = listOf("GEN", "EXO", "PSA", "ISA", "JHN")
+    val ink = theme.ink.toColor()
+    val muted = theme.muted.toColor()
+    val accent = theme.accentOt.toColor()
+
+    Column(verticalArrangement = Arrangement.spacedBy(if (compact) 10.dp else 14.dp)) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            BookplateStat(
+                value = "$calmDays",
+                label = AppLocale.pick("安静相伴 (天)", "Quiet Days", locale),
+                valueColor = Color(0xFF4F7A54),
+                muted = muted,
+                modifier = Modifier.weight(1f),
             )
+            Box(Modifier.width(1.dp).height(32.dp).background(theme.border.toColor()))
+            BookplateStat(
+                value = "${ach.chaptersReadCount}",
+                label = AppLocale.pick("已读章节", "Chapters Read", locale),
+                valueColor = ink,
+                muted = muted,
+                modifier = Modifier.weight(1f),
+            )
+            Box(Modifier.width(1.dp).height(32.dp).background(theme.border.toColor()))
+            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text("${ach.seals.size}", color = accent, fontSize = 23.sp, fontWeight = FontWeight.Bold)
+                    Text(" /66", color = ink.copy(alpha = 0.72f), fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 2.dp))
+                }
+                Text(AppLocale.pick("书卷火漆印", "Book Seals", locale), color = muted, fontSize = 11.5.sp)
+            }
+        }
+
+        if (!compact) {
+            Box(Modifier.fillMaxWidth().height(0.5.dp).background(theme.border.toColor()))
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    previewBookIds.forEach { bid ->
+                        val book = BibleCatalog.book(bid)
+                        val n = book?.number ?: 1
+                        val file = MedalCatalog.seals[n.coerceIn(1, MedalCatalog.seals.size) - 1]
+                        val lit = ach.seals[bid] != null
+                        MedalIcon(file, if (lit) 1 else 0, 1, 40.dp, theme)
+                    }
+                }
+                Spacer(Modifier.weight(1f))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(AppLocale.pick("印鉴墙", "Seals", locale), color = ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    MaterialIcon(MI.CHEVRON_RIGHT, 16f, ink)
+                }
+            }
         }
     }
 }
 
-/** +XP 飘字：从下往上飘、放大再淡出。读 / 听的时候几秒就来一次，就是「一直有反馈」那个手感。 */
+@Composable
+private fun BookplateStat(value: String, label: String, valueColor: Color, muted: Color, modifier: Modifier) {
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        Text(value, color = valueColor, fontSize = 23.sp, fontWeight = FontWeight.Bold)
+        Text(label, color = muted, fontSize = 11.5.sp)
+    }
+}
+
+/** 去游戏化后：静默消化队列里的 Xp / Streak / LevelUp / PlanDayDone 事件，不再弹出 +XP 飘字。 */
 @Composable
 fun XPFloater(ach: AchievementStore, modifier: Modifier = Modifier) {
-    /** id 自增，用来给每条飘字各自挂一个「1.1 秒后消失」的协程 */
-    var seq by remember { mutableStateOf(0) }
-    var shown by remember { mutableStateOf<List<FloaterItem>>(emptyList()) }
-
     val context = LocalContext.current
     val head = ach.pending.firstOrNull()
-    val floaterLocale = AppLocale.current
     LaunchedEffect(head) {
         when (head) {
             is AchievementStore.Event.Xp -> {
                 ach.consume()
-                seq += 1
-                AchievementFeedback.playXp(context, head.amount >= MedalXP.perChapterRead)
-                shown = (shown + FloaterItem(seq, "+${head.amount}", head.amount >= MedalXP.perChapterRead)).takeLast(3)
+                if (head.amount >= MedalXP.perChapterRead) {
+                    AchievementFeedback.playXp(context, milestone = true)
+                }
             }
-            // 连续天数：只在读完一章时跟着飘一句，不出声不震——那一章的小钵已经响过了（D-4）
-            is AchievementStore.Event.Streak -> {
+            is AchievementStore.Event.Streak,
+            is AchievementStore.Event.PlanDayDone,
+            is AchievementStore.Event.LevelUp -> {
                 ach.consume()
-                seq += 1
-                val text = SiteCopy.f("native.streakDays", mapOf("n" to head.days.toString()), floaterLocale)
-                shown = (shown + FloaterItem(seq, text, true)).takeLast(3)
-            }
-            // 今日计划完成：只飘一条字 + 触感（D-4 起不出声）
-            is AchievementStore.Event.PlanDayDone -> {
-                ach.consume()
-                seq += 1
-                AchievementFeedback.play(context, AchievementFeedback.Cue.EARN)
-                shown = (shown + FloaterItem(seq, SiteCopy.t("native.planDayDone", floaterLocale), true)).takeLast(3)
             }
             else -> Unit
-        }
-    }
-
-    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally,
-           verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        for (item in shown) {
-            androidx.compose.runtime.key(item.id) {
-                // 每条各自计时：新飘字进来不该把上一条的消失计时打断
-                LaunchedEffect(item.id) {
-                    delay(1100)
-                    shown = shown.filterNot { it.id == item.id }
-                }
-                var appeared by remember { mutableStateOf(false) }
-                LaunchedEffect(item.id) { appeared = true }
-                // 回弹进场（spring 比 tween 更「动态」），同时整条往上飘一截
-                val scale by animateFloatAsState(
-                    if (appeared) 1f else 0.4f,
-                    spring(dampingRatio = 0.45f, stiffness = Spring.StiffnessMediumLow),
-                    label = "pop",
-                )
-                val rise by animateFloatAsState(if (appeared) -10f else 14f, tween(1100), label = "rise")
-                val alpha by animateFloatAsState(if (appeared) 1f else 0f, tween(200), label = "fade")
-                Text(
-                    item.text, color = XPGold,
-                    fontSize = (if (item.big) 22 else 16).sp, fontWeight = FontWeight.ExtraBold,
-                    modifier = Modifier.graphicsLayer {
-                        scaleX = scale; scaleY = scale; translationY = rise; this.alpha = alpha
-                    },
-                )
-            }
         }
     }
 }
 
 internal data class FloaterItem(val id: Int, val text: String, val big: Boolean)
 
-/** 获得提示：勋章 / 印章 / 升级各弹一条，2.8 秒收起，点一下提前关 */
+/** 获得提示：仅保留书卷火漆印与安静阅读里程碑提示，移除 Lv.X 升级横幅。 */
 @Composable
 fun EarnedToast(
     ach: AchievementStore,
     locale: AppLocale = AppLocale.current,
-    theme: Parchment = LocalParchment.current,
+    theme: Parchment = Parchment.light,
     modifier: Modifier = Modifier,
 ) {
     val event = ach.pending.firstOrNull {
         it !is AchievementStore.Event.Xp &&
             it !is AchievementStore.Event.ChapterRead &&
             it !is AchievementStore.Event.Streak &&
-            it !is AchievementStore.Event.PlanDayDone
+            it !is AchievementStore.Event.PlanDayDone &&
+            it !is AchievementStore.Event.LevelUp
     }
     val d = event?.let { describeEarned(it, ach.level, locale) }
 
     val toastContext = LocalContext.current
     LaunchedEffect(event) {
         if (event == null) return@LaunchedEffect
-        // 声音 + 触感：升级用三声上行钟，勋章 / 卷印用单声钟
-        AchievementFeedback.play(
-            toastContext,
-            if (event is AchievementStore.Event.LevelUp) AchievementFeedback.Cue.LEVEL_UP
-            else AchievementFeedback.Cue.EARN,
-        )
+        AchievementFeedback.play(toastContext, AchievementFeedback.Cue.EARN)
         delay(2800)
         ach.consumeThrough(event)
     }
@@ -333,59 +311,22 @@ fun EarnedToast(
         modifier = modifier,
     ) {
         if (d != null) {
-            val levelUp = event is AchievementStore.Event.LevelUp
-            // 升级：金边呼吸 + 一道缓慢扫过的金光。不用粒子 —— 粒子是街机语气；
-            // 一道光扫过去像「金箔被光照到」，和羊皮卷 + 烫金是一路的。
-            val transition = rememberInfiniteTransition(label = "levelUpGlow")
-            val borderAlpha by if (levelUp) transition.animateFloat(
-                initialValue = 0.18f, targetValue = 0.95f,
-                animationSpec = infiniteRepeatable(tween(1350), RepeatMode.Reverse),
-                label = "borderAlpha",
-            ) else remember { mutableStateOf(0.35f) }
-            val sweep = remember(event) { Animatable(-1.2f) }
-            LaunchedEffect(event) {
-                if (!levelUp) return@LaunchedEffect
-                delay(180)
-                sweep.animateTo(3.2f, tween(620))
-            }
             Row(
                 Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
                     .background(theme.surfaceSolid.toColor())
-                    .then(
-                        if (levelUp) Modifier.drawWithContent {
-                            drawContent()
-                            val w = size.width * 0.45f
-                            drawRect(
-                                brush = Brush.linearGradient(
-                                    listOf(Color.Transparent, Color.White.copy(alpha = 0.22f), Color.Transparent),
-                                    start = Offset(sweep.value * size.width, 0f),
-                                    end = Offset(sweep.value * size.width + w, size.height),
-                                ),
-                                topLeft = Offset(sweep.value * size.width, 0f),
-                                size = Size(w, size.height),
-                            )
-                        } else Modifier
-                    )
-                    .border(if (levelUp) 2.dp else 1.dp,
-                            XPGold.copy(alpha = borderAlpha), RoundedCornerShape(16.dp))
+                    .border(1.dp, theme.borderStrong.toColor(), RoundedCornerShape(16.dp))
                     .clickableNoRipple { event?.let { ach.consumeThrough(it) } }
                     .padding(horizontal = 14.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (d.image != null) {
                     MedalIcon(d.image, d.tier, d.tierCount, 48.dp, theme)
-                } else {
-                    Box(Modifier.size(48.dp).clip(CircleShape).background(XPGold.copy(alpha = 0.18f)),
-                        contentAlignment = Alignment.Center) {
-                        Text("Lv.${ach.level}", color = XPGold, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
-                    }
+                    Spacer(Modifier.width(12.dp))
                 }
-                Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(d.title, color = theme.ink.toColor(), fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                    Text(d.subtitle, color = theme.faint.toColor(), fontSize = 13.sp,
-                         maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(d.title, color = theme.ink.toColor(), fontSize = 15.5.sp, fontWeight = FontWeight.SemiBold)
+                    Text(d.subtitle, color = theme.muted.toColor(), fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
             }
         }

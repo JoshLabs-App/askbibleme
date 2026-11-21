@@ -48,6 +48,7 @@ import me.askbible.native_.data.PlanCopy
 import me.askbible.native_.data.PlanDates
 import me.askbible.native_.data.PlanPlay
 import me.askbible.native_.data.PlanPointer
+import me.askbible.native_.data.ReadChrome
 import me.askbible.native_.data.ReadingPlanCatalog
 import me.askbible.native_.data.ReadingPlanPrefs
 import me.askbible.native_.data.ShellMetrics
@@ -80,7 +81,7 @@ fun PlanPlayScreen(
     bookLabel: (BookRef) -> String = { it.name(AppLocale.current) },
     onConfirmDay: () -> Unit,
     onStageSet: () -> Unit,
-    theme: Parchment = LocalParchment.current,
+    theme: Parchment = Parchment.light,
     /** 习惯统计里的已读日（云端同步下来的也在）；月历标黄 = 它 ∪ 播放页点听日（RN habitCompletedDates） */
     habitDates: Set<String> = emptySet(),
     /** 每日灵修卡片（D-7：入口只在计划页；只在中文界面，壳里决定 show） */
@@ -99,27 +100,15 @@ fun PlanPlayScreen(
     val needsConfirm = browsingAway && viewAhead >= 0
     val dayCount = ReadingPlanCatalog.plan(prefs.planId)?.dayCount ?: prefs.dayCount
     val planName = locale.zh(ReadingPlanCatalog.plan(prefs.planId)?.title ?: PlanCopy.t("pages.read.planPlayTitle"))
-    // 「计划第 N 天」：原来的「第 N 天」常被看成今年第几天（D-8）
     val dayMeta = locale.zh(me.askbible.native_.data.SiteCopy.f("native.planDayMeta", mapOf("n" to "${PlanPlay.planDayNumber(prefs, dayCount, contentAhead, tripleBaseDay = store.triplePlanDay())}"), locale))
     var stageToConfirm by remember { mutableStateOf<Int?>(null) }
-    var lastRowTap by remember { mutableStateOf<Pair<Int, Long>?>(null) }
+    var monthExpanded by remember { mutableStateOf(false) }
     val ink = theme.ink.toColor()
     val muted = theme.muted.toColor()
     val faint = theme.faint.toColor()
+    val accent = theme.accentOt.toColor()
     val busy = audio.isLoading && audio.wantsPlayback
-
-    // 单击点播；同一行 320ms 内再点 → 进阅读页（RN onRowPress）
-    fun rowTapped(index: Int) {
-        val now = System.currentTimeMillis()
-        val last = lastRowTap
-        if (last != null && last.first == index && now - last.second < 320) {
-            lastRowTap = null
-            onReadChapter(index)
-            return
-        }
-        lastRowTap = index to now
-        onPlayChapter(index)
-    }
+    val allReadDates = store.listenedDates + habitDates
 
     Box(Modifier.fillMaxSize()) {
         ParchmentBackground(theme = theme)
@@ -127,17 +116,40 @@ fun PlanPlayScreen(
             (if (queue.isNotEmpty()) ShellMetrics.dockContentHeight.dp else 0.dp)
         LazyColumn(
             Modifier.fillMaxSize().statusBarsPadding(),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = bottom),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 16.dp, bottom = bottom),
         ) {
             item {
-                // 顶栏：计划名居中 + 齿轮（→ 计划目录）
-                Box(Modifier.fillMaxWidth().height(44.dp), contentAlignment = Alignment.Center) {
-                    Text(planName, Modifier.padding(horizontal = 44.dp), color = ink, fontSize = 20.sp, fontWeight = FontWeight.Bold,
-                         textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    Box(Modifier.align(Alignment.CenterEnd).size(40.dp).clickableNoRipple(onOpenPlans), contentAlignment = Alignment.Center) {
-                        MaterialIcon(MI.SETTINGS, 22f, muted)
+                // 顶栏：「今日同行」+「换计划」胶囊（与 iOS PlanPlayView 对齐）
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            AppLocale.pick("今日同行", "Today's Walk", locale),
+                            color = ink,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            "$planName · $dayMeta",
+                            color = muted,
+                            fontSize = 13.5.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = 3.dp),
+                        )
+                    }
+                    Row(
+                        Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(theme.surface.toColor())
+                            .border(1.dp, theme.border.toColor(), RoundedCornerShape(999.dp))
+                            .clickableNoRipple(onOpenPlans)
+                            .padding(horizontal = 13.dp, vertical = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(AppLocale.pick("换计划", "Plans", locale), color = ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
+                Spacer(Modifier.height(16.dp))
             }
             if (queue.isEmpty() && !browsingAway) {
                 item {
@@ -146,26 +158,51 @@ fun PlanPlayScreen(
                 }
             } else {
                 item {
-                    PlanMonthCalendar(locale, prefs, dayCount, viewAhead, store.listenedDates + habitDates, theme) { a -> onViewAhead(a); onCursor(0) }
+                    // 默认 7 日温和周视图条；点击月份展开完整月历
+                    PlanGentleWeekCard(
+                        locale = locale,
+                        prefs = prefs,
+                        dayCount = dayCount,
+                        viewAhead = viewAhead,
+                        listened = allReadDates,
+                        monthExpanded = monthExpanded,
+                        onToggleMonth = { monthExpanded = !monthExpanded },
+                        theme = theme,
+                    ) { a -> onViewAhead(a); onCursor(0) }
+
                     if (needsConfirm) {
                         Box(
-                            Modifier.fillMaxWidth().padding(top = 12.dp).height(46.dp).clip(RoundedCornerShape(12.dp)).background(ink)
+                            Modifier.fillMaxWidth().padding(top = 12.dp).height(44.dp).clip(RoundedCornerShape(12.dp)).background(ink)
                                 .clickableNoRipple(onConfirmDay),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text(locale.zh(PlanCopy.t("pages.read.planPlayConfirmDay")), color = Color(0xFFF5EFE4), fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                            Text(locale.zh(PlanCopy.t("pages.read.planPlayConfirmDay")), color = Color(0xFFF5EFE4), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
-                    // 列表抬头：第 N 天 · 今日读经 · i / n
-                    Row(Modifier.fillMaxWidth().padding(top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(dayMeta, color = muted, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                        Spacer(Modifier.weight(1f))
-                        Text(locale.zh(PlanCopy.t("pages.read.todayPlanTitle")), color = ink, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                        Spacer(Modifier.weight(1f))
-                        Text(if (queue.isEmpty()) " " else PlanCopy.f("pages.read.planPlayTrackMeta", mapOf("current" to "${activeIndex + 1}", "total" to "${queue.size}")),
-                             color = muted, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+
+                    // 列表抬头：「今日读经」+「▶ 连播今日」主胶囊
+                    Row(Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(locale.zh(PlanCopy.t("pages.read.todayPlanTitle")), color = ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                        if (queue.isNotEmpty()) {
+                            Row(
+                                Modifier
+                                    .clip(RoundedCornerShape(999.dp))
+                                    .background(accent)
+                                    .clickableNoRipple { if (!busy) onPlayChapter(activeIndex.coerceIn(0, queue.lastIndex)) }
+                                    .padding(horizontal = 14.dp, vertical = 7.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                MaterialIcon(if (activePlaying) MI.PAUSE else MI.PLAY_ARROW, 16f, Color(0xFFFFFBF4))
+                                Text(
+                                    if (activePlaying) AppLocale.pick("正在连播", "Playing", locale) else AppLocale.pick("连播今日", "Play today", locale),
+                                    color = Color(0xFFFFFBF4),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                            }
+                        }
                     }
-                    Spacer(Modifier.height(8.dp))
                 }
                 if (queue.isEmpty()) item {
                     Text(locale.zh(PlanCopy.t("pages.read.todayPlanEmpty")), Modifier.fillMaxWidth().padding(vertical = 20.dp),
@@ -174,27 +211,69 @@ fun PlanPlayScreen(
                 items(queue.size) { i ->
                     val p = queue[i]
                     val active = i == activeIndex
-                    val title = BibleCatalog.book(p.bookId)?.let { "${bookLabel(it)} ${p.chapter}" } ?: "${p.bookId} ${p.chapter}"
+                    val book = BibleCatalog.book(p.bookId)
+                    val title = book?.let { ReadChrome.chapterTitle(bookLabel(it), p.chapter, locale) } ?: "${p.bookId} ${p.chapter}"
+                    val introSnippet = book?.let { me.askbible.native_.data.BibleBookIntroductions.get(it.id).text(locale) }.orEmpty()
+                    // 彻底消除 320ms 单双击陷阱：点行主体 = 进阅读页；点右侧 44dp 圆形按钮 = 播放本章
                     Row(
-                        Modifier.fillMaxWidth().padding(horizontal = if (active) 0.dp else 6.dp).clip(RoundedCornerShape(10.dp))
-                            .background(if (active) theme.surface.toColor().copy(alpha = 0.85f) else Color.Transparent)
-                            .clickableNoRipple { if (!busy) rowTapped(i) }
-                            .padding(start = if (active) 18.dp else 6.dp, end = if (active) 8.dp else 0.dp, top = 6.dp, bottom = 6.dp)
-                            .alpha(if (busy && !active) 0.7f else 1f),
-                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(if (active) theme.surface.toColor() else theme.surface.toColor().copy(alpha = 0.62f))
+                            .border(
+                                if (active) 1.dp else 0.75.dp,
+                                if (active) accent.copy(alpha = 0.55f) else theme.border.toColor(),
+                                RoundedCornerShape(16.dp),
+                            )
+                            .clickableNoRipple { onReadChapter(i) }
+                            .padding(horizontal = 14.dp, vertical = 12.dp)
+                            .alpha(if (busy && !active) 0.75f else 1f),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Text("%02d".format(i + 1), Modifier.width(26.dp), color = if (active) ink else faint, fontSize = 13.sp,
-                             fontWeight = if (active) FontWeight.Bold else FontWeight.Medium, textAlign = TextAlign.End)
-                        Text(title, Modifier.weight(1f), color = ink, fontSize = 17.sp,
-                             fontWeight = if (active) FontWeight.Bold else FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Box(Modifier.size(36.dp).clickableNoRipple { onReadChapter(i) }, contentAlignment = Alignment.Center) {
-                            MaterialIcon(MI.MENU_BOOK, 20f, muted)
+                        Text(
+                            "%02d".format(i + 1),
+                            Modifier.width(26.dp),
+                            color = if (active) ink else faint,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                title,
+                                color = ink,
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            if (introSnippet.isNotEmpty()) {
+                                Text(
+                                    introSnippet,
+                                    color = muted,
+                                    fontSize = 12.5.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
                         }
-                        Box(Modifier.size(36.dp).alpha(if (busy) 0.35f else 1f).clickableNoRipple { if (!busy) onPlayChapter(i) }, contentAlignment = Alignment.Center) {
-                            MaterialIcon(if (active && activePlaying) MI.GRAPHIC_EQ else MI.VOLUME_UP, 20f, muted)
+                        Box(
+                            Modifier
+                                .size(42.dp)
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(if (active && activePlaying) accent else accent.copy(alpha = 0.14f))
+                                .alpha(if (busy) 0.4f else 1f)
+                                .clickableNoRipple { if (!busy) onPlayChapter(i) },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            MaterialIcon(
+                                if (active && activePlaying) MI.GRAPHIC_EQ else MI.PLAY_ARROW,
+                                20f,
+                                if (active && activePlaying) Color(0xFFFFFBF4) else accent,
+                            )
                         }
                     }
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(8.dp))
                 }
             }
             if (showDevotional && devotionalPlayer != null) item {
@@ -229,12 +308,12 @@ fun PlanPlayScreen(
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         Text(locale.zh(PlanCopy.f("pages.read.ntDeepRepeatStageLabel", mapOf("n" to "${i + 1}"))), Modifier.width(58.dp),
-                             color = if (isCurrent) theme.readingAccent else faint, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                             color = if (isCurrent) Color(0xFF8A5A00) else faint, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                         Text(NtDeepRepeat.stageRange(seg), Modifier.weight(1f), color = ink, fontSize = 16.sp,
                              fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Normal)
                         if (isCurrent) {
                             Text(locale.zh(PlanCopy.f("pages.read.ntDeepRepeatStageCurrent", mapOf("day" to "${s.dayInSegment}", "total" to "${s.segmentDayTarget}"))),
-                                 color = theme.readingAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                 color = Color(0xFF8A5A00), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         } else if (done) {
                             Text(locale.zh(PlanCopy.t("pages.read.ntDeepRepeatStageDone")), color = faint, fontSize = 12.sp)
                         }
@@ -263,6 +342,110 @@ fun PlanPlayScreen(
     }
 }
 
+@Composable
+private fun PlanGentleWeekCard(
+    locale: AppLocale,
+    prefs: ReadingPlanPrefs,
+    dayCount: Int?,
+    viewAhead: Int,
+    listened: Set<String>,
+    monthExpanded: Boolean,
+    onToggleMonth: () -> Unit,
+    theme: Parchment,
+    onSelectAhead: (Int) -> Unit,
+) {
+    val today = LocalDate.now()
+    val selected = today.plusDays(viewAhead.toLong())
+    val dowOffset = selected.dayOfWeek.value - 1 // 周一 = 0 .. 周日 = 6
+    val monday = selected.minusDays(dowOffset.toLong())
+    val weekDays = (0..6).map { monday.plusDays(it.toLong()) }
+    val weekReadCount = weekDays.count { PlanPlay.isoDate(it) in listened || it == today }
+    val weekdaysShort = if (locale == AppLocale.EN) listOf("M", "T", "W", "T", "F", "S", "S") else listOf("一", "二", "三", "四", "五", "六", "日")
+    val ink = theme.ink.toColor()
+    val muted = theme.muted.toColor()
+    val accent = theme.accentOt.toColor()
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(theme.surface.toColor())
+            .border(1.dp, theme.border.toColor(), RoundedCornerShape(18.dp))
+            .padding(14.dp),
+    ) {
+        Row(
+            Modifier.fillMaxWidth().clickableNoRipple(onToggleMonth),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                PlanPlay.monthLabel(locale, selected.year, selected.monthValue),
+                color = ink,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            MaterialIcon(if (monthExpanded) MI.EXPAND_LESS else MI.EXPAND_MORE, 18f, accent)
+            Spacer(Modifier.weight(1f))
+            Text(
+                AppLocale.pick("本周相伴 $weekReadCount 天", "$weekReadCount days this week", locale),
+                color = muted,
+                fontSize = 12.5.sp,
+                fontWeight = FontWeight.Medium,
+            )
+        }
+
+        if (monthExpanded) {
+            Spacer(Modifier.height(6.dp))
+            PlanMonthCalendar(locale, prefs, dayCount, viewAhead, listened, theme, onSelectAhead)
+        } else {
+            Spacer(Modifier.height(10.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                weekDays.forEachIndexed { idx, d ->
+                    val ahead = java.time.temporal.ChronoUnit.DAYS.between(today, d).toInt()
+                    val isToday = d == today
+                    val isSelected = ahead == viewAhead
+                    val isRead = PlanPlay.isoDate(d) in listened
+                    val selectable = PlanPlay.isAheadSelectable(prefs, dayCount, ahead)
+                    Column(
+                        Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(
+                                when {
+                                    isSelected -> ink
+                                    isToday -> accent.copy(alpha = 0.14f)
+                                    else -> Color.Transparent
+                                },
+                            )
+                            .alpha(if (!selectable && !isRead) 0.38f else 1f)
+                            .clickableNoRipple { if (selectable) onSelectAhead(ahead) }
+                            .padding(vertical = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Text(
+                            weekdaysShort[idx],
+                            color = if (isSelected) Color(0xFFF5EFE4).copy(alpha = 0.78f) else muted,
+                            fontSize = 11.sp,
+                        )
+                        Text(
+                            "${d.dayOfMonth}",
+                            color = if (isSelected) Color(0xFFF5EFE4) else ink,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Box(
+                            Modifier
+                                .size(4.5.dp)
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(if (isRead || isToday) Brand.logo.toColor() else Color.Transparent),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 /**
  * 月历（RN ReadPlanPlayMonthCalendar）：黑底 = 系统今天（不随「进度设置为今日」移动）；黄底 = 选中浏览日或听过的日子；
  * 计划外的日子淡显不可点，但听过的日子仍保留黄标。
@@ -274,7 +457,7 @@ fun PlanMonthCalendar(
     dayCount: Int?,
     viewAhead: Int,
     listened: Set<String>,
-    theme: Parchment = LocalParchment.current,
+    theme: Parchment = Parchment.light,
     onSelectAhead: (Int) -> Unit,
 ) {
     val today = LocalDate.now()

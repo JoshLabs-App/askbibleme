@@ -81,10 +81,12 @@ function element(cue: AchievementCue): HTMLAudioElement | null {
  * 但完全没反馈又会觉得「读了没记上」。所以小额只给一记轻触感、不出声，
  * 只有整章读完这种大额才出声。
  */
+/**
+ * 去游戏化（Josh 2026-11-20 支持去游戏化）：不再为小额增量 XP 触发木叩声或高频震动，
+ * 仅在整章读完时轻响一记修道院小钵（chapter）。
+ */
 export function playAchievementXp(milestone: boolean): void {
-  // 里程碑用小钵而不是木叩：木叩配不上「读完一章」这件事
   if (milestone) playAchievementCue("chapter");
-  else playAchievementCue("xp", { silent: true });
 }
 
 /** 用户在系统里开了「减弱动态效果」：动效要收，声音不受影响（那是两种偏好） */

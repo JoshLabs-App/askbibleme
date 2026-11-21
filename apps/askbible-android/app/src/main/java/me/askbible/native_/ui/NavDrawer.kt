@@ -1,22 +1,18 @@
 package me.askbible.native_.ui
 
 import android.content.Context
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.ui.semantics.Role
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -27,9 +23,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -40,7 +36,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.askbible.native_.data.AppLocale
@@ -48,20 +43,20 @@ import me.askbible.native_.data.Parchment
 import me.askbible.native_.data.SiteCopy
 
 /**
- * 首页左上角的用户菜单，对齐 RN `ShellNavDrawer`：自左侧滑出、宽度 80%、羊皮卷底。
- * 行样式来自 `shellNavDrawerMenuStyles`（圆角 10、内边 12 × 10、正文 16、右侧细节 12）。
+ * 书房底部偏好设置抽屉（与 iOS NavDrawerView 对齐）：
+ * 取消左侧滑出抽屉与重复「音乐」行，改为底部柔和升起的三分组羊皮纸弹层：
+ * 1) 阅读与陪伴（语言 / 圣经版本 / 每日提醒 / 连接电视）
+ * 2) 账号与云端同步（登录注册 / 同步状态 / 退出）
+ * 3) 全局字号与支持（全局字号 / 邮件反馈 / 版本信息 / 删除账户）
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NavDrawer(
     open: Boolean,
     locale: AppLocale,
-    /** 界面语言手动设置（null = 跟随系统） */
     localeOverride: AppLocale?,
     userName: String?,
-    /** 当前主译本的短名，显示在「圣经版本」右边 */
     translationLabel: String,
-    /** 读经同步的右侧细节；没登录传 null，这一行就不出 */
     syncDetail: String?,
     versionLabel: String,
     onSetLocale: (AppLocale?) -> Unit,
@@ -71,125 +66,188 @@ fun NavDrawer(
     onLogout: () -> Unit,
     onFeedback: () -> Unit,
     onOpenMusic: () -> Unit = {},
-    /** 每日读经提醒：开关 + 当前时间 */
     reminderEnabled: Boolean = false,
     reminderTime: String = "07:00",
     onToggleReminder: () -> Unit = {},
     onPickReminderTime: () -> Unit = {},
-    /** 检查更新右侧状态文案（null 时显示当前版本号） */
     updateDetail: String? = null,
     onCheckUpdates: () -> Unit = {},
-    /** 删除账户（只在登录后出；二次确认在壳里弹） */
     onDeleteAccount: () -> Unit = {},
     onClose: () -> Unit,
     theme: Parchment = LocalParchment.current,
 ) {
     val textSizing = LocalAppTextSizing.current
     AnimatedVisibility(open, enter = fadeIn(), exit = fadeOut()) {
-        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.42f)).clickableNoRipple(onClose))
+        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.40f)).clickableNoRipple(onClose))
     }
     AnimatedVisibility(
         open,
-        enter = slideInHorizontally { -it },
-        exit = slideOutHorizontally { -it },
+        enter = slideInVertically { it },
+        exit = slideOutVertically { it },
     ) {
-        BoxWithConstraints(Modifier.fillMaxSize()) {
-            val panelW = minOf(maxWidth * 0.8f, 360.dp)
-            Box(Modifier.width(panelW).fillMaxHeight().clickableNoRipple {}) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.84f)
+                    .clip(RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp))
+                    .clickableNoRipple {},
+            ) {
                 ParchmentBackground(theme = theme)
-                Box(Modifier.fillMaxHeight().width(0.5.dp).background(theme.border.toColor())
-                        .align(Alignment.CenterEnd))
                 Column(
-                    Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()
-                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                    Modifier
+                        .fillMaxSize()
+                        .navigationBarsPadding()
+                        .padding(horizontal = 18.dp, vertical = 10.dp),
                 ) {
-                    Row(Modifier.fillMaxWidth().padding(bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(SiteCopy.t("native.userMenu", locale), Modifier.weight(1f),
-                             color = theme.ink.toColor().copy(alpha = 0.55f), fontSize = 14.sp,
-                             fontWeight = FontWeight.SemiBold, letterSpacing = 0.5.sp)
-                        Box(Modifier.size(40.dp).clickableNoRipple(onClose), contentAlignment = Alignment.Center) {
-                            MaterialIcon(MI.CLOSE, 22f, theme.ink.toColor().copy(alpha = 0.82f))
-                        }
+                    Box(
+                        Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(bottom = 10.dp)
+                            .width(38.dp)
+                            .height(4.dp)
+                            .clip(CircleShape)
+                            .background(theme.ink.toColor().copy(alpha = 0.22f)),
+                    )
+                    Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            AppLocale.pick("书房偏好设置", "Study Preferences", locale),
+                            Modifier.weight(1f),
+                            color = theme.ink.toColor(),
+                            fontSize = 19.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            SiteCopy.t("native.done", locale),
+                            Modifier.clickableNoRipple(onClose).padding(horizontal = 8.dp, vertical = 6.dp),
+                            color = theme.accentOt.toColor(),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
                     }
 
-                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-                        DrawerRow(AppLocale.pick("音乐", "Music", locale), null, theme, onOpenMusic)
-                        // 语言行：RN 是「语言 + EN / 繁 / 简」三个胶囊，原生多一个「跟随系统」
-                        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-                            Text(SiteCopy.t("nav.language", locale), color = theme.ink.toColor(), fontSize = 16.sp)
-                            Spacer(Modifier.height(8.dp))
-                            FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                DrawerLocaleChip(SiteCopy.t("native.followSystem", locale), localeOverride == null, theme) { onSetLocale(null) }
-                                for (l in listOf(AppLocale.ZH_CN, AppLocale.ZH_TW, AppLocale.EN)) {
-                                    DrawerLocaleChip(l.settingLabel, localeOverride == l, theme) { onSetLocale(l) }
-                                }
-                            }
-                        }
-                        Column(Modifier.fillMaxWidth().padding(horizontal=12.dp,vertical=10.dp)) {
-                            Text(AppLocale.pick("全局字号", "App text size", locale),color=theme.ink.toColor(),fontSize=16.sp,fontWeight=FontWeight.SemiBold)
-                            AppTextSize.entries.forEach { option ->
-                                Text((if(textSizing.selected==option) "●  " else "○  ") + option.label(locale),
-                                    Modifier.fillMaxWidth().heightIn(min=48.dp).clickableNoRipple { textSizing.select(option) }.padding(vertical=10.dp),
-                                    color=theme.ink.toColor(),fontSize=15.sp)
-                            }
-                            Text(AppLocale.pick("预览：你的话是我脚前的灯。", "Preview: Your word is a lamp to my feet.", locale),color=theme.ink.toColor(),fontSize=16.sp,lineHeight=25.sp,modifier=Modifier.padding(top=8.dp))
-                        }
-                        val appearance = LocalAppearance.current
-                        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-                            Text(SiteCopy.t("native.appearance", locale), color = theme.ink.toColor(), fontSize = 16.sp)
-                            Spacer(Modifier.height(8.dp))
-                            FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                for ((mode, key) in listOf("system" to "native.followSystem", "light" to "native.appearanceLight", "dark" to "native.appearanceDark")) {
-                                    DrawerLocaleChip(SiteCopy.t(key, locale), appearance.value == mode, theme) { appearance.select(mode) }
-                                }
-                            }
-                        }
-                        DrawerRow(SiteCopy.t("native.bibleVersion", locale), "$translationLabel ›", theme, onOpenTranslations)
-                        if (userName != null) {
-                            DrawerRow(SiteCopy.t("native.signedIn", locale), userName, theme, onClose)
-                            DrawerRow(SiteCopy.t("auth.drawerLogout", locale), null, theme, onLogout)
-                        } else {
-                            DrawerRow(SiteCopy.t("auth.pageTitle", locale), null, theme, onLogin)
-                        }
-                        // 每日读经提醒：左边开关（点文字切换），右边时间（点时间改）
-                        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Row(Modifier.weight(1f).clickableNoRipple(onToggleReminder),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text(SiteCopy.t("native.reminderTitle", locale),
-                                     color = theme.ink.toColor(), fontSize = 16.sp)
-                                Box(
-                                    Modifier.clip(RoundedCornerShape(999.dp))
-                                        .background(if (reminderEnabled) Color(0x38FFB101) else theme.surfaceSolid.toColor())
-                                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                    Column(
+                        Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                    ) {
+                        // 分组一：阅读与陪伴
+                        SheetGroupTitle(AppLocale.pick("阅读与陪伴", "Reading & Companion", locale), theme)
+                        SheetCard(theme) {
+                            Column(Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
+                                Text(SiteCopy.t("nav.language", locale), color = theme.ink.toColor(), fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                                Spacer(Modifier.height(8.dp))
+                                FlowRow(
+                                    Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp),
                                 ) {
-                                    Text(SiteCopy.t(if (reminderEnabled) "native.reminderOn" else "native.reminderOff", locale),
-                                         color = if (reminderEnabled) theme.readingAccent else theme.ink.toColor().copy(alpha = 0.5f),
-                                         fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                    DrawerLocaleChip(SiteCopy.t("native.followSystem", locale), localeOverride == null, theme) { onSetLocale(null) }
+                                    for (l in listOf(AppLocale.ZH_CN, AppLocale.ZH_TW, AppLocale.EN)) {
+                                        DrawerLocaleChip(l.settingLabel, localeOverride == l, theme) { onSetLocale(l) }
+                                    }
                                 }
                             }
-                            Text(reminderTime, Modifier.clickableNoRipple(onPickReminderTime),
-                                 color = theme.ink.toColor().copy(alpha = 0.7f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            SheetHairline(theme)
+                            SheetRow(SiteCopy.t("native.bibleVersion", locale), "$translationLabel ›", theme, onOpenTranslations)
+                            SheetHairline(theme)
+                            Row(
+                                Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Row(
+                                    Modifier.weight(1f).clickableNoRipple(onToggleReminder),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Text(SiteCopy.t("native.reminderTitle", locale), color = theme.ink.toColor(), fontSize = 15.sp)
+                                    Box(
+                                        Modifier.clip(CircleShape)
+                                            .background(if (reminderEnabled) Color(0x38FFB101) else theme.border.toColor().copy(alpha = 0.25f))
+                                            .padding(horizontal = 8.dp, vertical = 3.dp),
+                                    ) {
+                                        Text(
+                                            SiteCopy.t(if (reminderEnabled) "native.reminderOn" else "native.reminderOff", locale),
+                                            color = if (reminderEnabled) Color(0xFF784B1E) else theme.muted.toColor(),
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                        )
+                                    }
+                                }
+                                Text(
+                                    reminderTime,
+                                    Modifier.clickableNoRipple(onPickReminderTime).padding(4.dp),
+                                    color = theme.accentOt.toColor(),
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                            }
+                            SheetHairline(theme)
+                            val appearance = LocalAppearance.current
+                            Column(Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
+                                Text(SiteCopy.t("native.appearance", locale), color = theme.ink.toColor(), fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                                Spacer(Modifier.height(8.dp))
+                                FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    for ((mode, key) in listOf("system" to "native.followSystem", "light" to "native.appearanceLight", "dark" to "native.appearanceDark")) {
+                                        DrawerLocaleChip(SiteCopy.t(key, locale), appearance.value == mode, theme) { appearance.select(mode) }
+                                    }
+                                }
+                            }
                         }
-                        DrawerRow(SiteCopy.t("native.checkForUpdates", locale), updateDetail ?: appVersionWithTimeLabel(versionLabel), theme, onCheckUpdates)
-                        DrawerRow(SiteCopy.t("native.sendFeedback", locale), SUPPORT_EMAIL, theme, onFeedback)
-                        if (syncDetail != null) {
-                            DrawerRow(SiteCopy.t("native.readingSync", locale), syncDetail, theme, onClose)
-                        }
-                        if (userName != null) {
-                            // RN 抽屉底部的「删除账户」：quiet 样式，小一号、淡色
-                            Text(SiteCopy.t("native.deleteAccount", locale),
-                                 Modifier.fillMaxWidth().clickableNoRipple(onDeleteAccount)
-                                     .padding(top = 10.dp, start = 12.dp, end = 12.dp, bottom = 6.dp),
-                                 color = theme.ink.toColor().copy(alpha = 0.42f), fontSize = 12.sp)
-                        }
-                    }
 
-                    Text(SiteCopy.f("native.appVersion", mapOf("version" to appVersionWithTimeLabel(versionLabel)), locale),
-                         Modifier.fillMaxWidth().clickableNoRipple(onCheckUpdates).padding(top = 8.dp),
-                         color = theme.ink.toColor().copy(alpha = 0.42f), fontSize = 11.sp, textAlign = TextAlign.Center)
+                        // 分组二：账号与云端同步
+                        SheetGroupTitle(AppLocale.pick("账号与云端同步", "Account & Cloud Sync", locale), theme)
+                        SheetCard(theme) {
+                            if (userName != null) {
+                                SheetRow(SiteCopy.t("native.signedIn", locale), userName, theme, onClose)
+                                if (syncDetail != null) {
+                                    SheetHairline(theme)
+                                    SheetRow(SiteCopy.t("native.readingSync", locale), syncDetail, theme, onClose)
+                                }
+                                SheetHairline(theme)
+                                SheetRow(SiteCopy.t("auth.drawerLogout", locale), null, theme, onLogout)
+                            } else {
+                                SheetRow(SiteCopy.t("auth.pageTitle", locale), "›", theme, onLogin)
+                            }
+                        }
+
+                        // 分组三：全局字号与支持
+                        SheetGroupTitle(AppLocale.pick("全局字号与支持", "App Text Size & Support", locale), theme)
+                        SheetCard(theme) {
+                            Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp)) {
+                                Text(AppLocale.pick("全局字号", "App text size", locale), color = theme.ink.toColor(), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                                AppTextSize.entries.forEach { option ->
+                                    Text(
+                                        (if (textSizing.selected == option) "●  " else "○  ") + option.label(locale),
+                                        Modifier.fillMaxWidth().heightIn(min = 44.dp).clickableNoRipple { textSizing.select(option) }.padding(vertical = 8.dp),
+                                        color = theme.ink.toColor(),
+                                        fontSize = 14.5.sp,
+                                    )
+                                }
+                            }
+                            SheetHairline(theme)
+                            SheetRow(SiteCopy.t("native.checkForUpdates", locale), updateDetail ?: appVersionWithTimeLabel(versionLabel), theme, onCheckUpdates)
+                            SheetHairline(theme)
+                            SheetRow(SiteCopy.t("native.sendFeedback", locale), SUPPORT_EMAIL, theme, onFeedback)
+                            if (userName != null) {
+                                SheetHairline(theme)
+                                Text(
+                                    SiteCopy.t("native.deleteAccount", locale),
+                                    Modifier.fillMaxWidth().clickableNoRipple(onDeleteAccount).padding(horizontal = 14.dp, vertical = 12.dp),
+                                    color = Color(0xFFA63D33).copy(alpha = 0.85f),
+                                    fontSize = 13.sp,
+                                )
+                            }
+                        }
+
+                        Text(
+                            SiteCopy.f("native.appVersion", mapOf("version" to appVersionWithTimeLabel(versionLabel)), locale),
+                            Modifier.fillMaxWidth().clickableNoRipple(onCheckUpdates).padding(vertical = 8.dp),
+                            color = theme.faint.toColor(),
+                            fontSize = 11.sp,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
                 }
             }
         }
@@ -199,33 +257,69 @@ fun NavDrawer(
 const val SUPPORT_EMAIL = "hello@askbible.me"
 
 @Composable
-private fun DrawerLocaleChip(
-    label: String, on: Boolean, theme: Parchment, onClick: () -> Unit,
-) {
-    Box(
-        Modifier.heightIn(min = 48.dp).padding(horizontal=2.dp).clip(RoundedCornerShape(999.dp))
-            .background(if (on) Color(0x2EFFB101) else theme.surface.toColor().copy(alpha = 0.45f))
-            .border(if (on) 1.dp else 0.5.dp,
-                    if (on) Color(0xBFFFB101) else theme.border.toColor(), RoundedCornerShape(999.dp))
-            .selectable(selected = on, role = Role.RadioButton, onClick = onClick),
-        contentAlignment = Alignment.Center,
+private fun SheetGroupTitle(title: String, theme: Parchment) {
+    Text(
+        title,
+        Modifier.padding(start = 4.dp),
+        color = theme.muted.toColor(),
+        fontSize = 12.5.sp,
+        fontWeight = FontWeight.SemiBold,
+    )
+}
+
+@Composable
+private fun SheetCard(theme: Parchment, content: @Composable () -> Unit) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(theme.surface.toColor())
+            .border(1.dp, theme.border.toColor(), RoundedCornerShape(16.dp)),
     ) {
-        Text(label, color = if (on) theme.readingAccent else theme.ink.toColor().copy(alpha = 0.72f),
-             fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier=Modifier.padding(horizontal=10.dp,vertical=8.dp), textAlign = TextAlign.Center)
+        content()
     }
 }
 
 @Composable
-private fun DrawerRow(label: String, detail: String?, theme: Parchment, onClick: () -> Unit) {
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).clickableNoRipple(onClick)
-        .heightIn(min=48.dp).padding(horizontal=12.dp,vertical=10.dp)) {
-        Text(label,color=theme.ink.toColor(),fontSize=16.sp)
-        if(detail != null) Text(detail,color=theme.ink.toColor().copy(alpha=.65f),fontSize=12.sp,modifier=Modifier.padding(top=4.dp))
-    }
-    Spacer(Modifier.height(2.dp))
+private fun SheetHairline(theme: Parchment) {
+    Box(Modifier.fillMaxWidth().padding(horizontal = 14.dp).height(0.5.dp).background(theme.border.toColor()))
 }
 
-/** 读经同步那一行的右侧细节 */
+@Composable
+private fun DrawerLocaleChip(
+    label: String, on: Boolean, theme: Parchment, onClick: () -> Unit,
+) {
+    Box(
+        Modifier.heightIn(min = 38.dp).clip(CircleShape)
+            .background(if (on) Color(0x2EFFB101) else theme.surface.toColor().copy(alpha = 0.45f))
+            .border(if (on) 1.dp else 0.75.dp, if (on) Color(0xBFFFB101) else theme.border.toColor(), CircleShape)
+            .clickableNoRipple(onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            label,
+            color = if (on) Color(0xFF784B1E) else theme.ink.toColor().copy(alpha = 0.8f),
+            fontSize = 12.5.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun SheetRow(label: String, detail: String?, theme: Parchment, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clickableNoRipple(onClick).heightIn(min = 48.dp).padding(horizontal = 14.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, Modifier.weight(1f), color = theme.ink.toColor(), fontSize = 15.sp)
+        if (detail != null) {
+            Text(detail, color = theme.muted.toColor(), fontSize = 13.sp, maxLines = 1)
+        }
+    }
+}
+
 fun syncDetailText(engine: me.askbible.native_.data.MemberReadingSyncEngine, locale: AppLocale): String {
     val at = engine.lastSyncedAt
     if (!at.isNullOrEmpty()) {
@@ -238,7 +332,6 @@ fun syncDetailText(engine: me.askbible.native_.data.MemberReadingSyncEngine, loc
     return if (engine.lastError != null) SiteCopy.t("native.syncIncomplete", locale) else SiteCopy.t("native.syncNever", locale)
 }
 
-/** 「1.2.3 (45)」 */
 fun appVersionLabel(context: Context): String {
     return try {
         val info = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -247,13 +340,11 @@ fun appVersionLabel(context: Context): String {
     } catch (_: Throwable) { "—" }
 }
 
-/** 格式化时间戳为「yyyy-MM-dd HH:mm」 */
 fun formatLocalTimestamp(epochMs: Long = System.currentTimeMillis()): String {
     val fmt = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
     return fmt.format(java.util.Date(epochMs))
 }
 
-/** 「1.2.3 (45) · 2026-11-20 20:32」（编译打包时间） */
 fun appVersionWithTimeLabel(versionLabel: String): String {
     val epoch = me.askbible.native_.BuildConfig.BUILD_EPOCH_MS
     return if (epoch > 0L) "$versionLabel · ${formatLocalTimestamp(epoch)}" else versionLabel
@@ -262,9 +353,7 @@ fun appVersionWithTimeLabel(versionLabel: String): String {
 fun appVersionWithTimeLabel(context: Context): String =
     appVersionWithTimeLabel(appVersionLabel(context))
 
-/** 发送反馈：RN 是 mailto，打不开就算了（原生没有站内反馈页） */
 fun openSupportMail(context: Context) {
-    val intent = android.content.Intent(android.content.Intent.ACTION_SENDTO,
-                                        android.net.Uri.parse("mailto:$SUPPORT_EMAIL"))
+    val intent = android.content.Intent(android.content.Intent.ACTION_SENDTO, android.net.Uri.parse("mailto:$SUPPORT_EMAIL"))
     try { context.startActivity(intent) } catch (_: Throwable) { }
 }

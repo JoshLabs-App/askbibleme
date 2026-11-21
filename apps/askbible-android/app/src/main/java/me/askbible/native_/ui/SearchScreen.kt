@@ -64,7 +64,9 @@ import me.askbible.native_.data.name
 import me.askbible.native_.data.BibleCatalog
 import me.askbible.native_.data.AppLocale
 import me.askbible.native_.data.ReadSize
+import me.askbible.native_.data.ParsedScriptureRef
 import me.askbible.native_.data.ScriptureDatabase
+import me.askbible.native_.data.ScriptureReferenceParser
 import me.askbible.native_.data.ScriptureSearchHit
 import me.askbible.native_.data.ScriptureSearchResult
 import me.askbible.native_.data.ScriptureSearchRules
@@ -85,7 +87,7 @@ fun SearchScreen(
     onBack: () -> Unit,
     /** 点了哪条命中 + 当时的关键词（章页只标关键词） */
     onOpenHit: (ScriptureSearchHit, String) -> Unit,
-    theme: Parchment = LocalParchment.current,
+    theme: Parchment = Parchment.light,
     /** 命中条目的书名按读经展示语言 */
     locale: AppLocale = AppLocale.ZH_CN,
 ) {
@@ -125,56 +127,160 @@ fun SearchScreen(
     }
     LaunchedEffect(Unit) { if (resumed != null) run(resumed) else focus.requestFocus() }
 
+    val parsedJump: ParsedScriptureRef? = remember(query) { ScriptureReferenceParser.parse(query) }
+    val jumpPreviewText: String = remember(parsedJump, translationId) {
+        val j = parsedJump ?: return@remember ""
+        val fallbackId = ChapterLoader.searchFallbackId(context, translationId) ?: translationId
+        ScriptureDatabase.open(context, fallbackId)?.let { db ->
+            try {
+                val rows = db.loadChapter(j.book.id, j.chapter)
+                val target = j.verse ?: 1
+                rows.firstOrNull { it.number == target }?.text ?: rows.firstOrNull()?.text.orEmpty()
+            } finally { db.close() }
+        }.orEmpty()
+    }
+
     Box(Modifier.fillMaxSize()) {
         ParchmentBackground(theme = theme)
         LazyColumn(
             Modifier.fillMaxSize().parchmentFade(ParchmentFadePreset.TABBAR),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp + insets.calculateTopPadding(),
-                                           bottom = TAB_BAR_CLEARANCE.dp + 28.dp + insets.calculateBottomPadding() + 120.dp),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 14.dp + insets.calculateTopPadding(),
+                                           bottom = TAB_BAR_CLEARANCE.dp + 28.dp + insets.calculateBottomPadding() + 110.dp),
         ) {
             item {
-                Box(Modifier.size(44.dp).clickableNoRipple(onBack), contentAlignment = Alignment.CenterStart) {
-                    MaterialIcon(MI.ARROW_BACK, 24f, theme.ink.toColor())
-                }
-                Text(SiteCopy.t("pages.read.scriptureSearchTitle", locale), Modifier.fillMaxWidth().padding(bottom = 8.dp), color = theme.ink.toColor(), fontSize = sx(24f).sp,
-                     fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
-                Text(SiteCopy.t("pages.read.scriptureSearchLead", locale), Modifier.fillMaxWidth().padding(bottom = 12.dp), color = theme.muted.toColor(),
-                     fontSize = sx(16f).sp, lineHeight = sx(24f).sp, textAlign = TextAlign.Center)
-
-                // 范围分段：surface 底、hairline 边、圆角 10、内边 3、间隔 2；选中 ink 底 surface 字
-                Box(Modifier.fillMaxWidth().padding(bottom = 14.dp), contentAlignment = Alignment.Center) {
-                    Row(Modifier.background(theme.surface.toColor(), RoundedCornerShape(10.dp))
-                            .border(0.5.dp, theme.border.toColor(), RoundedCornerShape(10.dp)).padding(3.dp),
-                        horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                        for ((scope, label) in listOf(ScriptureSearchScope.ALL to SiteCopy.t("pages.read.scriptureSearchScopeAll", locale), ScriptureSearchScope.OLD to SiteCopy.t("pages.read.scriptureSearchScopeOld", locale),
-                                                      ScriptureSearchScope.NEW to SiteCopy.t("pages.read.scriptureSearchScopeNew", locale), ScriptureSearchScope.CHAPTER to SiteCopy.t("pages.read.scriptureSearchScopeChapter", locale))) {
-                            val on = prefs.scope == scope
-                            Text(label, Modifier.background(if (on) theme.ink.toColor() else Color.Transparent, RoundedCornerShape(8.dp))
-                                    .clickableNoRipple { prefs.updateScope(scope) }
-                                    .padding(horizontal = sx(12f).dp, vertical = sx(8f).dp),
-                                 color = if (on) theme.surface.toColor() else theme.muted.toColor(), fontSize = sx(15f).sp, fontWeight = FontWeight.Medium)
+                // 置顶返回键 + 搜索输入框（带 × 一键清空，对齐 iOS SearchView）
+                Row(
+                    Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Box(Modifier.size(38.dp).clickableNoRipple(onBack), contentAlignment = Alignment.CenterStart) {
+                        MaterialIcon(MI.CHEVRON_LEFT, 26f, theme.ink.toColor())
+                    }
+                    Row(
+                        Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                            .background(theme.surface.toColor(), RoundedCornerShape(12.dp))
+                            .border(1.dp, theme.borderStrong.toColor(), RoundedCornerShape(12.dp))
+                            .padding(horizontal = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        MaterialIcon(MI.SEARCH, 18f, theme.muted.toColor())
+                        BasicTextField(
+                            value = query, onValueChange = { query = it },
+                            modifier = Modifier.weight(1f).focusRequester(focus),
+                            textStyle = TextStyle(color = theme.ink.toColor(), fontSize = 16.sp),
+                            singleLine = true,
+                            cursorBrush = SolidColor(theme.ink.toColor()),
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search, autoCorrect = false),
+                            keyboardActions = KeyboardActions(onSearch = {
+                                parsedJump?.let { j ->
+                                    val q = ScriptureSearchRules.normalize(query)
+                                    prefs.push(q)
+                                    onOpenHit(ScriptureSearchHit(j.book.id, j.book.name(locale), j.chapter, j.verse ?: 1, jumpPreviewText), "")
+                                } ?: run(query)
+                            }),
+                            decorationBox = { inner ->
+                                if (query.isEmpty()) {
+                                    Text(
+                                        AppLocale.pick("搜索经文，或输入如 约 3:16 直达…", "Search text or jump e.g. John 3:16…", locale),
+                                        color = theme.faint.toColor(),
+                                        fontSize = 14.5.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                                inner()
+                            },
+                        )
+                        if (query.isNotEmpty()) {
+                            Box(
+                                Modifier
+                                    .size(22.dp)
+                                    .background(theme.faint.toColor().copy(alpha = 0.25f), CircleShape)
+                                    .clickableNoRipple { query = ""; results = emptyList(); searched = false; focus.requestFocus() },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                MaterialIcon(MI.CLOSE, 13f, theme.surface.toColor())
+                            }
                         }
                     }
                 }
 
-                BasicTextField(
-                    value = query, onValueChange = { query = it },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
-                        .background(theme.surface.toColor(), RoundedCornerShape(10.dp))
-                        .border(0.5.dp, theme.border.toColor(), RoundedCornerShape(10.dp))
-                        .padding(horizontal = 14.dp, vertical = 12.dp).focusRequester(focus),
-                    textStyle = TextStyle(color = theme.ink.toColor(), fontSize = size.metrics.verseFontSize.sp),
-                    singleLine = true,
-                    cursorBrush = SolidColor(theme.ink.toColor()),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search, autoCorrect = false),
-                    keyboardActions = KeyboardActions(onSearch = { run(query) }),
-                    decorationBox = { inner ->
-                        if (query.isEmpty()) Text(SiteCopy.t("pages.read.scriptureSearchPlaceholder", locale), color = theme.faint.toColor(), fontSize = size.metrics.verseFontSize.sp)
-                        inner()
-                    },
-                )
+                // 范围分段：全本 · 旧约 · 新约 · 本章
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 14.dp)
+                        .background(theme.ink.toColor().copy(alpha = 0.06f), RoundedCornerShape(11.dp))
+                        .padding(3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    for ((scope, label) in listOf(
+                        ScriptureSearchScope.ALL to SiteCopy.t("pages.read.scriptureSearchScopeAll", locale),
+                        ScriptureSearchScope.OLD to SiteCopy.t("pages.read.scriptureSearchScopeOld", locale),
+                        ScriptureSearchScope.NEW to SiteCopy.t("pages.read.scriptureSearchScopeNew", locale),
+                        ScriptureSearchScope.CHAPTER to SiteCopy.t("pages.read.scriptureSearchScopeChapter", locale),
+                    )) {
+                        val on = prefs.scope == scope
+                        Box(
+                            Modifier
+                                .weight(1f)
+                                .background(if (on) theme.surface.toColor() else Color.Transparent, RoundedCornerShape(8.dp))
+                                .clickableNoRipple { prefs.updateScope(scope) }
+                                .padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(label, color = if (on) theme.ink.toColor() else theme.muted.toColor(), fontSize = 13.5.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Medium)
+                        }
+                    }
+                }
 
-                if (prefs.recent.isNotEmpty()) {
+                // 置顶：书卷章节智能直达卡（如输入「约 3:16」「诗 23」）
+                parsedJump?.let { j ->
+                    val accent = theme.accentOt.toColor()
+                    val title = if (j.verse != null) {
+                        AppLocale.pick("${j.book.name(locale)} 第 ${j.chapter} 章 ${j.verse} 节", "${j.book.name(locale)} ${j.chapter}:${j.verse}", locale)
+                    } else {
+                        AppLocale.pick("${j.book.name(locale)} 第 ${j.chapter} 章", "${j.book.name(locale)} ${j.chapter}", locale)
+                    }
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 14.dp)
+                            .background(accent.copy(alpha = 0.12f), RoundedCornerShape(16.dp))
+                            .border(1.dp, accent.copy(alpha = 0.42f), RoundedCornerShape(16.dp))
+                            .clickableNoRipple {
+                                val q = ScriptureSearchRules.normalize(query)
+                                prefs.push(q)
+                                onOpenHit(ScriptureSearchHit(j.book.id, j.book.name(locale), j.chapter, j.verse ?: 1, jumpPreviewText), "")
+                            }
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Row(
+                                Modifier
+                                    .background(accent, CircleShape)
+                                    .padding(horizontal = 9.dp, vertical = 3.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                MaterialIcon(MI.MENU_BOOK, 12f, Color(0xFFFFFBF4))
+                                Text(AppLocale.pick("书卷章节直达", "Direct Jump", locale), color = Color(0xFFFFFBF4), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            }
+                            Text(title, color = theme.ink.toColor(), fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                            if (jumpPreviewText.isNotEmpty()) {
+                                Text(jumpPreviewText, color = theme.muted.toColor(), fontSize = 13.5.sp, lineHeight = 20.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
+                        MaterialIcon(MI.CHEVRON_RIGHT, 20f, accent)
+                    }
+                }
+
+                if (prefs.recent.isNotEmpty() && query.isEmpty()) {
                     Text(SiteCopy.t("pages.read.scriptureSearchRecentTitle", locale), Modifier.padding(top = 2.dp, bottom = 6.dp), color = theme.muted.toColor(), fontSize = sx(14f).sp, fontWeight = FontWeight.Medium)
                     // 一行，左右滑，不换行挡住下面的结果；出血到屏幕边，首尾留 20 和正文对齐
                     LazyRow(Modifier.fillMaxWidth().layout { measurable, constraints ->
@@ -201,7 +307,7 @@ fun SearchScreen(
                 if (loading) Box(Modifier.fillMaxWidth().padding(vertical = 20.dp), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = theme.muted.toColor(), strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
                 }
-                if (!loading && searched && results.isEmpty() && !(prefs.scope == ScriptureSearchScope.CHAPTER && chapterRef == null)) {
+                if (!loading && searched && results.isEmpty() && parsedJump == null && !(prefs.scope == ScriptureSearchScope.CHAPTER && chapterRef == null)) {
                     Text(SiteCopy.t("pages.read.scriptureSearchEmpty", locale), Modifier.fillMaxWidth().padding(top = 24.dp), color = theme.muted.toColor(),
                          fontSize = sx(16f).sp, lineHeight = sx(24f).sp, textAlign = TextAlign.Center)
                 }

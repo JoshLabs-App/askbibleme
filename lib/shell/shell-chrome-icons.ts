@@ -18,19 +18,22 @@ export const SHELL_AMBIENT_CHIP_SIZE_PX = 28;
 export const SHELL_AMBIENT_ICON_GLYPH_PX = 28;
 export const SHELL_AMBIENT_ICON_GAP_PX = 10;
 
-export type ShellTabMaterialIconName = "map" | "home" | "music-note" | "menu-book" | "explore";
+export type ShellTabMaterialIconName = "home" | "layers" | "today" | "music-note" | "menu-book" | "auto-stories" | "explore";
 export type ShellPlayMaterialIconName = "play-arrow" | "pause";
 
-export function shellTabMaterialIcon(tab: "panorama" | "home" | "music" | "read" | "explore"): ShellTabMaterialIconName {
+export function shellTabMaterialIcon(tab: "home" | "panorama" | "today" | "music" | "read" | "explore"): ShellTabMaterialIconName {
   switch (tab) {
-    case "panorama": return "map";
     case "home":
       return "home";
+    case "panorama":
+      return "layers";
+    case "today":
+      return "today";
     case "music":
       return "music-note";
     case "read":
       return "menu-book";
     case "explore":
-      return "explore";
+      return "auto-stories";
   }
 }

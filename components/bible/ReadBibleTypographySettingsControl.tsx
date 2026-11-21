@@ -54,10 +54,15 @@ const layoutBtnClass = "read-parchment-chip-btn px-2 text-[13px]";
 type Props = {
   buttonSize?: number;
   iconSize?: number;
+  triggerVariant?: "gear" | "aaPill" | "translationPill";
 };
 
 /** 圣经 /read 系路由顶栏右上：译本、对照、字号。 */
-export function ReadBibleTypographySettingsControl({ buttonSize = 44, iconSize = 15 }: Props = {}) {
+export function ReadBibleTypographySettingsControl({
+  buttonSize = 44,
+  iconSize = 15,
+  triggerVariant = "gear",
+}: Props = {}) {
   const { t, locale } = useLocale();
   const router = useRouter();
   const pathname = usePathname();
@@ -139,21 +144,51 @@ export function ReadBibleTypographySettingsControl({ buttonSize = 44, iconSize =
       : t("pages.read.typography.contrastNone");
 
   const iconBtn = `${HIT} text-white transition active:scale-[0.97] [filter:drop-shadow(0_1px_6px_rgba(0,0,0,0.55))_drop-shadow(0_0_1px_rgba(0,0,0,0.8))]`;
+  const shortPrimaryLabel =
+    primaryDisplay.split(/[（(]/)[0]?.trim() ||
+    (locale === "en" ? "Bible" : locale === "zh-TW" ? "譯本" : "译本");
   return (
     <>
     <div className="relative" ref={rootRef}>
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-label={t("pages.read.typography.ariaOpen")}
-        aria-expanded={open}
-        aria-haspopup="dialog"
-        aria-controls={open ? titleId : undefined}
-        className={iconBtn}
-        style={{ width: buttonSize, height: buttonSize }}
-      >
-        <IconGear className="opacity-100" size={iconSize} />
-      </button>
+      {triggerVariant === "aaPill" ? (
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-label={t("pages.read.typography.ariaOpen")}
+          aria-expanded={open}
+          aria-haspopup="dialog"
+          aria-controls={open ? titleId : undefined}
+          className="inline-flex h-9 items-center justify-center rounded-full border border-[#D8C6AA] bg-[#FAF5EC]/92 px-3 font-serif text-[14px] font-bold tracking-tight text-[#231A12] shadow-sm backdrop-blur-sm transition hover:bg-[#F3E9D8] active:scale-[0.97] dark:border-[#3E3328] dark:bg-[#262019]/92 dark:text-[#EDE2CF]"
+        >
+          Aa
+        </button>
+      ) : triggerVariant === "translationPill" ? (
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-label={t("pages.read.typography.ariaOpen")}
+          aria-expanded={open}
+          aria-haspopup="dialog"
+          aria-controls={open ? titleId : undefined}
+          className="inline-flex h-9 max-w-[11rem] items-center gap-1.5 rounded-full border border-[#D8C6AA] bg-[#FAF5EC]/92 px-3 text-[12.5px] font-semibold text-[#3C2E20] shadow-sm transition hover:bg-[#F3E9D8] active:scale-[0.97] dark:border-[#3E3328] dark:bg-[#262019]/92 dark:text-[#EDE2CF]"
+        >
+          <span className="truncate">{shortPrimaryLabel}</span>
+          <span className="text-[10px] opacity-70">▾</span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-label={t("pages.read.typography.ariaOpen")}
+          aria-expanded={open}
+          aria-haspopup="dialog"
+          aria-controls={open ? titleId : undefined}
+          className={iconBtn}
+          style={{ width: buttonSize, height: buttonSize }}
+        >
+          <IconGear className="opacity-100" size={iconSize} />
+        </button>
+      )}
       {open ? (
         <div
           id={titleId}

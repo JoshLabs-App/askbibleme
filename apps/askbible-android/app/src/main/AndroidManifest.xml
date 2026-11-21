@@ -26,6 +26,13 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- 桌面金句小组件深链直达经文所在章（askbible://verse?key=JHN.3.16） -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="askbible" android:host="verse" />
+            </intent-filter>
         </activity>
         <!-- 前台媒体服务：Media3 MediaSessionService，任一会话开播就 startForeground，锁屏后进程不被冻结 -->
         <service

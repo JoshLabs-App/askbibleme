@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.statusBarsPadding
 import me.askbible.native_.data.Parchment
+import me.askbible.native_.data.Endpoints
+import me.askbible.native_.update.AppUpdater
 import me.askbible.native_.update.UpdateGate
 import me.askbible.native_.update.PlayUpdateGate
 import me.askbible.native_.update.MigrateGate
@@ -154,11 +156,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /** 回前台重探一次线路并后台检查离线包 SHA-256 静默热更 */
+    /** 回前台重探一次线路，并后台检查客户端升级与离线包 SHA-256 静默热更 */
     override fun onStart() {
         super.onStart()
         EndpointsStore.refreshInBackground()
         PackStore.refreshInstalledPacksInBackground(this)
+        AppUpdater.checkInBackground(this)
+        PlayUpdateGate.start(this)
     }
 }
 
@@ -255,6 +259,8 @@ private fun RootScreen() {
     var reminderOn by remember { mutableStateOf(ReadingReminder.enabled(context)) }
     var reminderTime by remember { mutableStateOf(ReadingReminder.timeLabel(context)) }
     var showReminderTime by remember { mutableStateOf(false) }
+    var checkingUpdates by remember { mutableStateOf(false) }
+    var updateStatusDetail by remember { mutableStateOf<String?>(null) }
     val notifyPermission = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
     ) { granted ->
@@ -984,6 +990,59 @@ private fun RootScreen() {
                 }
             },
             onPickReminderTime = { showMenu = false; showReminderTime = true },
+            updateDetail = updateStatusDetail,
+            onCheckUpdates = {
+                if (!checkingUpdates) {
+                    checkingUpdates = true
+                    updateStatusDetail = SiteCopy.t("native.updateChecking", appLocale)
+                    scope.launch {
+                        withContext(Dispatchers.IO) { runCatching { Endpoints.refresh() } }
+                        val selfOutcome = if (BuildConfig.SELF_UPDATE) {
+                            AppUpdater.checkOutcome(context, force = true)
+                        } else null
+                        val playOutcome = if (!BuildConfig.SELF_UPDATE) {
+                            (context as? android.app.Activity)?.let { PlayUpdateGate.checkManual(it) }
+                        } else null
+                        val packOutcome = withContext(Dispatchers.IO) {
+                            PackStore.refreshInstalledPacksSync(context, force = true)
+                        }
+                        checkingUpdates = false
+                        when {
+                            selfOutcome?.status == AppUpdater.CheckStatus.AVAILABLE && selfOutcome.info != null -> {
+                                showMenu = false
+                                updateStatusDetail = "v${selfOutcome.info.version}"
+                            }
+                            playOutcome == PlayUpdateGate.ManualOutcome.STARTED_FLOW ||
+                                playOutcome == PlayUpdateGate.ManualOutcome.COMPLETED_DOWNLOADED -> {
+                                showMenu = false
+                                updateStatusDetail = null
+                            }
+                            packOutcome.updatedCount > 0 -> {
+                                reloadToken += 1
+                                updateStatusDetail = SiteCopy.t("native.updateUpToDate", appLocale)
+                                toast = SiteCopy.f(
+                                    "native.updatePacksApplied",
+                                    mapOf("count" to "${packOutcome.updatedCount}"),
+                                    appLocale,
+                                )
+                            }
+                            !packOutcome.catalogReachable &&
+                                (selfOutcome?.status == AppUpdater.CheckStatus.NETWORK_FAILED || !BuildConfig.SELF_UPDATE) -> {
+                                updateStatusDetail = SiteCopy.t("native.updateCheckFailed", appLocale)
+                                toast = SiteCopy.t("native.updateCheckFailed", appLocale)
+                            }
+                            else -> {
+                                updateStatusDetail = SiteCopy.t("native.updateUpToDate", appLocale)
+                                toast = SiteCopy.f(
+                                    "native.updateUpToDateToast",
+                                    mapOf("version" to appVersionLabel(context)),
+                                    appLocale,
+                                )
+                            }
+                        }
+                    }
+                }
+            },
             onDeleteAccount = { showMenu = false; confirmDeleteAccount = true },
             onClose = { showMenu = false },
         )

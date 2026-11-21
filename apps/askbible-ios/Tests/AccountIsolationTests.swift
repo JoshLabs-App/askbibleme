@@ -383,4 +383,18 @@ final class AccountIsolationTests: XCTestCase {
         XCTAssertThrowsError(try PackStore.installSQLiteAtomically(from: truncated, to: dest, expectedSha256: sha))
         XCTAssertEqual(PackStore.sha256Hex(of: dest), sha)
     }
+
+    func testPackStoreDecodesV2CatalogSchemaAndMapsLocalPackKeys() throws {
+        let json = """
+        {"schemaVersion":2,"generatedAt":"2026-11-20T00:00:00Z","packs":[
+          {"id":"bible.cuv-simp","kind":"sqlite","path":"bible/cuv-simp.sqlite","sha256":"abc123","sizeBytes":5013504},
+          {"id":"companion.xrefs","kind":"sqlite","path":"bible/scripture-xrefs.sqlite","sha256":"def456","sizeBytes":1728512}
+        ]}
+        """.data(using: .utf8)!
+        let catalog = try JSONDecoder().decode(PackStore.PackCatalog.self, from: json)
+        XCTAssertEqual(catalog.schemaVersion, 2)
+        XCTAssertEqual(catalog.packs.count, 2)
+        XCTAssertEqual(PackStore.localPackKey(for: catalog.packs[0]), "cuv-simp")
+        XCTAssertEqual(PackStore.localPackKey(for: catalog.packs[1]), "scripture-xrefs")
+    }
 }

@@ -798,3 +798,6 @@ manifest `start_url=/web`；手机截图和金句字体文件都取得到。本�
 5. **全端外观与交互基准（D-45，2026-11-20 Josh 定）**：
    - 全端整体外观与操作体验统一对齐安卓 App（`apps/askbible-android`）的羊皮卷实底与直接图标版面，**禁用苹果 Liquid Glass / 毛玻璃胶囊底栏与玻璃圆钮簇**。
    - iOS 与网页端已撤除全部 `glassEffect`、`Material`、`backdrop-blur`，统一为 5 位纯 `MaterialIcons` 底栏、整宽贴底单栏 `PlaybackDock`、直接常驻目录/章页右侧工具栏与 `parchmentCard` 羊皮实底弹层。
+6. **全端内置双层自动升级 + 手动「检查更新」（D-46，2026-11-20 Josh 定）**：
+   - **自动升级**：iOS / Android 启动与回前台自动执行 `PackStore` 离线包 `SHA-256` 静默热更 + 客户端版本自检（Android `web` 变体走 `AppUpdater` 下载安装 APK，Android `release` 商店版严守 Play 政策走官方 `PlayUpdateGate` `FLEXIBLE` 应用内更新，iOS 走 `AppUpdateChecker` App Store 检测）；Web / PWA 除轮询 `/app-build.json` 外在 `visibilitychange` 与 `online` 时自动检测新构建、清缓存并切换 Service Worker 刷新。
+   - **手动检查更新**：三端左侧设置抽屉（`NavDrawer.swift`、`NavDrawer.kt`、`ShellNavDrawerContent.tsx`）均提供「检查更新」入口（底部版本号页脚亦可点击触发），以 `force = true` 绕过节流同时核验客户端版本与离线包。

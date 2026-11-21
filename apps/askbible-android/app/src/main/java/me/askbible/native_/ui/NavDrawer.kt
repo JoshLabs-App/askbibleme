@@ -76,6 +76,9 @@ fun NavDrawer(
     reminderTime: String = "07:00",
     onToggleReminder: () -> Unit = {},
     onPickReminderTime: () -> Unit = {},
+    /** 检查更新右侧状态文案（null 时显示当前版本号） */
+    updateDetail: String? = null,
+    onCheckUpdates: () -> Unit = {},
     /** 删除账户（只在登录后出；二次确认在壳里弹） */
     onDeleteAccount: () -> Unit = {},
     onClose: () -> Unit,
@@ -170,6 +173,7 @@ fun NavDrawer(
                             Text(reminderTime, Modifier.clickableNoRipple(onPickReminderTime),
                                  color = theme.ink.toColor().copy(alpha = 0.7f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                         }
+                        DrawerRow(SiteCopy.t("native.checkForUpdates", locale), updateDetail ?: versionLabel, theme, onCheckUpdates)
                         DrawerRow(SiteCopy.t("native.sendFeedback", locale), SUPPORT_EMAIL, theme, onFeedback)
                         if (syncDetail != null) {
                             DrawerRow(SiteCopy.t("native.readingSync", locale), syncDetail, theme, onClose)
@@ -184,7 +188,7 @@ fun NavDrawer(
                     }
 
                     Text(SiteCopy.f("native.appVersion", mapOf("version" to versionLabel), locale),
-                         Modifier.fillMaxWidth().padding(top = 8.dp),
+                         Modifier.fillMaxWidth().clickableNoRipple(onCheckUpdates).padding(top = 8.dp),
                          color = theme.ink.toColor().copy(alpha = 0.42f), fontSize = 11.sp, textAlign = TextAlign.Center)
                 }
             }

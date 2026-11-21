@@ -6,9 +6,15 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Environment
 import android.provider.Settings
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.core.content.FileProvider
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.askbible.native_.BuildConfig
 import me.askbible.native_.data.Endpoints
@@ -35,35 +41,88 @@ object AppUpdater {
         val notes: String,
     )
 
+    enum class CheckStatus {
+        DISABLED,
+        THROTTLED,
+        UP_TO_DATE,
+        AVAILABLE,
+        NETWORK_FAILED,
+    }
+
+    data class CheckOutcome(
+        val status: CheckStatus,
+        val info: Info? = null,
+    )
+
+    /** 全局可观察待装版本：后台自检与手动「检查更新」共用同一弹窗 */
+    var pendingInfo by mutableStateOf<Info?>(null)
+
+    private val bgScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
     private const val PREFS = "app_update"
     private const val KEY_SKIPPED = "skipped_code"
     private const val KEY_LAST_CHECK = "last_check_at"
-    /** 用户点过「以后再说」的版本，6 小时内不再打扰 */
+    /** 用户点过「以后再说」的版本或自动轮询间隔：6 小时内不再打扰 */
     private const val QUIET_MS = 6 * 60 * 60 * 1000L
 
-    /** 返回比当前包新、且用户没在静默期里压掉的版本；没有就 null。 */
-    suspend fun check(context: Context, force: Boolean = false): Info? = withContext(Dispatchers.IO) {
-        if (!BuildConfig.SELF_UPDATE) return@withContext null
-        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val now = System.currentTimeMillis()
-        if (!force && now - prefs.getLong(KEY_LAST_CHECK, 0L) < QUIET_MS) return@withContext null
-
-        val info = fetch() ?: return@withContext null
-        prefs.edit().putLong(KEY_LAST_CHECK, now).apply()
-        if (info.versionCode <= BuildConfig.VERSION_CODE) return@withContext null
-        if (!force && prefs.getInt(KEY_SKIPPED, 0) >= info.versionCode) return@withContext null
-        info
+    /** 启动或回前台时静默自检（受 6 小时节流与跳过版本约束） */
+    fun checkInBackground(context: Context) {
+        if (!BuildConfig.SELF_UPDATE) return
+        val appContext = context.applicationContext
+        bgScope.launch {
+            checkOutcome(appContext, force = false)
+        }
     }
+
+    /** 检查版本并更新 [pendingInfo]；`force = true` 用于用户手动点击「检查更新」。 */
+    suspend fun checkOutcome(context: Context, force: Boolean = false): CheckOutcome {
+        if (!BuildConfig.SELF_UPDATE) return CheckOutcome(CheckStatus.DISABLED)
+        val outcome = withContext(Dispatchers.IO) {
+            val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            val now = System.currentTimeMillis()
+            if (!force && now - prefs.getLong(KEY_LAST_CHECK, 0L) < QUIET_MS) {
+                return@withContext CheckOutcome(CheckStatus.THROTTLED)
+            }
+
+            val info = fetch() ?: return@withContext CheckOutcome(CheckStatus.NETWORK_FAILED)
+            prefs.edit().putLong(KEY_LAST_CHECK, now).apply()
+            if (info.versionCode <= BuildConfig.VERSION_CODE) {
+                return@withContext CheckOutcome(CheckStatus.UP_TO_DATE)
+            }
+            if (!force && prefs.getInt(KEY_SKIPPED, 0) >= info.versionCode) {
+                return@withContext CheckOutcome(CheckStatus.THROTTLED)
+            }
+            CheckOutcome(CheckStatus.AVAILABLE, info)
+        }
+        withContext(Dispatchers.Main.immediate) {
+            when (outcome.status) {
+                CheckStatus.AVAILABLE -> pendingInfo = outcome.info
+                CheckStatus.UP_TO_DATE -> pendingInfo = null
+                else -> {}
+            }
+        }
+        return outcome
+    }
+
+    /** 返回比当前包新、且用户没在静默期里压掉的版本；没有就 null。 */
+    suspend fun check(context: Context, force: Boolean = false): Info? =
+        checkOutcome(context, force).info
 
     fun skip(context: Context, info: Info) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .edit().putInt(KEY_SKIPPED, info.versionCode).apply()
+        pendingInfo = null
+    }
+
+    fun clearPending() {
+        pendingInfo = null
     }
 
     private fun fetch(): Info? = try {
         val conn = (URL(VERSION_URL).openConnection() as HttpURLConnection).apply {
             connectTimeout = 8000
             readTimeout = 8000
+            useCaches = false
             setRequestProperty("Cache-Control", "no-cache")
         }
         conn.use {
@@ -99,7 +158,7 @@ object AppUpdater {
     }
 
     /**
-     * 下载 APK 并拉起系统安装器。[onProgress] 回 0f..1f，失败回 null。
+     * 下载 APK 并拉起系统安装器。[onProgress] 回 0f..1f，失败回 false。
      * 用系统 DownloadManager：断网续传、通知栏进度都是它自带的，不自己造。
      */
     suspend fun downloadAndInstall(

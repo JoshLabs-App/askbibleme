@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
 import { AppTextSizePicker } from "@/components/app-shell/AppTextSizeProvider";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -14,6 +15,13 @@ import { readTranslationsHref } from "@/lib/read/read-translations-route";
 import type { AppLocale } from "@/lib/i18n/config";
 import { getLocalePickerLabel } from "@/lib/i18n/locale-display-labels";
 import { isMemberRegisterEnabledClient } from "@/lib/member-register-enabled";
+import {
+  ASKBIBLE_MANUAL_CHECK_EVENT,
+  checkWebBuildUpdate,
+  formatShortBuildId,
+  getLoadedBuildId,
+  triggerWebBuildReload,
+} from "@/lib/pwa/check-app-update";
 
 const SUPPORT_EMAIL = "hello@askbible.me";
 
@@ -84,19 +92,80 @@ function ShellNavDrawerLocaleRow() {
   );
 }
 
-function ShellNavDrawerResourceUpdate() {
+function ShellNavDrawerCheckUpdate({ onClose }: { onClose: () => void }) {
   const { locale } = useLocale();
-  const zh = locale === "zh-CN" || locale === "zh-TW";
-  const detail = zh ? "已是最新" : "Up to date";
+  const [phase, setPhase] = useState<"idle" | "checking" | "up-to-date" | "updating" | "failed">("idle");
+  const [buildLabel, setBuildLabel] = useState<string>(() => formatShortBuildId(getLoadedBuildId()));
+
+  const runCheck = useCallback(async () => {
+    setPhase((prev) => (prev === "checking" || prev === "updating" ? prev : "checking"));
+    const outcome = await checkWebBuildUpdate();
+    if (outcome.status === "update-available") {
+      setBuildLabel(formatShortBuildId(outcome.remoteId));
+      setPhase("updating");
+      onClose();
+      triggerWebBuildReload(900);
+      return;
+    }
+    if (outcome.status === "up-to-date") {
+      setBuildLabel(formatShortBuildId(outcome.buildId));
+      setPhase("up-to-date");
+      return;
+    }
+    setPhase("failed");
+  }, [onClose]);
+
+  useEffect(() => {
+    setBuildLabel(formatShortBuildId(getLoadedBuildId()));
+    const onFooterCheck = () => {
+      void runCheck();
+    };
+    window.addEventListener(ASKBIBLE_MANUAL_CHECK_EVENT, onFooterCheck);
+    return () => window.removeEventListener(ASKBIBLE_MANUAL_CHECK_EVENT, onFooterCheck);
+  }, [runCheck]);
+
+  const label =
+    locale === "zh-CN"
+      ? "检查更新"
+      : locale === "zh-TW"
+        ? "檢查更新"
+        : "Check for updates";
+
+  const detail = (() => {
+    if (phase === "checking") {
+      return locale === "zh-CN" ? "正在检查…" : locale === "zh-TW" ? "正在檢查…" : "Checking…";
+    }
+    if (phase === "updating") {
+      return locale === "zh-CN"
+        ? "发现新版本，正在更新…"
+        : locale === "zh-TW"
+          ? "發現新版本，正在更新…"
+          : "Updating to latest…";
+    }
+    if (phase === "up-to-date") {
+      return locale === "zh-CN"
+        ? `已是最新版本（${buildLabel}）`
+        : locale === "zh-TW"
+          ? `已是最新版本（${buildLabel}）`
+          : `Up to date (${buildLabel})`;
+    }
+    if (phase === "failed") {
+      return locale === "zh-CN"
+        ? "无法连接更新服务器"
+        : locale === "zh-TW"
+          ? "無法連線更新伺服器"
+          : "Unable to check for updates";
+    }
+    return buildLabel;
+  })();
 
   return (
     <ShellNavDrawerMenuRow
-      label={zh ? "资源更新" : "Resource updates"}
+      label={label}
       detail={detail}
       onClick={() => {
-        window.alert(
-          zh ? "当前本地资源已是最新。" : "Your local resources are already up to date.",
-        );
+        if (phase === "checking" || phase === "updating") return;
+        void runCheck();
       }}
     />
   );
@@ -168,7 +237,7 @@ export function ShellNavDrawerContent({ onClose }: Props) {
         }}
       />
       <div className="h-1" aria-hidden />
-      <ShellNavDrawerResourceUpdate />
+      <ShellNavDrawerCheckUpdate onClose={onClose} />
       <div className="h-1" aria-hidden />
       <ShellNavDrawerVerseAdvanceGapRow />
       <div className="h-1" aria-hidden />

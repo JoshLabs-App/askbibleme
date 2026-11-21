@@ -12,7 +12,7 @@ import {
 import { analyzeAudioFileToV1 } from "@/lib/music/build-track-analysis-server";
 import { readMultipartForm } from "@/lib/http/multipart-form";
 
-/** 大文件上传；如开启转码会调用 ffmpeg。部署平台（如 Vercel）仍可能对请求体有套餐上限，与本应用内校验无关。 */
+/** 大文件上传；仅本机开发/Studio 使用，如开启转码会调用 ffmpeg。 */
 export const maxDuration = 120;
 
 const ALLOWED_EXT = new Set([

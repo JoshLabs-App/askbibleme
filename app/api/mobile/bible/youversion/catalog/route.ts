@@ -18,7 +18,7 @@ function languageName(code: string) {
   return LANGUAGE_NAMES[base];
 }
 
-/** 进程内缓存：Vercel 实例热着时后续请求直接返回（目录一天也不会变一次） */
+/** 进程内缓存：Worker 实例存活期间后续请求直接返回（目录一天也不会变一次） */
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 let cached: { at: number; payload: unknown } | null = null;
 

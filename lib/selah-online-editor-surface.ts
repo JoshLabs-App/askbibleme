@@ -16,7 +16,7 @@ export function isSelahOnlineEditorSurfaceAllowed(): boolean {
   if (process.env.SELAH_DISABLE_PUBLIC_ADMIN === "1") {
     return false;
   }
-  if (process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production") {
+  if (process.env.NODE_ENV === "production") {
     return process.env.SELAH_ALLOW_ADMIN_IN_PRODUCTION === "1";
   }
   return true;

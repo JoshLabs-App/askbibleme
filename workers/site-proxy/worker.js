@@ -1,8 +1,7 @@
 // AskBible · 主站接口反代（防封换线，见 docs/anti-block-endpoints.md、DECISIONS D-20）
 //
 // App 要调主站的几个接口（在线译本目录 / 章节 / 书名、章节朗读地址解析、注销账号）。
-// `askbible.me` 被封时这些全断，而且主站在 Vercel，换 IP 这条路我们控制不了。
-// 这个 Worker 是另一条线：走 Cloudflare 的边缘，再由边缘去取 askbible.me。
+// `askbible.me` 被封时，这个 Worker 提供独立域名的备线入口，再回源 askbible.me。
 //
 // 客户端把它当作 `site` 角色的一个候选域（data/endpoints.json），askbible.me 通的时候不会走这里。
 //

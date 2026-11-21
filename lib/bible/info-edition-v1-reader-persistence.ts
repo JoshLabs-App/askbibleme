@@ -28,7 +28,6 @@ import {
   isInfoEditionProductionDiskConfigured,
   isInfoEditionWritableDiskAvailable,
   isRenderDeployment,
-  isVercelDeployment,
 } from "@/lib/bible/info-edition-published-path";
 import type { InfoEditionV1ReaderCacheResponse } from "@/lib/bible/info-edition-v1-reader-cache";
 
@@ -118,11 +117,6 @@ export function infoEditionReaderGenerateBlockedReason(cwd = process.cwd()): str
       return (
         "Render 磁盘方案：① Disks 的 Mount path 与 DATA_ROOT 一致（如 /var/data）；② INFO_EDITION_DISK_SAVE=1；" +
         "③ AI_API_KEY、AI_BASE_URL、AI_MODEL；④ Manual Deploy。"
-      );
-    }
-    if (isVercelDeployment()) {
-      return (
-        "本章导读需持久存储：请启用 INFO_EDITION_DISK_SAVE，并确保 DATA_ROOT 可写，同时配置 AI_API_KEY。"
       );
     }
     return (

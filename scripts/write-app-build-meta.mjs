@@ -16,12 +16,7 @@ const isDev = process.argv.includes("--dev");
 
 const id = isDev
   ? "development"
-  : (
-      process.env.NEXT_PUBLIC_APP_BUILD_ID?.trim() ||
-      process.env.VERCEL_DEPLOYMENT_ID?.trim() ||
-      process.env.VERCEL_GIT_COMMIT_SHA?.trim() ||
-      crypto.randomUUID()
-    );
+  : (process.env.NEXT_PUBLIC_APP_BUILD_ID?.trim() || crypto.randomUUID());
 
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(outPath, `${JSON.stringify({ id })}\n`, "utf8");

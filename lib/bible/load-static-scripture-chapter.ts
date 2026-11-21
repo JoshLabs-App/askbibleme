@@ -11,9 +11,9 @@ import {
 /**
  * 读按卷静态经文（由 scripts/build-static-scripture.ts 生成）。
  *
- * 两条取数路径，好让同一份代码在迁移前后都能跑：
- * - 有 `fs`（本机 dev / Render / Vercel）直接读文件，没有网络往返；
- * - 没有 `fs`（Cloudflare Workers 一类边缘运行时）改用 fetch 取同域静态资源。
+ * 两条取数路径，兼顾本机与边缘运行时：
+ * - 有 `fs`（本机 dev）直接读文件，没有网络往返；
+ * - 没有 `fs`（Cloudflare Workers 一类边缘运行时）优先走 `ASSETS` 绑定，再回落 fetch 取同域静态资源。
  *
  * 取不到时返回 null，由调用方回落 sqlite——迁移期间两套并存，不至于一处没备好就白屏。
  */
@@ -55,15 +55,13 @@ async function readViaFs(cwd: string, translationId: string, bookId: string): Pr
 }
 
 /**
- * 无 fs 时的同域取法。绝对地址优先取显式配置，其次取平台注入的部署域名；
- * 都没有就放弃（返回 null → 回落 sqlite），不猜域名以免打到别人站点上。
+ * 无 fs 时的同域取法。绝对地址只取显式配置；
+ * 未配置就放弃（返回 null → 回落 sqlite），不猜域名以免打到别人站点上。
  */
 function staticScriptureOrigin(): string | null {
   const explicit =
     process.env.STATIC_SCRIPTURE_BASE_URL?.trim() || process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (explicit) return explicit.replace(/\/$/, "");
-  const vercel = process.env.VERCEL_URL?.trim();
-  if (vercel) return `https://${vercel.replace(/^https?:\/\//, "").replace(/\/$/, "")}`;
   return null;
 }
 

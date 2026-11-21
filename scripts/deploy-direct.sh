@@ -40,12 +40,14 @@ echo "本机构建 Cloudflare Worker (askbible-web) $REF @ $SHA …"
 npm run prebuild
 npx cf build
 BASE_NODE_OPTS="${NODE_OPTIONS:-}"
+CF_PATCH_FLAG=""
+[ -f "$HOME/bin/cf-wrangler-net.mjs" ] && CF_PATCH_FLAG="--import=file://$HOME/bin/cf-wrangler-net.mjs"
 DEPLOYED=0
 for pass in 1 2 3; do
   if [ "$pass" = "2" ]; then
-    NET_FLAG="--dns-result-order=ipv4first"
+    NET_FLAG="$CF_PATCH_FLAG --no-network-family-autoselection --dns-result-order=ipv4first"
   else
-    NET_FLAG="--network-family-autoselection"
+    NET_FLAG="$CF_PATCH_FLAG --no-network-family-autoselection"
   fi
   if NODE_OPTIONS="$NET_FLAG $BASE_NODE_OPTS" WRANGLER_SEND_METRICS=false npx cf deploy --prebuilt; then
     DEPLOYED=1

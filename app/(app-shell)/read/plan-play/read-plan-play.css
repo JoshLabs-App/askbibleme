@@ -87,13 +87,14 @@
 }
 
 .read-plan-play-calendar__cell--today {
-  background: var(--bc-read-book, #3d2e24);
-  color: var(--bc-read-surface-solid, #faf6ee);
+  background: #c1660b;
+  color: #fffbf4;
   font-weight: 700;
 }
 
 .read-plan-play-calendar__cell--accent {
   background: var(--brand-logo-background, #f5d547);
+  color: #1c1410;
   font-weight: 700;
 }
 
@@ -106,6 +107,10 @@
   background: rgba(255, 252, 245, 0.9);
 }
 
+.dark .read-plan-play-ndr-stages__row--current {
+  background: rgba(255, 177, 1, 0.16);
+}
+
 .read-plan-play-ndr-stages__row:active:not(:disabled) {
   opacity: 0.72;
 }
@@ -116,5 +121,10 @@
 }
 
 .dark .read-plan-play-calendar__cell--today {
-  color: #1a1410;
+  background: #d97707;
+  color: #fffbf4;
+}
+
+.dark .read-plan-play-calendar__cell--accent {
+  color: #1c1410;
 }

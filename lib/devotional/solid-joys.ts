@@ -13,8 +13,8 @@ export type DevotionalDay = {
 export const DEVOTIONAL_PREF = "askbible.devotional.after-reading";
 const LISTENING_DAY = "askbible.devotional.plan-day";
 const cache = new Map<string, Promise<DevotionalDay[]>>();
-export function devotionalAvailable(locale: string, isAdmin: boolean) {
-  return isAdmin && locale !== "en";
+export function devotionalAvailable(locale: string, _isAdmin = true) {
+  return locale !== "en";
 }
 export function readDevotionalAuto() {
   try {

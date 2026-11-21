@@ -2,11 +2,13 @@ import { describe, it, expect } from "vitest";
 import { devotionalAvailable, devotionalKey, shouldHandoffDevotional, devotionalAudioUrl } from "./solid-joys";
 
 describe("daily devotional handoff", () => {
-  it("preserves Chinese administrator access", () => {
+  it("enables Chinese locales and hides English locale", () => {
     expect(devotionalAvailable("zh-CN", true)).toBe(true);
     expect(devotionalAvailable("zh-TW", true)).toBe(true);
+    expect(devotionalAvailable("zh-CN", false)).toBe(true);
+    expect(devotionalAvailable("zh-TW", false)).toBe(true);
     expect(devotionalAvailable("en", true)).toBe(false);
-    expect(devotionalAvailable("zh-CN", false)).toBe(false);
+    expect(devotionalAvailable("en", false)).toBe(false);
   });
   it("uses February 28 for leap day", () => {
     expect(devotionalKey(new Date(2024, 1, 29))).toBe("02-28");

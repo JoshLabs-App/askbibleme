@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { ReadPlanDevotional } from "@/components/bible/ReadPlanDevotional";
+import { captureDevotionalPlanDay } from "@/lib/devotional/solid-joys";
 import { ReadNtDeepRepeatStagesBelowToday } from "@/components/bible/ReadNtDeepRepeatStagesBelowToday";
 import { ReadPlanPlayMonthCalendar } from "@/components/bible/ReadPlanPlayMonthCalendar";
 import { ReadScripturePlaybackDock } from "@/components/bible/ReadScripturePlaybackDock";
@@ -249,6 +251,7 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
     const viewDate = new Date();
     viewDate.setDate(viewDate.getDate() + viewAhead);
     markPlanPlayListenedDate(toLocalDateString(viewDate));
+    captureDevotionalPlanDay(viewDate);
   }, [viewAhead]);
 
   const syncPlanPlayAudioSession = useCallback(() => {
@@ -493,7 +496,7 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
                       className={[
                         "flex h-8 w-8 items-center justify-center rounded-full text-[13px] tabular-nums transition",
                         d.isSelected
-                          ? "bg-[#C1660B] font-bold text-[#FFFDF9] shadow-sm dark:bg-[#D9822B] dark:text-[#1A1511]"
+                          ? "bg-[#C1660B] font-bold text-[#FFFBF4] shadow-sm dark:bg-[#D97707] dark:text-[#FFFBF4]"
                           : d.isToday
                             ? "border border-[#C1660B]/60 font-semibold text-[#231A12] dark:border-[#E2A84B]/60 dark:text-[#EDE2CF]"
                             : "font-medium text-[#3C2E20] dark:text-[#D5C3A8]",
@@ -644,6 +647,8 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
             </ul>
           </div>
         )}
+
+        <ReadPlanDevotional viewAhead={viewAhead} />
 
         {isNtDeepRepeat ? (
           <ReadNtDeepRepeatStagesBelowToday

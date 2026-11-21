@@ -136,29 +136,22 @@ fun BiblePanoramaScreen(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
                                 ViewGroup.LayoutParams.MATCH_PARENT,
                             )
-                            bridge.configureWebView(this)
-                            val initialUrl = Uri.parse("${NativeMediaBridge.BASE_ORIGIN}/index.html")
-                                .buildUpon()
-                                .appendQueryParameter("route", "panorama")
-                                .appendQueryParameter("locale", locale.tag)
-                                .appendQueryParameter("dark", if (theme.isDark) "1" else "0")
-                                .appendQueryParameter("scale", "1")
-                                .appendQueryParameter("book", currentBook ?: "")
-                                .appendQueryParameter("ch", maxOf(1, currentChapter).toString())
-                                .appendQueryParameter("hasHistory", if (currentBook != null) "1" else "0")
-                                .appendQueryParameter("locateRequest", locateRequest.toString())
-                                .appendQueryParameter("topInset", topInsetDp.toString())
-                                .appendQueryParameter("bottomInset", bottomInsetDp.toString())
-                                .appendQueryParameter("embedded", "1")
-                                .build()
-                                .toString()
+                            bridge.configureWebView(this, isDark = theme.isDark)
                             webViewRef = this
-                            bridge.loadLocalPack(this, initialUrl)
+                            if (!bridge.loadInlinePack(this, stateJson)) {
+                                webViewFailed = true
+                            }
                         }
                     }.getOrElse {
                         webViewFailed = true
                         android.view.View(ctx)
                     }
+                },
+                update = { wv ->
+                    wv.setBackgroundColor(
+                        if (theme.isDark) android.graphics.Color.parseColor("#1A1512")
+                        else android.graphics.Color.parseColor("#ECD9B9"),
+                    )
                 },
             )
         }

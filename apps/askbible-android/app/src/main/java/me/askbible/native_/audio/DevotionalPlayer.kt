@@ -46,7 +46,7 @@ class DevotionalPlayer(context: Context, private val scope: CoroutineScope) {
             )
         )
         .build()
-    private val mediaSession = MediaSession.Builder(context, player).setId("devotional").build()
+    private val mediaSession = PlaybackSessions.createSession(context, player, "devotional")
         .also { PlaybackSessions.register(it) { player.playWhenReady } }
     private var ticker: Job? = null
     private var sleepJob: Job? = null

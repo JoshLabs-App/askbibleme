@@ -78,8 +78,8 @@ class NativeMediaBridge(
     """.trimIndent()
 
     @SuppressLint("SetJavaScriptEnabled")
-    fun configureWebView(webView: WebView) {
-        webView.setBackgroundColor(Color.TRANSPARENT)
+    fun configureWebView(webView: WebView, isDark: Boolean = false) {
+        webView.setBackgroundColor(if (isDark) Color.parseColor("#1A1512") else Color.parseColor("#ECD9B9"))
         webView.overScrollMode = View.OVER_SCROLL_NEVER
         webView.isVerticalScrollBarEnabled = false
         webView.isHorizontalScrollBarEnabled = false
@@ -92,6 +92,14 @@ class NativeMediaBridge(
             allowContentAccess = false
         }
         webView.addJavascriptInterface(this, BRIDGE_NAME)
+        webView.webChromeClient = object : android.webkit.WebChromeClient() {
+            override fun onConsoleMessage(cm: android.webkit.ConsoleMessage?): Boolean {
+                if (cm != null) {
+                    android.util.Log.i("AskBiblePack", "[JS:${cm.messageLevel()}] ${cm.message()} @${cm.lineNumber()}")
+                }
+                return true
+            }
+        }
         webView.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
                 val url = request?.url ?: return null
@@ -115,10 +123,41 @@ class NativeMediaBridge(
         }
     }
 
+    private var watchdogInitStateJson: String? = null
+
+    /** 直接以内存内联自包含 HTML 加载胶囊（零网络/零拦截器子请求/防三星透明图层丢失）并启动 3 秒看门狗 */
+    fun loadInlinePack(webView: WebView, initialStateJson: String): Boolean {
+        val snap = PackStore.loadWebPackFiles(context) ?: return false
+        val rawHtmlBytes = snap.files["index.html"] ?: return false
+        var html = String(rawHtmlBytes, Charsets.UTF_8)
+        val cssBytes = snap.files["app.css"]
+        if (cssBytes != null && html.contains("<link rel='stylesheet' href='app.css'>")) {
+            html = html.replace("<link rel='stylesheet' href='app.css'>", "<style>${String(cssBytes, Charsets.UTF_8)}</style>")
+        }
+        val jsBytes = snap.files["app.js"]
+        if (jsBytes != null && html.contains("<script src='app.js'></script>")) {
+            html = html.replace("<script src='app.js'></script>", "<script>${String(jsBytes, Charsets.UTF_8)}</script>")
+        }
+        val initScript = "<script>$bootstrapJS;window.__ASKBIBLE_INIT__=$initialStateJson;</script>"
+        html = if (html.contains("<!--__ASKBIBLE_INIT_SLOT__-->")) {
+            html.replace("<!--__ASKBIBLE_INIT_SLOT__-->", initScript)
+        } else {
+            html.replace("</head>", "$initScript</head>")
+        }
+
+        observedWebView = WeakReference(webView)
+        watchdogUrl = null
+        watchdogInitStateJson = initialStateJson
+        beginWatchdogIfHotPack()
+        webView.loadDataWithBaseURL("$BASE_ORIGIN/", html, "text/html", "UTF-8", null)
+        return true
+    }
+
     /** 加载本地胶囊 URL 并启动 3 秒防变砖看门狗（仅加载热更胶囊时启用） */
     fun loadLocalPack(webView: WebView, url: String) {
         observedWebView = WeakReference(webView)
         watchdogUrl = url
+        watchdogInitStateJson = null
         beginWatchdogIfHotPack()
         webView.loadUrl(url)
     }
@@ -131,11 +170,14 @@ class NativeMediaBridge(
 
         val task = Runnable {
             if (bootHealthyReceived) return@Runnable
+            android.util.Log.w("AskBiblePack", "Watchdog timeout on hot web-pack; rolling back to builtin")
             PackStore.rollbackHotWebPack(context)
-            val wv = observedWebView?.get()
-            val reloadUrl = watchdogUrl
-            if (wv != null && reloadUrl != null) {
-                wv.loadUrl(reloadUrl)
+            val wv = observedWebView?.get() ?: return@Runnable
+            val initJson = watchdogInitStateJson
+            if (initJson != null) {
+                loadInlinePack(wv, initJson)
+            } else {
+                watchdogUrl?.let { wv.loadUrl(it) }
             }
         }
         watchdogRunnable = task

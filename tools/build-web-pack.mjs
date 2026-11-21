@@ -20,19 +20,20 @@
  */
 
 import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { SCRIPTURE_BOOK_NAME_EN } from "../lib/bible/scripture-book-names-en.ts";
 import { scriptureBooks } from "../lib/bible/scripture-books.ts";
 import { toZhTwText } from "../lib/i18n/zh-tw-text.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const MAX_PACK_BYTES = 60 * 1024;
+const MAX_PACK_BYTES = 64 * 1024;
 
 const OUTPUT_TARGETS = [
   "public/v2/web-pack.json",
-  "apps/askbible-ios/AskBible/Resources/web-pack.json",
-  "apps/askbible-android/app/src/main/assets/web-pack.json",
+  ...(existsSync(path.join(ROOT, "apps/askbible-ios")) ? ["apps/askbible-ios/AskBible/Resources/web-pack.json"] : []),
+  ...(existsSync(path.join(ROOT, "apps/askbible-android")) ? ["apps/askbible-android/app/src/main/assets/web-pack.json"] : []),
 ];
 
 function readRepoFile(rel) {
@@ -68,16 +69,20 @@ function toJsLiteral(val) {
   return "{" + parts.join(",") + "}";
 }
 
-/** 从 BibleCatalog.swift 解析 66 卷英文书名 */
+/** 从 BibleCatalog.swift（或无 apps/ 部署归档下的 TS 目录）解析 66 卷英文书名 */
 function loadEnglishBookNames() {
-  const swift = readRepoFile("apps/askbible-ios/AskBible/Model/BibleCatalog.swift");
-  const enMap = new Map();
-  for (const m of swift.matchAll(
-    /BookRef\(number:\s*\d+,\s*id:\s*"(\w+)",\s*nameZh:\s*"[^"]+",\s*nameEn:\s*"([^"]+)",\s*chapterCount:\s*\d+\)/g,
-  )) {
-    enMap.set(m[1], m[2]);
+  const swiftRel = "apps/askbible-ios/AskBible/Model/BibleCatalog.swift";
+  if (existsSync(path.join(ROOT, swiftRel))) {
+    const swift = readRepoFile(swiftRel);
+    const enMap = new Map();
+    for (const m of swift.matchAll(
+      /BookRef\(number:\s*\d+,\s*id:\s*"(\w+)",\s*nameZh:\s*"[^"]+",\s*nameEn:\s*"([^"]+)",\s*chapterCount:\s*\d+\)/g,
+    )) {
+      enMap.set(m[1], m[2]);
+    }
+    return enMap;
   }
-  return enMap;
+  return new Map(Object.entries({ ...SCRIPTURE_BOOK_NAME_EN, SNG: "Song of Solomon" }));
 }
 
 /** 从 zh-tw-text.ts 提取简繁转换表，并仅保留本胶囊用到的词组与单字 */
@@ -274,23 +279,14 @@ function loadSourceData() {
   return { books, acts, notes, tw };
 }
 
-function buildIndexHtml() {
+function buildSelfContainedHtml(appCss, appJs) {
   return (
     "<!doctype html><html lang='zh-CN'><head><meta charset='utf-8'>" +
     "<meta name='viewport' content='width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover'>" +
-    "<title>AskBible.me</title><script>(function(){" +
-    "var q=new URLSearchParams(location.search||'');" +
-    "if(!q.toString()&&location.hash&&location.hash.indexOf('?')!==-1){q=new URLSearchParams(location.hash.split('?')[1]);}" +
-    "var r=document.documentElement,d=q.get('dark')==='1'||q.get('dark')==='true',l=q.get('locale')||'zh-CN',s=parseFloat(q.get('scale')||'1');" +
-    "if(!isFinite(s)||s<=0)s=1;" +
-    "var ti=parseFloat(q.get('topInset')||'0')||0,bi=parseFloat(q.get('bottomInset')||'0')||0;" +
-    "var emb=!!(window.askbibleNative||window.askbibleNativeBridge||(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.askbibleNative)||q.get('embedded')==='1');" +
-    "r.dataset.theme=d?'dark':'light';r.dataset.locale=l;r.dataset.embedded=emb?'1':'0';" +
-    "r.style.setProperty('--font-scale',String(s));" +
-    "r.style.setProperty('--inset-top',ti+'px');" +
-    "r.style.setProperty('--inset-bottom',bi+'px');" +
-    "})();</script><link rel='stylesheet' href='app.css'></head>" +
-    "<body><div id='app'></div><script src='app.js'></script></body></html>"
+    "<title>AskBible.me</title>" +
+    "<style>" + appCss + "</style>" +
+    "<!--__ASKBIBLE_INIT_SLOT__-->" +
+    "</head><body><div id='app'></div><script>" + appJs + "</script></body></html>"
   );
 }
 
@@ -299,7 +295,7 @@ function buildAppCss() {
     ":root{--canvas:#ecd9b9;--ink:#1c1410;--ink-soft:rgba(28,20,16,0.94);--muted:#5c4030;--faint:#6e5240;--border:rgba(120,53,15,0.28);--border-strong:rgba(120,53,15,0.42);--accent:#C1660B;--accent-soft:rgba(193,102,11,0.12);--accent-line:rgba(193,102,11,0.35);--surface:rgba(255,252,245,0.88);--surface-dim:rgba(255,252,245,0.62);--card:rgba(255,252,245,0.72);--chapter-bg:#f5ead8;--chapter-border:rgba(120,53,15,0.30);--modal-backdrop:rgba(28,20,16,0.45);--modal-bg:#f5ebe0;--cta-fg:#fffdf9;--shadow:0 4px 14px rgba(28,20,16,0.07);--font-scale:1;--inset-top:0px;--inset-bottom:0px;}",
     "html[data-theme='dark']{--canvas:#1a1512;--ink:#f4ebe1;--ink-soft:rgba(244,235,225,0.94);--muted:#d8c8b4;--faint:#b9a896;--border:rgba(244,235,225,0.16);--border-strong:rgba(244,235,225,0.24);--accent:#E2A84B;--accent-soft:rgba(226,168,75,0.14);--accent-line:rgba(226,168,75,0.35);--surface:rgba(41,37,36,0.80);--surface-dim:rgba(41,37,36,0.52);--card:rgba(26,21,18,0.64);--chapter-bg:rgba(63,58,54,0.66);--chapter-border:rgba(244,235,225,0.18);--modal-backdrop:rgba(12,10,8,0.64);--modal-bg:#26201c;--cta-fg:#1a1511;--shadow:0 4px 16px rgba(0,0,0,0.28);}",
     "*,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}",
-    "html,body{margin:0;padding:0;min-height:100%;background:transparent;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Noto Sans SC','Hiragino Sans GB','Microsoft YaHei',system-ui,sans-serif;font-size:calc(16px * var(--font-scale));line-height:1.5;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-text-size-adjust:100%;}",
+    "html,body{margin:0;padding:0;min-height:100%;background:var(--canvas);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Noto Sans SC','Hiragino Sans GB','Microsoft YaHei',system-ui,sans-serif;font-size:calc(16px * var(--font-scale));line-height:1.5;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-text-size-adjust:100%;}",
     "html[data-embedded='0'] body{background:var(--canvas);}",
     "button,input{font-family:inherit;color:inherit;}input{-webkit-user-select:text;user-select:text;}button{border:0;background:transparent;padding:0;margin:0;text-align:left;cursor:pointer;}",
     ".wrap{max-width:520px;margin:0 auto;padding:calc(max(var(--inset-top),env(safe-area-inset-top,0px)) + 18px) 20px calc(max(var(--inset-bottom),env(safe-area-inset-bottom,0px)) + 28px);}",
@@ -361,6 +357,25 @@ function toTw(str){
   return out;
 }
 function parseParams(){
+  if(window.__ASKBIBLE_INIT__&&typeof window.__ASKBIBLE_INIT__==='object'){
+    var p=window.__ASKBIBLE_INIT__;
+    var pb=String(p.book||'').trim().toUpperCase();
+    var pch=Number(p.ch||1);
+    if(!isFinite(pch)||pch<1)pch=1;
+    var psc=Number(p.scale||1);
+    if(!isFinite(psc)||psc<=0)psc=1;
+    return{
+      locale:String(p.locale||'zh-CN'),
+      dark:Boolean(p.dark),
+      scale:psc,
+      book:pb||'GEN',
+      ch:Math.floor(pch),
+      hasHistory:typeof p.hasHistory==='boolean'?p.hasHistory:Boolean(pb),
+      locateRequest:Number(p.locateRequest||0)||0,
+      topInset:Number(p.topInset||0)||0,
+      bottomInset:Number(p.bottomInset||0)||0
+    };
+  }
   var q=new URLSearchParams(location.search||'');
   if(!q.toString()&&location.hash&&location.hash.indexOf('?')!==-1){
     q=new URLSearchParams(location.hash.split('?')[1]);
@@ -678,17 +693,17 @@ if(appNode&&appNode.children.length>0)sendNative('bootHealthy',{version:VERSION}
 
 function generateCapsule() {
   const data = loadSourceData();
-  const indexHtml = buildIndexHtml();
   const appCss = buildAppCss();
   const contentHash = createHash("sha256")
-    .update(JSON.stringify({ data, indexHtml, appCss }))
+    .update(JSON.stringify({ data, appCss }))
     .digest("hex")
     .slice(0, 12);
+  const appJs = buildAppJs(data, contentHash);
+  const indexHtml = buildSelfContainedHtml(appCss, appJs);
 
   const files = {
     "index.html": indexHtml,
-    "app.css": appCss,
-    "app.js": buildAppJs(data, contentHash),
+    "app.js": "/* inlined in index.html */",
   };
   const capsule = {
     schemaVersion: 1,

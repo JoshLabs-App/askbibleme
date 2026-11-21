@@ -166,10 +166,43 @@ final class NativeMediaBridge: NSObject, WKScriptMessageHandler {
         webView.allowsLinkPreview = false
     }
 
+    private var watchdogInitStateJSON: String?
+
+    /// 直接以内存自包含 HTML 加载胶囊（零子请求等待、0ms 秒开）并启动 3 秒看门狗
+    @discardableResult
+    func loadInlinePack(in webView: WKWebView, initialStateJSON: String) -> Bool {
+        guard let snap = PackStore.loadWebPackFiles(),
+              let htmlData = snap.files["index.html"],
+              var html = String(data: htmlData, encoding: .utf8) else {
+            return false
+        }
+        if let cssData = snap.files["app.css"], let css = String(data: cssData, encoding: .utf8),
+           html.contains("<link rel='stylesheet' href='app.css'>") {
+            html = html.replacingOccurrences(of: "<link rel='stylesheet' href='app.css'>", with: "<style>\(css)</style>")
+        }
+        if let jsData = snap.files["app.js"], let js = String(data: jsData, encoding: .utf8),
+           html.contains("<script src='app.js'></script>") {
+            html = html.replacingOccurrences(of: "<script src='app.js'></script>", with: "<script>\(js)</script>")
+        }
+        let initScript = "<script>window.__ASKBIBLE_INIT__=\(initialStateJSON);</script>"
+        if html.contains("<!--__ASKBIBLE_INIT_SLOT__-->") {
+            html = html.replacingOccurrences(of: "<!--__ASKBIBLE_INIT_SLOT__-->", with: initScript)
+        } else {
+            html = html.replacingOccurrences(of: "</head>", with: "\(initScript)</head>")
+        }
+        observedWebView = webView
+        watchdogURL = nil
+        watchdogInitStateJSON = initialStateJSON
+        beginWatchdogIfHotPack()
+        webView.loadHTMLString(html, baseURL: URL(string: "\(LocalPackURLSchemeHandler.baseOrigin)/"))
+        return true
+    }
+
     /// 加载本地胶囊并启动 3 秒防变砖健康看门狗（仅当加载热更胶囊时启用）
     func loadLocalPack(in webView: WKWebView, url: URL) {
         observedWebView = webView
         watchdogURL = url
+        watchdogInitStateJSON = nil
         beginWatchdogIfHotPack()
         webView.load(URLRequest(url: url))
     }
@@ -182,8 +215,12 @@ final class NativeMediaBridge: NSObject, WKScriptMessageHandler {
         let item = DispatchWorkItem { [weak self] in
             guard let self, !self.bootHealthyReceived else { return }
             PackStore.rollbackHotWebPack()
-            if let wv = self.observedWebView, let url = self.watchdogURL {
-                wv.load(URLRequest(url: url))
+            if let wv = self.observedWebView {
+                if let initJSON = self.watchdogInitStateJSON {
+                    self.loadInlinePack(in: wv, initialStateJSON: initJSON)
+                } else if let url = self.watchdogURL {
+                    wv.load(URLRequest(url: url))
+                }
             }
         }
         watchdogWorkItem = item

@@ -92,10 +92,7 @@ private struct PanoramaPackWebView: UIViewRepresentable {
 
         let initialJSON = encodeStateJSON()
         coord.lastStateJSON = initialJSON
-
-        if let url = makeInitialURL() {
-            coord.bridge.loadLocalPack(in: webView, url: url)
-        }
+        coord.bridge.loadInlinePack(in: webView, initialStateJSON: initialJSON)
         return webView
     }
 

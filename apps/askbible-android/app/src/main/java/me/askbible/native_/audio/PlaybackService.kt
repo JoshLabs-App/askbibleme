@@ -44,12 +44,33 @@ class PlaybackService : MediaSessionService() {
 /** 进程内所有 MediaSession 的登记处；服务起来后新登记的会话也会补挂上去 */
 object PlaybackSessions {
     private val sessions = ArrayList<MediaSession>()
+    private val activeBySlot = HashMap<String, MediaSession>()
     private val wantsPlayback = HashMap<MediaSession, () -> Boolean>()
     private var service: PlaybackService? = null
+    private var seq = 0
+
+    /**
+     * 安全创建 MediaSession（防 Activity 重建时旧实例尚未走完 onDispose 引发 `Session ID must be unique` 闪退）：
+     * 遵循「成对 acquire 前先 release 上一个」原则，先卸载并释放同槽残留旧会话，再构建新会话。
+     */
+    fun createSession(context: Context, player: androidx.media3.common.Player, slotId: String): MediaSession {
+        activeBySlot.remove(slotId)?.let { stale ->
+            unregister(stale)
+            runCatching { stale.release() }
+        }
+        val built = runCatching {
+            MediaSession.Builder(context, player).setId(slotId).build()
+        }.getOrElse {
+            seq += 1
+            MediaSession.Builder(context, player).setId("$slotId-$seq").build()
+        }
+        activeBySlot[slotId] = built
+        return built
+    }
 
     /** [wantsPlayback]：用户还想播（没按暂停）；失焦被迫停下时靠它把前台服务留住 */
     fun register(session: MediaSession, wantsPlayback: () -> Boolean = { false }) {
-        sessions += session
+        if (!sessions.contains(session)) sessions += session
         this.wantsPlayback[session] = wantsPlayback
         service?.addSession(session)
     }
@@ -59,6 +80,10 @@ object PlaybackSessions {
     fun unregister(session: MediaSession) {
         sessions -= session
         wantsPlayback.remove(session)
+        val iter = activeBySlot.entries.iterator()
+        while (iter.hasNext()) {
+            if (iter.next().value === session) iter.remove()
+        }
         service?.removeSession(session)
     }
 

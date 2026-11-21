@@ -47,7 +47,7 @@ struct NavDrawerView: View {
                     header
                     ScrollView(showsIndicators: false) { rows }
                     Button(action: onCheckUpdates) {
-                        Text(SiteCopy.t("native.appVersion", locale).replacingOccurrences(of: "{{version}}", with: Self.versionLabel))
+                        Text(SiteCopy.t("native.appVersion", locale).replacingOccurrences(of: "{{version}}", with: Self.versionWithTimeLabel))
                             .askFont(size: 11)
                             .foregroundStyle(theme.ink.opacity(0.42))
                             .frame(maxWidth: .infinity)
@@ -101,7 +101,7 @@ struct NavDrawerView: View {
             menuRow(SiteCopy.t("auth.pageTitle", locale), action: onLogin)
         }
         reminderRow
-        menuRow(SiteCopy.t("native.checkForUpdates", locale), detail: updateDetail ?? Self.versionLabel, action: onCheckUpdates)
+        menuRow(SiteCopy.t("native.checkForUpdates", locale), detail: updateDetail ?? Self.versionWithTimeLabel, stacked: true, action: onCheckUpdates)
         menuRow(SiteCopy.t("native.sendFeedback", locale), detail: Self.supportEmail, action: onFeedback)
         if let syncDetail {
             menuRow(SiteCopy.t("native.readingSync", locale), detail: syncDetail, action: onClose)
@@ -209,19 +209,33 @@ struct NavDrawerView: View {
         .buttonStyle(.plain)
     }
 
-    private func menuRow(_ label: String, detail: String? = nil, action: @escaping () -> Void) -> some View {
+    private func menuRow(_ label: String, detail: String? = nil, stacked: Bool = false, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack(spacing: 8) {
-                Text(label)
-                    .askFont(size: 16)
-                    .foregroundStyle(theme.ink)
-                    .lineLimit(1)
-                Spacer(minLength: 8)
-                if let detail {
-                    Text(detail)
-                        .askFont(size: 12)
-                        .foregroundStyle(theme.ink.opacity(0.55))
-                        .lineLimit(1)
+            Group {
+                if stacked, let detail {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(label)
+                            .askFont(size: 16)
+                            .foregroundStyle(theme.ink)
+                        Text(detail)
+                            .askFont(size: 12)
+                            .foregroundStyle(theme.ink.opacity(0.65))
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    HStack(spacing: 8) {
+                        Text(label)
+                            .askFont(size: 16)
+                            .foregroundStyle(theme.ink)
+                            .lineLimit(1)
+                        Spacer(minLength: 8)
+                        if let detail {
+                            Text(detail)
+                                .askFont(size: 12)
+                                .foregroundStyle(theme.ink.opacity(0.55))
+                                .lineLimit(1)
+                        }
+                    }
                 }
             }
             .padding(.horizontal, 12)
@@ -238,5 +252,24 @@ struct NavDrawerView: View {
         let short = info?["CFBundleShortVersionString"] as? String ?? "—"
         let build = info?["CFBundleVersion"] as? String
         return build.map { "\(short) (\($0))" } ?? short
+    }
+
+    static func formatTimestamp(_ date: Date = Date()) -> String {
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "en_US_POSIX")
+        fmt.timeZone = .current
+        fmt.dateFormat = "yyyy-MM-dd HH:mm"
+        return fmt.string(from: date)
+    }
+
+    /// 「1.2.3 (45) · 2026-11-20 20:32」（取主二进制编译链接时间）
+    static var versionWithTimeLabel: String {
+        let ver = versionLabel
+        if let execPath = Bundle.main.executablePath,
+           let attrs = try? FileManager.default.attributesOfItem(atPath: execPath),
+           let modDate = attrs[.modificationDate] as? Date {
+            return "\(ver) · \(formatTimestamp(modDate))"
+        }
+        return ver
     }
 }

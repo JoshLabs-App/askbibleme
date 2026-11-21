@@ -173,7 +173,7 @@ fun NavDrawer(
                             Text(reminderTime, Modifier.clickableNoRipple(onPickReminderTime),
                                  color = theme.ink.toColor().copy(alpha = 0.7f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                         }
-                        DrawerRow(SiteCopy.t("native.checkForUpdates", locale), updateDetail ?: versionLabel, theme, onCheckUpdates)
+                        DrawerRow(SiteCopy.t("native.checkForUpdates", locale), updateDetail ?: appVersionWithTimeLabel(versionLabel), theme, onCheckUpdates)
                         DrawerRow(SiteCopy.t("native.sendFeedback", locale), SUPPORT_EMAIL, theme, onFeedback)
                         if (syncDetail != null) {
                             DrawerRow(SiteCopy.t("native.readingSync", locale), syncDetail, theme, onClose)
@@ -187,7 +187,7 @@ fun NavDrawer(
                         }
                     }
 
-                    Text(SiteCopy.f("native.appVersion", mapOf("version" to versionLabel), locale),
+                    Text(SiteCopy.f("native.appVersion", mapOf("version" to appVersionWithTimeLabel(versionLabel)), locale),
                          Modifier.fillMaxWidth().clickableNoRipple(onCheckUpdates).padding(top = 8.dp),
                          color = theme.ink.toColor().copy(alpha = 0.42f), fontSize = 11.sp, textAlign = TextAlign.Center)
                 }
@@ -246,6 +246,21 @@ fun appVersionLabel(context: Context): String {
         "${info.versionName} ($code)"
     } catch (_: Throwable) { "—" }
 }
+
+/** 格式化时间戳为「yyyy-MM-dd HH:mm」 */
+fun formatLocalTimestamp(epochMs: Long = System.currentTimeMillis()): String {
+    val fmt = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
+    return fmt.format(java.util.Date(epochMs))
+}
+
+/** 「1.2.3 (45) · 2026-11-20 20:32」（编译打包时间） */
+fun appVersionWithTimeLabel(versionLabel: String): String {
+    val epoch = me.askbible.native_.BuildConfig.BUILD_EPOCH_MS
+    return if (epoch > 0L) "$versionLabel · ${formatLocalTimestamp(epoch)}" else versionLabel
+}
+
+fun appVersionWithTimeLabel(context: Context): String =
+    appVersionWithTimeLabel(appVersionLabel(context))
 
 /** 发送反馈：RN 是 mailto，打不开就算了（原生没有站内反馈页） */
 fun openSupportMail(context: Context) {

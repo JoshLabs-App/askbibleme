@@ -22,7 +22,7 @@ import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { CuvChapterAudioVoiceProvider } from "@/components/bible/CuvChapterAudioVoiceContext";
 import { MediaPlaybackCoordinatorProvider } from "@/components/media/MediaPlaybackCoordinatorProvider";
 import { MusicShellPlaybackProvider } from "@/components/music/MusicShellPlaybackContext";
-import { getAppBuildId } from "@/lib/app-build-id";
+import { getAppBuildId, getAppBuiltAt } from "@/lib/app-build-id";
 import { brandingAssetsExist, getResolvedBrandColors, getResolvedLogoBackground } from "@/lib/site-branding";
 import {
   brandCanvasColorScheme,
@@ -102,6 +102,7 @@ export default async function RootLayout({
    *   「服务端没设才设」的补位逻辑，去掉服务端这半边它会自然接管。
    */
   const appBuildId = getAppBuildId();
+  const appBuiltAt = getAppBuiltAt();
 
   return (
     <html
@@ -115,7 +116,11 @@ export default async function RootLayout({
       }
       suppressHydrationWarning
     >
-      <body className="min-h-screen font-sans text-[15px] leading-relaxed" data-app-build={appBuildId}>
+      <body
+        className="min-h-screen font-sans text-[15px] leading-relaxed"
+        data-app-build={appBuildId}
+        data-app-built-at={appBuiltAt || undefined}
+      >
         <Script id="selah-sync-html-dark-class" strategy="beforeInteractive">
           {SYNC_HTML_DARK_CLASS_BOOT_SCRIPT}
         </Script>

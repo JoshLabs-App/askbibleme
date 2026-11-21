@@ -756,36 +756,45 @@ struct RootView: View {
     /// 手动「检查更新」：强制探测客户端新版本与离线内容包 SHA-256 热更（忽略 6 小时冷却与已跳过标记）。
     private func checkUpdatesManually() {
         guard !checkingUpdates else { return }
+        let ver = NavDrawerView.versionLabel
         checkingUpdates = true
+        updateStatusDetail = "\(ver) · \(SiteCopy.t("native.updateChecking", appLocale))"
         Task {
             await Endpoints.refresh()
             async let appCheck = updateChecker.check(force: true)
             async let packCheck = PackStore.refreshInstalledPacksIfNeeded(force: true)
             let (appOutcome, packOutcome) = await (appCheck, packCheck)
+            let checkedAt = NavDrawerView.formatTimestamp()
             checkingUpdates = false
             switch appOutcome {
-            case .updateAvailable(let ver):
-                updateStatusDetail = SiteCopy.f("native.updateTitle", ["version": ver], appLocale)
+            case .updateAvailable(let nextVer):
+                updateStatusDetail = "\(SiteCopy.f("native.updateTitle", ["version": nextVer], appLocale)) · \(checkedAt)"
                 showMenu = false
             case .upToDate, .throttled:
                 if packOutcome.updatedCount > 0 {
-                    updateStatusDetail = SiteCopy.t("native.updateUpToDate", appLocale)
-                    showToast(SiteCopy.f("native.updatePacksApplied", ["count": "\(packOutcome.updatedCount)"], appLocale))
+                    let appliedText = SiteCopy.f("native.updatePacksApplied", ["count": "\(packOutcome.updatedCount)"], appLocale)
+                    updateStatusDetail = "\(ver) · \(appliedText) · \(checkedAt)"
+                    showToast("\(appliedText)（\(ver) · \(checkedAt)）")
                 } else {
-                    updateStatusDetail = SiteCopy.t("native.updateUpToDate", appLocale)
-                    showToast(SiteCopy.f("native.updateUpToDateToast", ["version": NavDrawerView.versionLabel], appLocale))
+                    let latestText = SiteCopy.t("native.updateUpToDate", appLocale)
+                    updateStatusDetail = "\(ver) · \(latestText) · \(checkedAt)"
+                    showToast(SiteCopy.f("native.updateUpToDateToast", ["version": "\(ver) · \(checkedAt)"], appLocale))
                 }
             case .networkFailed:
                 if packOutcome.catalogReachable {
                     if packOutcome.updatedCount > 0 {
-                        updateStatusDetail = SiteCopy.t("native.updateUpToDate", appLocale)
-                        showToast(SiteCopy.f("native.updatePacksApplied", ["count": "\(packOutcome.updatedCount)"], appLocale))
+                        let appliedText = SiteCopy.f("native.updatePacksApplied", ["count": "\(packOutcome.updatedCount)"], appLocale)
+                        updateStatusDetail = "\(ver) · \(appliedText) · \(checkedAt)"
+                        showToast("\(appliedText)（\(ver) · \(checkedAt)）")
                     } else {
-                        updateStatusDetail = SiteCopy.t("native.updateUpToDate", appLocale)
-                        showToast(SiteCopy.f("native.updateUpToDateToast", ["version": NavDrawerView.versionLabel], appLocale))
+                        let latestText = SiteCopy.t("native.updateUpToDate", appLocale)
+                        updateStatusDetail = "\(ver) · \(latestText) · \(checkedAt)"
+                        showToast(SiteCopy.f("native.updateUpToDateToast", ["version": "\(ver) · \(checkedAt)"], appLocale))
                     }
                 } else {
-                    showToast(SiteCopy.t("native.updateCheckFailed", appLocale))
+                    let failText = SiteCopy.t("native.updateCheckFailed", appLocale)
+                    updateStatusDetail = "\(ver) · \(failText) · \(checkedAt)"
+                    showToast(failText)
                 }
             }
         }

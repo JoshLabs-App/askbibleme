@@ -16,8 +16,9 @@ android {
         minSdk = 26
         targetSdk = 36
         // 必须大于 Play 上 RN 版已用过的 versionCode（RN android/app/build.gradle = 238）
-        versionCode = 253
-        versionName = "1.0.56"
+        versionCode = 254
+        versionName = "1.0.57"
+        buildConfigField("long", "BUILD_EPOCH_MS", "${System.currentTimeMillis()}L")
     }
 
     // 上传签名凭据：优先读本目录 keystore.properties，回退 00 保险箱（gitignore，不入库）

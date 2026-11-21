@@ -2,6 +2,7 @@
  * 构建/开发启动前写入 `public/app-build.json`，供静态 CDN 与 `getAppBuildId()` 对齐。
  * - 正式发布使用发布脚本传入的提交 SHA，其他构建回退到部署标识或随机 UUID
  * - `--dev`：固定 `development`（与 AppUpdateNotifier 跳过逻辑一致）
+ * - 同时写入 `builtAt` ISO 时间戳，用于侧栏展示版本号与构建时间
  */
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -17,10 +18,11 @@ const isDev = process.argv.includes("--dev");
 const id = isDev
   ? "development"
   : (process.env.NEXT_PUBLIC_APP_BUILD_ID?.trim() || crypto.randomUUID());
+const builtAt = new Date().toISOString();
 
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
-fs.writeFileSync(outPath, `${JSON.stringify({ id })}\n`, "utf8");
+fs.writeFileSync(outPath, `${JSON.stringify({ id, builtAt })}\n`, "utf8");
 const genOutPath = path.join(root, "lib", "generated", "app-build-meta.json");
 fs.mkdirSync(path.dirname(genOutPath), { recursive: true });
-fs.writeFileSync(genOutPath, `${JSON.stringify({ id })}\n`, "utf8");
-console.log(`[write-app-build-meta] wrote ${outPath} id=${id}`);
+fs.writeFileSync(genOutPath, `${JSON.stringify({ id, builtAt })}\n`, "utf8");
+console.log(`[write-app-build-meta] wrote ${outPath} id=${id} builtAt=${builtAt}`);

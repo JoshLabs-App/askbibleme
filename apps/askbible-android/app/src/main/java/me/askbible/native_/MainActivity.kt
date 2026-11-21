@@ -76,6 +76,8 @@ import me.askbible.native_.ui.VerseSelectionSheet
 import me.askbible.native_.ui.OnboardingPrefs
 import me.askbible.native_.ui.WelcomeScreen
 import me.askbible.native_.ui.appVersionLabel
+import me.askbible.native_.ui.appVersionWithTimeLabel
+import me.askbible.native_.ui.formatLocalTimestamp
 import me.askbible.native_.ui.openSupportMail
 import me.askbible.native_.ui.syncDetailText
 import me.askbible.native_.audio.LoopMode
@@ -993,8 +995,9 @@ private fun RootScreen() {
             updateDetail = updateStatusDetail,
             onCheckUpdates = {
                 if (!checkingUpdates) {
+                    val ver = appVersionLabel(context)
                     checkingUpdates = true
-                    updateStatusDetail = SiteCopy.t("native.updateChecking", appLocale)
+                    updateStatusDetail = "$ver · ${SiteCopy.t("native.updateChecking", appLocale)}"
                     scope.launch {
                         withContext(Dispatchers.IO) { runCatching { Endpoints.refresh() } }
                         val selfOutcome = if (BuildConfig.SELF_UPDATE) {
@@ -1006,36 +1009,40 @@ private fun RootScreen() {
                         val packOutcome = withContext(Dispatchers.IO) {
                             PackStore.refreshInstalledPacksSync(context, force = true)
                         }
+                        val checkedAt = formatLocalTimestamp()
                         checkingUpdates = false
                         when {
                             selfOutcome?.status == AppUpdater.CheckStatus.AVAILABLE && selfOutcome.info != null -> {
                                 showMenu = false
-                                updateStatusDetail = "v${selfOutcome.info.version}"
+                                updateStatusDetail = "v${selfOutcome.info.version} · $checkedAt"
                             }
                             playOutcome == PlayUpdateGate.ManualOutcome.STARTED_FLOW ||
                                 playOutcome == PlayUpdateGate.ManualOutcome.COMPLETED_DOWNLOADED -> {
                                 showMenu = false
-                                updateStatusDetail = null
+                                updateStatusDetail = "$ver · $checkedAt"
                             }
                             packOutcome.updatedCount > 0 -> {
                                 reloadToken += 1
-                                updateStatusDetail = SiteCopy.t("native.updateUpToDate", appLocale)
-                                toast = SiteCopy.f(
+                                val appliedText = SiteCopy.f(
                                     "native.updatePacksApplied",
                                     mapOf("count" to "${packOutcome.updatedCount}"),
                                     appLocale,
                                 )
+                                updateStatusDetail = "$ver · $appliedText · $checkedAt"
+                                toast = "$appliedText（$ver · $checkedAt）"
                             }
                             !packOutcome.catalogReachable &&
                                 (selfOutcome?.status == AppUpdater.CheckStatus.NETWORK_FAILED || !BuildConfig.SELF_UPDATE) -> {
-                                updateStatusDetail = SiteCopy.t("native.updateCheckFailed", appLocale)
-                                toast = SiteCopy.t("native.updateCheckFailed", appLocale)
+                                val failText = SiteCopy.t("native.updateCheckFailed", appLocale)
+                                updateStatusDetail = "$ver · $failText · $checkedAt"
+                                toast = failText
                             }
                             else -> {
-                                updateStatusDetail = SiteCopy.t("native.updateUpToDate", appLocale)
+                                val latestText = SiteCopy.t("native.updateUpToDate", appLocale)
+                                updateStatusDetail = "$ver · $latestText · $checkedAt"
                                 toast = SiteCopy.f(
                                     "native.updateUpToDateToast",
-                                    mapOf("version" to appVersionLabel(context)),
+                                    mapOf("version" to "$ver · $checkedAt"),
                                     appLocale,
                                 )
                             }

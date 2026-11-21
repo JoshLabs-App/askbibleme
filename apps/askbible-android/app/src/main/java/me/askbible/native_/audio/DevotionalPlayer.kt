@@ -52,6 +52,7 @@ class DevotionalPlayer(context: Context, private val scope: CoroutineScope) {
     private var sleepJob: Job? = null
 
     init {
+        player.setWakeMode(C.WAKE_MODE_NETWORK)
         player.setAudioAttributes(
             AudioAttributes.Builder().setContentType(C.AUDIO_CONTENT_TYPE_SPEECH).setUsage(C.USAGE_MEDIA).build(),
             true

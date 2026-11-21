@@ -401,22 +401,56 @@ private fun RootScreen() {
             }
         }
     }
+    val resolveAudioJob = remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    val bgAudioJob = remember { kotlinx.coroutines.SupervisorJob() }
+    val bgAudioScope = remember { kotlinx.coroutines.CoroutineScope(bgAudioJob + Dispatchers.Main.immediate) }
+    /**
+     * 直接向原生 ExoPlayer 装载并按需起播目标章——严禁依赖前台 Compose `LaunchedEffect` 重组：
+     * 锁屏进入 `ON_STOP` 后 `WindowRecomposer` 停摆，只有命令式直调才能在锁屏后台顺畅连播下一章。
+     */
+    fun loadChapterAudioNow(b: BookRef?, ch: Int, tr: ScriptureTranslation = translation, autoPlay: Boolean) {
+        listenTarget.value = b?.let { it.id to ch }
+        resolveAudioJob.value?.cancel()
+        resolveAudioJob.value = null
+        if (b == null) return
+        val url = ChapterAudioSource.resolve(tr.id, b.id, b.number, b.nameEn, ch) ?: return
+        val dispLoc = ReadDisplayLocale.resolve(appLocale, tr.language)
+        val chromeLoc = ReadDisplayLocale.chrome(appLocale, tr.language)
+        val bName = me.askbible.native_.data.RemoteBookNames.name(context, tr, b.id) ?: b.name(dispLoc)
+        val key = "${tr.id}.${b.id}.$ch"
+        val title = ReadChrome.chapterTitle(bName, ch, chromeLoc)
+        if (ChapterAudioSource.isResolverUrl(url)) {
+            audio.beginResolving(key, title, autoPlay = autoPlay)
+            resolveAudioJob.value = bgAudioScope.launch {
+                val src = withContext(Dispatchers.IO) { ChapterAudioSource.fetchResolved(url, key) }
+                if (src != null) audio.load(src, key, title, tr.id, b.id, ch, resolved = true, autoPlay = autoPlay)
+                else audio.failResolving(key)
+            }
+        } else {
+            audio.load(url, key, title, tr.id, b.id, ch, autoPlay = autoPlay)
+        }
+    }
     fun openPlanChapter(p: PlanPointer, autoPlay: Boolean) {
         val b = BibleCatalog.book(p.bookId) ?: return
         focusVerse = null; focusKeyword = null
-        autoPlayPending = autoPlay
+        autoPlayPending = false
         listenBook = b; listenChapter = p.chapter
         chapter = p.chapter
         searchReturnQuery = null; openedBook = b
+        loadChapterAudioNow(b, p.chapter, autoPlay = autoPlay)
     }
     // 播放页点播：不开章页，只把音源换到这一章（同章已载入就直接续播）
     fun listenPlanChapter(p: PlanPointer, autoPlay: Boolean) {
         val b = BibleCatalog.book(p.bookId) ?: return
         val tb = openedBook ?: listenBook
         val tc = if (openedBook != null) chapter else listenChapter
-        if (tb?.id == b.id && tc == p.chapter) { if (autoPlay) audio.resume(); return }
-        autoPlayPending = autoPlay
+        if (tb?.id == b.id && tc == p.chapter) {
+            loadChapterAudioNow(b, p.chapter, autoPlay = autoPlay)
+            return
+        }
+        autoPlayPending = false
         listenBook = b; listenChapter = p.chapter
+        loadChapterAudioNow(b, p.chapter, autoPlay = autoPlay)
     }
     // 下一章：计划流里顺队列并记已读（播放页听着就只换音源，章页开着就开下一章页），否则本卷下一章
     val skipNext: () -> Unit = {
@@ -427,7 +461,7 @@ private fun RootScreen() {
                 val readChapter = if (b != null) chapter else listenChapter
                 plans.markChapterRead(cb.id, readChapter)
                 achievements.noteChapterRead(cb.id, readChapter)
-                RatePrompt.maybeAsk(context, achievements.chaptersReadCount)
+                if (achievements.foreground) RatePrompt.maybeAsk(context, achievements.chaptersReadCount)
             }
             val next = planQueueIndex + 1
             if (next < planQueue.size) {
@@ -448,13 +482,18 @@ private fun RootScreen() {
                     // 单章书循环：音源没变，不会重新装载，直接回开头续播
                     audio.seekTo(0.0); audio.resume()
                 } else if (nextChapter > 0) {
-                    // 自动跳章要接着播：交给音源变化后的 autoPlayPending 起播
-                    if (b != null) { autoPlayPending = true; chapter = nextChapter }
-                    else { listenChapter = nextChapter; audio.resume() }
+                    autoPlayPending = false
+                    if (b != null) {
+                        chapter = nextChapter
+                    } else {
+                        listenChapter = nextChapter
+                    }
+                    loadChapterAudioNow(cur, nextChapter, autoPlay = true)
                 }
             }
         }
     }
+    val currentSkipNext = androidx.compose.runtime.rememberUpdatedState(skipNext)
     val music = remember { MusicPlayer(context, scope) }
     DisposableEffect(lifecycle, music) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
@@ -504,12 +543,13 @@ private fun RootScreen() {
         // 读经朗读与音乐可以同时放：音乐压到 30%，不再直接暂停（Josh 2026-09-11）；金句人声仍然互斥
         audio.onWillPlay = { devotional.stop(); music.setDucked(true); home.stopVoice() }
         audio.onStopped = { music.setDucked(false) }
+        audio.onSkipNext = { currentSkipNext.value() }
         audio.onFinished = {
             val handoff = me.askbible.native_.data.PlanDevotionalHandoff.shouldPlay(
                 naturalEnd = true, active = planFlowActive, count = planQueue.size, index = planQueueIndex,
                 listeningDay = planListeningDate?.toString(), today = LocalDate.now().toString(),
                 enabled = devotionalPrefs.getBoolean("after-reading", false), available = currentDevotionalAccess.value)
-            skipNext()
+            currentSkipNext.value()
             if (handoff) {
                 val day = me.askbible.native_.data.SolidJoys.day(LocalDate.now())
                 if (day?.audio != null) devotional.play(day.md, day.audio, "${day.dateLabel} ${day.title}")
@@ -522,7 +562,7 @@ private fun RootScreen() {
         devotional.onStopped = { music.setDucked(audio.isPlaying) }
         ambient.onWillPlay = { if ((home.voiceOn || audio.isPlaying || devotional.isPlaying) && music.isPlaying) music.pause() }
         music.restorePlaybackIfNeeded()
-        onDispose { audio.release(); music.release(); home.release(); ambient.release(); devotional.release() }
+        onDispose { resolveAudioJob.value?.cancel(); bgAudioJob.cancel(); audio.release(); music.release(); home.release(); ambient.release(); devotional.release() }
     }
     // 整章朗读时环境音压半，停了恢复（「读经混播时继续播并压音量」）
     // 人声（整章 / 金句）或音乐在放时环境音压到 30%（AMBIENT_WHILE_VOICE_GAIN / AMBIENT_WHILE_MUSIC_GAIN）
@@ -565,22 +605,10 @@ private fun RootScreen() {
     }
 
     LaunchedEffect(audioUrl, targetChapter, translation.id) {
-        val b = targetBook ?: return@LaunchedEffect
-        audioUrl?.let {
-            val key = "${translation.id}.${b.id}.$targetChapter"
-            val title = ReadChrome.chapterTitle(bookLabel(b), targetChapter, readChromeLocale)
-            if (ChapterAudioSource.isResolverUrl(it)) {
-                // YouVersion 译本：先问网站代理拿 CDN mp3，再装载
-                audio.beginResolving(key, title)
-                val src = withContext(Dispatchers.IO) { ChapterAudioSource.fetchResolved(it, key) }
-                if (src != null) audio.load(src, key, title, translation.id, b.id, targetChapter, resolved = true)
-                else audio.failResolving(key)
-            } else {
-                audio.load(it, key, title, translation.id, b.id, targetChapter)
-            }
-        }
-        audio.onSkipNext = skipNext
-        if (autoPlayPending) { autoPlayPending = false; audio.resume() }
+        val shouldStart = autoPlayPending
+        autoPlayPending = false
+        audio.onSkipNext = { currentSkipNext.value() }
+        loadChapterAudioNow(targetBook, targetChapter, translation, autoPlay = shouldStart)
     }
 
     val deepLinkKey = VerseDeepLinkBus.pendingKey

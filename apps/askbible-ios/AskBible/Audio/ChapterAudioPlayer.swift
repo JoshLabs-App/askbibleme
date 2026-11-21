@@ -157,13 +157,16 @@ final class ChapterAudioPlayer: ObservableObject {
     }
 
     /// 装载一章。同一章重复调用不重新装载，只切换播放态。
-    /// YouVersion 译本：先问代理拿 mp3，这段时间按「装载中」显示；用户这时点播放，拿到地址后自动起播
-    func beginResolving(key: String, title: String) {
-        guard loadedKey != key else { return }
+    /// YouVersion 译本：先问代理拿 mp3，这段时间按「装载中」显示；若 `autoPlay` 为真（如锁屏顺章），保持 `wantsPlayback = true`
+    func beginResolving(key: String, title: String, autoPlay: Bool = false) {
+        if loadedKey == key {
+            if autoPlay { wantsPlayback = true }
+            return
+        }
         teardown()
         loadedKey = key
         nowPlayingTitle = title
-        wantsPlayback = false
+        wantsPlayback = autoPlay
         errorMessage = nil
         isLoading = true
         currentTime = 0
@@ -179,12 +182,19 @@ final class ChapterAudioPlayer: ObservableObject {
         errorMessage = SiteCopy.t("native.audioLoadFailed")
     }
 
-    /// [resolved]：beginResolving 之后拿到了真地址，同一个 key 也要装；用户等待期间点过播放就直接起播
+    /// [resolved]：beginResolving 之后拿到了真地址，同一个 key 也要装；若 `autoPlay` 为真则直接无缝起播（不依赖前台 SwiftUI onChange）
     func load(url: URL, key: String, title: String,
-              translationId: String = "", bookId: String = "", chapter: Int = 0, resolved: Bool = false) {
-        guard loadedKey != key || (resolved && player == nil) else { return }
-        let resumeAfter = resolved && wantsPlayback
+              translationId: String = "", bookId: String = "", chapter: Int = 0, resolved: Bool = false, autoPlay: Bool = false) {
+        if loadedKey == key && !(resolved && player == nil) {
+            if autoPlay {
+                if duration > 0 && currentTime >= duration - 0.05 { seek(to: 0) }
+                resume()
+            }
+            return
+        }
+        let resumeAfter = autoPlay || (resolved && wantsPlayback)
         teardown()
+        wantsPlayback = resumeAfter
 
         loadedKey = key
         nowPlayingTitle = title
@@ -205,7 +215,7 @@ final class ChapterAudioPlayer: ObservableObject {
         let avPlayer = AVPlayer(playerItem: item)
         avPlayer.automaticallyWaitsToMinimizeStalling = true
         player = avPlayer
-        if resumeAfter { DispatchQueue.main.async { [weak self] in self?.resume() } }
+        if resumeAfter { resume() }
 
         statusObserver = item.observe(\.status, options: [.new]) { [weak self] item, _ in
             Task { @MainActor in
@@ -259,7 +269,14 @@ final class ChapterAudioPlayer: ObservableObject {
                 case .book, .forward:
                     // 往下走由壳决定：计划流跟计划池，否则下一章；本书循环读到末章回本书第 1 章
                     self.currentTime = self.duration
+                    let prevKey = self.loadedKey
                     (self.onFinished ?? self.onSkipNext)?()
+                    if self.loadedKey == prevKey {
+                        self.wantsPlayback = false
+                        self.isPlaying = false
+                        self.updateNowPlaying()
+                        self.onStopped?()
+                    }
                 }
             }
         }

@@ -533,7 +533,8 @@ struct RootView: View {
                 audio.onFinished = {
                     let handoff = PlanDevotionalHandoff.shouldPlay(naturalEnd: true, active: planFlowActive,
                         count: planQueue.count, index: planQueueIndex, listeningDay: planListeningDate,
-                        today: PlanDates.localDateString(Date()), enabled: UserDefaults.standard.bool(forKey: "devotional.after-reading"),
+                        today: PlanDates.localDateString(Date()),
+                        enabled: (UserDefaults.standard.object(forKey: "devotional.after-reading") as? Bool) ?? true,
                         available: SolidJoys.available(locale: appLocale, isAdmin: auth.isAdmin))
                     skipToNextChapter()
                     if handoff, let day = devotionals.day(Date()) {

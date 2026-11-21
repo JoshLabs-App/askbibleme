@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  DEVOTIONAL_PREF,
   dateFromDevotionalKey,
   devotionalAudioUrl,
   devotionalAvailable,
@@ -9,7 +10,9 @@ import {
   devotionalKeyFromAudioSrc,
   devotionalMatchesQuery,
   groupDevotionalDaysByMonth,
+  readDevotionalAuto,
   shouldHandoffDevotional,
+  writeDevotionalAuto,
   type DevotionalDay,
 } from "./solid-joys";
 
@@ -25,6 +28,31 @@ describe("daily devotional handoff & catalog helpers", () => {
 
   it("uses February 28 for leap day", () => {
     expect(devotionalKey(new Date(2024, 1, 29))).toBe("02-28");
+  });
+
+  it("defaults after-reading auto-play to true when unset and respects explicit toggle", () => {
+    const store = new Map<string, string>();
+    const prev = globalThis.localStorage;
+    Object.defineProperty(globalThis, "localStorage", {
+      configurable: true,
+      value: {
+        getItem: (k: string) => store.get(k) ?? null,
+        setItem: (k: string, v: string) => void store.set(k, v),
+      },
+    });
+    try {
+      expect(store.has(DEVOTIONAL_PREF)).toBe(false);
+      expect(readDevotionalAuto()).toBe(true);
+      writeDevotionalAuto(false);
+      expect(readDevotionalAuto()).toBe(false);
+      writeDevotionalAuto(true);
+      expect(readDevotionalAuto()).toBe(true);
+    } finally {
+      Object.defineProperty(globalThis, "localStorage", {
+        configurable: true,
+        value: prev,
+      });
+    }
   });
 
   it("only hands off at the final chapter of a nonempty queue", () => {

@@ -44,7 +44,7 @@ function shiftMdByDays(md: string, delta: number): string {
   return devotionalKey(d);
 }
 
-/** 今日同行页底部的「每日灵修」卡片：直接展示简单标题、经文出处与 3 行内容简要，点击进入全年 12 个月目录与搜索页。 */
+/** 今日同行页底部的「每日灵修」紧凑卡片：写明作者（约翰·派博）、简单标题与 2 行简要，默认开启「读经后接着听」，一屏内完整可见。 */
 export function ReadPlanDevotional({
   viewAhead,
   onOpenCatalog,
@@ -55,7 +55,7 @@ export function ReadPlanDevotional({
   const { locale } = useLocale();
   const { isAdmin } = useAskbibleUser();
   const allowed = devotionalAvailable(locale, isAdmin);
-  const [on, setOn] = useState(false);
+  const [on, setOn] = useState(true);
   const [day, setDay] = useState<DevotionalDay>();
   const [failed, setFailed] = useState(false);
   const [retry, setRetry] = useState(0);
@@ -111,7 +111,7 @@ export function ReadPlanDevotional({
   return (
     <section
       aria-label={tw ? "每日靈修" : "每日灵修"}
-      className="mt-6 rounded-2xl border border-[#DFD0B8] bg-[#FAF5EC]/95 p-4 text-[#231A12] shadow-sm dark:border-[#3A3026] dark:bg-[#221C16]/95 dark:text-[#EDE2CF]"
+      className="mt-3 rounded-2xl border border-[#DFD0B8] bg-[#FAF5EC]/95 px-3.5 py-2.5 text-[#231A12] shadow-sm dark:border-[#3A3026] dark:bg-[#221C16]/95 dark:text-[#EDE2CF]"
     >
       <button
         type="button"
@@ -119,49 +119,50 @@ export function ReadPlanDevotional({
         className="block w-full cursor-pointer border-0 bg-transparent p-0 text-left"
       >
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[13.5px] font-semibold text-[#C1660B] dark:text-[#E2A84B]">
+          <span className="min-w-0 truncate text-[12.5px] font-semibold text-[#C1660B] dark:text-[#E2A84B]">
             {tw ? "每日靈修" : "每日灵修"}
-            {day ? (
-              <span className="font-medium text-[#8B7358] dark:text-[#9E8E78]">
-                {` · ${devotionalDateLabel(day.md)}`}
-              </span>
-            ) : null}
+            <span className="font-medium text-[#75614B] dark:text-[#A99A84]">
+              {tw ? " · 約翰·派博" : " · 约翰·派博"}
+              {day ? ` · ${devotionalDateLabel(day.md)}` : ""}
+            </span>
           </span>
-          <span className="inline-flex items-center gap-0.5 text-[12.5px] font-semibold text-[#C1660B] dark:text-[#E2A84B]">
-            <span>{tw ? "全年目錄" : "全年目录"}</span>
+          <span className="inline-flex shrink-0 items-center gap-0.5 text-[12px] font-semibold text-[#C1660B] dark:text-[#E2A84B]">
+            <span>{tw ? "目錄" : "目录"}</span>
             <span aria-hidden>›</span>
           </span>
         </div>
 
         {day ? (
-          <div className="mt-2.5">
-            <h2 className="font-serif text-[19px] font-bold leading-snug text-[#231A12] dark:text-[#EDE2CF]">
-              {day.title}
-            </h2>
-            {day.ref ? (
-              <p className="mt-1 text-[12.5px] font-semibold text-[#C1660B]/90 dark:text-[#E2A84B]/90">
-                {day.ref}
-              </p>
-            ) : null}
+          <div className="mt-1.5">
+            <div className="flex items-baseline justify-between gap-2">
+              <h2 className="min-w-0 truncate font-serif text-[16.5px] font-bold leading-snug text-[#231A12] dark:text-[#EDE2CF]">
+                {day.title}
+              </h2>
+              {day.ref ? (
+                <span className="shrink-0 text-[11.5px] font-medium text-[#8B7358] dark:text-[#9E8E78]">
+                  {day.ref}
+                </span>
+              ) : null}
+            </div>
             {brief ? (
-              <p className="mt-1.5 line-clamp-3 text-[14.5px] leading-relaxed text-[#4E3B28] dark:text-[#D5C3A8]">
+              <p className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-[#5A4632] dark:text-[#C8B79E]">
                 {brief}
               </p>
             ) : null}
           </div>
         ) : failed ? (
-          <p className="mt-2.5 py-1 text-sm text-[#8B7358] dark:text-[#9E8E78]">
+          <p className="mt-1.5 text-[13px] text-[#8B7358] dark:text-[#9E8E78]">
             {tw ? "靈修沒有載入，點這裡重試" : "灵修没有载入，点这里重试"}
           </p>
         ) : (
-          <p className="mt-2.5 py-1 text-sm text-[#8B7358] dark:text-[#9E8E78]">
-            {tw ? "正在準備每日靈修…" : "正在准备每日灵修…"}
+          <p className="mt-1.5 text-[13px] text-[#8B7358] dark:text-[#9E8E78]">
+            {tw ? "正在準備每日靈修…" : "正在准备每日靈修…".replace("靈", "灵")}
           </p>
         )}
       </button>
 
-      <div className="mt-3.5 flex items-center justify-between gap-3 border-t border-[#E6D9C3] pt-3 dark:border-[#362C22]">
-        <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 text-[13.5px] font-medium text-[#75614B] dark:text-[#A99A84]">
+      <div className="mt-2 flex items-center justify-between gap-2 border-t border-[#E6D9C3]/80 pt-2 dark:border-[#362C22]">
+        <label className="inline-flex min-h-7 cursor-pointer items-center gap-1.5 text-[12.5px] font-medium text-[#6E5A44] dark:text-[#A99A84]">
           <input
             type="checkbox"
             role="switch"
@@ -175,7 +176,7 @@ export function ReadPlanDevotional({
           />
           <span
             aria-hidden="true"
-            className="relative h-5 w-9 shrink-0 rounded-full bg-stone-300 after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-transform peer-checked:bg-[#C1660B] peer-checked:after:translate-x-4 dark:bg-stone-700 dark:peer-checked:bg-[#D97707]"
+            className="relative h-4 w-7 shrink-0 rounded-full bg-stone-300 after:absolute after:left-0.5 after:top-0.5 after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-transform peer-checked:bg-[#C1660B] peer-checked:after:translate-x-3 dark:bg-stone-700 dark:peer-checked:bg-[#D97707]"
           />
           <span>{tw ? "讀經後接著聽" : "读经后接着听"}</span>
         </label>
@@ -194,7 +195,7 @@ export function ReadPlanDevotional({
               shell.setPlaybackSrc(src, { autoPlay: true });
             }}
             className={[
-              "inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition active:scale-[0.98]",
+              "inline-flex min-h-7 shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[12px] font-semibold transition active:scale-[0.98]",
               isPlaying
                 ? "border-transparent bg-[#C1660B] text-[#FFFBF4] dark:bg-[#D97707]"
                 : "border-[#C1660B]/35 bg-[#C1660B]/15 text-[#C1660B] hover:bg-[#C1660B]/20 dark:border-[#E2A84B]/35 dark:bg-[#E2A84B]/15 dark:text-[#E2A84B]",
@@ -202,12 +203,12 @@ export function ReadPlanDevotional({
           >
             {isPlaying ? (
               <>
-                <IconPause className="h-3.5 w-3.5" />
+                <IconPause className="h-3 w-3" />
                 <span>{tw ? "正在播放" : "正在播放"}</span>
               </>
             ) : (
               <>
-                <IconPlay className="h-3.5 w-3.5 translate-x-[0.5px]" />
+                <IconPlay className="h-3 w-3 translate-x-[0.5px]" />
                 <span>
                   {minsLabel
                     ? `${tw ? "收聽" : "收听"} · ${minsLabel}`

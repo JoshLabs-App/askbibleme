@@ -488,20 +488,20 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
 
   return (
     <div className="read-plan-play-screen relative flex min-h-0 flex-1 flex-col">
-      <div className="read-plan-play-screen__scroll mx-auto w-full max-w-[440px] flex-1 overflow-y-auto px-4 pb-6 pt-[calc(env(safe-area-inset-top,0px)+1rem)]">
-        <header className="read-plan-play-screen__top-bar mb-4 flex items-start justify-between gap-3">
+      <div className="read-plan-play-screen__scroll mx-auto w-full max-w-[440px] flex-1 overflow-y-auto px-4 pb-6 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)]">
+        <header className="read-plan-play-screen__top-bar mb-2.5 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="font-serif text-[26px] font-bold leading-tight tracking-tight text-[#231A12] dark:text-[#EDE2CF]">
+            <h1 className="font-serif text-[24px] font-bold leading-tight tracking-tight text-[#231A12] dark:text-[#EDE2CF]">
               {pickPlanCopy("今日同行", "Today's Walk", locale)}
             </h1>
-            <p className="mt-1 truncate text-[13px] text-[#75614B] dark:text-[#A99A84]">
+            <p className="mt-0.5 truncate text-[12.5px] text-[#75614B] dark:text-[#A99A84]">
               {planName}
               {dayMeta ? ` · ${dayMeta}` : ""}
             </p>
           </div>
           <Link
             href="/read/plans"
-            className="mt-0.5 inline-flex shrink-0 items-center rounded-full border border-[#D8C6AA] bg-[#FAF5EC]/90 px-3 py-1.5 text-[12px] font-semibold text-[#6E563A] no-underline transition hover:bg-[#F3E9D8] dark:border-[#3E3328] dark:bg-[#262019] dark:text-[#D5C3A8]"
+            className="mt-0.5 inline-flex shrink-0 items-center rounded-full border border-[#D8C6AA] bg-[#FAF5EC]/90 px-3 py-1 text-[12px] font-semibold text-[#6E563A] no-underline transition hover:bg-[#F3E9D8] dark:border-[#3E3328] dark:bg-[#262019] dark:text-[#D5C3A8]"
           >
             {pickPlanCopy("换计划", "Plans", locale)}
           </Link>
@@ -512,10 +512,10 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
         ) : !hasQueue ? (
           <p className="py-12 text-center text-sm text-[var(--bc-read-muted)]">{t("pages.read.todayPlanEmpty")}</p>
         ) : (
-          <div className="read-plan-play-screen__queue space-y-4">
+          <div className="read-plan-play-screen__queue space-y-2.5">
             {/* 7 日温和周条（点击月份展开完整月历） */}
-            <section className="rounded-2xl border border-[#DFD0B8] bg-[#FAF5EC]/90 p-3.5 shadow-sm dark:border-[#3A3026] dark:bg-[#221C16]/90">
-              <div className="mb-2.5 flex items-center justify-between">
+            <section className="rounded-2xl border border-[#DFD0B8] bg-[#FAF5EC]/90 px-3.5 py-2.5 shadow-sm dark:border-[#3A3026] dark:bg-[#221C16]/90">
+              <div className="mb-1.5 flex items-center justify-between">
                 <button
                   type="button"
                   onClick={() => setMonthExpanded((prev) => !prev)}
@@ -537,7 +537,7 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
                     key={d.ahead}
                     type="button"
                     onClick={() => onSelectCalendarAhead(d.ahead)}
-                    className="flex flex-col items-center gap-1 rounded-xl border-0 bg-transparent py-1 transition active:scale-95"
+                    className="flex flex-col items-center gap-0.5 rounded-xl border-0 bg-transparent py-0.5 transition active:scale-95"
                   >
                     <span
                       className={[
@@ -551,7 +551,7 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
                     </span>
                     <span
                       className={[
-                        "flex h-[30px] w-[34px] items-center justify-center rounded-full text-[14px] tabular-nums transition",
+                        "flex h-[28px] w-[34px] items-center justify-center rounded-full text-[13.5px] tabular-nums transition",
                         d.isSelected
                           ? "bg-[#C1660B] font-bold text-[#FFFBF4] shadow-sm dark:bg-[#D97707] dark:text-[#FFFBF4]"
                           : d.isToday
@@ -598,9 +598,9 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
               </button>
             ) : null}
 
-            <div className="flex items-center justify-between gap-2 pt-1">
+            <div className="flex items-center justify-between gap-2 pt-0.5">
               <div className="flex items-baseline gap-2">
-                <h2 className="font-serif text-[17px] font-semibold text-[#231A12] dark:text-[#EDE2CF]">
+                <h2 className="font-serif text-[16.5px] font-semibold text-[#231A12] dark:text-[#EDE2CF]">
                   {t("pages.read.todayPlanTitle")}
                 </h2>
                 {trackMeta ? (
@@ -613,7 +613,7 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
                 type="button"
                 disabled={busy}
                 onClick={() => void onTogglePlay()}
-                className="inline-flex items-center gap-1.5 rounded-full bg-[#C1660B] px-3.5 py-1.5 text-[12.5px] font-semibold text-[#FFFDF9] shadow-sm transition hover:bg-[#A85607] active:scale-[0.98] disabled:opacity-50 dark:bg-[#D9822B] dark:text-[#1A1511]"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#C1660B] px-3 py-1 text-[12px] font-semibold text-[#FFFDF9] shadow-sm transition hover:bg-[#A85607] active:scale-[0.98] disabled:opacity-50 dark:bg-[#D9822B] dark:text-[#1A1511]"
               >
                 {isScripturePlaying ? (
                   <>
@@ -633,7 +633,7 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
               <p className="py-3 text-center text-sm text-[var(--bc-read-muted)]">{t("pages.read.todayPlanLoading")}</p>
             ) : null}
 
-            <ul className="read-plan-play-screen__list space-y-2">
+            <ul className="read-plan-play-screen__list space-y-1.5">
               {queue.map((item, index) => {
                 const active = activeIndex === index;
                 const rowPlaying = active && isScripturePlaying;
@@ -641,10 +641,10 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
                   <li key={`${item.bookId}:${item.chapter}:${index}`}>
                     <div
                       className={[
-                        "flex items-center gap-2 rounded-2xl border px-3.5 py-2.5 transition",
+                        "flex items-center gap-2 rounded-2xl border px-3.5 py-2 transition",
                         active
                           ? "border-[#C1660B]/45 bg-[#FBF6EC] shadow-sm dark:border-[#E2A84B]/40 dark:bg-[#282119]"
-                          : "border-[#E3D5BE] bg-[#FAF5EC]/75 hover:bg-[#FAF5EC] dark:border-[#362C22] dark:bg-[#211B15]/80",
+                          : "border-[#E3D5BE] bg-[#FAF5EC]/80 hover:bg-[#FAF5EC] dark:border-[#362C22] dark:bg-[#211B15]/80",
                       ].join(" ")}
                     >
                       <button
@@ -654,7 +654,7 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
                       >
                         <span
                           className={[
-                            "w-6 shrink-0 text-[12.5px] tabular-nums",
+                            "w-6 shrink-0 text-[12px] tabular-nums",
                             active
                               ? "font-bold text-[#C1660B] dark:text-[#E2A84B]"
                               : "text-[#8B7358] dark:text-[#9E8E78]",
@@ -663,10 +663,10 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
                           {String(index + 1).padStart(2, "0")}
                         </span>
                         <div className="min-w-0 flex-1">
-                          <div className="truncate font-serif text-[16px] font-semibold text-[#231A12] dark:text-[#EDE2CF]">
+                          <div className="truncate font-serif text-[15.5px] font-semibold text-[#231A12] dark:text-[#EDE2CF]">
                             {item.title}
                           </div>
-                          <div className="mt-0.5 text-[11.5px] text-[#8B7358] dark:text-[#9E8E78]">
+                          <div className="text-[11px] text-[#8B7358] dark:text-[#9E8E78]">
                             {pickPlanCopy("点按进入经文阅读", "Tap to read chapter", locale)}
                           </div>
                         </div>
@@ -685,7 +685,7 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
                           }
                         }}
                         className={[
-                          "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition active:scale-95 disabled:opacity-45",
+                          "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition active:scale-95 disabled:opacity-45",
                           rowPlaying
                             ? "border-[#C1660B] bg-[#C1660B] text-[#FFFDF9] dark:border-[#E2A84B] dark:bg-[#E2A84B] dark:text-[#1A1511]"
                             : "border-[#D8C6AA] bg-[#F3E9D8] text-[#4E3B28] hover:bg-[#EADBC3] dark:border-[#3E3328] dark:bg-[#2C241C] dark:text-[#EDE2CF]",

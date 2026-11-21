@@ -1,23 +1,15 @@
 /**
- * 媒体控件图标（跳过为描边；播放 / 暂停为 **Apple / SF Symbols 气质**：圆角楔形 + 胶囊竖条）。
- *
- * **播放**（近 `play.fill`）
- * - 圆角楔形、实心、`fill="currentColor"`；父级用 `text-*` / `color` 控制颜色。
- * - 可略 `translate-x-[0.5px]` 做光学居中。
- *
- * **暂停**（近 `pause.fill`）
- * - 两根圆角矩形（`rx` 为半宽 → 端部半圆），与系统控制条暂停一致。
- *
+ * 媒体控件图标（跳过与循环为圆润几何描边；播放 / 暂停为圆角楔形 + 胶囊竖条）。
  * 避免用 ▶ ⏸ Unicode，以免在 iOS/Android 上变成彩色 emoji。
  */
 const stroke = {
   stroke: "currentColor",
-  strokeWidth: 2,
+  strokeWidth: 1.9,
   strokeLinecap: "round" as const,
   strokeLinejoin: "round" as const,
 };
 
-/** 圆角楔形播放（SF Symbols `play.fill` 一类形，24×24 视口）。 */
+/** 圆角楔形播放（24×24 视口）。 */
 export function IconPlay({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
@@ -30,7 +22,7 @@ export function IconPlay({ className }: { className?: string }) {
   );
 }
 
-/** 双胶囊暂停（SF Symbols `pause.fill` 一类形）。 */
+/** 双胶囊暂停。 */
 export function IconPause({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
@@ -60,35 +52,38 @@ export function IconSkipForward({ className }: { className?: string }) {
 
 const repeatStroke = {
   stroke: "currentColor",
-  strokeWidth: 1.5,
+  strokeWidth: 1.85,
   strokeLinecap: "round" as const,
   strokeLinejoin: "round" as const,
 };
 
-/** 经朗读：重复本章（循环箭头 + 单划） */
+/** 经文朗读：单章循环（对称圆角循环轨 + 居中数字 1） */
 export function IconScriptureRepeatChapter({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path d="M17 3l3.5 3.5L17 10" {...repeatStroke} />
+      <path d="M3.5 11V9.5a3 3 0 0 1 3-3H20.5" {...repeatStroke} />
+      <path d="M7 21l-3.5-3.5L7 14" {...repeatStroke} />
+      <path d="M20.5 13v1.5a3 3 0 0 1-3 3H3.5" {...repeatStroke} />
       <path
-        d="M6.5 9.25A5.75 5.75 0 0 1 17.2 7.5M17.5 14.75A5.75 5.75 0 0 1 6.8 16.5"
-        {...repeatStroke}
+        d="M11.1 10.4l1.4-.9v5"
+        stroke="currentColor"
+        strokeWidth={1.85}
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      <path d="M6.5 9.25V6.5H3.75M17.5 14.75v2.75h2.75" {...repeatStroke} />
-      <path d="M10.5 12h6.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
 
-/** 经朗读：重复本卷（循环箭头 + 多行） */
+/** 经文朗读：整卷循环 / 默认循环图标（干净对称圆角循环轨，不塞杂乱横线） */
 export function IconScriptureRepeatBook({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-      <path
-        d="M6.5 9.25A5.75 5.75 0 0 1 17.2 7.5M17.5 14.75A5.75 5.75 0 0 1 6.8 16.5"
-        {...repeatStroke}
-      />
-      <path d="M6.5 9.25V6.5H3.75M17.5 14.75v2.75h2.75" {...repeatStroke} />
-      <path d="M10 10.75h7M10 12.25h7M10 13.75h5.5" {...repeatStroke} />
+      <path d="M17 3l3.5 3.5L17 10" {...repeatStroke} />
+      <path d="M3.5 11V9.5a3 3 0 0 1 3-3H20.5" {...repeatStroke} />
+      <path d="M7 21l-3.5-3.5L7 14" {...repeatStroke} />
+      <path d="M20.5 13v1.5a3 3 0 0 1-3 3H3.5" {...repeatStroke} />
     </svg>
   );
 }

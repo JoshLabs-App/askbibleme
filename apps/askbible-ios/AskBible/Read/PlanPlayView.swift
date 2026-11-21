@@ -51,13 +51,13 @@ struct PlanPlayView: View {
         GeometryReader { geo in
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
-                    topBar.padding(.top, 14)
+                    topBar.padding(.top, 10)
                     if queue.isEmpty && !browsingAway {
                         Text(locale.zh(PlanCopy.t("pages.read.todayPlanEmpty")))
                             .askFont(size: 16).foregroundStyle(theme.muted)
                             .frame(maxWidth: .infinity).padding(.top, 48)
                     } else {
-                        weekStripCard.padding(.top, 14)
+                        weekStripCard.padding(.top, 10)
                         if needsConfirm {
                             Button {
                                 guard !confirmBusy else { return }
@@ -67,22 +67,22 @@ struct PlanPlayView: View {
                             } label: {
                                 Text(locale.zh(PlanCopy.t(confirmBusy ? "pages.read.todayPlanLoading" : "pages.read.planPlayConfirmDay")))
                                     .askFont(size: 15, weight: .semibold).foregroundStyle(.white)
-                                    .frame(maxWidth: .infinity).frame(height: 44)
+                                    .frame(maxWidth: .infinity).frame(height: 40)
                                     .background(RoundedRectangle(cornerRadius: 12).fill(theme.accentOt))
                             }
-                            .buttonStyle(.plain).opacity(confirmBusy ? 0.35 : 1).padding(.top, 10)
+                            .buttonStyle(.plain).opacity(confirmBusy ? 0.35 : 1).padding(.top, 8)
                         }
-                        queueHeader.padding(.top, 20)
+                        queueHeader.padding(.top, 12)
                         if queue.isEmpty {
                             Text(locale.zh(PlanCopy.t("pages.read.todayPlanEmpty")))
-                                .askFont(size: 15).foregroundStyle(theme.muted).frame(maxWidth: .infinity).padding(.vertical, 20)
+                                .askFont(size: 15).foregroundStyle(theme.muted).frame(maxWidth: .infinity).padding(.vertical, 16)
                         } else {
-                            VStack(spacing: 10) {
+                            VStack(spacing: 7) {
                                 ForEach(Array(queue.enumerated()), id: \.offset) { i, p in
                                     queueRow(index: i, pointer: p)
                                 }
                             }
-                            .padding(.top, 12)
+                            .padding(.top, 8)
                         }
                     }
                     if showDevotional {
@@ -94,7 +94,7 @@ struct PlanPlayView: View {
                             locale: locale,
                             onOpen: { onOpenDevotional(targetDate) }
                         )
-                        .padding(.top, 24)
+                        .padding(.top, 12)
                     }
                     if prefs.isNtDeepRepeat {
                         ntStages.padding(.top, 30)
@@ -245,7 +245,8 @@ struct PlanPlayView: View {
                 .padding(.top, 2)
             }
         }
-        .padding(14)
+        .padding(.horizontal, 13)
+        .padding(.vertical, 10)
         .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(theme.surface))
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(theme.border, lineWidth: 1))
     }
@@ -341,7 +342,7 @@ struct PlanPlayView: View {
         }
         .padding(.leading, 14)
         .padding(.trailing, 10)
-        .padding(.vertical, 10)
+        .padding(.vertical, 7)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(active ? theme.surface : theme.surface.opacity(0.52))

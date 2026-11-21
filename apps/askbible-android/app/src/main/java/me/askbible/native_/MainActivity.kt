@@ -302,7 +302,7 @@ private fun RootScreen() {
     var planRoute by remember { mutableStateOf("play") }
     // 每日灵修页正在看的那天（计划页卡片点进来时带入）
     val devotionalPrefs = remember { context.getSharedPreferences("devotional", android.content.Context.MODE_PRIVATE) }
-    var autoReadDevotional by remember { mutableStateOf(devotionalPrefs.getBoolean("after-reading", false)) }
+    var autoReadDevotional by remember { mutableStateOf(devotionalPrefs.getBoolean("after-reading", true)) }
     var planListeningDate by remember { mutableStateOf<LocalDate?>(null) }
     val currentDevotionalAccess = androidx.compose.runtime.rememberUpdatedState(
         me.askbible.native_.data.SolidJoys.availableFor(appLocale, auth.isAdmin))
@@ -548,7 +548,7 @@ private fun RootScreen() {
             val handoff = me.askbible.native_.data.PlanDevotionalHandoff.shouldPlay(
                 naturalEnd = true, active = planFlowActive, count = planQueue.size, index = planQueueIndex,
                 listeningDay = planListeningDate?.toString(), today = LocalDate.now().toString(),
-                enabled = devotionalPrefs.getBoolean("after-reading", false), available = currentDevotionalAccess.value)
+                enabled = devotionalPrefs.getBoolean("after-reading", true), available = currentDevotionalAccess.value)
             currentSkipNext.value()
             if (handoff) {
                 val day = me.askbible.native_.data.SolidJoys.day(LocalDate.now())

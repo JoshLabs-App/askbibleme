@@ -85,7 +85,7 @@ fun PlanPlayScreen(
     /** 习惯统计里的已读日（云端同步下来的也在）；月历标黄 = 它 ∪ 播放页点听日（RN habitCompletedDates） */
     habitDates: Set<String> = emptySet(),
     /** 每日灵修卡片（D-7：入口只在计划页；只在中文界面，壳里决定 show） */
-    autoReadDevotional: Boolean = false,
+    autoReadDevotional: Boolean = true,
     onAutoReadDevotional: (Boolean) -> Unit = {},
     showDevotional: Boolean = false,
     devotionalPlayer: me.askbible.native_.audio.DevotionalPlayer? = null,
@@ -143,13 +143,13 @@ fun PlanPlayScreen(
                             .background(theme.surface.toColor())
                             .border(1.dp, theme.border.toColor(), RoundedCornerShape(999.dp))
                             .clickableNoRipple(onOpenPlans)
-                            .padding(horizontal = 13.dp, vertical = 7.dp),
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(AppLocale.pick("换计划", "Plans", locale), color = ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        Text(AppLocale.pick("换计划", "Plans", locale), color = ink, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(10.dp))
             }
             if (queue.isEmpty() && !browsingAway) {
                 item {
@@ -181,7 +181,7 @@ fun PlanPlayScreen(
                     }
 
                     // 列表抬头：「今日读经」+「▶ 连播今日」主胶囊
-                    Row(Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(locale.zh(PlanCopy.t("pages.read.todayPlanTitle")), color = ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                         if (queue.isNotEmpty()) {
                             Row(
@@ -226,7 +226,7 @@ fun PlanPlayScreen(
                                 RoundedCornerShape(16.dp),
                             )
                             .clickableNoRipple { onReadChapter(i) }
-                            .padding(horizontal = 14.dp, vertical = 12.dp)
+                            .padding(horizontal = 14.dp, vertical = 9.dp)
                             .alpha(if (busy && !active) 0.75f else 1f),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -259,7 +259,7 @@ fun PlanPlayScreen(
                         }
                         Box(
                             Modifier
-                                .size(42.dp)
+                                .size(38.dp)
                                 .clip(RoundedCornerShape(999.dp))
                                 .background(if (active && activePlaying) accent else accent.copy(alpha = 0.14f))
                                 .alpha(if (busy) 0.4f else 1f)
@@ -268,12 +268,12 @@ fun PlanPlayScreen(
                         ) {
                             MaterialIcon(
                                 if (active && activePlaying) MI.GRAPHIC_EQ else MI.PLAY_ARROW,
-                                20f,
+                                19f,
                                 if (active && activePlaying) Color(0xFFFFFBF4) else accent,
                             )
                         }
                     }
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(6.dp))
                 }
             }
             if (showDevotional && devotionalPlayer != null) item {
@@ -374,7 +374,7 @@ private fun PlanGentleWeekCard(
             .clip(RoundedCornerShape(18.dp))
             .background(theme.surface.toColor())
             .border(1.dp, theme.border.toColor(), RoundedCornerShape(18.dp))
-            .padding(14.dp),
+            .padding(horizontal = 13.dp, vertical = 10.dp),
     ) {
         Row(
             Modifier.fillMaxWidth().clickableNoRipple(onToggleMonth),

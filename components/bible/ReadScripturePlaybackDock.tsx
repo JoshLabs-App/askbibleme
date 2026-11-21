@@ -167,10 +167,10 @@ export function ReadScripturePlaybackDock({
           <div className="h-10 w-10 shrink-0" aria-hidden />
         )}
 
-        <div className="flex min-w-0 flex-1 items-center justify-center gap-1 sm:gap-2">
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-4 sm:gap-5">
           <button
             type="button"
-            className={`${sideBtnClass} min-w-[2.5rem] px-1`}
+            className={`${sideBtnClass} min-w-[2.75rem] px-1`}
             disabled={disabled}
             aria-label={`语音速度 ${scripturePlaybackRate}x`}
             onClick={onCycleRate}
@@ -211,18 +211,18 @@ export function ReadScripturePlaybackDock({
             type="button"
             className={[
               sideBtnClass,
-              loopMode !== "off" ? "bg-[rgba(92,64,48,0.12)] dark:bg-white/15" : "",
+              loopMode !== "off"
+                ? "bg-[#C1660B]/15 text-[#C1660B] dark:bg-[#E2A84B]/15 dark:text-[#E2A84B]"
+                : "opacity-70 hover:opacity-100",
             ].join(" ")}
             aria-pressed={loopMode !== "off"}
             aria-label={loopLabel}
             onClick={onCycleLoop}
           >
             {loopMode === "chapter" ? (
-              <IconScriptureRepeatChapter className="h-[18px] w-[18px]" />
+              <IconScriptureRepeatChapter className="h-[21px] w-[21px]" />
             ) : (
-              <IconScriptureRepeatBook
-                className={["h-[18px] w-[18px]", loopMode === "book" ? "" : "opacity-45"].join(" ")}
-              />
+              <IconScriptureRepeatBook className="h-[21px] w-[21px]" />
             )}
           </button>
         </div>

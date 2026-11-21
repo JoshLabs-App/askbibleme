@@ -30,9 +30,10 @@ export function devotionalAvailable(locale: string, _isAdmin = true) {
 
 export function readDevotionalAuto() {
   try {
-    return localStorage.getItem(DEVOTIONAL_PREF) === "1";
+    const raw = localStorage.getItem(DEVOTIONAL_PREF);
+    return raw === null ? true : raw === "1";
   } catch {
-    return false;
+    return true;
   }
 }
 

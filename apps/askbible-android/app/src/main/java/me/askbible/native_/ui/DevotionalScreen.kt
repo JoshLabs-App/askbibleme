@@ -78,8 +78,8 @@ private fun zh(text: String) = AppLocale.current.zh(text)
 private fun minutesLabel(sec: Int?) = sec?.let { zh("约 ${maxOf(1, Math.round(it / 60f))} 分钟") }
 
 /**
- * 今日同行页底部的「每日灵修」卡片（D-7：入口只在计划页）。
- * 直接展示简单标题、经文出处与 3 行内容简要；点卡片进入全年 12 个月分类目录与搜索收听页，点右下角直接听。
+ * 今日同行页底部的「每日灵修」紧凑卡片（D-7：入口只在计划页）。
+ * 写明作者（约翰·派博）、简单标题与 2 行简要，默认开启「读经后接着听」，一屏内完整可见。
  */
 @Composable
 fun DevotionalCard(
@@ -97,16 +97,16 @@ fun DevotionalCard(
     val muted = theme.muted.toColor()
     val faint = theme.faint.toColor()
     val accent = theme.accentOt.toColor()
-    val shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(16.dp)
 
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(top = 24.dp)
+            .padding(top = 12.dp)
             .clip(shape)
             .background(theme.surface.toColor())
             .border(1.dp, theme.border.toColor(), shape)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = 14.dp, vertical = 10.dp),
     ) {
         Column(
             Modifier
@@ -117,82 +117,91 @@ fun DevotionalCard(
                 },
         ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(zh("每日灵修"), color = accent, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                if (day != null) {
-                    Text(" · ${zh(day.dateLabel)}", color = muted, fontSize = 13.5.sp, fontWeight = FontWeight.Medium)
-                }
-                Spacer(Modifier.weight(1f))
+                Text(zh("每日灵修"), color = accent, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold)
+                Text(
+                    zh(" · 约翰·派博") + (day?.let { " · ${zh(it.dateLabel)}" } ?: ""),
+                    Modifier.weight(1f),
+                    color = muted,
+                    fontSize = 12.5.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(zh("全年目录"), color = accent, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold)
-                    MaterialIcon(MI.CHEVRON_RIGHT, 16f, accent)
+                    Text(zh("目录"), color = accent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    MaterialIcon(MI.CHEVRON_RIGHT, 15f, accent)
                 }
             }
 
             when {
                 day != null -> {
-                    Text(
-                        day.title,
-                        Modifier.padding(top = 8.dp),
-                        color = ink,
-                        fontSize = 19.sp,
-                        lineHeight = 26.sp,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    if (day.ref.isNotEmpty()) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(top = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         Text(
-                            day.ref,
-                            Modifier.padding(top = 4.dp),
-                            color = accent.copy(alpha = 0.9f),
-                            fontSize = 12.5.sp,
-                            fontWeight = FontWeight.SemiBold,
+                            day.title,
+                            Modifier.weight(1f),
+                            color = ink,
+                            fontSize = 16.5.sp,
+                            lineHeight = 22.sp,
+                            fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
+                        if (day.ref.isNotEmpty()) {
+                            Text(
+                                day.ref,
+                                Modifier.padding(start = 8.dp),
+                                color = muted,
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 1,
+                            )
+                        }
                     }
                     if (day.brief.isNotEmpty()) {
                         Text(
                             day.brief,
-                            Modifier.padding(top = 6.dp),
+                            Modifier.padding(top = 3.dp),
                             color = inkSoft,
-                            fontSize = 14.5.sp,
-                            lineHeight = 22.sp,
-                            maxLines = 3,
+                            fontSize = 13.sp,
+                            lineHeight = 19.sp,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }
                 state is SolidJoys.State.Failed -> {
-                    Text(zh("灵修没有载入，点这里重试"), Modifier.padding(top = 10.dp), color = muted, fontSize = 15.sp)
+                    Text(zh("灵修没有载入，点这里重试"), Modifier.padding(top = 6.dp), color = muted, fontSize = 13.5.sp)
                 }
                 else -> {
-                    Text(zh("正在准备每日灵修…"), Modifier.padding(top = 10.dp), color = muted, fontSize = 15.sp)
+                    Text(zh("正在准备每日灵修…"), Modifier.padding(top = 6.dp), color = muted, fontSize = 13.5.sp)
                 }
             }
         }
 
-        Box(Modifier.fillMaxWidth().padding(vertical = 12.dp).height(0.75.dp).background(theme.border.toColor()))
+        Box(Modifier.fillMaxWidth().padding(vertical = 8.dp).height(0.75.dp).background(theme.border.toColor()))
 
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Row(
                 Modifier
-                    .defaultMinSize(minHeight = 40.dp)
+                    .defaultMinSize(minHeight = 30.dp)
                     .clickableNoRipple { onAutoRead(!autoRead) },
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(7.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Box(
                     Modifier
-                        .size(18.dp)
+                        .size(16.dp)
                         .clip(CircleShape)
                         .background(if (autoRead) accent else Color.Transparent)
                         .border(1.2.dp, if (autoRead) accent else faint, CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
-                    if (autoRead) MaterialIcon(MI.CHECK, 12f, Color(0xFFFFFBF4))
+                    if (autoRead) MaterialIcon(MI.CHECK, 11f, Color(0xFFFFFBF4))
                 }
-                Text(zh("读经后接着听"), color = muted, fontSize = 13.5.sp, fontWeight = FontWeight.Medium)
+                Text(zh("读经后接着听"), color = muted, fontSize = 12.5.sp, fontWeight = FontWeight.Medium)
             }
 
             Spacer(Modifier.weight(1f))
@@ -212,19 +221,19 @@ fun DevotionalCard(
                         .clickableNoRipple {
                             if (playing) player.pause() else player.play(day.md, day.audio, "${day.dateLabel} ${day.title}")
                         }
-                        .padding(horizontal = 13.dp, vertical = 7.dp),
+                        .padding(horizontal = 10.dp, vertical = 5.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     if (mine && player.isLoading) {
-                        CircularProgressIndicator(Modifier.size(15.dp), color = if (playing) Color(0xFFFFFBF4) else accent, strokeWidth = 2.dp)
+                        CircularProgressIndicator(Modifier.size(13.dp), color = if (playing) Color(0xFFFFFBF4) else accent, strokeWidth = 2.dp)
                     } else {
-                        MaterialIcon(if (playing) MI.PAUSE else MI.PLAY_ARROW, 17f, if (playing) Color(0xFFFFFBF4) else accent)
+                        MaterialIcon(if (playing) MI.PAUSE else MI.PLAY_ARROW, 15f, if (playing) Color(0xFFFFFBF4) else accent)
                     }
                     Text(
                         if (playing) zh("正在播放") else minutesLabel(day.audioSec)?.let { "${zh("收听")} · $it" } ?: zh("收听"),
                         color = if (playing) Color(0xFFFFFBF4) else accent,
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                     )
                 }

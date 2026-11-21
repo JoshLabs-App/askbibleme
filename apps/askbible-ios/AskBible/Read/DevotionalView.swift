@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// 今日同行页底部的「每日灵修」卡片：
-/// 直接展示简单标题、经文出处与 3 行内容简要，支持一键收听，点按卡片进入全年 12 个月分类目录与搜索收听页。
+/// 今日同行页底部的「每日灵修」紧凑卡片：
+/// 写明作者（约翰·派博）、简单标题与 2 行简要，默认开启「读经后接着听」，一屏内完整可见。
 struct DevotionalCard: View {
     @ObservedObject var content: SolidJoys
     @ObservedObject var player: DevotionalPlayer
@@ -9,66 +9,65 @@ struct DevotionalCard: View {
     let locale: AppLocale
     var onOpen: () -> Void = {}
 
-    @AppStorage("devotional.after-reading") private var autoRead = false
+    @AppStorage("devotional.after-reading") private var autoRead = true
     @Environment(\.parchment) private var theme
-    @ScaledMetric(relativeTo: .body) private var textScale = 1.0
 
     var body: some View {
         let day = content.day(date)
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
             Button(action: onOpen) {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(alignment: .center, spacing: 6) {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(alignment: .center, spacing: 5) {
                         Text(locale.zh("每日灵修"))
-                            .askFont(size: 14, weight: .semibold)
+                            .askFont(size: 12.5, weight: .semibold)
                             .foregroundStyle(theme.accentOt)
-                        if let day {
-                            Text("· \(locale.zh(day.dateLabel))")
-                                .askFont(size: 13.5, weight: .medium)
-                                .foregroundStyle(theme.muted)
-                        }
-                        Spacer(minLength: 8)
-                        HStack(spacing: 3) {
-                            Text(locale.zh("全年目录"))
-                                .askFont(size: 12.5, weight: .semibold)
+                        Text(locale.zh("· 约翰·派博") + (day.map { " · \(locale.zh($0.dateLabel))" } ?? ""))
+                            .askFont(size: 12.5, weight: .medium)
+                            .foregroundStyle(theme.muted)
+                            .lineLimit(1)
+                        Spacer(minLength: 6)
+                        HStack(spacing: 2) {
+                            Text(locale.zh("目录"))
+                                .askFont(size: 12, weight: .semibold)
                             Image(systemName: "chevron.right")
-                                .font(.system(size: 11, weight: .bold))
+                                .font(.system(size: 10, weight: .bold))
                         }
                         .foregroundStyle(theme.accentOt)
                     }
 
                     if let day {
-                        Text(day.title)
-                            .askFont(size: 19, weight: .bold)
-                            .foregroundStyle(theme.ink)
-                            .lineLimit(2)
-                            .multilineTextAlignment(.leading)
-
-                        if !day.ref.isEmpty {
-                            Text(day.ref)
-                                .askFont(size: 12.5, weight: .semibold)
-                                .foregroundStyle(theme.accentOt.opacity(0.9))
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Text(day.title)
+                                .askFont(size: 16.5, weight: .bold)
+                                .foregroundStyle(theme.ink)
                                 .lineLimit(1)
+                            Spacer(minLength: 4)
+                            if !day.ref.isEmpty {
+                                Text(day.ref)
+                                    .askFont(size: 11.5, weight: .medium)
+                                    .foregroundStyle(theme.muted)
+                                    .lineLimit(1)
+                            }
                         }
 
                         if !day.brief.isEmpty {
                             Text(day.brief)
-                                .askFont(size: 14.5)
-                                .lineSpacing(4)
+                                .askFont(size: 13)
+                                .lineSpacing(2)
                                 .foregroundStyle(theme.inkSoft)
-                                .lineLimit(3)
+                                .lineLimit(2)
                                 .multilineTextAlignment(.leading)
                         }
                     } else if content.failed {
                         Text(locale.zh("灵修没有载入，点这里重试"))
-                            .askFont(size: 15)
+                            .askFont(size: 13.5)
                             .foregroundStyle(theme.muted)
-                            .padding(.vertical, 6)
+                            .padding(.vertical, 2)
                     } else {
                         Text(locale.zh("正在准备每日灵修…"))
-                            .askFont(size: 15)
+                            .askFont(size: 13.5)
                             .foregroundStyle(theme.muted)
-                            .padding(.vertical, 6)
+                            .padding(.vertical, 2)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -80,25 +79,25 @@ struct DevotionalCard: View {
                 Button(locale.zh("重新载入")) {
                     Task { await content.load(locale: locale) }
                 }
-                .askFont(size: 14, weight: .semibold)
+                .askFont(size: 13, weight: .semibold)
                 .foregroundStyle(theme.accentOt)
             }
 
-            Divider().overlay(theme.border)
+            Divider().overlay(theme.border.opacity(0.8))
 
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 Button {
                     autoRead.toggle()
                 } label: {
-                    HStack(spacing: 8) {
+                    HStack(spacing: 6) {
                         Image(systemName: autoRead ? "checkmark.circle.fill" : "circle")
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(autoRead ? theme.accentOt : theme.faint)
                         Text(locale.zh("读经后接着听"))
-                            .askFont(size: 13.5, weight: .medium)
+                            .askFont(size: 12.5, weight: .medium)
                             .foregroundStyle(theme.muted)
                     }
-                    .frame(minHeight: 40)
+                    .frame(minHeight: 30)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -112,12 +111,12 @@ struct DevotionalCard: View {
                     Button {
                         if playing { player.remotePause() } else { player.play(day) }
                     } label: {
-                        HStack(spacing: 5) {
+                        HStack(spacing: 4) {
                             if mine && player.isLoading {
-                                ProgressView().scaleEffect(0.75)
+                                ProgressView().scaleEffect(0.7)
                             } else {
                                 Image(systemName: playing ? "pause.fill" : "play.fill")
-                                    .font(.system(size: 11.5, weight: .bold))
+                                    .font(.system(size: 10.5, weight: .bold))
                             }
                             Text(
                                 locale.zh(
@@ -126,11 +125,11 @@ struct DevotionalCard: View {
                                         : (day.minutesText.map { "收听 · \($0)" } ?? "收听")
                                 )
                             )
-                            .askFont(size: 13, weight: .semibold)
+                            .askFont(size: 12, weight: .semibold)
                         }
                         .foregroundStyle(playing ? Color(rgb: 0xFFFBF4) : theme.accentOt)
-                        .padding(.horizontal, 13)
-                        .padding(.vertical, 8)
+                        .padding(.horizontal, 11)
+                        .padding(.vertical, 5)
                         .background(
                             Capsule()
                                 .fill(playing ? theme.accentOt : theme.accentOt.opacity(0.14))
@@ -146,9 +145,10 @@ struct DevotionalCard: View {
                 }
             }
         }
-        .padding(16)
-        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(theme.surface))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(theme.border, lineWidth: 1))
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
+        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(theme.surface))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(theme.border, lineWidth: 1))
     }
 }
 

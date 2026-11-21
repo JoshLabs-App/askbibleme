@@ -1,7 +1,7 @@
 {
   "_note": "android_dir 相对于此文件所在目录（01AskBible/）",
   "app_name": "AskBible.me",
-  "version": "1.0.57",
+  "version": "1.0.58",
   "apk_prefix": "AskBible",
   "bucket": "askbible-media",
   "android_dir": "apps/askbible-android",

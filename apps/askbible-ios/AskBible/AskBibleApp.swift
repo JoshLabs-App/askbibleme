@@ -176,12 +176,40 @@ struct RootView: View {
         )
     }
 
+    /// 直接向 AVPlayer 装载并按需起播目标章——严禁依赖前台 SwiftUI `.onChange(of: audioURL)`：
+    /// 锁屏切入 `.background` 后 SwiftUI 停止刷新 `body` 与 `onChange`，只有命令式直调才能在锁屏下顺畅连播下一章。
+    private func loadChapterAudioNow(book: BookRef, chapter: Int, autoPlay: Bool) {
+        let tr = store.translation
+        guard let url = ChapterAudioSource.resolve(
+            translationId: tr.id,
+            bookId: book.id,
+            bookNumber: book.number,
+            bookName: book.name,
+            chapter: chapter
+        ) else { return }
+        let key = "\(tr.id).\(book.id).\(chapter)"
+        let title = ReadChrome.chapterTitle(bookName: bookLabel(book), chapter: chapter, locale: titleLocale)
+        if ChapterAudioSource.isResolverURL(url) {
+            let tid = tr.id, bookId = book.id
+            audio.beginResolving(key: key, title: title, autoPlay: autoPlay)
+            Task { @MainActor in
+                if let src = await ChapterAudioSource.fetchResolved(url, cacheKey: key) {
+                    audio.load(url: src, key: key, title: title, translationId: tid, bookId: bookId, chapter: chapter, resolved: true, autoPlay: autoPlay)
+                } else {
+                    audio.failResolving(key: key)
+                }
+            }
+        } else {
+            audio.load(url: url, key: key, title: title, translationId: tr.id, bookId: book.id, chapter: chapter, autoPlay: autoPlay)
+        }
+    }
+
     private func skipToNextChapter() {
         if planFlowActive {
             if let cur = audioTarget {
                 plans.markChapterRead(cur.book.id, cur.chapter)
                 achievements.noteChapterRead(bookId: cur.book.id, chapter: cur.chapter)
-                RatePrompt.maybeAsk(chaptersRead: achievements.chaptersReadCount)
+                if achievements.foreground { RatePrompt.maybeAsk(chaptersRead: achievements.chaptersReadCount) }
             }
             let next = planQueueIndex + 1
             if next < planQueue.count {
@@ -205,12 +233,15 @@ struct RootView: View {
         if nextChapter == opened.chapter {
             // 单章书循环：音源没变，onChange 不会触发，直接回开头续播
             audio.seek(to: 0); audio.resume()
-        } else if openedChapter != nil {
-            // 自动跳章要接着播：交给 audioURL 的 onChange 起播
-            autoPlayPending = true
-            openedChapter = (opened.book, nextChapter)
+        } else {
+            autoPlayPending = false
+            if openedChapter != nil {
+                openedChapter = (opened.book, nextChapter)
+            } else {
+                listenChapter = (opened.book, nextChapter)
+            }
+            loadChapterAudioNow(book: opened.book, chapter: nextChapter, autoPlay: true)
         }
-        else { listenChapter = (opened.book, nextChapter); audio.resume() }
     }
 
     /// 睡眠定时：首页定时角标与音乐页睡眠单同一份分钟数，四路播放器一起设（0 = 关）
@@ -295,20 +326,22 @@ struct RootView: View {
     private func openPlanChapter(_ p: PlanPointer, autoPlay: Bool) {
         guard let b = BibleCatalog.book(id: p.bookId) else { return }
         focusVerse = nil; focusKeyword = nil
-        autoPlayPending = autoPlay
+        autoPlayPending = false
         listenChapter = (b, p.chapter)
         searchReturnQuery = nil; openedChapter = (b, p.chapter)
+        loadChapterAudioNow(book: b, chapter: p.chapter, autoPlay: autoPlay)
     }
 
     /// 播放页点播：不开章页，只把音源换到这一章（同章已载入就直接续播）
     private func listenPlanChapter(_ p: PlanPointer, autoPlay: Bool) {
         guard let b = BibleCatalog.book(id: p.bookId) else { return }
         if let t = audioTarget, t.book.id == b.id, t.chapter == p.chapter {
-            if autoPlay { audio.resume() }
+            loadChapterAudioNow(book: b, chapter: p.chapter, autoPlay: autoPlay)
             return
         }
-        autoPlayPending = autoPlay
+        autoPlayPending = false
         listenChapter = (b, p.chapter)
+        loadChapterAudioNow(book: b, chapter: p.chapter, autoPlay: autoPlay)
     }
 
     // MARK: 播放页（RN ReadPlanPlayScreen：本页队列 vs 全局播放池，谁在播就跟谁的游标）
@@ -423,28 +456,11 @@ struct RootView: View {
                 }
                 home.setSource(store.translation)
             }
-            .onChange(of: audioURL) { _, url in
-                guard let url, let opened = audioTarget else { return }
-                let key = "\(store.translation.id).\(opened.book.id).\(opened.chapter)"
-                let title = ReadChrome.chapterTitle(bookName: bookLabel(opened.book), chapter: opened.chapter, locale: titleLocale)
-                if ChapterAudioSource.isResolverURL(url) {
-                    // YouVersion 译本：先问网站代理拿 CDN mp3，再装载
-                    let tid = store.translation.id, bookId = opened.book.id, chapter = opened.chapter
-                    audio.beginResolving(key: key, title: title)
-                    Task {
-                        if let src = await ChapterAudioSource.fetchResolved(url, cacheKey: key) {
-                            audio.load(url: src, key: key, title: title, translationId: tid, bookId: bookId, chapter: chapter, resolved: true)
-                        } else {
-                            audio.failResolving(key: key)
-                        }
-                    }
-                } else {
-                    audio.load(url: url, key: key, title: title, translationId: store.translation.id, bookId: opened.book.id, chapter: opened.chapter)
-                }
-                if autoPlayPending {
-                    autoPlayPending = false
-                    audio.resume()
-                }
+            .onChange(of: audioURL) { _, _ in
+                guard let opened = audioTarget else { return }
+                let shouldStart = autoPlayPending
+                autoPlayPending = false
+                loadChapterAudioNow(book: opened.book, chapter: opened.chapter, autoPlay: shouldStart)
             }
             // 整章朗读时环境音压半音量继续放，停了恢复
             .onChange(of: audio.isPlaying) { _, playing in ambient.setDucked(playing || devotional.isPlaying) }

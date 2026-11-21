@@ -1,12 +1,13 @@
 package me.askbible.native_.audio
 
-import me.askbible.native_.data.SiteCopy
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
+import androidx.media3.common.ForwardingPlayer
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
@@ -19,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import me.askbible.native_.data.SiteCopy
 import me.askbible.native_.data.VerseTiming
 import me.askbible.native_.data.VerseTimingLookup
 
@@ -34,21 +36,14 @@ enum class LoopMode { FORWARD, CHAPTER, BOOK;
 
 /**
  * 整章朗读播放器（ExoPlayer）。与 iOS 的 ChapterAudioPlayer 对等。
- *
- * 与 iOS 的实现差异（同一需求两端手段不同，是纯双写的日常）：
- * · 音频焦点：iOS 是 AVAudioSession.interruptionNotification；
- *   这里用 ExoPlayer 的 setAudioAttributes(handleAudioFocus = true)，
- *   由播放器自己处理暂停/恢复，`wantsPlayback` 仍由我们保留意图。
- * · 锁屏控制：iOS 是 MPRemoteCommandCenter；这里是 MediaSession。
- * · 进度回调：iOS 有 addPeriodicTimeObserver；ExoPlayer 没有等价物，
- *   用协程轮询（250ms，与 iOS 的间隔一致）。
  */
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
     private val appContext = context.applicationContext
 
     var isPlaying by mutableStateOf(false); private set
     var isLoading by mutableStateOf(false); private set
-    /** 用户点过播放（RN wantsPlayback）：开章时预载会短暂 BUFFERING，没点播放前不该转圈 */
+    /** 用户点过播放（RN wantsPlayback）：锁屏换章期间保持 true，防止前台服务在章间空档降级 */
     var wantsPlayback by mutableStateOf(false); private set
     /** 被系统「永久」夺走焦点而停的（还想播）：外部声音停了 / 回前台就续播（AudioInterruptionMonitor） */
     private var focusLost = false
@@ -87,16 +82,53 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
         )
         .build()
 
-    // 同进程两个 MediaSession（朗读 / 音乐）id 必须不同，重复会直接抛异常
-    private val mediaSession = MediaSession.Builder(context, player).setId("chapter").build()
+    // 锁屏与蓝牙耳机支持「下一章 / 回本章开头」（ExoPlayer 单 MediaItem 默认把 NEXT 置灰，用 ForwardingPlayer 补齐）
+    private val sessionPlayer: Player = object : ForwardingPlayer(player) {
+        override fun getAvailableCommands(): Player.Commands =
+            super.getAvailableCommands().buildUpon()
+                .add(COMMAND_SEEK_TO_NEXT)
+                .add(COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
+                .add(COMMAND_SEEK_TO_PREVIOUS)
+                .add(COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
+                .build()
+
+        override fun isCommandAvailable(command: Int): Boolean =
+            when (command) {
+                COMMAND_SEEK_TO_NEXT,
+                COMMAND_SEEK_TO_NEXT_MEDIA_ITEM,
+                COMMAND_SEEK_TO_PREVIOUS,
+                COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM -> true
+                else -> super.isCommandAvailable(command)
+            }
+
+        override fun seekToNext() {
+            onSkipNext?.invoke()
+        }
+
+        override fun seekToNextMediaItem() {
+            onSkipNext?.invoke()
+        }
+
+        override fun seekToPrevious() {
+            this@ChapterAudioPlayer.seekTo(0.0)
+        }
+
+        override fun seekToPreviousMediaItem() {
+            this@ChapterAudioPlayer.seekTo(0.0)
+        }
+    }
+
+    // 同进程多个 MediaSession id 必须不同
+    private val mediaSession = MediaSession.Builder(context, sessionPlayer).setId("chapter").build()
         .also { PlaybackSessions.register(it) { wantsPlayback } }
 
-    /** 开播前先让别的播放器（音乐）停下：两个播放器不能同时出声 */
+    /** 开播前先让别的播放器（音乐压低 / 灵修停下 / 金句停下）协调 */
     var onWillPlay: (() -> Unit)? = null
     /** 朗读停下来（暂停 / 播完 / 换章卸载）时通知壳：音乐可以把音量还原 */
     var onStopped: (() -> Unit)? = null
 
     init {
+        player.setWakeMode(C.WAKE_MODE_NETWORK)
         // handleAudioFocus=true：来电等打断时 ExoPlayer 自动暂停，结束后按需恢复
         player.setAudioAttributes(
             AudioAttributes.Builder()
@@ -105,8 +137,6 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
                 .build(),
             true
         )
-        // listener 写在 init 而不是 apply 块里：apply 里的 this 是 ExoPlayer，
-        // isPlaying / duration 会解析到它自己的只读属性而不是本类的状态。
         player.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(playing: Boolean) {
                 this@ChapterAudioPlayer.isPlaying = playing
@@ -127,18 +157,23 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
             }
 
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                Log.w(TAG, "player error key=$loadedKey code=${error.errorCodeName}")
                 this@ChapterAudioPlayer.errorMessage = error.errorCodeName
                 this@ChapterAudioPlayer.isPlaying = false
             }
         })
     }
 
-    /** 装载一章。同一章重复调用不重新装载。 */
-    /** YouVersion 译本：先问代理拿 mp3，这段时间按「装载中」显示；用户这时点播放，拿到地址后自动起播 */
-    fun beginResolving(key: String, title: String) {
-        if (loadedKey == key) return
+    /** YouVersion 译本：先问代理拿 mp3；若 [autoPlay] 为真（如锁屏顺章），保持 wantsPlayback=true 保活前台服务 */
+    fun beginResolving(key: String, title: String, autoPlay: Boolean = false) {
+        if (loadedKey == key) {
+            if (autoPlay) wantsPlayback = true
+            return
+        }
+        Log.i(TAG, "beginResolving key=$key autoPlay=$autoPlay")
         loadedKey = key
-        wantsPlayback = false
+        wantsPlayback = autoPlay
+        if (autoPlay) PlaybackSessions.ensureStarted(appContext)
         errorMessage = null
         currentTime = 0.0; duration = 0.0; activeVerse = null; activeVerseProgress = 0.0; timings = emptyList()
         player.stop(); player.clearMediaItems()
@@ -152,41 +187,79 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
         errorMessage = SiteCopy.t("native.audioLoadFailed")
     }
 
-    /** [resolved]：beginResolving 之后拿到了真地址，同一个 key 也要装；用户等待期间点过播放就直接起播 */
-    fun load(url: String, key: String, title: String,
-             translationId: String, bookId: String, chapter: Int, resolved: Boolean = false) {
-        if (loadedKey == key && !(resolved && player.mediaItemCount == 0)) return
+    /**
+     * 装载一章。同一章重复调用不重新装载；若 [autoPlay] 为真则直接起播（不依赖前台 Compose 重组）。
+     */
+    fun load(
+        url: String,
+        key: String,
+        title: String,
+        translationId: String,
+        bookId: String,
+        chapter: Int,
+        resolved: Boolean = false,
+        autoPlay: Boolean = false,
+    ) {
+        if (loadedKey == key && !(resolved && player.mediaItemCount == 0)) {
+            if (autoPlay) {
+                if (player.playbackState == Player.STATE_ENDED) seekTo(0.0)
+                resume()
+            }
+            return
+        }
+        val shouldStart = autoPlay || (resolved && wantsPlayback)
+        Log.i(TAG, "load key=$key autoPlay=$autoPlay shouldStart=$shouldStart")
         loadedKey = key
-        if (!resolved) wantsPlayback = false
+        wantsPlayback = shouldStart
         errorMessage = null
         currentTime = 0.0
         duration = 0.0
         activeVerse = null
+        activeVerseProgress = 0.0
         timings = timingDb?.timings(translationId, bookId, chapter) ?: emptyList()
 
         player.setMediaItem(
             MediaItem.Builder()
                 .setUri(url)
                 .setMediaMetadata(
-                    MediaMetadata.Builder().setTitle(title).setArtist("AskBible").build())
+                    MediaMetadata.Builder().setTitle(title).setArtist("AskBible").build()
+                )
                 .build()
         )
         player.prepare()
-        if (resolved && wantsPlayback) player.playWhenReady = true
+        if (shouldStart) {
+            resume()
+        }
         startTicker()
     }
 
-    fun toggle() = if (isPlaying) pause() else resume()
+    fun toggle() {
+        if (isPlaying) {
+            pause()
+        } else {
+            if (player.playbackState == Player.STATE_ENDED) seekTo(0.0)
+            resume()
+        }
+    }
 
     fun resume() {
         onWillPlay?.invoke()
         PlaybackSessions.ensureStarted(appContext)
         wantsPlayback = true
+        if (player.playbackState == Player.STATE_ENDED) {
+            player.seekTo(0)
+            currentTime = 0.0
+        }
         player.playWhenReady = true
         player.playbackParameters = player.playbackParameters.withSpeed(rate)
     }
 
-    fun pause() { wantsPlayback = false; focusLost = false; player.playWhenReady = false; onStopped?.invoke() }
+    fun pause() {
+        wantsPlayback = false
+        focusLost = false
+        player.playWhenReady = false
+        onStopped?.invoke()
+    }
 
     /** 外部声音停了 / 回到前台：永久失焦停掉的、还想播的，叫回来（RN tryResumeScriptureAfterInterruption） */
     fun recoverAfterInterruption() {
@@ -207,12 +280,6 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
 
     fun cycleLoop() { loopMode = loopMode.next }
 
-    /**
-     * 与 RN 版 musicCopy 的档位一致：30m / 60m。
-     * 这里走协程延时：MediaSession 让进程带前台媒体服务时主线程持续运行，
-     * 与 RN 版 ShellSleepTimer 注释里「Handler 是精确的那一路」同理。
-     * 深度休眠场景的 AlarmManager 兜底尚未加（RN 版有）。
-     */
     fun setSleepTimer(minutes: Int?) {
         sleepJob?.cancel(); sleepJob = null
         if (minutes == null || minutes <= 0) { sleepDeadlineMs = null; return }
@@ -231,8 +298,6 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
             val s = ((d - System.currentTimeMillis()) / 1000).coerceAtLeast(0)
             return "%d:%02d".format(s / 60, s % 60)
         }
-
-
 
     fun cycleRate() {
         val steps = listOf(0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
@@ -257,7 +322,6 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
                 val hit = VerseTimingLookup.activeVerseProgress(pos, timings)
                 if (hit?.first != activeVerse) activeVerse = hit?.first
                 val progress = hit?.second ?: 0.0
-                // 死区：定时器每跳一次都算一遍，句的切换只在跨过阈值时才重组
                 if (kotlin.math.abs(progress - activeVerseProgress) > 0.02) activeVerseProgress = progress
                 delay(250)
             }
@@ -265,10 +329,21 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
     }
 
     private fun onEnded() {
+        Log.i(TAG, "onEnded key=$loadedKey loop=$loopMode")
         when (loopMode) {
             LoopMode.CHAPTER -> { seekTo(0.0); resume() }
             // 往下走由壳决定：计划流跟计划池，否则下一章；本书循环读到末章回本书第 1 章
-            LoopMode.BOOK, LoopMode.FORWARD -> { currentTime = duration; (onFinished ?: onSkipNext)?.invoke() }
+            LoopMode.BOOK, LoopMode.FORWARD -> {
+                currentTime = duration
+                val prevKey = loadedKey
+                (onFinished ?: onSkipNext)?.invoke()
+                // 若已是最后一章且未进入下一章/灵修，收掉 wantsPlayback 让前台通知回到完成暂停态
+                if (loadedKey == prevKey && player.playbackState == Player.STATE_ENDED) {
+                    wantsPlayback = false
+                    player.playWhenReady = false
+                    onStopped?.invoke()
+                }
+            }
         }
     }
 
@@ -282,6 +357,7 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
     }
 
     companion object {
+        private const val TAG = "AskBiblePlayback"
         val SLEEP_OPTIONS_MINUTES = listOf(30, 60)
 
         /** 秒 → m:ss，与播放坞时间标签一致 */

@@ -171,10 +171,27 @@ const packSources = [
   { id: "bundle.figures", kind: "json", src: "public/data/static-bundles/legacy-figures-mobile.json", urlPath: "data/static-bundles/legacy-figures-mobile.json" },
 ];
 
+const catalogOutPath = path.join(cwd, "public", "v2", "catalog.json");
+let prevCatalog = null;
+if (fs.existsSync(catalogOutPath)) {
+  try {
+    prevCatalog = JSON.parse(fs.readFileSync(catalogOutPath, "utf8"));
+  } catch {
+    prevCatalog = null;
+  }
+}
+const prevPacksById = new Map(
+  Array.isArray(prevCatalog?.packs) ? prevCatalog.packs.map((entry) => [entry.id, entry]) : [],
+);
+
 const catalogPacks = [];
 for (const p of packSources) {
   const abs = path.join(cwd, p.src);
-  if (!fs.existsSync(abs)) continue;
+  if (!fs.existsSync(abs)) {
+    const existing = prevPacksById.get(p.id);
+    if (existing) catalogPacks.push(existing);
+    continue;
+  }
   const stat = fs.statSync(abs);
   const sha256 = sha256File(abs);
   catalogPacks.push({
@@ -188,9 +205,14 @@ for (const p of packSources) {
   });
 }
 
-writeJson(path.join(cwd, "public", "v2", "catalog.json"), {
+const generatedAt =
+  prevCatalog?.generatedAt && JSON.stringify(prevCatalog.packs) === JSON.stringify(catalogPacks)
+    ? prevCatalog.generatedAt
+    : new Date().toISOString();
+
+writeJson(catalogOutPath, {
   schemaVersion: 2,
-  generatedAt: new Date().toISOString(),
+  generatedAt,
   packs: catalogPacks,
 });
 

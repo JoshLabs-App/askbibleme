@@ -31,6 +31,11 @@ else
 fi
 export NEXT_PUBLIC_APP_BUILD_ID="$SHA"
 export NODE_ENV=production
+export CLOUDFLARE_ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID:-652050e08d4a384c7cbe975ea02fb52c}"
+if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] && [ -f "$HOME/.config/cloudflare/token" ]; then
+  CLOUDFLARE_API_TOKEN="$(tr -d '[:space:]' < "$HOME/.config/cloudflare/token")"
+  export CLOUDFLARE_API_TOKEN
+fi
 echo "本机构建 Cloudflare Worker (askbible-web) $REF @ $SHA …"
 npm run prebuild
 npx cf build

@@ -16,6 +16,7 @@ export default defineConfig({
     },
     env: {
       ASSETS: bindings.assets(),
+      ASKBIBLE_SYNC: bindings.worker({ worker: "askbible-sync" }),
     },
   }),
 });

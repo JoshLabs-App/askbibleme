@@ -792,3 +792,6 @@ manifest `start_url=/web`；手机截图和金句字体文件都取得到。本�
 3. **清退历史死重**：
    - 已移除退役的 `apps/askbible-mobile`（Expo，2.4 GB / 10.5 万行）、`.maestro`、`eas.json`、`render.yaml`、`vercel.json`、`supabase/`、`workers/supabase-proxy` 及 ~150 个废弃脚本与 `@supabase/*`、`bcryptjs`、`eas-cli` 依赖。
    - 跟读时间轴库 `npm run build:verse-timings` 已直接由 `public/verse-timings/` 真源生成两端 `verse-timings.sqlite`。
+4. **Cloudflare 构建与反代防坑（必读）**：
+   - 根 `package.json` **必须保留 `"type": "module"`**（且 `vite.config.ts` 保持 `.ts`）：否则 `@cloudflare/build-output-utils` 在展开预构建目录时会将 `.js` 产物标为 CommonJS，导致线上 SSR 抛 `No such module "ssr/index.js"`（1101）。
+   - 主站同域备线 `/api/sync/*` 通过 `cloudflare.config.ts` 的 `ASKBIBLE_SYNC: bindings.worker({ worker: "askbible-sync" })` 走 Worker Service Binding 零延迟内网直连，避免公网子请求触发同账号域名 Cloudflare WAF `403`。

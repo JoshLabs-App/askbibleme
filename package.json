@@ -12,7 +12,7 @@
     "dev:fresh": "npm run clean && npm run dev",
     "free-port": "node scripts/free-port.mjs",
     "dev:restart": "node scripts/free-port.mjs 3450 && npm run dev:fresh",
-    "check": "tsc --noEmit && npm test",
+    "check": "node scripts/write-app-build-meta.mjs && tsc --noEmit && npm test",
     "build": "NODE_OPTIONS=--max-old-space-size=4096 next build",
     "lint": "next lint",
     "ship": "bash scripts/deploy-direct.sh",
@@ -75,5 +75,9 @@
     "vite-css-modules": "^1.16.1",
     "vitest": "^2.1.8",
     "wrangler": "^4.162.0"
-  }
+  },
+  "engines": {
+    "node": ">=22.0.0 <23.0.0"
+  },
+  "type": "module"
 }

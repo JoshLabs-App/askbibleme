@@ -78,56 +78,113 @@ function pointerProgress(ptr, order) {
   return (idx >= 0 ? idx : 0) * 10000 + ptr.chapter;
 }
 
-function mergeBookmarks(a, b) {
-  if (!isPlainObj(a)) return b;
-  if (!isPlainObj(b)) return a;
-  const out = { ...a };
-  for (const [key, item] of Object.entries(b)) {
-    if (item === null) {
-      delete out[key];
-      continue;
-    }
-    const nextTs = isPlainObj(item) ? Number(item.deletedAt ?? item.savedAt ?? 0) : 0;
-    const prevTs = isPlainObj(out[key]) ? Number(out[key].deletedAt ?? out[key].savedAt ?? 0) : 0;
-    if (!out[key] || nextTs >= prevTs) {
-      if (isPlainObj(item) && item.deleted === true) delete out[key];
-      else out[key] = item;
+const TOMBSTONE_TTL_MS = 60 * 24 * 60 * 60 * 1000;
+
+function readFiniteTs(raw) {
+  const n = Number(raw || 0);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+function bookmarkEntryTs(item) {
+  if (!isPlainObj(item)) return 0;
+  if (item.deleted === true) return readFiniteTs(item.deletedAt);
+  return readFiniteTs(item.savedAt);
+}
+
+function mergeBookmarks(a, b, nowMs = Date.now()) {
+  if (!isPlainObj(a) && !isPlainObj(b)) return isPlainObj(a) ? a : b;
+  const out = {};
+  for (const side of [a, b]) {
+    if (!isPlainObj(side)) continue;
+    for (const [key, rawItem] of Object.entries(side)) {
+      if (rawItem === undefined) continue;
+      const item = rawItem === null ? { deleted: true, deletedAt: nowMs } : rawItem;
+      const isTombstone = isPlainObj(item) && item.deleted === true;
+      const nextTs = bookmarkEntryTs(item);
+      const prev = out[key];
+      const prevTs = prev !== undefined ? bookmarkEntryTs(prev) : 0;
+      if (prev === undefined || nextTs >= prevTs) {
+        out[key] = isTombstone ? { deleted: true, deletedAt: nextTs } : item;
+      }
     }
   }
   for (const [k, v] of Object.entries(out)) {
-    if (isPlainObj(v) && v.deleted === true) delete out[k];
+    if (isPlainObj(v) && v.deleted === true && nowMs - readFiniteTs(v.deletedAt) > TOMBSTONE_TTL_MS) {
+      delete out[k];
+    }
   }
   return out;
 }
 
-function mergeHighlights(a, b) {
-  if (!isPlainObj(a)) return b;
-  if (!isPlainObj(b)) return a;
-  const out = { ...a };
-  for (const [key, entries] of Object.entries(b)) {
-    if (entries === null) {
-      delete out[key];
+function normalizeHighlightEntries(entries) {
+  if (!Array.isArray(entries)) return [];
+  const byIndex = new Map();
+  for (const row of entries) {
+    if (typeof row === "number") {
+      if (Number.isInteger(row) && row >= 0) byIndex.set(row, "#FFB103");
       continue;
     }
-    if (!Array.isArray(entries)) continue;
-    if (entries.length === 0) {
-      delete out[key];
-      continue;
+    if (!isPlainObj(row) || !Number.isInteger(row.i) || row.i < 0) continue;
+    if (typeof row.c === "string" && row.c) byIndex.set(row.i, row.c);
+  }
+  return [...byIndex.entries()].sort((x, y) => x[0] - y[0]).map(([i, c]) => ({ i, c }));
+}
+
+function mergeHighlightLegacyEntries(aEntries, bEntries) {
+  if (bEntries === null) return [];
+  if (Array.isArray(bEntries) && bEntries.length === 0) return [];
+  const byIndex = new Map();
+  for (const row of Array.isArray(aEntries) ? aEntries : []) {
+    if (isPlainObj(row) && Number.isInteger(row.i) && row.i >= 0 && typeof row.c === "string" && row.c) {
+      byIndex.set(row.i, row.c);
     }
-    const byIndex = new Map();
-    for (const row of Array.isArray(out[key]) ? out[key] : []) {
-      if (isPlainObj(row) && Number.isInteger(row.i) && row.i >= 0 && typeof row.c === "string" && row.c) {
-        byIndex.set(row.i, row.c);
+  }
+  for (const row of Array.isArray(bEntries) ? bEntries : []) {
+    if (!isPlainObj(row) || !Number.isInteger(row.i) || row.i < 0) continue;
+    if (typeof row.c === "string" && row.c === "") byIndex.delete(row.i);
+    else if (typeof row.c === "string" && row.c) byIndex.set(row.i, row.c);
+  }
+  return [...byIndex.entries()].sort((x, y) => x[0] - y[0]).map(([i, c]) => ({ i, c }));
+}
+
+function mergeHighlights(a, b, nowMs = Date.now()) {
+  if (!isPlainObj(a) && !isPlainObj(b)) return isPlainObj(a) ? a : b;
+  const la = isPlainObj(a) ? a : {};
+  const lb = isPlainObj(b) ? b : {};
+  const taMap = isPlainObj(la._t) ? la._t : {};
+  const tbMap = isPlainObj(lb._t) ? lb._t : {};
+
+  const keys = new Set();
+  for (const obj of [la, lb, taMap, tbMap]) {
+    for (const k of Object.keys(obj)) {
+      if (k !== "_t") keys.add(k);
+    }
+  }
+
+  const out = {};
+  const outT = {};
+  for (const key of keys) {
+    const ta = readFiniteTs(taMap[key]);
+    const tb = readFiniteTs(tbMap[key]);
+    if (ta > 0 || tb > 0) {
+      const winnerSide = tb >= ta ? lb : la;
+      const winTs = tb >= ta ? tb : ta;
+      const normalized = normalizeHighlightEntries(winnerSide[key]);
+      if (normalized.length > 0) {
+        out[key] = normalized;
+        outT[key] = winTs;
+      } else if (nowMs - winTs <= TOMBSTONE_TTL_MS) {
+        outT[key] = winTs;
+      }
+    } else {
+      const merged = mergeHighlightLegacyEntries(la[key], lb[key]);
+      if (merged.length > 0) {
+        out[key] = merged;
       }
     }
-    for (const row of entries) {
-      if (!isPlainObj(row) || !Number.isInteger(row.i) || row.i < 0) continue;
-      if (typeof row.c === "string" && row.c === "") byIndex.delete(row.i);
-      else if (typeof row.c === "string" && row.c) byIndex.set(row.i, row.c);
-    }
-    const merged = [...byIndex.entries()].sort((x, y) => x[0] - y[0]).map(([i, c]) => ({ i, c }));
-    if (merged.length) out[key] = merged;
-    else delete out[key];
+  }
+  if (Object.keys(outT).length > 0) {
+    out._t = outT;
   }
   return out;
 }
@@ -404,10 +461,10 @@ function mergeAchievements(a, b) {
   };
 }
 
-function mergeBlobValue(key, older, newer) {
+function mergeBlobValue(key, older, newer, nowMs = Date.now()) {
   switch (key) {
-    case "bookmarks": return mergeBookmarks(older, newer);
-    case "highlights": return mergeHighlights(older, newer);
+    case "bookmarks": return mergeBookmarks(older, newer, nowMs);
+    case "highlights": return mergeHighlights(older, newer, nowMs);
     case "chapterCompletion": return mergeStringSet(older, newer, "completed");
     case "todayReadingDone": return mergeTodayReadingDone(older, newer);
     case "habitStats": return mergeStringSet(older, newer, "completedDates");
@@ -428,7 +485,7 @@ function mergeBlobValue(key, older, newer) {
   }
 }
 
-export function mergeSyncBlobs(baseBlobs, incomingBlobs) {
+export function mergeSyncBlobs(baseBlobs, incomingBlobs, nowMs = Date.now()) {
   const out = isPlainObj(baseBlobs) ? { ...baseBlobs } : {};
   if (!isPlainObj(incomingBlobs)) return out;
   for (const [key, blob] of Object.entries(incomingBlobs)) {
@@ -436,7 +493,13 @@ export function mergeSyncBlobs(baseBlobs, incomingBlobs) {
     if (typeof blob.updatedAt !== "string" || !blob.updatedAt.trim()) continue;
     const prev = out[key];
     if (!isPlainObj(prev)) {
-      out[key] = blob;
+      if (key === "bookmarks") {
+        out[key] = { updatedAt: blob.updatedAt, value: mergeBookmarks({}, blob.value, nowMs) };
+      } else if (key === "highlights") {
+        out[key] = { updatedAt: blob.updatedAt, value: mergeHighlights({}, blob.value, nowMs) };
+      } else {
+        out[key] = blob;
+      }
       continue;
     }
     const leftMs = parseIsoMs(prev.updatedAt);
@@ -444,8 +507,8 @@ export function mergeSyncBlobs(baseBlobs, incomingBlobs) {
     const newer = rightMs >= leftMs ? blob : prev;
     const older = newer === blob ? prev : blob;
     out[key] = {
-      updatedAt: new Date(Math.max(leftMs, rightMs) || Date.now()).toISOString(),
-      value: mergeBlobValue(key, older.value, newer.value),
+      updatedAt: new Date(Math.max(leftMs, rightMs) || nowMs).toISOString(),
+      value: mergeBlobValue(key, older.value, newer.value, nowMs),
     };
   }
   return out;

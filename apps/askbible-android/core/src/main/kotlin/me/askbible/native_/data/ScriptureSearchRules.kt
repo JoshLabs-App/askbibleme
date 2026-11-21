@@ -182,26 +182,99 @@ data class VerseBookmark(
 
 object VerseBookmarkRules {
     const val STORAGE_KEY = "askbible-scripture-verse-bookmarks-v1"
+    const val TOMBSTONES_STORAGE_KEY = "askbible-scripture-verse-bookmark-tombstones-v1"
+    const val TOMBSTONE_TTL_MS = 60L * 24L * 60L * 60L * 1000L
 
     fun key(translationId: String, bookId: String, chapter: Int, verse: Int) = "$translationId:$bookId:$chapter:$verse"
 
-    /** parseScriptureVerseBookmarkStore：坏条目跳过；bookId 大写；bookName 缺省用 bookId；savedAt 缺省用现在 */
+    /** parseScriptureVerseBookmarkStore：坏条目/墓碑跳过；bookId 大写；bookName 缺省用 bookId；savedAt 缺省用现在 */
     fun parse(raw: String?, now: Double = System.currentTimeMillis().toDouble()): Map<String, VerseBookmark> {
         if (raw.isNullOrBlank()) return emptyMap()
         val obj = runCatching { org.json.JSONObject(raw) }.getOrNull() ?: return emptyMap()
         val out = LinkedHashMap<String, VerseBookmark>()
         for (key in obj.keys()) {
             val item = obj.optJSONObject(key) ?: continue
+            if (item.optBoolean("deleted", false)) continue
             val bookId0 = item.opt("bookId")?.toString()?.takeIf { it.isNotEmpty() && it != "null" } ?: continue
             val tid = item.opt("translationId")?.toString()?.takeIf { it.isNotEmpty() && it != "null" } ?: continue
-            val chapter = item.opt("chapter") as? Int ?: continue
-            val verse = item.opt("verse") as? Int ?: continue
+            val chapter = (item.opt("chapter") as? Number)?.toInt() ?: continue
+            val verse = (item.opt("verse") as? Number)?.toInt() ?: continue
             if (chapter < 1 || verse < 1) continue
             val bookName = item.optString("bookName").takeIf { it.isNotEmpty() } ?: bookId0
             val savedAt = if (item.opt("savedAt") is Number) (item.opt("savedAt") as Number).toDouble() else now
             out[key] = VerseBookmark(bookId0.trim().uppercase(), bookName, chapter, verse, tid, item.optString("text"), savedAt)
         }
         return out
+    }
+
+    fun pruneTombstones(
+        tombstones: Map<String, Double>,
+        nowMs: Double = System.currentTimeMillis().toDouble(),
+    ): Map<String, Double> {
+        val out = LinkedHashMap<String, Double>()
+        for ((k, ts) in tombstones) {
+            if (ts.isFinite() && ts > 0.0 && nowMs - ts <= TOMBSTONE_TTL_MS) {
+                out[k] = ts
+            }
+        }
+        return out
+    }
+
+    fun parseTombstones(
+        raw: String?,
+        nowMs: Double = System.currentTimeMillis().toDouble(),
+    ): Map<String, Double> {
+        if (raw.isNullOrBlank()) return emptyMap()
+        val obj = runCatching { org.json.JSONObject(raw) }.getOrNull() ?: return emptyMap()
+        val out = LinkedHashMap<String, Double>()
+        for (key in obj.keys()) {
+            val ts = (obj.opt(key) as? Number)?.toDouble() ?: continue
+            if (ts.isFinite() && ts > 0.0 && nowMs - ts <= TOMBSTONE_TTL_MS) {
+                out[key] = ts
+            }
+        }
+        return out
+    }
+
+    fun extractTombstones(
+        obj: org.json.JSONObject,
+        nowMs: Double = System.currentTimeMillis().toDouble(),
+    ): Map<String, Double> {
+        val out = LinkedHashMap<String, Double>()
+        for (key in obj.keys()) {
+            val item = obj.optJSONObject(key) ?: continue
+            if (!item.optBoolean("deleted", false)) continue
+            val ts = (item.opt("deletedAt") as? Number)?.toDouble() ?: continue
+            if (ts.isFinite() && ts > 0.0 && nowMs - ts <= TOMBSTONE_TTL_MS) {
+                out[key] = ts
+            }
+        }
+        return out
+    }
+
+    fun serializeTombstones(tombstones: Map<String, Double>): String {
+        val obj = org.json.JSONObject()
+        for ((k, ts) in tombstones) {
+            obj.put(k, ts)
+        }
+        return obj.toString()
+    }
+
+    fun serializeForSync(
+        store: Map<String, VerseBookmark>,
+        tombstones: Map<String, Double>,
+        nowMs: Double = System.currentTimeMillis().toDouble(),
+    ): org.json.JSONObject {
+        val obj = org.json.JSONObject()
+        for ((k, b) in store) {
+            obj.put(k, org.json.JSONObject().put("bookId", b.bookId).put("bookName", b.bookName).put("chapter", b.chapter)
+                .put("verse", b.verse).put("translationId", b.translationId).put("text", b.text).put("savedAt", b.savedAt))
+        }
+        for ((k, ts) in pruneTombstones(tombstones, nowMs)) {
+            if (store.containsKey(k)) continue
+            obj.put(k, org.json.JSONObject().put("deleted", true).put("deletedAt", ts))
+        }
+        return obj
     }
 
     fun serialize(store: Map<String, VerseBookmark>): String {

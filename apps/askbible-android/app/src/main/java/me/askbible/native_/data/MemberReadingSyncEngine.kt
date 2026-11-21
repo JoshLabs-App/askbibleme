@@ -110,16 +110,19 @@ class MemberReadingSyncEngine(context: Context) {
         if (activity.usageTotalSec > 0) blobs.put("appUsageTime", wrap(activity.usageJson(), now))
         if (activity.recent.isNotEmpty()) blobs.put("recentChapters", wrap(activity.recentJson(), now))
         highlights?.let { h ->
-            if (h.localUpdatedAtMs > 0) blobs.put("highlights", wrap(h.json(), R.isoString(h.localUpdatedAtMs.toDouble())))
-            else { val hl = h.json(); if (hl.length() > 0) blobs.put("highlights", wrap(hl, now)) }
+            val hl = h.json()
+            if (hl.length() > 0) {
+                val ts = if (h.localUpdatedAtMs > 0) R.isoString(h.localUpdatedAtMs.toDouble()) else now
+                blobs.put("highlights", wrap(hl, ts))
+            }
         }
         achievements?.let { a -> if (a.hasProgress) blobs.put("achievements", wrap(a.syncJson(), now)) }
         return blobs
     }
 
     fun localHasProgress(): Boolean {
-        if (bookmarks.store.isNotEmpty()) return true
-        if (highlights?.dirty == true) return true
+        if (bookmarks.store.isNotEmpty() || bookmarks.tombstones.isNotEmpty()) return true
+        if (highlights?.store?.isNotEmpty() == true || highlights?.verseTimestamps?.isNotEmpty() == true || highlights?.dirty == true) return true
         if (achievements?.hasProgress == true) return true
         if (activity.lastPosition != null) return true
         if (activity.listenTotalSec > 0) return true
@@ -188,7 +191,7 @@ class MemberReadingSyncEngine(context: Context) {
             "recentSearches" -> R.dict(value)?.let { d ->
                 if (R.num(d.opt("version")) == 1.0 && d.opt("terms") is JSONArray) search.replaceRecent(R.stringArray(d.opt("terms")))
             }
-            "highlights" -> R.dict(value)?.let { highlights?.replace(VerseHighlightStore.parse(it), applyingUpdatedAtMs) }
+            "highlights" -> R.dict(value)?.let { highlights?.replace(it, applyingUpdatedAtMs) }
             "achievements" -> R.dict(value)?.let { achievements?.mergeRemote(it) }
             "appUsageTime" -> R.dict(value)?.let { d -> R.num(d.opt("totalSec"))?.let { activity.mergeRemoteUsage(it) } }
             "recentChapters" -> R.dict(value)?.let { d ->

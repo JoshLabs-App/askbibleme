@@ -15,6 +15,8 @@ import org.json.JSONObject
  */
 object VerseHighlightRules {
     const val STORAGE_KEY = "askbible-read-verse-text-highlights-v1"
+    const val TIMESTAMPS_STORAGE_KEY = "askbible-read-verse-text-highlights-timestamps-v1"
+    const val TOMBSTONE_TTL_MS = 60L * 24L * 60L * 60L * 1000L
     const val DEFAULT_COLOR = "#FFB103"
     /**
      * RN VERSE_TEXT_HIGHLIGHT_PALETTE（2026-09-19 改版，见 docs/design-color-system.md）。
@@ -62,6 +64,8 @@ class VerseHighlightStore(context: Context) {
     /** 键 → （字符下标 → 颜色） */
     var store by mutableStateOf<Map<String, Map<Int, String>>>(emptyMap())
         private set
+    var verseTimestamps: Map<String, Long> = emptyMap()
+        private set
 
     /** 本机改动通知（会员同步用） */
     var onLocalChange: ((String) -> Unit)? = null
@@ -74,7 +78,12 @@ class VerseHighlightStore(context: Context) {
     val dirty: Boolean get() = sp.getBoolean(DIRTY_KEY, false)
     fun markSynced() { sp.edit().putBoolean(DIRTY_KEY, false).apply() }
 
-    init { localUpdatedAtMs = sp.getLong(UPDATED_KEY, 0L); store = parse(sp.getString(VerseHighlightRules.STORAGE_KEY, null)) }
+    init {
+        localUpdatedAtMs = sp.getLong(UPDATED_KEY, 0L)
+        val loaded = parse(sp.getString(VerseHighlightRules.STORAGE_KEY, null))
+        store = loaded
+        verseTimestamps = parseTimestamps(sp.getString(VerseHighlightRules.TIMESTAMPS_STORAGE_KEY, null), loaded)
+    }
 
     fun colors(translationId: String, bookId: String, chapter: Int, verse: Int): Map<Int, String> =
         store[VerseHighlightRules.key(translationId, bookId, chapter, verse)] ?: emptyMap()
@@ -101,8 +110,22 @@ class VerseHighlightStore(context: Context) {
         }
         val next = HashMap(store)
         if (byIndex.isEmpty()) next.remove(key) else next[key] = byIndex
+        val nowMs = System.currentTimeMillis()
         store = next
-        localUpdatedAtMs = System.currentTimeMillis()
+        verseTimestamps = pruneTimestamps(verseTimestamps + (key to nowMs), next, nowMs)
+        localUpdatedAtMs = nowMs
+        sp.edit().putLong(UPDATED_KEY, localUpdatedAtMs).putBoolean(DIRTY_KEY, true).apply()
+        persist()
+    }
+
+    fun clear(translationId: String, bookId: String, chapter: Int, verse: Int) {
+        val key = VerseHighlightRules.key(translationId, bookId, chapter, verse)
+        val next = HashMap(store)
+        next.remove(key)
+        val nowMs = System.currentTimeMillis()
+        store = next
+        verseTimestamps = pruneTimestamps(verseTimestamps + (key to nowMs), next, nowMs)
+        localUpdatedAtMs = nowMs
         sp.edit().putLong(UPDATED_KEY, localUpdatedAtMs).putBoolean(DIRTY_KEY, true).apply()
         persist()
     }
@@ -110,19 +133,35 @@ class VerseHighlightStore(context: Context) {
     /** 云端并入（会员同步 highlights blob） */
     fun replace(next: Map<String, Map<Int, String>>, updatedAtMs: Long) {
         store = next
+        verseTimestamps = pruneTimestamps(verseTimestamps, next)
+        if (updatedAtMs > localUpdatedAtMs) { localUpdatedAtMs = updatedAtMs; sp.edit().putLong(UPDATED_KEY, updatedAtMs).apply() }
+        persist(notify = false)
+    }
+
+    /** 云端并入（含 `_t` 节级时间戳与擦除墓碑） */
+    fun replace(o: JSONObject, updatedAtMs: Long) {
+        val nowMs = System.currentTimeMillis()
+        val next = parse(o)
+        val remoteTs = extractTimestamps(o, next, nowMs)
+        val mergedTs = HashMap(verseTimestamps)
+        for ((k, ts) in remoteTs) {
+            mergedTs[k] = maxOf(mergedTs[k] ?: 0L, ts)
+        }
+        store = next
+        verseTimestamps = pruneTimestamps(mergedTs, next, nowMs)
         if (updatedAtMs > localUpdatedAtMs) { localUpdatedAtMs = updatedAtMs; sp.edit().putLong(UPDATED_KEY, updatedAtMs).apply() }
         persist(notify = false)
     }
 
     fun clearForAccountSwitch() {
         store = emptyMap()
+        verseTimestamps = emptyMap()
         localUpdatedAtMs = 0L
-        sp.edit().remove(UPDATED_KEY).remove(DIRTY_KEY).apply()
+        sp.edit().remove(UPDATED_KEY).remove(DIRTY_KEY).remove(VerseHighlightRules.TIMESTAMPS_STORAGE_KEY).apply()
         persist(notify = false)
     }
 
-    /** 同步用：`{"译本:卷:章:节": [{i, c}]}` */
-    fun json(): JSONObject {
+    private fun storeJson(): JSONObject {
         val out = JSONObject()
         for ((key, byIndex) in store) {
             if (byIndex.isEmpty()) continue
@@ -135,14 +174,82 @@ class VerseHighlightStore(context: Context) {
         return out
     }
 
+    /** 同步用：`{"译本:卷:章:节": [{i, c}], "_t": {"译本:卷:章:节": tsMs}}` */
+    fun json(): JSONObject {
+        val out = storeJson()
+        val prunedTs = pruneTimestamps(verseTimestamps, store)
+        if (prunedTs.isNotEmpty()) {
+            val tObj = JSONObject()
+            for ((k, ts) in prunedTs) tObj.put(k, ts)
+            out.put("_t", tObj)
+        }
+        return out
+    }
+
     private fun persist(notify: Boolean = true) {
-        sp.edit().putString(VerseHighlightRules.STORAGE_KEY, json().toString()).apply()
+        val tsObj = JSONObject()
+        for ((k, ts) in verseTimestamps) tsObj.put(k, ts)
+        sp.edit()
+            .putString(VerseHighlightRules.STORAGE_KEY, storeJson().toString())
+            .putString(VerseHighlightRules.TIMESTAMPS_STORAGE_KEY, tsObj.toString())
+            .apply()
         if (notify && !suppressChangeNotify) onLocalChange?.invoke("highlights")
     }
 
     companion object {
         private const val UPDATED_KEY = "askbible-read-verse-text-highlights-updated-at"
         private const val DIRTY_KEY = "askbible-read-verse-text-highlights-dirty"
+
+        fun pruneTimestamps(
+            ts: Map<String, Long>,
+            liveStore: Map<String, Map<Int, String>>,
+            nowMs: Long = System.currentTimeMillis(),
+        ): Map<String, Long> {
+            val out = HashMap<String, Long>()
+            for ((k, v) in ts) {
+                if (k == "_t" || v <= 0L) continue
+                val isLive = liveStore[k]?.isNotEmpty() == true
+                if (isLive || nowMs - v <= VerseHighlightRules.TOMBSTONE_TTL_MS) {
+                    out[k] = v
+                }
+            }
+            return out
+        }
+
+        fun parseTimestamps(
+            raw: String?,
+            liveStore: Map<String, Map<Int, String>>,
+            nowMs: Long = System.currentTimeMillis(),
+        ): Map<String, Long> {
+            if (raw.isNullOrEmpty()) return emptyMap()
+            val obj = runCatching { JSONObject(raw) }.getOrNull() ?: return emptyMap()
+            val out = HashMap<String, Long>()
+            val keys = obj.keys()
+            while (keys.hasNext()) {
+                val k = keys.next()
+                if (k == "_t") continue
+                val v = MemberReadingSyncRules.num(obj.opt(k))?.toLong() ?: continue
+                if (v > 0L) out[k] = v
+            }
+            return pruneTimestamps(out, liveStore, nowMs)
+        }
+
+        fun extractTimestamps(
+            o: JSONObject,
+            liveStore: Map<String, Map<Int, String>>,
+            nowMs: Long = System.currentTimeMillis(),
+        ): Map<String, Long> {
+            val tObj = o.optJSONObject("_t") ?: return emptyMap()
+            val out = HashMap<String, Long>()
+            val keys = tObj.keys()
+            while (keys.hasNext()) {
+                val k = keys.next()
+                if (k == "_t") continue
+                val v = MemberReadingSyncRules.num(tObj.opt(k))?.toLong() ?: continue
+                if (v > 0L) out[k] = v
+            }
+            return pruneTimestamps(out, liveStore, nowMs)
+        }
 
         fun parse(raw: String?): Map<String, Map<Int, String>> {
             if (raw.isNullOrEmpty()) return emptyMap()
@@ -154,6 +261,7 @@ class VerseHighlightStore(context: Context) {
             val keys = o.keys()
             while (keys.hasNext()) {
                 val key = keys.next()
+                if (key == "_t") continue
                 val rows = o.opt(key) as? JSONArray ?: continue
                 val byIndex = HashMap<Int, String>()
                 for (i in 0 until rows.length()) {

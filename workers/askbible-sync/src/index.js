@@ -432,37 +432,45 @@ export default {
         if (request.method === "POST") {
           const body = await request.json().catch(() => ({}));
           const incomingBlobs = body && typeof body.blobs === "object" && body.blobs ? body.blobs : {};
-          const existing = await env.DB.prepare(
-            "SELECT blobs_json FROM reading_sync_docs WHERE user_id = ?"
-          )
-            .bind(uid)
-            .first();
-          const baseBlobs =
-            body.replace === true || !existing ? {} : JSON.parse(existing.blobs_json || "{}");
-          const mergedBlobs = mergeSyncBlobs(baseBlobs, incomingBlobs);
-          const now = Date.now();
-          const revision = `${now}-${randomHex(4)}`;
-          await env.DB.prepare(
-            `INSERT INTO reading_sync_docs (user_id, schema_version, revision, blobs_json, updated_at)
-             VALUES (?, 1, ?, ?, ?)
-             ON CONFLICT(user_id) DO UPDATE SET
-               revision = excluded.revision,
-               blobs_json = excluded.blobs_json,
-               updated_at = excluded.updated_at`
-          )
-            .bind(uid, revision, JSON.stringify(mergedBlobs), now)
-            .run();
+          const MAX_CAS_ATTEMPTS = 5;
+          for (let attempt = 0; attempt < MAX_CAS_ATTEMPTS; attempt++) {
+            const existing = await env.DB.prepare(
+              "SELECT schema_version, revision, blobs_json FROM reading_sync_docs WHERE user_id = ?"
+            )
+              .bind(uid)
+              .first();
+            const baseBlobs =
+              body.replace === true || !existing ? {} : JSON.parse(existing.blobs_json || "{}");
+            const now = Date.now();
+            const mergedBlobs = mergeSyncBlobs(baseBlobs, incomingBlobs, now);
+            const revision = `${now}-${randomHex(4)}`;
+            const blobsJson = JSON.stringify(mergedBlobs);
+            const res = existing
+              ? await env.DB.prepare(
+                  "UPDATE reading_sync_docs SET revision = ?, blobs_json = ?, updated_at = ? WHERE user_id = ? AND revision = ?"
+                )
+                  .bind(revision, blobsJson, now, uid, existing.revision)
+                  .run()
+              : await env.DB.prepare(
+                  "INSERT INTO reading_sync_docs (user_id, schema_version, revision, blobs_json, updated_at) VALUES (?, 1, ?, ?, ?) ON CONFLICT(user_id) DO NOTHING"
+                )
+                  .bind(uid, revision, blobsJson, now)
+                  .run();
 
-          return json({
-            ok: true,
-            doc: {
-              schemaVersion: 1,
-              userId: uid,
-              revision,
-              updatedAt: new Date(now).toISOString(),
-              blobs: mergedBlobs,
-            },
-          });
+            if (Number(res?.meta?.changes || 0) > 0) {
+              return json({
+                ok: true,
+                doc: {
+                  schemaVersion: Number(existing?.schema_version || 1),
+                  userId: uid,
+                  revision,
+                  updatedAt: new Date(now).toISOString(),
+                  blobs: mergedBlobs,
+                },
+              });
+            }
+          }
+          return json({ ok: false, code: "sync_conflict", error: "并发同步冲突，请重试。" }, 409);
         }
       }
 

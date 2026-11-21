@@ -39,5 +39,22 @@ fi
 echo "本机构建 Cloudflare Worker (askbible-web) $REF @ $SHA …"
 npm run prebuild
 npx cf build
-npx cf deploy --prebuilt
+BASE_NODE_OPTS="${NODE_OPTIONS:-}"
+DEPLOYED=0
+for pass in 1 2 3; do
+  if [ "$pass" = "2" ]; then
+    NET_FLAG="--dns-result-order=ipv4first"
+  else
+    NET_FLAG="--network-family-autoselection"
+  fi
+  if NODE_OPTIONS="$NET_FLAG $BASE_NODE_OPTS" WRANGLER_SEND_METRICS=false npx cf deploy --prebuilt; then
+    DEPLOYED=1
+    break
+  fi
+  if [ "$pass" -lt 3 ]; then
+    echo "⚠️ 第 ${pass} 轮部署网络波动，切换双栈策略续传重试（$((pass + 1))/3）…"
+    sleep $((pass * 2))
+  fi
+done
+[ "$DEPLOYED" = "1" ] || exit 1
 echo "发布完成，预期 /api/app-build id=${SHA}；继续核对正式站（https://askbible.me）实际页面。"

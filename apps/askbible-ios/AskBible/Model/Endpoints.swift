@@ -24,8 +24,8 @@ enum Endpoints {
         var builtin: [String] {
             switch self {
             case .media: return ["https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/", "https://askbible-media.joshlabs.app/"]
-            case .site:  return ["https://askbible.me/", "https://bible.joshlabs.app/", "https://askbible-site.joshlabs.app/"]
-            case .api:   return ["https://askbible-sync.joshlabs.app/", "https://askbible.me/api/sync/", "https://bible.joshlabs.app/api/sync/"]
+            case .site:  return ["https://askbible.me/", "https://askbible-site.joshlabs.app/"]
+            case .api:   return ["https://askbible-sync.joshlabs.app/", "https://askbible.me/api/sync/"]
             }
         }
     }

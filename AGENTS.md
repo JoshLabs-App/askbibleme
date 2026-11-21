@@ -263,7 +263,7 @@ play scripture …/GEN-2.mp3 q=0 -> audible=[SCRIPTURE]
 |------|------|
 | **Frontend（前台 + Studio）** | Next.js **App Router**（`vinext` 构建）+ **TypeScript** + **Tailwind CSS** |
 | **Backend（后端）** | 本地静态/打包数据（`public/data/` + `env.ASSETS`）+ Cloudflare Worker `askbible-sync`（D1） |
-| **Deploy（部署）** | **Cloudflare Workers**（Worker：`askbible-web`，主域 `askbible.me`，备用域 `bible.joshlabs.app`） |
+| **Deploy（部署）** | **Cloudflare Workers**（Worker：`askbible-web`，主域 `askbible.me`） |
 | **Mobile App** | 原生 iOS：`apps/askbible-ios`；原生 Android：`apps/askbible-android` |
 
 说明：Studio 仅在本地 `npm run dev` 下使用；线上生产环境运行在 Cloudflare Workers。

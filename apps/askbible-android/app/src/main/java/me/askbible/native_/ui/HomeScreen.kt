@@ -51,7 +51,7 @@ fun HomeScreen(
     var toolsOpen by remember { mutableStateOf(false) }
     var albumsOpen by remember { mutableStateOf(false) }
     var idleEpoch by remember { mutableIntStateOf(0) }
-    val dark = isSystemInDarkTheme()
+    val dark = LocalParchment.current == Parchment.dark
     val paper = if (dark) Color(0xFF28251F) else Color(0xFFF7F0E4)
     val ink = if (dark) Color(0xFFEEE3D1) else Color(0xFF493B2C)
     val gold = Color(0xFFB88A35)

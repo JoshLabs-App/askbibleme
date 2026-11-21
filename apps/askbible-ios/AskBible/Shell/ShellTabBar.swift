@@ -22,7 +22,7 @@ enum ShellTab: String, CaseIterable, Identifiable {
         case .music: return "music.note"
         case .plan: return "sun.horizon"
         case .read: return "book.closed"
-        case .explore: return "books.vertical"
+        case .explore: return "safari"
         }
     }
 
@@ -41,19 +41,20 @@ enum ShellTab: String, CaseIterable, Identifiable {
         case (.read, .en): return "Bible"
         case (.read, .zhTW): return "聖經"
         case (.read, _): return "圣经"
-        case (.explore, .en): return "Study"
-        case (.explore, .zhTW): return "書房"
-        case (.explore, _): return "书房"
+        case (.explore, .en): return "Explore"
+        case (.explore, .zhTW): return "探索"
+        case (.explore, _): return "探索"
         }
     }
 }
 
-/// 五栏对称羊皮纸胶囊底栏：首页 · 全景 · 今日 · 圣经 · 书房（全端对齐）。
+/// 五栏对称羊皮纸胶囊底栏：首页 · 全景 · 今日 · 圣经 · 探索（全端对齐）。
 struct ShellTabBar: View {
     @Environment(\.parchment) private var theme
     @Binding var selection: ShellTab
     var locale: AppLocale = .zhCN
     var onCenterTap: () -> Void = {}
+    var onReselectRead: () -> Void = {}
 
     var body: some View {
         let onScenery = selection == .home || selection == .music
@@ -61,7 +62,13 @@ struct ShellTabBar: View {
             tabPill(.home, active: selection == .home || selection == .music) { selection = .home }
             tabPill(.panorama, active: selection == .panorama) { selection = .panorama }
             tabPill(.plan, active: selection == .plan) { onCenterTap() }
-            tabPill(.read, active: selection == .read) { selection = .read }
+            tabPill(.read, active: selection == .read) {
+                if selection == .read {
+                    onReselectRead()
+                } else {
+                    selection = .read
+                }
+            }
             tabPill(.explore, active: selection == .explore) { selection = .explore }
         }
         .padding(.horizontal, 6)
@@ -119,6 +126,7 @@ struct AskTabShell<Screen: View, Dock: View>: View {
     var homeBarHidden: Bool = false
     var onWakeHomeChrome: () -> Void = {}
     var onEnterPlan: () -> Void = {}
+    var onReselectRead: () -> Void = {}
     @ViewBuilder var screen: (ShellTab) -> Screen
     @ViewBuilder var dock: () -> Dock
 
@@ -139,7 +147,8 @@ struct AskTabShell<Screen: View, Dock: View>: View {
                             ShellTabBar(
                                 selection: $selection,
                                 locale: locale,
-                                onCenterTap: onEnterPlan
+                                onCenterTap: onEnterPlan,
+                                onReselectRead: onReselectRead
                             )
                             .frame(height: ShellMetrics.tabRowHeight)
                             .opacity(homeBarHidden ? 0 : 1)

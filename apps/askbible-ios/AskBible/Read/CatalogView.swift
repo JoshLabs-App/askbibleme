@@ -166,18 +166,35 @@ struct CatalogView: View {
     }
 }
 
-/// 章节选择浮层
+/// 书卷与章节二合一快捷切换浮层（支持章格速选 + 66 卷双栏圣经目录秒切）
 struct ChapterPickerSheet: View {
     let book: BookRef
     /// 章数以库为准 —— 目录里的静态数字只是回退
     var chapterCount: Int = 0
+    var currentChapter: Int? = nil
+    var initialShowBooks: Bool = false
+    var chapterCountForBook: ((BookRef) -> Int)? = nil
     var onPick: (Int) -> Void
+    var onPickBookChapter: ((BookRef, Int) -> Void)? = nil
     var onClose: () -> Void
     var locale: AppLocale = .zhCN
     /// 书卷名：在线译本用它自己那套
     var bookLabel: (BookRef) -> String = { $0.name(AppLocale.current) }
 
     @Environment(\.parchment) private var theme
+    @State private var selectedBook: BookRef? = nil
+    @State private var showingBooksOverride: Bool? = nil
+
+    private var activeBook: BookRef { selectedBook ?? book }
+    private var showingBooks: Bool { showingBooksOverride ?? initialShowBooks }
+    private var resolvedChapterCount: Int {
+        if let selectedBook {
+            let dyn = chapterCountForBook?(selectedBook) ?? 0
+            return max(1, dyn > 0 ? dyn : selectedBook.chapterCount)
+        }
+        return max(1, chapterCount > 0 ? chapterCount : book.chapterCount)
+    }
+
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 9), count: 6)
 
     var body: some View {
@@ -187,51 +204,96 @@ struct ChapterPickerSheet: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // RN BibleChapterPickerPanel.header：系统返回（iOS 是 chevron）+ 标题 17/600 居中 + 「×」28 faint
                 HStack(spacing: 8) {
-                    Button(action: onClose) {
-                        Image(systemName: "chevron.left")
-                            .askFont(size: 20, weight: .semibold)
-                            .foregroundStyle(theme.ink)
-                            .frame(width: 44, height: 44, alignment: .leading)
-                            .contentShape(Rectangle())
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showingBooksOverride = !showingBooks
+                        }
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: showingBooks ? "chevron.left" : "books.vertical")
+                                .font(.system(size: 13, weight: .semibold))
+                            Text(showingBooks
+                                 ? AppLocale.pick("返回选章", "Chapters", locale)
+                                 : AppLocale.pick("圣经目录", "Books", locale))
+                                .askFont(size: 13, weight: .semibold)
+                        }
+                        .foregroundStyle(theme.accentOt)
+                        .padding(.horizontal, 11)
+                        .padding(.vertical, 7)
+                        .background(Capsule().fill(theme.accentOt.opacity(theme.isDark ? 0.20 : 0.12)))
+                        .overlay(Capsule().strokeBorder(theme.accentOt.opacity(0.4), lineWidth: 0.75))
+                        .contentShape(Capsule())
                     }
                     .buttonStyle(.plain)
-                    Text(bookLabel(book))
-                        .askFont(size: 17, weight: .semibold)
+
+                    Spacer(minLength: 4)
+
+                    Text(showingBooks
+                         ? AppLocale.pick("选择书卷（66卷）", "Choose Book (66)", locale)
+                         : bookLabel(activeBook))
+                        .askFont(size: 17, weight: .bold)
                         .foregroundStyle(theme.ink)
                         .lineLimit(1)
-                        .frame(maxWidth: .infinity)
+
+                    Spacer(minLength: 4)
+
                     Button(action: onClose) {
-                        Text("\u{00D7}")
-                            .askFont(size: 28)
-                            .foregroundStyle(theme.faint)
-                            .frame(height: 28)
-                            .padding(.horizontal, 4)
+                        Image(systemName: "xmark")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(theme.muted)
+                            .frame(width: 34, height: 34)
+                            .background(Circle().fill(theme.surface.opacity(0.75)))
+                            .contentShape(Circle())
                     }
                     .buttonStyle(.plain)
                 }
-                .padding(.bottom, 18)
+                .padding(.bottom, 14)
 
-                ScrollView(showsIndicators: false) {
-                    LazyVGrid(columns: columns, spacing: 9) {
-                        ForEach(1...max(1, chapterCount > 0 ? chapterCount : book.chapterCount), id: \.self) { n in
-                            Button { onPick(n) } label: {
-                                Text("\(n)")
-                                    .askFont(size: 19, weight: .semibold)
-                                    .foregroundStyle(theme.ink)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 46)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 11)
-                                            .fill(theme.chapterCellPressed)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 11)
-                                                    .strokeBorder(theme.chapterCellBorder, lineWidth: 1)
-                                            )
-                                    )
+                if showingBooks {
+                    ScrollView(showsIndicators: false) {
+                        HStack(alignment: .top, spacing: 14) {
+                            bookColumn(
+                                title: ReadChrome.testamentOld(locale),
+                                titleColor: Color(parchment: 0x2F6291),
+                                groups: BibleCatalog.oldTestament
+                            )
+                            bookColumn(
+                                title: ReadChrome.testamentNew(locale),
+                                titleColor: Color(parchment: 0xC1660B),
+                                groups: BibleCatalog.newTestament
+                            )
+                        }
+                        .padding(.bottom, 6)
+                    }
+                } else {
+                    ScrollView(showsIndicators: false) {
+                        LazyVGrid(columns: columns, spacing: 9) {
+                            ForEach(1...resolvedChapterCount, id: \.self) { n in
+                                let isCurrent = activeBook.id == book.id && currentChapter == n
+                                Button {
+                                    if let onPickBookChapter {
+                                        onPickBookChapter(activeBook, n)
+                                    } else {
+                                        onPick(n)
+                                    }
+                                } label: {
+                                    Text("\(n)")
+                                        .askFont(size: 18, weight: isCurrent ? .bold : .semibold)
+                                        .foregroundStyle(isCurrent ? .white : theme.ink)
+                                        .frame(maxWidth: .infinity)
+                                        .frame(height: 46)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 11)
+                                                .fill(isCurrent ? theme.accentOt : theme.chapterCellPressed)
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 11)
+                                                        .strokeBorder(isCurrent ? theme.accentOt : theme.chapterCellBorder, lineWidth: 1)
+                                                )
+                                        )
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -239,15 +301,73 @@ struct ChapterPickerSheet: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .parchmentCard(cornerRadius: 20)
-            .frame(maxHeight: 508)
-            .padding(.horizontal, 18)
+            .frame(maxHeight: 540)
+            .padding(.horizontal, 16)
             .contentShape(Rectangle())
             .onTapGesture {}
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        // 点空白关面板：手势要挂在整层上，挂在遮罩色块上时卡片以外点不动（见 TranslationPanel 那条注）
         .contentShape(Rectangle())
         .onTapGesture(perform: onClose)
+    }
+
+    private func bookColumn(title: String, titleColor: Color, groups: [BookGroup]) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .askFont(size: 15, weight: .bold)
+                .foregroundStyle(titleColor)
+                .padding(.bottom, 2)
+
+            ForEach(groups) { group in
+                Text(group.title(locale))
+                    .askFont(size: 12.5, weight: .bold)
+                    .foregroundStyle(group.color)
+                    .padding(.top, 5)
+                    .padding(.bottom, 1)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(group.books) { b in
+                        let isSelected = b.id == activeBook.id
+                        Button {
+                            selectedBook = b
+                            let count = max(1, (chapterCountForBook?(b) ?? 0) > 0 ? (chapterCountForBook?(b) ?? b.chapterCount) : b.chapterCount)
+                            if count == 1 {
+                                if let onPickBookChapter {
+                                    onPickBookChapter(b, 1)
+                                } else {
+                                    onPick(1)
+                                }
+                            } else {
+                                withAnimation(.easeInOut(duration: 0.18)) {
+                                    showingBooksOverride = false
+                                }
+                            }
+                        } label: {
+                            HStack(spacing: 6) {
+                                Text(b.displayNumber)
+                                    .askFont(size: 10.5, weight: .semibold)
+                                    .foregroundStyle(isSelected ? theme.accentOt : group.color)
+                                    .frame(minWidth: 15, alignment: .leading)
+                                Text(bookLabel(b))
+                                    .askFont(size: 14, weight: isSelected ? .bold : .medium)
+                                    .foregroundStyle(isSelected ? theme.accentOt : theme.ink)
+                                    .lineLimit(1)
+                                Spacer(minLength: 2)
+                            }
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 6)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(isSelected ? theme.accentOt.opacity(theme.isDark ? 0.22 : 0.12) : Color.clear)
+                            )
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -287,7 +407,11 @@ struct TranslationPanel: View {
                         expanded.toggle()
                         if expanded { expandedSecondary = false }
                     } label: {
-                        dropdown(text: store.translation.label(locale), color: theme.parchmentAccent, open: expanded)
+                        dropdown(
+                            text: store.translation.label(locale),
+                            color: theme.isDark ? Color(red: 0.95, green: 0.90, blue: 0.82) : theme.parchmentAccent,
+                            open: expanded
+                        )
                     }
                     .buttonStyle(.plain)
                 }
@@ -308,8 +432,11 @@ struct TranslationPanel: View {
                         expandedSecondary.toggle()
                         if expandedSecondary { expanded = false }
                     } label: {
-                        dropdown(text: store.secondary?.label(locale) ?? SiteCopy.t("native.none", locale),
-                                 color: Color(parchment: 0xE0A100), open: expandedSecondary)
+                        dropdown(
+                            text: store.secondary?.label(locale) ?? SiteCopy.t("native.none", locale),
+                            color: theme.isDark ? Color(red: 1.0, green: 0.78, blue: 0.27) : Color(red: 0.71, green: 0.33, blue: 0.04),
+                            open: expandedSecondary
+                        )
                     }
                     .buttonStyle(.plain)
                 }
@@ -450,8 +577,8 @@ struct TranslationPanel: View {
         }
         .background(
             RoundedRectangle(cornerRadius: 9)
-                .fill(Color(parchment: 0xfffdf8))
-                .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(theme.border.opacity(0.6), lineWidth: 1))
+                .fill(theme.isDark ? Color(red: 31 / 255, green: 25 / 255, blue: 20 / 255) : Color(rgb: 0xFFFDF8))
+                .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(theme.borderStrong, lineWidth: 1))
         )
         .padding(.leading, 40)
     }
@@ -459,15 +586,22 @@ struct TranslationPanel: View {
     private func row<Badges: View>(label: String, selected: Bool, badges: Badges, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                Text(label).askFont(size: 16).foregroundStyle(theme.ink).lineLimit(1)
+                Text(label)
+                    .askFont(size: 16, weight: selected ? .semibold : .regular)
+                    .foregroundStyle(selected && theme.isDark ? Brand.logo : theme.ink)
+                    .lineLimit(1)
                 Spacer(minLength: 4)
                 badges
                 if selected {
-                    Image(systemName: "checkmark").askFont(size: 14, weight: .semibold).foregroundStyle(theme.parchmentAccent)
+                    Image(systemName: "checkmark")
+                        .askFont(size: 14, weight: .semibold)
+                        .foregroundStyle(theme.isDark ? Brand.logo : theme.parchmentAccent)
                 }
             }
             .padding(.horizontal, 14)
             .frame(minHeight: 42)
+            .background(selected ? Brand.logo.opacity(theme.isDark ? 0.16 : 0.10) : Color.clear)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -505,15 +639,15 @@ struct TranslationPanel: View {
             Spacer()
             Image(systemName: "chevron.down")
                 .askFont(size: 14, weight: .semibold)
-                .foregroundStyle(theme.muted.opacity(0.55))
+                .foregroundStyle(theme.muted.opacity(0.75))
                 .rotationEffect(.degrees(open ? 180 : 0))
         }
         .padding(.horizontal, 14)
         .frame(height: 40)
         .background(
             RoundedRectangle(cornerRadius: 9)
-                .fill(Color(parchment: 0xfffdf8))
-                .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(theme.border.opacity(0.6), lineWidth: 1))
+                .fill(theme.isDark ? Color(red: 36 / 255, green: 30 / 255, blue: 23 / 255) : Color(rgb: 0xFFFDF8))
+                .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(theme.borderStrong, lineWidth: 1))
         )
     }
 }

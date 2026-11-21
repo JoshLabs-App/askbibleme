@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import panoramaJson from "@/data/bible/panorama.json";
 import {
   BIBLE_PANORAMA_ACTS,
   findPanoramaLocation,
@@ -14,6 +15,9 @@ import { scriptureBooks } from "@/lib/bible/scripture-books";
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import { readLastReadPosition, type ReadLastPosition } from "@/lib/read/read-last-position";
 
+type BookIntro = { zh: string; en: string; references: string };
+const BOOK_INTRODUCTIONS = panoramaJson.introductions as Record<string, BookIntro | undefined>;
+
 const ACT_NUMERALS_ZH = ["壹", "贰", "叁", "肆", "伍", "陆"];
 const chaptersById = new Map(scriptureBooks.map((b) => [b.bookId, b.chapters]));
 
@@ -24,7 +28,17 @@ function pickCopy(zh: string, en: string, locale: string): string {
 
 function ActLineArt({ actIndex }: { actIndex: number }) {
   return (
-    <svg width="62" height="66" viewBox="0 0 64 68" fill="none" stroke="#C1660B" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      width="62"
+      height="66"
+      viewBox="0 0 64 68"
+      fill="none"
+      stroke="#C1660B"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       {actIndex === 0 ? (
         <>
           <line x1="8" y1="58" x2="56" y2="58" />
@@ -68,14 +82,16 @@ function ActLineArt({ actIndex }: { actIndex: number }) {
 }
 
 /**
- * 网页端「救赎全景」灵修画卷（对齐 iOS BiblePanoramaView / Android BiblePanoramaScreen）：
- * 置顶「✦ 你正在这一幕」沉浸定位卡 + 纵向金线六幕时间轴 + 书签式经文脉络导读卡 + 选章弹层。
+ * 网页端「救赎全景」灵修画卷 + 66 卷逐卷简介合璧版（对齐 iOS BiblePanoramaView / Android BiblePanoramaScreen）：
+ * 置顶「✦ 你正在这一幕」定位卡 + 66 卷速查 + 纵向金线六幕时间轴 + 每一卷书在写什么（66 卷核心主旨简介与选章直达）。
  */
 export function BiblePanoramaClient() {
   const { locale } = useLocale();
   const [lastPos, setLastPos] = useState<ReadLastPosition | null>(null);
   const [activeAct, setActiveAct] = useState<number>(0);
-  const [pickerSpan, setPickerSpan] = useState<PanoramaSpan | null>(null);
+  const [expandedCardKey, setExpandedCardKey] = useState<string | null>(null);
+  const [finderOpen, setFinderOpen] = useState(false);
+  const [finderQuery, setFinderQuery] = useState("");
 
   useEffect(() => {
     const pos = readLastReadPosition();
@@ -94,19 +110,46 @@ export function BiblePanoramaClient() {
   const heroSection = heroLoc?.section ?? heroAct.sections[0]!;
   const currentBookName = getScriptureBookDisplayName(currentBookId, locale);
 
+  const filteredBooks = useMemo(() => {
+    const q = finderQuery.trim().toLowerCase();
+    if (!q) return scriptureBooks;
+    return scriptureBooks.filter((b) => {
+      const displayName = getScriptureBookDisplayName(b.bookId, locale).toLowerCase();
+      const intro = BOOK_INTRODUCTIONS[b.bookId];
+      return (
+        displayName.includes(q) ||
+        b.bookId.toLowerCase().includes(q) ||
+        (intro?.zh.toLowerCase().includes(q) ?? false) ||
+        (intro?.en.toLowerCase().includes(q) ?? false)
+      );
+    });
+  }, [finderQuery, locale]);
+
   return (
-    <div className="mx-auto w-full max-w-[460px] px-5 pb-28 pt-5 text-[#231A12] dark:text-[#EDE2CF]">
-      <header className="mb-5">
-        <h1 className="m-0 text-[28px] font-bold tracking-tight">
-          {pickCopy("救赎全景", "Redemption Story", locale)}
-        </h1>
-        <p className="mt-1 text-[13.5px] leading-relaxed text-[#75614B] dark:text-[#A99A84]">
-          {pickCopy(
-            "在完整的救赎故事中安静灵修，看见今天所读经文的位置",
-            "Dwell in the whole story of redemption and see where today's reading belongs",
-            locale,
-          )}
-        </p>
+    <div className="mx-auto w-full max-w-[480px] px-5 pb-28 pt-5 text-[#231A12] dark:text-[#EDE2CF]">
+      <header className="mb-5 flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="m-0 text-[28px] font-bold tracking-tight">
+            {pickCopy("救赎全景", "Redemption Story", locale)}
+          </h1>
+          <p className="mt-1 text-[13.5px] leading-relaxed text-[#75614B] dark:text-[#A99A84]">
+            {pickCopy(
+              "在完整的救赎故事中，读懂每一卷书在写什么",
+              "Understand what every book of Scripture is about within one redemptive story",
+              locale,
+            )}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setFinderQuery("");
+            setFinderOpen(true);
+          }}
+          className="mt-1 inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#D8C6AA] bg-[#FAF5EC]/90 px-3 py-1.5 text-[12.5px] font-semibold text-[#C1660B] shadow-sm transition hover:bg-[#F3E9D8] dark:border-[#3E3328] dark:bg-[#262019]/90 dark:text-[#FFC845]"
+        >
+          <span>{pickCopy("书卷速查", "66 Books", locale)}</span>
+        </button>
       </header>
 
       {/* 置顶：你正在这一幕 */}
@@ -133,11 +176,11 @@ export function BiblePanoramaClient() {
           <span className="truncate">
             {lastPos
               ? pickCopy(
-                  `继续灵修 · ${currentBookName} 第 ${currentChapter} 章`,
+                  `接着阅读 · ${currentBookName} 第 ${currentChapter} 章`,
                   `Continue · ${currentBookName} ${currentChapter}`,
                   locale,
                 )
-              : pickCopy("从起初进入灵修 · 创世记 第 1 章", "Begin from Genesis 1", locale)}
+              : pickCopy("从起初进入 · 创世记 第 1 章", "Begin from Genesis 1", locale)}
           </span>
           <span aria-hidden>›</span>
         </Link>
@@ -200,35 +243,34 @@ export function BiblePanoramaClient() {
                 </button>
 
                 {expanded ? (
-                  <div className="space-y-4 px-3.5 pb-4">
+                  <div className="space-y-5 px-3.5 pb-4">
                     {act.sections.map((sec) => {
                       const note = PANORAMA_READING_GUIDE[sec.id];
                       return (
-                        <div key={sec.id} className="space-y-2.5 border-t border-[#DFD0B8]/70 pt-3 dark:border-[#3A3025]">
-                          <h3 className="m-0 text-[15.5px] font-bold">{pickCopy(sec.zh, sec.en, locale)}</h3>
+                        <div key={sec.id} className="space-y-2.5 border-t border-[#DFD0B8]/70 pt-3.5 dark:border-[#3A3025]">
+                          <h3 className="m-0 text-[15.5px] font-bold text-[#C1660B] dark:text-[#FFC845]">
+                            {pickCopy(sec.zh, sec.en, locale)}
+                          </h3>
                           <p className="m-0 text-[13.5px] leading-relaxed text-[#75614B] dark:text-[#A99A84]">
                             {pickCopy(sec.summaryZh, sec.summaryEn, locale)}
                           </p>
                           {note ? (
-                            <>
-                              <p className="m-0 text-[13px] leading-relaxed opacity-90">
-                                {pickCopy(note.zh, note.en, locale)}
-                              </p>
+                            <div className="space-y-2">
                               {note.links.map((lk) => {
                                 const bName = getScriptureBookDisplayName(lk.bookId, locale);
                                 return (
                                   <Link
                                     key={`${lk.bookId}:${lk.chapter}:${lk.verses}`}
                                     href={`/read/${encodeURIComponent(lk.bookId)}/${lk.chapter}`}
-                                    className="flex items-center gap-2.5 rounded-xl border border-[#C1660B]/25 bg-[#C1660B]/[0.08] px-3 py-2.5 text-inherit no-underline"
+                                    className="flex items-center gap-2.5 rounded-xl border border-[#C1660B]/25 bg-[#C1660B]/[0.08] px-3 py-2 text-inherit no-underline"
                                   >
-                                    <span className="h-8 w-[2.5px] shrink-0 rounded-full bg-[#C1660B]" aria-hidden />
+                                    <span className="h-7 w-[2.5px] shrink-0 rounded-full bg-[#C1660B]" aria-hidden />
                                     <span className="min-w-0 flex-1">
                                       <span className="block text-[13.5px] font-semibold">
                                         {pickCopy(lk.kindZh, lk.kindEn, locale)} · {bName} {lk.chapter}
                                         {lk.verses ? `:${lk.verses}` : ""}
                                       </span>
-                                      <span className="mt-0.5 block text-[12.5px] text-[#75614B] dark:text-[#A99A84]">
+                                      <span className="mt-0.5 block text-[12px] text-[#75614B] dark:text-[#A99A84]">
                                         {pickCopy(lk.reasonZh, lk.reasonEn, locale)}
                                       </span>
                                     </span>
@@ -238,53 +280,107 @@ export function BiblePanoramaClient() {
                                   </Link>
                                 );
                               })}
-                            </>
+                            </div>
                           ) : null}
 
-                          <div className="space-y-1.5 pt-0.5">
-                            {sec.spans.map((sp) => {
+                          {/* 每一卷书在写什么：逐卷核心主旨导览卡 */}
+                          <div className="space-y-2.5 pt-1">
+                            {sec.spans.map((sp: PanoramaSpan) => {
+                              const cardKey = `${sec.id}:${sp.bookId}:${sp.first}-${sp.last}`;
+                              const cardOpen = expandedCardKey === cardKey;
                               const bName = getScriptureBookDisplayName(sp.bookId, locale);
                               const maxCh = chaptersById.get(sp.bookId) ?? sp.last;
+                              const intro = BOOK_INTRODUCTIONS[sp.bookId];
                               const rangeLabel =
                                 sp.first === 1 && sp.last === maxCh
-                                  ? pickCopy(`${maxCh} 章`, `${maxCh} ch`, locale)
-                                  : pickCopy(`${sp.first}–${sp.last} 章`, `Ch ${sp.first}–${sp.last}`, locale);
+                                  ? pickCopy(`共 ${maxCh} 章`, `${maxCh} chs`, locale)
+                                  : pickCopy(`第 ${sp.first}–${sp.last} 章`, `Ch. ${sp.first}–${sp.last}`, locale);
                               const isCurrent =
                                 lastPos?.bookId === sp.bookId &&
                                 currentChapter >= sp.first &&
                                 currentChapter <= sp.last;
-                              if (sp.first === sp.last) {
-                                return (
-                                  <Link
-                                    key={`${sec.id}:${sp.bookId}:${sp.first}`}
-                                    href={`/read/${encodeURIComponent(sp.bookId)}/${sp.first}`}
-                                    className={[
-                                      "flex items-center justify-between rounded-xl border px-3 py-2.5 text-[14px] no-underline",
-                                      isCurrent
-                                        ? "border-[#C1660B] bg-[#C1660B]/12 font-semibold"
-                                        : "border-[#DFD0B8] bg-white/40 dark:border-[#3A3025] dark:bg-black/15",
-                                    ].join(" ")}
-                                  >
-                                    <span className="font-semibold text-[#231A12] dark:text-[#EDE2CF]">{bName}</span>
-                                    <span className="text-[12px] text-[#75614B] dark:text-[#A99A84]">{rangeLabel} ›</span>
-                                  </Link>
-                                );
-                              }
+
                               return (
-                                <button
-                                  key={`${sec.id}:${sp.bookId}:${sp.first}`}
-                                  type="button"
-                                  onClick={() => setPickerSpan(sp)}
+                                <div
+                                  key={cardKey}
                                   className={[
-                                    "flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-left text-[14px]",
+                                    "rounded-xl border p-3 transition",
                                     isCurrent
-                                      ? "border-[#C1660B] bg-[#C1660B]/12"
-                                      : "border-[#DFD0B8] bg-white/40 dark:border-[#3A3025] dark:bg-black/15",
+                                      ? "border-[#C1660B] bg-[#C1660B]/10 dark:border-[#FFB101]/70 dark:bg-[#FFB101]/10"
+                                      : "border-[#DFD0B8] bg-white/55 dark:border-[#3A3025] dark:bg-[#1E1813]/85",
                                   ].join(" ")}
                                 >
-                                  <span className="font-semibold text-[#231A12] dark:text-[#EDE2CF]">{bName}</span>
-                                  <span className="text-[12px] text-[#75614B] dark:text-[#A99A84]">{rangeLabel} ›</span>
-                                </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setExpandedCardKey(cardOpen ? null : cardKey)}
+                                    className="w-full border-0 bg-transparent p-0 text-left text-inherit"
+                                  >
+                                    <div className="flex items-center justify-between gap-2">
+                                      <div className="flex min-w-0 items-center gap-2">
+                                        <span className="truncate text-[15px] font-bold text-[#231A12] dark:text-[#F4EBE1]">
+                                          {bName}
+                                        </span>
+                                        <span className="shrink-0 rounded-full bg-[#C1660B]/14 px-2 py-0.5 text-[11px] font-semibold text-[#C1660B] dark:bg-[#FFB101]/16 dark:text-[#FFC845]">
+                                          {rangeLabel}
+                                        </span>
+                                      </div>
+                                      <span className="shrink-0 text-[12px] font-semibold text-[#C1660B] dark:text-[#FFC845]">
+                                        {cardOpen ? pickCopy("收起", "Hide", locale) : pickCopy("选章 ›", "Chapters ›", locale)}
+                                      </span>
+                                    </div>
+                                    {intro ? (
+                                      <p className="mt-1.5 mb-0 text-[13.5px] leading-relaxed text-[#4A3828] dark:text-[#D8C8B4]">
+                                        {pickCopy(intro.zh, intro.en, locale)}
+                                      </p>
+                                    ) : null}
+                                  </button>
+
+                                  {cardOpen ? (
+                                    <div className="mt-3 border-t border-[#DFD0B8]/80 pt-2.5 dark:border-[#3A3025]">
+                                      {intro?.references ? (
+                                        <p className="mt-0 mb-2 text-[12px] text-[#75614B] dark:text-[#A99A84]">
+                                          {pickCopy("核心经文线索：", "Key passages: ", locale)}
+                                          {intro.references}
+                                        </p>
+                                      ) : null}
+                                      <div className="grid grid-cols-6 gap-1.5">
+                                        {Array.from(
+                                          { length: sp.last - sp.first + 1 },
+                                          (_, idx) => sp.first + idx,
+                                        ).map((ch) => {
+                                          const isCurCh = lastPos?.bookId === sp.bookId && currentChapter === ch;
+                                          return (
+                                            <Link
+                                              key={ch}
+                                              href={`/read/${encodeURIComponent(sp.bookId)}/${ch}`}
+                                              className={[
+                                                "flex h-9 items-center justify-center rounded-lg border text-[13.5px] font-semibold no-underline transition",
+                                                isCurCh
+                                                  ? "border-[#C1660B] bg-[#C1660B] text-white"
+                                                  : "border-[#DFD0B8] bg-[#FAF5EC] text-[#231A12] hover:border-[#C1660B] dark:border-[#463A2E] dark:bg-[#2A221B] dark:text-[#F4EBE1]",
+                                              ].join(" ")}
+                                            >
+                                              {ch}
+                                            </Link>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="mt-2">
+                                      <Link
+                                        href={`/read/${encodeURIComponent(sp.bookId)}/${sp.first}`}
+                                        className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#C1660B] no-underline hover:underline dark:text-[#FFC845]"
+                                      >
+                                        <span>
+                                          {sp.first === 1
+                                            ? pickCopy("读第 1 章 →", "Read Ch. 1 →", locale)
+                                            : pickCopy(`读第 ${sp.first} 章 →`, `Read Ch. ${sp.first} →`, locale)}
+                                        </span>
+                                      </Link>
+                                    </div>
+                                  )}
+                                </div>
                               );
                             })}
                           </div>
@@ -301,49 +397,69 @@ export function BiblePanoramaClient() {
 
       <p className="mt-5 text-[12px] leading-relaxed text-[#8B7760] dark:text-[#8E806D]">
         {pickCopy(
-          "六幕为灵修导览脉络，帮助你在救赎历史中安放每一章经文；诗歌、智慧与先知书按历史处境与主题相联。",
-          "The six acts serve as a devotional story guide, helping place each chapter within redemptive history.",
+          "六幕为灵修导览脉络，帮助你在救赎历史中读懂每一卷书在写什么。",
+          "The six acts serve as a devotional story guide introducing what every book of Scripture is about.",
           locale,
         )}
       </p>
 
-      {/* 选章弹层 */}
-      {pickerSpan ? (
+      {/* 66 卷速查弹层 */}
+      {finderOpen ? (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center"
-          onClick={() => setPickerSpan(null)}
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-3 sm:items-center"
+          onClick={() => setFinderOpen(false)}
         >
           <div
-            className="max-h-[72vh] w-full max-w-[380px] overflow-y-auto rounded-2xl border border-[#D8C6AA] bg-[#FAF5EC] p-5 dark:border-[#3E3328] dark:bg-[#241E18]"
+            className="flex max-h-[80vh] w-full max-w-[420px] flex-col rounded-2xl border border-[#D8C6AA] bg-[#FAF5EC] p-4 text-[#231A12] shadow-xl dark:border-[#3E3328] dark:bg-[#221C16] dark:text-[#F4EBE1]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-3 flex items-center justify-between">
               <h3 className="m-0 text-[18px] font-bold">
-                {getScriptureBookDisplayName(pickerSpan.bookId, locale)}
+                {pickCopy("66 卷书都在写什么", "66 Books Overview", locale)}
               </h3>
               <button
                 type="button"
-                onClick={() => setPickerSpan(null)}
-                className="border-0 bg-transparent text-lg text-[#75614B]"
+                onClick={() => setFinderOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full border-0 bg-transparent text-lg text-[#75614B] dark:text-[#B9A896]"
                 aria-label="关闭"
               >
                 ×
               </button>
             </div>
-            <div className="grid grid-cols-5 gap-2">
-              {Array.from(
-                { length: pickerSpan.last - pickerSpan.first + 1 },
-                (_, idx) => pickerSpan.first + idx,
-              ).map((ch) => (
-                <Link
-                  key={ch}
-                  href={`/read/${encodeURIComponent(pickerSpan.bookId)}/${ch}`}
-                  onClick={() => setPickerSpan(null)}
-                  className="flex h-10 items-center justify-center rounded-lg border border-[#DFD0B8] bg-white/60 text-[14.5px] font-medium text-[#231A12] no-underline hover:border-[#C1660B] dark:border-[#3A3025] dark:bg-black/25 dark:text-[#EDE2CF]"
-                >
-                  {ch}
-                </Link>
-              ))}
+            <input
+              type="search"
+              value={finderQuery}
+              onChange={(e) => setFinderQuery(e.target.value)}
+              placeholder={pickCopy("搜书名或主题关键词…", "Search book or theme…", locale)}
+              className="mb-3 h-10 w-full rounded-xl border border-[#D8C6AA] bg-white/80 px-3 text-[14px] text-[#231A12] outline-none placeholder:text-[#8B7760] dark:border-[#463A2E] dark:bg-[#2C241D] dark:text-[#F4EBE1] dark:placeholder:text-[#9C8B78]"
+            />
+            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+              {filteredBooks.map((b) => {
+                const intro = BOOK_INTRODUCTIONS[b.bookId];
+                const bName = getScriptureBookDisplayName(b.bookId, locale);
+                return (
+                  <Link
+                    key={b.bookId}
+                    href={`/read/${encodeURIComponent(b.bookId)}/1`}
+                    onClick={() => setFinderOpen(false)}
+                    className="block rounded-xl border border-[#DFD0B8] bg-white/65 p-3 text-inherit no-underline transition hover:border-[#C1660B] dark:border-[#3A3025] dark:bg-[#2A221B]"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[14.5px] font-bold">
+                        {String(b.bookNumber).padStart(2, "0")} · {bName}
+                      </span>
+                      <span className="text-[12px] font-semibold text-[#C1660B] dark:text-[#FFC845]">
+                        {pickCopy("进入阅读 ›", "Read ›", locale)}
+                      </span>
+                    </div>
+                    {intro ? (
+                      <p className="mt-1 mb-0 text-[13px] leading-relaxed text-[#5C4632] dark:text-[#D8C8B4]">
+                        {pickCopy(intro.zh, intro.en, locale)}
+                      </p>
+                    ) : null}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </div>

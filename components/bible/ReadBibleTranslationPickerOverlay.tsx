@@ -134,41 +134,41 @@ export function ReadBibleTranslationPickerOverlay({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[rgba(28,20,16,0.35)] p-3">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[rgba(28,20,16,0.45)] p-3 dark:bg-black/65">
       <button type="button" className="absolute inset-0" aria-label="关闭译本选择" onClick={onClose} />
       <section
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="read-parchment-modal-surface relative z-10 flex h-[min(42rem,90dvh)] w-[min(22.5rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-xl border border-[rgba(120,53,15,0.42)] text-[#1c1410] shadow-[0_8px_30px_rgba(28,20,16,0.2)]"
+        className="read-parchment-modal-surface relative z-10 flex h-[min(42rem,90dvh)] w-[min(22.5rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-xl border border-[rgba(120,53,15,0.42)] bg-[#FAF5EC] text-[#1c1410] shadow-[0_8px_30px_rgba(28,20,16,0.2)] dark:border-[#3E3328] dark:bg-[#221C16] dark:text-[#F4EBE1] dark:shadow-[0_12px_36px_rgba(0,0,0,0.55)]"
       >
-        <header className="flex min-h-[68px] items-start border-b border-[rgba(120,53,15,0.2)] px-2 py-2">
+        <header className="flex min-h-[68px] items-start border-b border-[rgba(120,53,15,0.2)] px-2 py-2 dark:border-[#3A3025]">
           <button
             type="button"
             onClick={onClose}
-            className="flex h-11 w-11 items-center justify-center rounded-full"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-[#5c4030] dark:text-[#D8C8B4]"
             aria-label="返回阅读设置"
           >
-            <ShellMaterialIcon name="arrow_back_ios_new" size={20} color="#5c4030" />
+            <ShellMaterialIcon name="arrow_back_ios_new" size={20} color="currentColor" />
           </button>
           <div className="min-w-0 flex-1 pr-11 text-center">
-            <h2 className="text-[18px] font-semibold">{title}</h2>
-            <p className="mt-0.5 text-[12px] text-[#6e5240]">先选语言，再选这个语言里的版本。</p>
+            <h2 className="text-[18px] font-semibold text-[#1c1410] dark:text-[#F4EBE1]">{title}</h2>
+            <p className="mt-0.5 text-[12px] text-[#6e5240] dark:text-[#B9A896]">先选语言，再选这个语言里的版本。</p>
           </div>
         </header>
 
-        <div className="border-b border-[rgba(120,53,15,0.16)] px-3 py-3">
-          <label className="flex h-10 items-center gap-2 rounded-full border border-[rgba(120,53,15,0.25)] bg-[rgba(255,252,245,0.55)] px-3">
-            <ShellMaterialIcon name="search" size={18} color="#8b6b55" />
+        <div className="border-b border-[rgba(120,53,15,0.16)] px-3 py-3 dark:border-[#3A3025]">
+          <label className="flex h-10 items-center gap-2 rounded-full border border-[rgba(120,53,15,0.25)] bg-[rgba(255,252,245,0.75)] px-3 text-[#8b6b55] dark:border-[#4A3E31] dark:bg-[#2C241D] dark:text-[#B9A896]">
+            <ShellMaterialIcon name="search" size={18} color="currentColor" />
             <input
               value={searchText}
               onChange={(event) => setSearchText(event.target.value)}
               placeholder="搜索译本"
-              className="min-w-0 flex-1 bg-transparent text-[15px] text-[#1c1410] outline-none placeholder:text-[#8b6b55]"
+              className="min-w-0 flex-1 bg-transparent text-[15px] text-[#1c1410] outline-none placeholder:text-[#8b6b55] dark:text-[#F4EBE1] dark:placeholder:text-[#9C8B78]"
             />
             {searchText ? (
-              <button type="button" onClick={() => setSearchText("")} aria-label="清除搜索">
-                <ShellMaterialIcon name="close" size={16} color="#8b6b55" />
+              <button type="button" onClick={() => setSearchText("")} aria-label="清除搜索" className="text-[#8b6b55] dark:text-[#B9A896]">
+                <ShellMaterialIcon name="close" size={16} color="currentColor" />
               </button>
             ) : null}
           </label>
@@ -183,8 +183,8 @@ export function ReadBibleTranslationPickerOverlay({
                   className={[
                     "min-w-[70px] rounded-full border px-4 py-1.5 text-[14px] font-semibold",
                     active
-                      ? "border-[#d97707] bg-[rgba(217,119,7,0.12)] text-[#d97707]"
-                      : "border-[rgba(120,53,15,0.24)] bg-[rgba(255,252,245,0.45)] text-[#6e5240]",
+                      ? "border-[#d97707] bg-[rgba(217,119,7,0.14)] text-[#b45309] dark:border-[#FFB101] dark:bg-[#FFB101]/18 dark:text-[#FFC845]"
+                      : "border-[rgba(120,53,15,0.24)] bg-[rgba(255,252,245,0.55)] text-[#6e5240] dark:border-[#463A2E] dark:bg-[#2C241D] dark:text-[#D8C8B4]",
                   ].join(" ")}
                 >
                   {modeKey === "common" ? "常用" : "全部"}
@@ -204,8 +204,8 @@ export function ReadBibleTranslationPickerOverlay({
                     className={[
                       "shrink-0 rounded-full border px-3 py-1.5 text-[13px] font-medium",
                       active
-                        ? "border-[#d97707] bg-[rgba(217,119,7,0.12)] text-[#d97707]"
-                        : "border-[rgba(120,53,15,0.22)] bg-[rgba(255,252,245,0.45)] text-[#6e5240]",
+                        ? "border-[#d97707] bg-[rgba(217,119,7,0.14)] text-[#b45309] dark:border-[#FFB101] dark:bg-[#FFB101]/18 dark:text-[#FFC845]"
+                        : "border-[rgba(120,53,15,0.22)] bg-[rgba(255,252,245,0.55)] text-[#6e5240] dark:border-[#463A2E] dark:bg-[#2C241D] dark:text-[#D8C8B4]",
                     ].join(" ")}
                   >
                     {languageLabel(group.language)} · {group.items.length}
@@ -214,7 +214,7 @@ export function ReadBibleTranslationPickerOverlay({
               })}
             </div>
           ) : (
-            <p className="mt-3 text-[13px] font-medium text-[#8b6b55]">常用版本</p>
+            <p className="mt-3 text-[13px] font-medium text-[#8b6b55] dark:text-[#B9A896]">常用版本</p>
           )}
         </div>
 
@@ -223,7 +223,12 @@ export function ReadBibleTranslationPickerOverlay({
             <button
               type="button"
               onClick={() => setDraft([])}
-              className="mb-2 flex min-h-[48px] w-full items-center justify-between rounded-lg border border-[rgba(120,53,15,0.22)] bg-[rgba(255,252,245,0.52)] px-3 text-left"
+              className={[
+                "mb-2 flex min-h-[48px] w-full items-center justify-between rounded-lg border px-3 text-left text-[15px]",
+                draft.length === 0
+                  ? "border-[#d97707] bg-[rgba(217,119,7,0.12)] font-semibold text-[#1c1410] dark:border-[#FFB101] dark:bg-[#FFB101]/16 dark:text-[#FFC845]"
+                  : "border-[rgba(120,53,15,0.22)] bg-[rgba(255,252,245,0.65)] text-[#1c1410] dark:border-[#463A2E] dark:bg-[#2C241D] dark:text-[#F4EBE1]",
+              ].join(" ")}
             >
               <span>{noneLabel}</span>
               {draft.length === 0 ? <ShellMaterialIcon name="check" size={20} color="#d97707" /> : null}
@@ -249,8 +254,8 @@ export function ReadBibleTranslationPickerOverlay({
                   className={[
                     "flex min-h-[48px] w-full items-center justify-between gap-3 rounded-lg border px-3 text-left text-[15px]",
                     selected
-                      ? "border-[#d97707] bg-[rgba(217,119,7,0.12)]"
-                      : "border-[rgba(120,53,15,0.22)] bg-[rgba(255,252,245,0.52)]",
+                      ? "border-[#d97707] bg-[rgba(217,119,7,0.12)] font-semibold text-[#1c1410] dark:border-[#FFB101] dark:bg-[#FFB101]/16 dark:text-[#FFC845]"
+                      : "border-[rgba(120,53,15,0.22)] bg-[rgba(255,252,245,0.65)] text-[#1c1410] dark:border-[#463A2E] dark:bg-[#2C241D] dark:text-[#F4EBE1]",
                   ].join(" ")}
                 >
                   <span className="min-w-0 flex-1">{option.label}</span>
@@ -260,22 +265,22 @@ export function ReadBibleTranslationPickerOverlay({
             })}
             {visiblePinned.length === 0 && visibleOptions.length === 0 ? (
               <div className="py-10 text-center">
-                <p className="font-semibold text-[#1c1410]">没有找到匹配结果</p>
-                <p className="mt-1 text-[13px] text-[#8b6b55]">换个关键词，或者清除搜索。</p>
+                <p className="font-semibold text-[#1c1410] dark:text-[#F4EBE1]">没有找到匹配结果</p>
+                <p className="mt-1 text-[13px] text-[#8b6b55] dark:text-[#B9A896]">换个关键词，或者清除搜索。</p>
               </div>
             ) : null}
           </div>
         </div>
 
         {mode === "contrast" ? (
-          <footer className="border-t border-[rgba(120,53,15,0.2)] p-3">
+          <footer className="border-t border-[rgba(120,53,15,0.2)] p-3 dark:border-[#3A3025]">
             <button
               type="button"
               onClick={() => {
                 onConfirmContrast(draft);
                 onClose();
               }}
-              className="min-h-[46px] w-full rounded-lg border border-[rgba(120,53,15,0.36)] bg-[rgba(217,119,7,0.14)] text-[15px] font-semibold"
+              className="min-h-[46px] w-full rounded-lg border border-[rgba(120,53,15,0.36)] bg-[rgba(217,119,7,0.16)] text-[15px] font-semibold text-[#1c1410] dark:border-[#FFB101]/65 dark:bg-[#FFB101] dark:text-[#1C1713]"
             >
               {confirmLabel}
             </button>

@@ -54,9 +54,9 @@ fun ShellTabBar(
     parchmentScrim: Boolean = false,
     onCenterTap: () -> Unit = {},
 ) {
-    val dark = isSystemInDarkTheme()
+    val theme = LocalParchment.current
+    val dark = theme == Parchment.dark
     val onHomeSurface = selected == ShellTab.HOME || selected == ShellTab.MUSIC
-    val theme = if (dark) Parchment.dark else Parchment.light
     val pillBg = when {
         onHomeSurface -> Color(0xB8DDE6E4).let { if (dark) Color(0xC21D1A16) else it }
         dark -> Color(0xEB262019)
@@ -128,8 +128,8 @@ fun ShellTabBar(
             ) { onSelect(ShellTab.READ) }
 
             TabPillItem(
-                glyph = MI.AUTO_STORIES,
-                label = AppLocale.pick("书房", "Study", locale),
+                glyph = MI.EXPLORE,
+                label = AppLocale.pick("探索", "Explore", locale),
                 active = selected == ShellTab.EXPLORE,
                 activeInk = activeInk,
                 inactiveInk = inactiveInk,

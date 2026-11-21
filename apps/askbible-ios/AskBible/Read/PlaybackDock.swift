@@ -48,7 +48,9 @@ struct PlaybackDock: View {
             SeekableProgressBar(
                 audio: audio,
                 trackHeight: 3,
-                trackColor: Color(red: 92 / 255, green: 64 / 255, blue: 48 / 255, opacity: 0.22)
+                trackColor: theme.isDark
+                    ? Color.white.opacity(0.24)
+                    : Color(red: 92 / 255, green: 64 / 255, blue: 48 / 255, opacity: 0.22)
             )
 
             timeText(total)
@@ -67,7 +69,7 @@ struct PlaybackDock: View {
 
     private var transport: some View {
         HStack(spacing: 0) {
-            Color.clear.frame(width: ShellMetrics.loopButtonSize, height: ShellMetrics.loopButtonSize)
+            glyphButton(MI.search, size: ShellMetrics.loopIconSize, frame: ShellMetrics.transportButtonSize, action: onSearch)
 
             Spacer(minLength: 0)
 
@@ -89,7 +91,7 @@ struct PlaybackDock: View {
                         .frame(width: ShellMetrics.loopButtonSize, height: ShellMetrics.loopButtonSize)
                         .background {
                             if audio.loopMode != .forward {
-                                Circle().fill(Color(parchment: 0x5c4030, opacity: 0.1))
+                                Circle().fill(theme.isDark ? Color.white.opacity(0.14) : Color(parchment: 0x5c4030, opacity: 0.1))
                             }
                         }
                         .contentShape(Circle())

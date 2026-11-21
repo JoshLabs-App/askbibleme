@@ -241,6 +241,7 @@ private fun RootScreen() {
 
     // 目录 → 章节选择 → 章页
     var pickingBook by remember { mutableStateOf<BookRef?>(null) }
+    var pickerShowBooks by remember { mutableStateOf(false) }
     var openedBook by remember { mutableStateOf<BookRef?>(null) }
     var exploreArticle by remember { mutableStateOf<ExploreArticle?>(null) }
     // 会员登录（AskBible Sync Worker + D1，D-44）；登录页盖在整个壳上（无底栏）
@@ -897,7 +898,7 @@ private fun RootScreen() {
                     }
                 },
                 size = size,
-                onOpenBook = { pickingBook = it },
+                onOpenBook = { pickerShowBooks = false; pickingBook = it },
                 onOpenSettings = { showTranslationPanel = true },
                 onSizeUp = { size.next?.let { size = it } },
                 onSizeDown = { size.previous?.let { size = it } },
@@ -949,7 +950,7 @@ private fun RootScreen() {
                             translationPrefs.write(translation, null)
                         }
                     },
-                    onOpenChapterPicker = { pickingBook = book },
+                    onOpenChapterPicker = { pickerShowBooks = false; pickingBook = book },
                     xrefReturnLabel = xrefReturnOrigin?.let { (ob, oc, ov) -> "${ob.name(displayLocale)} $oc:$ov" },
                     onReturnXrefOrigin = {
                         xrefReturnOrigin?.let { (ob, oc, ov) ->
@@ -1047,7 +1048,14 @@ private fun RootScreen() {
             ShellTabBar(
                 selected = tab,
                 locale = appLocale,
-                onSelect = { tab = it },
+                onSelect = { nextTab ->
+                    if (nextTab == ShellTab.READ && tab == ShellTab.READ && openedBook != null && !showSearch && !showFavorites) {
+                        pickerShowBooks = true
+                        pickingBook = openedBook
+                    } else {
+                        tab = nextTab
+                    }
+                },
                 // 中央键：切到读经计划 Tab（主页级页面，底栏照常；Josh「中间计划与旁边的圣经，要直接就切换过来」）
                 onCenterTap = { tab = ShellTab.PLAN; planFlowListen = true },
                 // 羊皮底由外层 bottomScrim 连坞带导航栏一起铺；这里不再铺第二层，
@@ -1226,8 +1234,19 @@ private fun RootScreen() {
                 locale = readChromeLocale,
                 book = b,
                 chapterCount = b.chapterCount,
-                onPick = { n -> chapter = n; openedBook = b; pickingBook = null },
-                onClose = { pickingBook = null },
+                currentChapter = if (openedBook?.id == b.id) chapter else null,
+                initialShowBooks = pickerShowBooks,
+                onPick = { n ->
+                    planFlowActive = false; listenBook = null; chapterFromPlan = false; chapterFromHome = false; xrefReturnOrigin = null
+                    focusVerse = null; focusKeyword = null; searchReturnQuery = null
+                    chapter = n; openedBook = b; pickingBook = null; pickerShowBooks = false
+                },
+                onPickBookChapter = { targetBook, n ->
+                    planFlowActive = false; listenBook = null; chapterFromPlan = false; chapterFromHome = false; xrefReturnOrigin = null
+                    focusVerse = null; focusKeyword = null; searchReturnQuery = null
+                    chapter = n; openedBook = targetBook; pickingBook = null; pickerShowBooks = false
+                },
+                onClose = { pickingBook = null; pickerShowBooks = false },
             )
         }
 

@@ -79,7 +79,7 @@ data class VerseSharePayload(
 fun VerseShareCardSheet(
     payload: VerseSharePayload,
     locale: AppLocale,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     onCopied: () -> Unit = {},
     onClose: () -> Unit,
 ) {
@@ -289,7 +289,7 @@ fun ReaderTypographySheet(
     onToggleBilingual: (Boolean) -> Unit,
     onOpenFullTranslations: () -> Unit,
     locale: AppLocale,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     onClose: () -> Unit,
 ) {
     val stops = listOf(ReadSize.XS, ReadSize.S, ReadSize.M, ReadSize.L, ReadSize.XL, ReadSize.XXL, ReadSize.XXXL)
@@ -406,7 +406,7 @@ fun InstantVerseHighlightBar(
     bookmarked: Boolean,
     currentHex: String?,
     locale: AppLocale,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     onPickColor: (String?) -> Unit,
     onCopy: () -> Unit,
     onBookmark: () -> Unit,

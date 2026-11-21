@@ -103,6 +103,15 @@
   background: var(--parchment-control-fill-strong, rgba(255, 252, 245, 0.62));
 }
 
+.dark .read-bible-settings-select__trigger {
+  border-color: rgba(244, 235, 225, 0.22);
+  background: rgba(44, 36, 29, 0.92);
+}
+
+.dark .read-bible-settings-select__trigger:hover:not(:disabled) {
+  background: rgba(56, 46, 37, 0.96);
+}
+
 .read-bible-settings-select__trigger:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -215,6 +224,21 @@
 
 .read-bible-settings-select__option--active .read-bible-settings-select__check::after {
   opacity: 1;
+}
+
+.dark .read-bible-settings-select__check {
+  border-color: rgba(244, 235, 225, 0.36);
+  background: rgba(34, 28, 22, 0.92);
+}
+
+.dark .read-bible-settings-select__option--active .read-bible-settings-select__check {
+  border-color: #ffb101;
+  background: rgba(255, 177, 1, 0.22);
+}
+
+.dark .read-bible-settings-select__check::after {
+  border-bottom-color: #ffc845;
+  border-left-color: #ffc845;
 }
 
 .read-bible-settings-select__option-label {

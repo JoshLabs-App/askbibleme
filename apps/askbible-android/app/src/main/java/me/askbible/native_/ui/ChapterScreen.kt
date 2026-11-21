@@ -671,76 +671,92 @@ private fun TopChrome(
 
         Spacer(Modifier.weight(1f))
 
-        // 中央：「书卷 章 · 译本 ▾」多功能胶囊
-        Box {
-            val verSummary = if (bilingualLabel != null) {
-                AppLocale.pick("对照($bilingualLabel)", "Parallel", locale)
-            } else {
-                translationLabel
-            }
+        // 中央：「书卷 章 ▾」直达目录选书选章 + 「译本 ▾」直达译本对照
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
             Row(
                 Modifier
                     .height(36.dp)
                     .clip(CircleShape)
                     .background(pillBg)
                     .border(1.dp, pillBorder, CircleShape)
-                    .clickableNoRipple { menuExpanded = true }
-                    .padding(horizontal = 13.dp),
+                    .clickableNoRipple(onOpenChapterPicker)
+                    .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
+                MaterialIcon(MI.MENU_BOOK, 15f, theme.accentOt.toColor())
                 Text(
-                    if (verSummary.isEmpty()) "$bookName $chapter" else "$bookName $chapter · $verSummary",
+                    "$bookName $chapter",
                     color = ink,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.5.sp,
+                    fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 MaterialIcon(MI.EXPAND_MORE, 15f, theme.accentOt.toColor())
             }
 
-            DropdownMenu(
-                expanded = menuExpanded,
-                onDismissRequest = { menuExpanded = false },
-                modifier = Modifier.background(theme.surfaceSolid.toColor()),
-            ) {
-                DropdownMenuItem(
-                    text = { Text(AppLocale.pick("选章（$bookName）", "Select Chapter", locale), color = ink) },
-                    onClick = { menuExpanded = false; onOpenChapterPicker() },
-                )
-                DropdownMenuItem(
-                    text = { Text(AppLocale.pick("切换圣经译本 / 双语对照", "Translations & Parallel", locale), color = ink) },
-                    onClick = { menuExpanded = false; onOpenSettings() },
-                )
-                DropdownMenuItem(
-                    text = { Text(AppLocale.pick("搜索本章与全书", "Search Scripture", locale), color = ink) },
-                    onClick = { menuExpanded = false; onOpenSearch() },
-                )
-                DropdownMenuItem(
-                    text = { Text(AppLocale.pick("摘录与印记", "Notes & Highlights", locale), color = ink) },
-                    onClick = { menuExpanded = false; onOpenFavorites() },
-                )
-                DropdownMenuItem(
-                    text = { Text(AppLocale.pick("在救赎全景中定位本章", "Locate in Redemption Story", locale), color = ink) },
-                    onClick = { menuExpanded = false; onOpenPanorama() },
-                )
+            val verSummary = if (bilingualLabel != null) {
+                AppLocale.pick("双语", "2x", locale)
+            } else {
+                translationLabel.substringBefore("（").substringBefore("(").trim()
+            }
+            if (verSummary.isNotEmpty()) {
+                Row(
+                    Modifier
+                        .height(36.dp)
+                        .clip(CircleShape)
+                        .background(pillBg)
+                        .border(1.dp, pillBorder, CircleShape)
+                        .clickableNoRipple(onOpenSettings)
+                        .padding(horizontal = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    Text(
+                        verSummary,
+                        color = if (bilingualLabel != null) theme.accentOt.toColor() else theme.muted.toColor(),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                    )
+                    MaterialIcon(MI.EXPAND_MORE, 14f, theme.muted.toColor())
+                }
             }
         }
 
         Spacer(Modifier.weight(1f))
 
-        // 右：「Aa」排版与对照抽屉按钮
-        Box(
-            Modifier
-                .size(38.dp)
-                .clip(CircleShape)
-                .background(pillBg)
-                .border(1.dp, pillBorder, CircleShape)
-                .clickableNoRipple(onOpenTypography),
-            contentAlignment = Alignment.Center,
+        // 右：收藏笔记 + 「Aa」排版与对照抽屉按钮
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Text("Aa", color = ink, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Box(
+                Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(pillBg)
+                    .border(1.dp, pillBorder, CircleShape)
+                    .clickableNoRipple(onOpenFavorites),
+                contentAlignment = Alignment.Center,
+            ) {
+                MaterialIcon(MI.BOOKMARK_BORDER, 18f, ink)
+            }
+            Box(
+                Modifier
+                    .size(38.dp)
+                    .clip(CircleShape)
+                    .background(pillBg)
+                    .border(1.dp, pillBorder, CircleShape)
+                    .clickableNoRipple(onOpenTypography),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("Aa", color = ink, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }

@@ -49,10 +49,10 @@ type Props = {
 };
 
 const seekClass =
-  "read-scripture-dock-seek h-5 w-full min-w-[2.75rem] max-w-full flex-1 cursor-pointer appearance-none bg-transparent accent-amber-700/80 disabled:cursor-not-allowed disabled:opacity-35";
+  "read-scripture-dock-seek h-5 w-full min-w-[2.75rem] max-w-full flex-1 cursor-pointer appearance-none bg-transparent accent-amber-700/80 dark:accent-amber-400 disabled:cursor-not-allowed disabled:opacity-35";
 
 const sideBtnClass =
-  "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--bc-read-book,#3d2e24)] transition active:scale-[0.97] disabled:opacity-35";
+  "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#3d2e24] dark:text-[#EDE2CF] transition active:scale-[0.97] disabled:opacity-35";
 
 /** 读经播放坞 — 对齐 App `ReadScripturePlaybackDock`。 */
 export function ReadScripturePlaybackDock({
@@ -115,16 +115,16 @@ export function ReadScripturePlaybackDock({
       data-shell-swipe-nav-exclude
       className={[
         "pointer-events-auto w-full min-w-0 max-w-[min(100%,var(--read-parchment-column-max,28rem))]",
-        "border-t border-[var(--bc-read-border,rgba(92,64,48,0.14))] bg-transparent px-3 pt-2",
+        "rounded-2xl border border-[#DFD0B8] bg-[#F4EBDD]/96 px-3.5 pt-2.5 pb-1 text-[#231A12] shadow-[0_6px_22px_rgba(24,16,10,0.14)] backdrop-blur-md dark:border-[#3A3026] dark:bg-[#1E1914]/96 dark:text-[#EDE2CF] dark:shadow-[0_8px_26px_rgba(0,0,0,0.42)]",
         className,
       ]
         .filter(Boolean)
         .join(" ")}
       aria-label={t("playback.scriptureDockLabel")}
     >
-      <div className="mb-2 flex items-center gap-2 text-[11px] tabular-nums text-[var(--bc-read-book,#3d2e24)] sm:text-xs">
+      <div className="mb-2 flex items-center gap-2 text-[11px] tabular-nums text-[#3d2e24] dark:text-[#D8C8B4] sm:text-xs">
         <span className="shrink-0">{formatClock(currentSec)}</span>
-        <span className="text-[var(--bc-read-muted,rgba(61,46,36,0.45))]">/</span>
+        <span className="text-[rgba(61,46,36,0.45)] dark:text-[rgba(216,200,180,0.45)]">/</span>
         <span className="shrink-0 opacity-80">{durOk ? formatClock(durationSec) : "—"}</span>
         <input
           type="range"
@@ -182,7 +182,9 @@ export function ReadScripturePlaybackDock({
             type="button"
             className={[
               "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition active:scale-[0.97] disabled:opacity-35",
-              playing ? "bg-[var(--brand-logo-background,#f5d547)] text-[var(--bc-read-book,#3d2e24)]" : "bg-[var(--bc-read-book,#3d2e24)] text-white",
+              playing
+                ? "bg-[#FFB101] text-[#231A12]"
+                : "bg-[#3d2e24] text-white dark:bg-[#EDE2CF] dark:text-[#1C1713]",
             ].join(" ")}
             disabled={playLocked}
             aria-label={
@@ -209,7 +211,7 @@ export function ReadScripturePlaybackDock({
             type="button"
             className={[
               sideBtnClass,
-              loopMode !== "off" ? "bg-[rgba(92,64,48,0.1)]" : "",
+              loopMode !== "off" ? "bg-[rgba(92,64,48,0.12)] dark:bg-white/15" : "",
             ].join(" ")}
             aria-pressed={loopMode !== "off"}
             aria-label={loopLabel}

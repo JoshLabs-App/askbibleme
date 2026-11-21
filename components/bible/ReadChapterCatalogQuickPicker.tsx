@@ -15,6 +15,7 @@ type Props = {
   chapter: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialMode?: "books" | "chapters";
 };
 
 /** 宽屏三栏：旧约 | 新约 | 章次（与 iPad 横屏目录一致） */
@@ -48,7 +49,13 @@ function useJumpCatalogWideLayout(): boolean {
 }
 
 /** 章页底栏「读经」：正典十段双列目录 + 选章（对齐 iOS ReadChapterScreen jump sheet） */
-export function ReadChapterCatalogQuickPicker({ bookId, chapter, open, onOpenChange }: Props) {
+export function ReadChapterCatalogQuickPicker({
+  bookId,
+  chapter,
+  open,
+  onOpenChange,
+  initialMode = "books",
+}: Props) {
   const router = useRouter();
   const { t, locale } = useLocale();
   const sections = useMemo(() => getScriptureCanonCatalogSectionsClient(locale), [locale]);
@@ -69,7 +76,7 @@ export function ReadChapterCatalogQuickPicker({ bookId, chapter, open, onOpenCha
       setPickerBookName("");
       return;
     }
-    if (isWideLayout) {
+    if (isWideLayout || initialMode === "chapters") {
       const name = bookNameFromSections(sections, bookId);
       setPickerBookId(bookId);
       setPickerBookName(name ?? "");
@@ -77,7 +84,7 @@ export function ReadChapterCatalogQuickPicker({ bookId, chapter, open, onOpenCha
     }
     setPickerBookId(null);
     setPickerBookName("");
-  }, [open, isWideLayout, bookId, sections]);
+  }, [open, isWideLayout, initialMode, bookId, sections]);
 
   useLayoutEffect(() => {
     if (!open) {
@@ -210,26 +217,42 @@ export function ReadChapterCatalogQuickPicker({ bookId, chapter, open, onOpenCha
         onTransitionEnd={onPanelTransitionEnd}
       >
         <header className="read-chapter-jump-header read-chapter-jump-header--catalog">
-          <button
-            type="button"
-            className="read-chapter-jump-back"
-            aria-label={
-              !isWideLayout && pickerBookId
-                ? t("pages.read.backToJumpBooks")
-                : t("pages.read.backToBibleHome")
-            }
-            onClick={onHeaderBack}
-          >
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden>
-              <path
-                d="M14.5 6 9 12l5.5 6"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
+          {!isWideLayout && pickerBookId ? (
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 rounded-full border border-[#C1660B]/40 bg-[#C1660B]/12 px-2.5 py-1 text-[12.5px] font-semibold text-[#B45309] dark:border-[#FFB101]/45 dark:bg-[#FFB101]/16 dark:text-[#FFC845]"
+              aria-label={t("pages.read.backToJumpBooks")}
+              onClick={onHeaderBack}
+            >
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden>
+                <path
+                  d="M14.5 6 9 12l5.5 6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <span>{locale === "en" ? "66 Books" : locale === "zh-TW" ? "聖經目錄" : "圣经目录"}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="read-chapter-jump-back"
+              aria-label={t("pages.read.backToBibleHome")}
+              onClick={onHeaderBack}
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden>
+                <path
+                  d="M14.5 6 9 12l5.5 6"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          )}
           <h2 id="read-chapter-catalog-title" className="read-chapter-jump-title">
             {headerTitle}
           </h2>

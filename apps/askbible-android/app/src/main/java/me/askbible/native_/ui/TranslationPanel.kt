@@ -96,7 +96,7 @@ fun TranslationPanel(
                 horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 Icon(Icons.Filled.MenuBook, contentDescription = null,
                      tint = theme.ink.toColor(), modifier = Modifier.size(26.dp))
-                Dropdown(current.label(locale), theme.parchmentAccent.toColor(), expanded, theme,
+                Dropdown(current.label(locale), if (theme == Parchment.dark) Color(0xFFF3E6D0) else theme.parchmentAccent.toColor(), expanded, theme,
                          Modifier.weight(1f)) { expanded = !expanded; if (expanded) expandedSecondary = false }
             }
 
@@ -110,7 +110,7 @@ fun TranslationPanel(
             Row(verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 Spacer(Modifier.width(26.dp))
-                Dropdown(secondary?.label(locale) ?: SiteCopy.t("native.none", locale), Color(0xFFE0A100), expandedSecondary, theme,
+                Dropdown(secondary?.label(locale) ?: SiteCopy.t("native.none", locale), if (theme == Parchment.dark) Color(0xFFFFC845) else Color(0xFFB45309), expandedSecondary, theme,
                          Modifier.weight(1f)) { expandedSecondary = !expandedSecondary; if (expandedSecondary) expanded = false }
             }
 
@@ -166,7 +166,7 @@ private fun TranslationList(
     Column(
         Modifier.padding(start = 40.dp)
             .clip(RoundedCornerShape(9.dp))
-            .background(Color(0xFFFFFDF8))
+            .background(if (theme == Parchment.dark) Color(0xFF231D17) else Color(0xFFFFFDF8))
             .border(1.dp, theme.border.toColor().copy(alpha = 0.6f), RoundedCornerShape(9.dp)),
     ) {
         BasicTextField(
@@ -247,7 +247,7 @@ private fun TranslationList(
 @Composable
 private fun TranslationRow(label: String, selected: Boolean, theme: Parchment, onClick: () -> Unit, badges: @Composable () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 42.dp).clickableNoRipple(onClick).padding(horizontal = 14.dp),
+        Modifier.fillMaxWidth().heightIn(min = 42.dp).background(if (selected) Brand.logo.toColor().copy(alpha = 0.14f) else Color.Transparent).clickableNoRipple(onClick).padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(label, color = theme.ink.toColor(), fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
@@ -272,7 +272,7 @@ private fun Dropdown(
     Row(
         modifier.height(40.dp)
             .clip(RoundedCornerShape(9.dp))
-            .background(Color(0xFFFFFDF8))
+            .background(if (theme == Parchment.dark) Color(0xFF28211A) else Color(0xFFFFFDF8))
             .border(1.dp, theme.border.toColor().copy(alpha = 0.6f), RoundedCornerShape(9.dp))
             .clickableNoRipple(onClick)
             .padding(horizontal = 14.dp),

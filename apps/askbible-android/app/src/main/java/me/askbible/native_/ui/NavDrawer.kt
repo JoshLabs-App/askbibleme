@@ -111,7 +111,7 @@ fun NavDrawer(
                     )
                     Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            AppLocale.pick("书房偏好设置", "Study Preferences", locale),
+                            AppLocale.pick("偏好设置", "Preferences", locale),
                             Modifier.weight(1f),
                             color = theme.ink.toColor(),
                             fontSize = 19.sp,

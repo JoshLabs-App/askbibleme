@@ -79,7 +79,7 @@ fun UnifiedNotesBlock(
     bookmarks: VerseBookmarkStore,
     highlights: VerseHighlightStore?,
     locale: AppLocale,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     limit: Int? = null,
     onOpenVerse: (bookId: String, chapter: Int, verse: Int) -> Unit,
     onOpenMore: (() -> Unit)? = null,
@@ -352,7 +352,7 @@ fun FavoritesScreen(
     onBack: () -> Unit,
     onOpen: (VerseBookmark) -> Unit,
     onOpenVerse: ((String, Int, Int) -> Unit)? = null,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     locale: AppLocale = AppLocale.ZH_CN,
 ) {
     val insets = WindowInsets.systemBars.asPaddingValues()

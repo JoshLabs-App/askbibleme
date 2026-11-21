@@ -63,7 +63,7 @@ fun PlaybackDock(
     audio: ChapterAudioPlayer,
     available: Boolean,
     modifier: Modifier = Modifier,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
     onSearch: () -> Unit = {},
     onSkipNext: () -> Unit = {},
     /** 播放键的自定义动作（计划播放页：没建池时从选中章起播）；null 走 audio.toggle() */
@@ -134,7 +134,8 @@ fun PlaybackDock(
                     contentAlignment = Alignment.CenterStart,
                 ) {
                     Box(
-                        Modifier.fillMaxWidth().height(3.dp).clip(CircleShape).background(Color(0x385C4030))
+                        Modifier.fillMaxWidth().height(3.dp).clip(CircleShape)
+                            .background(if (theme == Parchment.dark) Color(0x47EDE2CF) else Color(0x385C4030))
                     ) {
                         Box(Modifier.fillMaxWidth(fraction).height(3.dp)
                             .clip(CircleShape).background(Brand.logo.toColor()))
@@ -145,57 +146,67 @@ fun PlaybackDock(
                      softWrap = false, modifier = Modifier.widthIn(min = ShellMetrics.timeLabelMinWidth.dp * androidx.compose.ui.platform.LocalDensity.current.fontScale))
             }
 
-            // 传输控制（与 iOS PlaybackDock 对齐：移除重复左搜索钮，对称排布 语速 · 循环 · 播放 · 下一章）
+            // 传输控制：经典 5 键对称布局（左：搜索 · 语速 | 正中：播放 | 右：循环 · 下一章）
             Row(
                 Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = ShellMetrics.dockMarginBottom.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(
-                    Modifier.defaultMinSize(minWidth = ShellMetrics.speedButtonSize.dp,
-                                            minHeight = ShellMetrics.transportButtonSize.dp)
-                        .clickableNoRipple { audio.cycleRate() },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    SpeedRateImage(audio.rate.toDouble(), ink)
-                }
+                GlyphBox(ShellMetrics.loopButtonSize, ShellMetrics.loopIconSize, MI.SEARCH, ink, onSearch)
 
                 Spacer(Modifier.weight(1f))
 
-                Box(
-                    Modifier.size(ShellMetrics.loopButtonSize.dp).clip(CircleShape)
-                        .background(if (audio.loopMode != LoopMode.FORWARD) Color(0x1A5C4030) else Color.Transparent)
-                        .clickableNoRipple { audio.cycleLoop() },
-                    contentAlignment = Alignment.Center,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(ShellMetrics.transportMainGap.dp),
                 ) {
-                    RepeatGlyph(
-                        badge = audio.loopMode.badge,
-                        color = if (audio.loopMode == LoopMode.FORWARD) theme.muted.toColor() else ink,
-                        size = ShellMetrics.loopIconSize,
-                    )
-                }
+                    Box(
+                        Modifier.defaultMinSize(minWidth = ShellMetrics.speedButtonSize.dp,
+                                                minHeight = ShellMetrics.transportButtonSize.dp)
+                            .clickableNoRipple { audio.cycleRate() },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        SpeedRateImage(audio.rate.toDouble(), ink)
+                    }
 
-                Spacer(Modifier.weight(1f))
+                    Box(
+                        Modifier.size(ShellMetrics.playButtonSize.dp).clip(CircleShape)
+                            .background(if (audio.isPlaying) Brand.logo.toColor() else ink)
+                            .alpha(if (available) 1f else 0.35f)
+                            .clickableNoRipple { if (available) { if (onToggle != null) onToggle() else audio.toggle() } },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        val fg = if (audio.isPlaying) ink else theme.surfaceSolid.toColor()
+                        if (audio.isLoading && audio.wantsPlayback) {
+                            CircularProgressIndicator(color = fg, strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
+                        } else {
+                            MaterialIcon(
+                                if (audio.isPlaying) MI.PAUSE else MI.PLAY_ARROW,
+                                ShellMetrics.playIconSize, fg,
+                                modifier = Modifier.offset(x = if (audio.isPlaying) 0.dp else ShellMetrics.playIconNudge.dp),
+                            )
+                        }
+                    }
 
-                Box(
-                    Modifier.size(ShellMetrics.playButtonSize.dp).clip(CircleShape)
-                        .background(if (audio.isPlaying) Brand.logo.toColor() else ink)
-                        .alpha(if (available) 1f else 0.35f)
-                        .clickableNoRipple { if (available) { if (onToggle != null) onToggle() else audio.toggle() } },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    val fg = if (audio.isPlaying) ink else theme.surfaceSolid.toColor()
-                    if (audio.isLoading && audio.wantsPlayback) {
-                        CircularProgressIndicator(color = fg, strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
-                    } else {
-                        MaterialIcon(
-                            if (audio.isPlaying) MI.PAUSE else MI.PLAY_ARROW,
-                            ShellMetrics.playIconSize, fg,
-                            modifier = Modifier.offset(x = if (audio.isPlaying) 0.dp else ShellMetrics.playIconNudge.dp),
+                    Box(
+                        Modifier.size(ShellMetrics.loopButtonSize.dp).clip(CircleShape)
+                            .background(
+                                if (audio.loopMode != LoopMode.FORWARD)
+                                    (if (theme == Parchment.dark) Color(0x2EEDE2CF) else Color(0x1A5C4030))
+                                else Color.Transparent
+                            )
+                            .clickableNoRipple { audio.cycleLoop() },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        RepeatGlyph(
+                            badge = audio.loopMode.badge,
+                            color = if (audio.loopMode == LoopMode.FORWARD) theme.muted.toColor() else ink,
+                            size = ShellMetrics.loopIconSize,
                         )
                     }
                 }
 
                 Spacer(Modifier.weight(1f))
+
                 Box(Modifier.alpha(if (available) 1f else 0.35f)) {
                     GlyphBox(ShellMetrics.transportButtonSize, ShellMetrics.skipIconSize, MI.SKIP_NEXT, ink) {
                         if (available) onSkipNext()

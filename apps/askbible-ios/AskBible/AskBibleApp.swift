@@ -129,6 +129,7 @@ struct RootView: View {
     @State private var homeChromeHidden = false
     @State private var readSize: ReadSize = .default
     @State private var openedBook: BookRef?
+    @State private var pickerStartInBooks = false
     @State private var openedChapter: (book: BookRef, chapter: Int)?
     @State private var showTranslationPanel = false
     /// 在线译本的书卷名取到后 +1，目录页 / 章页据此重画
@@ -574,7 +575,16 @@ struct RootView: View {
                 showTabBar: !(tab == .plan && planRoute != .play && !showSearch) && authRoute == nil && !(tab == .music && musicChromeHidden),
                 homeBarHidden: tab == .home && homeChromeHidden,
                 onWakeHomeChrome: { withAnimation(.easeInOut(duration: 0.3)) { homeChromeHidden = false } },
-                onEnterPlan: openToday
+                onEnterPlan: openToday,
+                onReselectRead: {
+                    if showSearch || showFavorites {
+                        showSearch = false
+                        showFavorites = false
+                    } else if let opened = openedChapter {
+                        pickerStartInBooks = true
+                        openedBook = opened.book
+                    }
+                }
             ) { which in
                 screen(for: which)
             } dock: {
@@ -610,12 +620,31 @@ struct RootView: View {
                     book: book,
                     chapterCount: store.chapterCount(
                         translationId: store.translation.id, bookId: book.id),
+                    currentChapter: openedChapter?.book.id == book.id ? openedChapter?.chapter : nil,
+                    initialShowBooks: pickerStartInBooks,
+                    chapterCountForBook: { b in
+                        store.chapterCount(translationId: store.translation.id, bookId: b.id)
+                    },
                     onPick: { chapter in
                         xrefReturnOrigin = nil
                         openedChapter = (book, chapter)
+                        pickerStartInBooks = false
                         openedBook = nil
                     },
-                    onClose: { openedBook = nil },
+                    onPickBookChapter: { pickedBook, chapter in
+                        xrefReturnOrigin = nil
+                        planFlowActive = false
+                        listenChapter = nil
+                        chapterFromPlan = false
+                        chapterFromHome = false
+                        openedChapter = (pickedBook, chapter)
+                        pickerStartInBooks = false
+                        openedBook = nil
+                    },
+                    onClose: {
+                        pickerStartInBooks = false
+                        openedBook = nil
+                    },
                     locale: titleLocale,
                     bookLabel: bookLabel
                 )
@@ -1031,7 +1060,7 @@ struct RootView: View {
                             openedChapter = (orig.book, orig.chapter)
                         }
                     },
-                    onOpenChapterPicker: { openedBook = opened.book },
+                    onOpenChapterPicker: { pickerStartInBooks = false; openedBook = opened.book },
                     onOpenCatalog: { searchReturnQuery = nil; xrefReturnOrigin = nil; chapterFromHome = false; openedChapter = nil; openedBook = nil; planFlowActive = false; listenChapter = nil; chapterFromPlan = false },
                     onNavigate: { id, ch in
                         // 结尾的上一章 / 下一章：手动翻页就退出计划流

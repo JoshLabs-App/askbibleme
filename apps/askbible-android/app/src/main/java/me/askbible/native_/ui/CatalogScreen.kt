@@ -62,7 +62,7 @@ fun CatalogScreen(
     onOpenSearch: () -> Unit = {},
     onOpenFavorites: () -> Unit = {},
     onLastRead: (() -> Unit)? = null,
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
 ) {
     val insets = WindowInsets.systemBars.asPaddingValues()
     val density = LocalDensity.current

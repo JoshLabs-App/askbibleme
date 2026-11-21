@@ -140,7 +140,7 @@ struct NavDrawerView: View {
 
     private var header: some View {
         HStack {
-            Text(AppLocale.pick("书房偏好设置", "Study Preferences", locale))
+            Text(AppLocale.pick("偏好设置", "Preferences", locale))
                 .askFont(size: 18, weight: .bold)
                 .foregroundStyle(theme.ink)
             Spacer()

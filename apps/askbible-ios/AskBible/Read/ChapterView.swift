@@ -568,37 +568,49 @@ struct ChapterView: View {
 
                 Spacer(minLength: 4)
 
-                Menu {
-                    Button {
-                        onOpenChapterPicker()
-                    } label: {
-                        Label(AppLocale.pick("切换章节…", "Choose Chapter…", uiLocale), systemImage: "square.grid.3x3")
+                HStack(spacing: 0) {
+                    Button(action: onOpenChapterPicker) {
+                        HStack(spacing: 4) {
+                            Text("\(bookName) \(chapter)")
+                                .askFont(size: 13.5, weight: .semibold)
+                                .foregroundStyle(theme.ink)
+                                .lineLimit(1)
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 9.5, weight: .bold))
+                                .foregroundStyle(theme.accentOt)
+                        }
+                        .padding(.leading, 13)
+                        .padding(.trailing, 9)
+                        .frame(height: 36)
+                        .contentShape(Rectangle())
                     }
-                    Button {
-                        onOpenSettings()
-                    } label: {
-                        Label(AppLocale.pick("切换圣经译本 / 对照…", "Bible Translations…", uiLocale), systemImage: "book")
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(AppLocale.pick("切换书卷与章节", "Choose Book & Chapter", uiLocale))
+
+                    Rectangle()
+                        .fill(theme.border)
+                        .frame(width: 1, height: 16)
+
+                    Button(action: onOpenSettings) {
+                        HStack(spacing: 4) {
+                            Text(shortTranslationTitle)
+                                .askFont(size: 12.5, weight: .semibold)
+                                .foregroundStyle(theme.muted)
+                                .lineLimit(1)
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundStyle(theme.muted)
+                        }
+                        .padding(.leading, 9)
+                        .padding(.trailing, 12)
+                        .frame(height: 36)
+                        .contentShape(Rectangle())
                     }
-                    Button {
-                        onOpenSearch()
-                    } label: {
-                        Label(AppLocale.pick("搜索经文…", "Search Scripture…", uiLocale), systemImage: "magnifyingglass")
-                    }
-                } label: {
-                    HStack(spacing: 5) {
-                        Text("\(bookName) \(chapter) · \(shortTranslationTitle)")
-                            .askFont(size: 13, weight: .semibold)
-                            .foregroundStyle(theme.ink)
-                            .lineLimit(1)
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 9.5, weight: .bold))
-                            .foregroundStyle(theme.accentOt)
-                    }
-                    .padding(.horizontal, 13)
-                    .frame(height: 36)
-                    .background(Capsule().fill(theme.surface.opacity(0.90)))
-                    .overlay(Capsule().strokeBorder(theme.border, lineWidth: 0.75))
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(AppLocale.pick("切换圣经译本与双版本", "Bible Translations", uiLocale))
                 }
+                .background(Capsule().fill(theme.surface.opacity(0.92)))
+                .overlay(Capsule().strokeBorder(theme.border, lineWidth: 0.75))
 
                 Spacer(minLength: 4)
 

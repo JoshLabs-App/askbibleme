@@ -70,10 +70,10 @@ export function ExploreHomeContent({ exploreModulesBundle, featuredByLocale }: P
         : "平安，旅人";
   const greetingSubtitle = user
     ? locale === "en"
-      ? "Entry over completion · Personal study"
+      ? "Explore · Quietly enter God's Word"
       : locale === "zh-TW"
-        ? "進入優先於完成 · 私人讀經書房"
-        : "进入优先于完成 · 私人读经书房"
+        ? "探索 · 安靜進入神的話語"
+        : "探索 · 安静进入神的话语"
     : locale === "en"
       ? "Tap to sign in and sync notes & seals ›"
       : locale === "zh-TW"

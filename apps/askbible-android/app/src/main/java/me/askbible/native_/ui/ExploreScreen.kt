@@ -84,7 +84,7 @@ fun ExploreScreen(
     onSignOut: () -> Unit = {},
     achievements: AchievementStore? = null,
     onOpenAchievements: () -> Unit = {},
-    theme: Parchment = Parchment.light,
+    theme: Parchment = LocalParchment.current,
 ) {
     if (article != null) {
         ExploreArticleScreen(article, size, onBack = { onOpenArticle(null) }, onOpenChapter = onOpenChapter,
@@ -163,7 +163,7 @@ fun ExploreScreen(
                                 overflow = TextOverflow.Ellipsis,
                             )
                             Text(
-                                if (user != null) AppLocale.pick("进入优先于完成 · 私人读经书房", "Entry over completion · Personal study", locale)
+                                if (user != null) AppLocale.pick("探索 · 安静进入神的话语", "Explore · Enter Quietly into the Word", locale)
                                 else AppLocale.pick("点此登录，跨设备同步印记与摘录 ›", "Tap to sign in and sync notes & seals ›", locale),
                                 color = if (user != null) muted else accent,
                                 fontSize = 13.sp,

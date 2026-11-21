@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ReadScripturePlaybackDock } from "@/components/bible/ReadScripturePlaybackDock";
 import { useReadBibleTranslationSettings } from "@/components/bible/ReadBibleTypographyProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { useReadChapterPageAudioAvailable } from "@/hooks/useReadChapterPageAudioAvailable";
 import { isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
@@ -21,9 +22,12 @@ type Props = { placement: Placement };
 /** 读经章页播放坞 — 对齐 App `ReadScriptureAudioDockStrip`。 */
 export function ReadScriptureAudioDockStrip({ placement }: Props) {
   const pathname = usePathname() ?? "";
+  const router = useRouter();
+  const { t } = useLocale();
   const { chapterAudioTranslationId } = useReadBibleTranslationSettings();
   const readChapterAudioAvailable = useReadChapterPageAudioAvailable();
-  const onChapterPage = parseReadChapterPathname(pathname) !== null;
+  const chapterRoute = parseReadChapterPathname(pathname);
+  const onChapterPage = chapterRoute !== null;
 
 
   const {
@@ -100,6 +104,16 @@ export function ReadScriptureAudioDockStrip({ placement }: Props) {
     setScriptureAudioRepeatMode(next);
   }, [scriptureAudioRepeatMode, setScriptureAudioRepeatMode]);
 
+  const onOpenSearch = useCallback(() => {
+    if (chapterRoute) {
+      router.push(
+        `/read/search?bookId=${encodeURIComponent(chapterRoute.bookId)}&chapter=${chapterRoute.chapter}`,
+      );
+      return;
+    }
+    router.push("/read/search");
+  }, [chapterRoute, router]);
+
   if (placement !== "fixedShell" || !show) return null;
 
   const loopMode =
@@ -122,6 +136,9 @@ export function ReadScriptureAudioDockStrip({ placement }: Props) {
       loopMode={loopMode}
       onTogglePlay={onTogglePlay}
       onNext={onNext}
+      onRead={onOpenSearch}
+      readIconName="search"
+      readAccessibilityLabel={t("pages.read.chapterChromeSearch")}
       onCycleRate={onCycleRate}
       onCycleLoop={onCycleLoop}
     />

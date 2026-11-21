@@ -660,7 +660,6 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
           visible={hasQueue}
           busy={busy}
           disabled={!hasQueue}
-          className="pointer-events-auto bg-[var(--bc-read-surface,rgba(250,246,238,0.96))] backdrop-blur-sm dark:bg-[#1E1914]/95"
           playing={isScripturePlaying}
           preparing={isPreparing}
           currentSec={currentSec}
@@ -670,6 +669,9 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
           loopMode={loopMode}
           onTogglePlay={() => void onTogglePlay()}
           onNext={() => void onNext()}
+          onRead={() => router.push("/read/search")}
+          readIconName="search"
+          readAccessibilityLabel={t("pages.read.chapterChromeSearch")}
           onCycleRate={() => setScripturePlaybackRate(nextScripturePlaybackRate(scripturePlaybackRate))}
           onCycleLoop={() => {
             const next =

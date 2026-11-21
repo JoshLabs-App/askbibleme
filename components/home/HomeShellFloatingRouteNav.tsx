@@ -89,8 +89,8 @@ const readItem: NavItemDef = {
 const studyItem: NavItemDef = {
   key: "study",
   href: "/explore",
-  zhLabel: "书房",
-  enLabel: "Study",
+  zhLabel: "探索",
+  enLabel: "Explore",
   match: (p) => p === "/explore" || p.startsWith("/explore/"),
   materialIcon: shellTabMaterialIcon("explore"),
 };

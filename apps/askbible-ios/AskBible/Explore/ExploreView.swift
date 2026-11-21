@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 书房（原探索页）：全面去游戏化「手抄本藏书票与书卷火漆印」+「摘录与印记（四色划线与收藏合一）」+ 最近阅读 + 同系列软件。
+/// 探索页：全面去游戏化「手抄本藏书票与书卷火漆印」+「摘录与印记（四色划线与收藏合一）」+ 最近阅读 + 同系列软件。
 struct ExploreView: View {
     @Binding var article: ExploreArticle?
     @ObservedObject var auth: MemberAuthStore
@@ -62,7 +62,7 @@ struct ExploreView: View {
                                         .foregroundStyle(theme.ink)
                                         .lineLimit(1)
                                     Text(auth.user != nil
-                                         ? AppLocale.pick("进入优先于完成 · 私人读经书房", "Entry over completion · Personal study", locale)
+                                         ? AppLocale.pick("探索 · 安静进入神的话语", "Explore · Quietly enter God's Word", locale)
                                          : AppLocale.pick("点此登录，跨设备同步印记与摘录 ›", "Tap to sign in and sync notes & seals ›", locale))
                                         .askFont(size: 13)
                                         .foregroundStyle(auth.user != nil ? theme.muted : theme.accentOt)

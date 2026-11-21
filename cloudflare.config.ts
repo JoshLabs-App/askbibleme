@@ -6,7 +6,7 @@ export default defineConfig({
     entrypoint: "vinext/server/fetch-handler",
     compatibilityDate: "2026-11-10",
     compatibilityFlags: ["nodejs_compat"],
-    domains: ["bible.joshlabs.app", "askbible.me"],
+    domains: ["askbible.me"],
     workersDev: true,
     previewUrls: true,
     assets: {

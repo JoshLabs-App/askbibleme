@@ -7,7 +7,7 @@ alwaysApply: true
 
 **AskBible.me 线上生产**部署在 **Cloudflare Workers**（Web 主站 Worker：`askbible-web`，同步与会员 Worker：`askbible-sync` + D1，媒体与静态包：Cloudflare R2 `askbible-media`）。Render 与 Vercel 均已全面退役停用。
 
-- **主站与备用域**：`https://askbible.me`（主域）、`https://bible.joshlabs.app`（备用域），配置见 `cloudflare.config.ts`。
+- **正式主域**：`https://askbible.me`，配置见 `cloudflare.config.ts`。
 - **无服务端持久磁盘**：线上生产环境不挂载本地磁盘，`/admin`、`/studio`、`/api/admin`、`/api/studio`、`/api/ai` 在生产环境默认返回 `404`。产品文字、导读生成与管理配置均在本机 `npm run dev` 完成并随仓库构建发布。
 - **发布方式**：遵循 `AGENTS.md`，仅在本机构建并通过 `scripts/deploy-direct.sh`（`npx cf build` + `npx cf deploy --prebuilt`）直发 Cloudflare Workers，禁止云端自动构建。服务端运行时密钥通过 `wrangler secret` 管理。
 - **推送与合入纪律**：只提交本任务涉及的文件，保护其它会话的未提交改动；主干合入走 PR + CI 门禁。

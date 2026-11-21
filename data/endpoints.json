@@ -16,7 +16,6 @@
       "probe": "healthz.txt",
       "candidates": [
         "https://askbible.me/",
-        "https://bible.joshlabs.app/",
         "https://askbible-site.joshlabs.app/"
       ]
     },
@@ -25,8 +24,7 @@
       "probe": "healthz.txt",
       "candidates": [
         "https://askbible-sync.joshlabs.app/",
-        "https://askbible.me/api/sync/",
-        "https://bible.joshlabs.app/api/sync/"
+        "https://askbible.me/api/sync/"
       ]
     }
   }

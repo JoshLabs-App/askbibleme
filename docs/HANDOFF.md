@@ -46,7 +46,7 @@
 |----|------|------|
 | **Studio** | 产品大脑（策展/编辑部）：理清意图、防失忆、写回 `docs/`；**不是** CMS / 运营后台 | Web：`/studio`（本机） |
 | **Mobile App** | 已上架、持续维护的用户端（原生 iOS / Android） | `apps/askbible-ios`、`apps/askbible-android` |
-| **Web 站点** | Next.js（`vinext`）；生产在 **Cloudflare Workers**（Worker `askbible-web`，主域 `askbible.me`，备用域 `bible.joshlabs.app`；Render 与 Vercel 均已退役） | `app/`、`components/`、`lib/` |
+| **Web 站点** | Next.js（`vinext`）；生产在 **Cloudflare Workers**（Worker `askbible-web`，主域 `askbible.me`；Render 与 Vercel 均已退役） | `app/`、`components/`、`lib/` |
 
 `AGENTS.md` 写「不要先做 Journey/CMS」= **不要新开产品线堆功能**；不是禁止修现有 App bug / 发版 / 对齐 iOS。
 

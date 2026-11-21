@@ -25,9 +25,9 @@ object Endpoints {
         /** R2 桶 askbible-media：金句语音、音乐、场景、勋章图、每日灵修、整本库、更新检查 */
         MEDIA("media", listOf("https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/", "https://askbible-media.joshlabs.app/")),
         /** 主站接口（Cloudflare Worker askbible-web）：在线译本、章节朗读地址解析 */
-        SITE("site", listOf("https://askbible.me/", "https://bible.joshlabs.app/", "https://askbible-site.joshlabs.app/")),
+        SITE("site", listOf("https://askbible.me/", "https://askbible-site.joshlabs.app/")),
         /** AskBible Sync（Cloudflare Worker askbible-sync + D1）：验证码登录、会员同步、注销账号 */
-        API("api", listOf("https://askbible-sync.joshlabs.app/", "https://askbible.me/api/sync/", "https://bible.joshlabs.app/api/sync/")),
+        API("api", listOf("https://askbible-sync.joshlabs.app/", "https://askbible.me/api/sync/")),
     }
 
     /** 本地缓存（:app 里是 SharedPreferences）。没接的时候（对拍）就只用内置表。 */

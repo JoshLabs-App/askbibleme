@@ -37,8 +37,38 @@ data class DevotionalDay(
     /** 音频时长（秒），卡片显示「约 N 分钟」 */
     val audioSec: Int?,
 ) {
+    val month: Int get() = md.substringBefore("-").toIntOrNull() ?: 1
+    val dayOfMonth: Int get() = md.substringAfter("-").toIntOrNull() ?: 1
+
     /** 「10月1日」 */
-    val dateLabel: String get() = md.split("-").let { "${it[0].toInt()}月${it[1].toInt()}日" }
+    val dateLabel: String get() = "${month}月${dayOfMonth}日"
+
+    /** 正文首段简要（无独立段时回落经文） */
+    val brief: String get() = paragraphs.firstOrNull { it.isNotBlank() } ?: verse
+
+    /** 命中关键词的段落优先作简要预览 */
+    fun briefMatching(query: String): String {
+        val q = query.trim()
+        if (q.isEmpty()) return brief
+        paragraphs.firstOrNull { it.contains(q, ignoreCase = true) }?.let { return it }
+        if (verse.isNotEmpty() && verse.contains(q, ignoreCase = true)) return verse
+        return brief
+    }
+
+    /** 跨标题、经文、出处、日期与正文全文检索 */
+    fun matches(query: String): Boolean {
+        val q = query.trim()
+        if (q.isEmpty()) return true
+        if (title.contains(q, ignoreCase = true)
+            || ref.contains(q, ignoreCase = true)
+            || verse.contains(q, ignoreCase = true)
+            || md.contains(q, ignoreCase = true)
+            || dateLabel.contains(q, ignoreCase = true)
+        ) {
+            return true
+        }
+        return paragraphs.any { it.contains(q, ignoreCase = true) }
+    }
 }
 
 object SolidJoys {
@@ -88,6 +118,10 @@ object SolidJoys {
 
     /** 按 md（"09-30"）取，播放坞用 */
     fun dayByKey(md: String): DevotionalDay? = (state as? State.Ready)?.days?.get(md)
+
+    /** 全年按日期排序列表（1–12 月目录与搜索用） */
+    fun orderedDays(): List<DevotionalDay> =
+        (state as? State.Ready)?.days?.values?.sortedBy { it.md }.orEmpty()
 
     /** 有缓存读缓存，没有就下载；同一版已在下载或已就绪不重复做。失败后再调一次即重试；切简繁会换一份 */
     fun ensureLoaded(context: Context, locale: AppLocale) {

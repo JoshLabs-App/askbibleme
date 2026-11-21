@@ -22,6 +22,7 @@ struct PlanPlayView: View {
     var onPlayChapter: (Int) -> Void
     var onReadChapter: (Int) -> Void
     var onOpenPlans: () -> Void
+    var onOpenDevotional: (Date) -> Void = { _ in }
     /// 书卷名：跟当前版本（点这一行进去读的就是它）；默认退回目录里的中英名
     var bookLabel: (BookRef) -> String = { $0.name(AppLocale.current) }
     /// 习惯统计里的已读日（云端同步下来的也在）；月历标黄 = 它 ∪ 播放页点听日（RN habitCompletedDates）
@@ -85,8 +86,15 @@ struct PlanPlayView: View {
                         }
                     }
                     if showDevotional {
-                        DevotionalCard(content: devotionals, player: devotionalPlayer,
-                                       date: PlanDates.addDays(Date(), viewAhead), locale: locale).padding(.top, 24)
+                        let targetDate = PlanDates.addDays(Date(), viewAhead)
+                        DevotionalCard(
+                            content: devotionals,
+                            player: devotionalPlayer,
+                            date: targetDate,
+                            locale: locale,
+                            onOpen: { onOpenDevotional(targetDate) }
+                        )
+                        .padding(.top, 24)
                     }
                     if prefs.isNtDeepRepeat {
                         ntStages.padding(.top, 30)
@@ -199,21 +207,27 @@ struct PlanPlayView: View {
                     } label: {
                         VStack(spacing: 5) {
                             Text(weekLabels[step])
-                                .askFont(size: 11, weight: .medium)
-                                .foregroundStyle(isSelected ? Color.white.opacity(0.88) : theme.muted)
+                                .askFont(size: 11, weight: isSelected ? .semibold : .medium)
+                                .foregroundStyle(isSelected ? theme.accentOt : theme.muted)
                             Text("\(dayNum)")
                                 .askFont(size: 15, weight: .bold).monospacedDigit()
-                                .foregroundStyle(isSelected ? Color.white : theme.ink)
+                                .foregroundStyle(isSelected ? Color(rgb: 0xFFFBF4) : theme.ink)
+                                .frame(width: 34, height: 30)
+                                .background(
+                                    Capsule()
+                                        .fill(isSelected ? theme.accentOt : (isToday ? theme.accentOt.opacity(0.16) : Color.clear))
+                                )
+                                .overlay(
+                                    Capsule()
+                                        .strokeBorder(!isSelected && isToday ? theme.accentOt.opacity(0.45) : Color.clear, lineWidth: 1)
+                                )
                             Circle()
-                                .fill(isDone ? (isSelected ? Color.white : doneOlive) : Color.clear)
+                                .fill(isDone ? doneOlive : Color.clear)
                                 .frame(width: 5, height: 5)
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                        .background(
-                            Capsule()
-                                .fill(isSelected ? theme.accentOt : (isToday ? theme.accentOt.opacity(0.16) : Color.clear))
-                        )
+                        .padding(.vertical, 4)
+                        .contentShape(Rectangle())
                         .opacity(!selectable && !isDone ? 0.38 : 1)
                     }
                     .buttonStyle(.plain)

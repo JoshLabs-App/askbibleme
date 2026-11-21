@@ -115,7 +115,7 @@ export function ReadScripturePlaybackDock({
       data-shell-swipe-nav-exclude
       className={[
         "pointer-events-auto w-full min-w-0 max-w-[min(100%,var(--read-parchment-column-max,28rem))]",
-        "rounded-2xl border border-[#DFD0B8] bg-[#F4EBDD]/96 px-3.5 pt-2.5 pb-1 text-[#231A12] shadow-[0_6px_22px_rgba(24,16,10,0.14)] backdrop-blur-md dark:border-[#3A3026] dark:bg-[#1E1914]/96 dark:text-[#EDE2CF] dark:shadow-[0_8px_26px_rgba(0,0,0,0.42)]",
+        "rounded-2xl border border-[#DFD0B8] bg-[#F4EBDD] px-3.5 pt-2.5 pb-1 text-[#231A12] shadow-[0_6px_22px_rgba(24,16,10,0.14)] dark:border-[#3A3026] dark:bg-[#1E1914] dark:text-[#EDE2CF] dark:shadow-[0_8px_26px_rgba(0,0,0,0.42)]",
         className,
       ]
         .filter(Boolean)

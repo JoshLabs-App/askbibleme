@@ -78,8 +78,8 @@ struct RootView: View {
         store.secondary = nil
         // 首页金句跟读经版本走，换完译本由 onChange(store.translation.id) 接手
     }
-    /// 计划 Tab（底栏中央键）里的子页：播放页 / 计划目录 / 计划详情
-    enum PlanRoute: Equatable { case play, plans, planDetail(String) }
+    /// 计划 Tab（底栏中央键）里的子页：播放页 / 每日灵修目录 / 计划目录 / 计划详情
+    enum PlanRoute: Equatable { case play, devotional(Date), plans, planDetail(String) }
     @State private var planRoute: PlanRoute = .play
     /// 播放页状态：日历上看的那天（相对系统今天）与选中的章
     @State private var planViewAhead = 0
@@ -581,7 +581,8 @@ struct RootView: View {
     }
 
     private var content: some View {
-        let devotionalDockActive = (tab == .plan || tab == .read)
+        let devotionalDockActive = ((tab == .plan && planRoute == .play) || tab == .read)
+            && !showSearch && !showFavorites
             && devotional.currentKey.flatMap({ devotionals.days[$0] }) != nil
         return ZStack {
             AskTabShell(
@@ -605,8 +606,16 @@ struct RootView: View {
                 screen(for: which)
             } dock: {
                 // 搜索 / 收藏页盖在上面时藏坞（RN 非章页只在播放中才出坞）
-                if (tab == .plan || tab == .read), let key = devotional.currentKey, let day = devotionals.days[key] {
-                    DevotionalControls(day: day, player: devotional, locale: appLocale).padding(.horizontal, 20)
+                if devotionalDockActive, let key = devotional.currentKey, let day = devotionals.days[key] {
+                    DevotionalDock(
+                        day: day,
+                        player: devotional,
+                        locale: appLocale,
+                        onOpen: {
+                            planRoute = .devotional(SolidJoys.dateForKey(key))
+                            tab = .plan
+                        }
+                    )
                 } else if readDockActive {
                     PlaybackDock(
                         audio: audio,
@@ -1146,9 +1155,29 @@ struct RootView: View {
                                  activeIndex: planActiveIndex, activePlaying: planActivePlaying,
                                  viewAhead: $planViewAhead, cursor: $planCursor,
                                  onPlayChapter: { planPlay(at: $0) }, onReadChapter: { planRead(at: $0) },
-                                 onOpenPlans: { planRoute = .plans }, bookLabel: bookLabel, habitDates: activity.completedDateSet,
+                                 onOpenPlans: { planRoute = .plans },
+                                 onOpenDevotional: { planRoute = .devotional($0) },
+                                 bookLabel: bookLabel, habitDates: activity.completedDateSet,
                                  onConfirmDay: { plans.setAheadDays(planContentAhead); planViewAhead = 0 },
                                  onStageSet: { planViewAhead = 0; planCursor = 0 })
+                case .devotional(let date):
+                    DevotionalCatalogView(
+                        content: devotionals,
+                        player: devotional,
+                        initialDate: date,
+                        size: readSize,
+                        locale: appLocale,
+                        onBack: { planRoute = .play },
+                        onOpenChapter: { bookId, ch in
+                            guard let b = BibleCatalog.book(id: bookId) else { return }
+                            planFlowActive = false; listenChapter = nil; openedBook = nil; xrefReturnOrigin = nil; chapterFromHome = false
+                            chapterFromPlan = true; planFlowHost = .chapter
+                            focusVerse = nil; focusKeyword = nil; searchReturnQuery = nil
+                            openedChapter = (b, ch)
+                            tab = .read
+                        }
+                    )
+                    .edgeSwipeBack { planRoute = .play }
                 case .plans:
                     PlansListView(store: plans, onOpenPlan: { planRoute = .planDetail($0) }, onBack: { planRoute = .play },
                                   onOpenArticle: { slug in exploreArticle = ExploreArticles.article(slug); tab = .explore })

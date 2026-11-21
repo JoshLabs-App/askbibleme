@@ -3,8 +3,15 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { ReadPlanDevotional } from "@/components/bible/ReadPlanDevotional";
-import { captureDevotionalPlanDay } from "@/lib/devotional/solid-joys";
+import {
+  ReadDevotionalPlaybackDock,
+  ReadPlanDevotional,
+  ReadPlanDevotionalCatalog,
+} from "@/components/bible/ReadPlanDevotional";
+import {
+  captureDevotionalPlanDay,
+  devotionalKeyFromAudioSrc,
+} from "@/lib/devotional/solid-joys";
 import { ReadNtDeepRepeatStagesBelowToday } from "@/components/bible/ReadNtDeepRepeatStagesBelowToday";
 import { ReadPlanPlayMonthCalendar } from "@/components/bible/ReadPlanPlayMonthCalendar";
 import { ReadScripturePlaybackDock } from "@/components/bible/ReadScripturePlaybackDock";
@@ -88,6 +95,7 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
   const [starting, setStarting] = useState(false);
   const [viewAhead, setViewAhead] = useState(0);
   const [monthExpanded, setMonthExpanded] = useState(false);
+  const [devotionalCatalogMd, setDevotionalCatalogMd] = useState<string | null>(null);
   const [browsePayload, setBrowsePayload] = useState<TodayReadingPlanPayload | null>(null);
   const [browseLoading, setBrowseLoading] = useState(false);
   const [confirmBusy, setConfirmBusy] = useState(false);
@@ -362,6 +370,37 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
     setCursor(0);
   }, []);
 
+  const openDevotionalCatalog = useCallback((md: string) => {
+    setDevotionalCatalogMd(md);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("devotional", md);
+      window.history.pushState({ devotionalMd: md }, "", url.toString());
+    }
+  }, []);
+
+  const closeDevotionalCatalog = useCallback(() => {
+    setDevotionalCatalogMd(null);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("devotional")) {
+        url.searchParams.delete("devotional");
+        window.history.replaceState({}, "", url.toString());
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const syncFromUrl = () => {
+      const val = new URLSearchParams(window.location.search).get("devotional");
+      setDevotionalCatalogMd(val && /^\d{2}-\d{2}$/.test(val) ? val : null);
+    };
+    syncFromUrl();
+    window.addEventListener("popstate", syncFromUrl);
+    return () => window.removeEventListener("popstate", syncFromUrl);
+  }, []);
+
   const onConfirmDay = useCallback(async () => {
     if (!needsConfirm || confirmBusy) return;
     setConfirmBusy(true);
@@ -436,6 +475,17 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
         ? "book"
         : "off";
 
+  const activeDevotionalMd = devotionalKeyFromAudioSrc(effectiveSrc);
+
+  if (devotionalCatalogMd) {
+    return (
+      <ReadPlanDevotionalCatalog
+        initialMd={devotionalCatalogMd}
+        onBack={closeDevotionalCatalog}
+      />
+    );
+  }
+
   return (
     <div className="read-plan-play-screen relative flex min-h-0 flex-1 flex-col">
       <div className="read-plan-play-screen__scroll mx-auto w-full max-w-[440px] flex-1 overflow-y-auto px-4 pb-6 pt-[calc(env(safe-area-inset-top,0px)+1rem)]">
@@ -464,7 +514,7 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
         ) : (
           <div className="read-plan-play-screen__queue space-y-4">
             {/* 7 日温和周条（点击月份展开完整月历） */}
-            <section className="rounded-2xl border border-[#DFD0B8] bg-[#FAF5EC]/88 p-3.5 shadow-sm dark:border-[#3A3026] dark:bg-[#221C16]/90">
+            <section className="rounded-2xl border border-[#DFD0B8] bg-[#FAF5EC]/90 p-3.5 shadow-sm dark:border-[#3A3026] dark:bg-[#221C16]/90">
               <div className="mb-2.5 flex items-center justify-between">
                 <button
                   type="button"
@@ -489,17 +539,24 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
                     onClick={() => onSelectCalendarAhead(d.ahead)}
                     className="flex flex-col items-center gap-1 rounded-xl border-0 bg-transparent py-1 transition active:scale-95"
                   >
-                    <span className="text-[11px] font-medium text-[#8B7358] dark:text-[#9E8E78]">
+                    <span
+                      className={[
+                        "text-[11px]",
+                        d.isSelected
+                          ? "font-semibold text-[#C1660B] dark:text-[#E2A84B]"
+                          : "font-medium text-[#8B7358] dark:text-[#9E8E78]",
+                      ].join(" ")}
+                    >
                       {d.weekdayLabel}
                     </span>
                     <span
                       className={[
-                        "flex h-8 w-8 items-center justify-center rounded-full text-[13px] tabular-nums transition",
+                        "flex h-[30px] w-[34px] items-center justify-center rounded-full text-[14px] tabular-nums transition",
                         d.isSelected
                           ? "bg-[#C1660B] font-bold text-[#FFFBF4] shadow-sm dark:bg-[#D97707] dark:text-[#FFFBF4]"
                           : d.isToday
-                            ? "border border-[#C1660B]/60 font-semibold text-[#231A12] dark:border-[#E2A84B]/60 dark:text-[#EDE2CF]"
-                            : "font-medium text-[#3C2E20] dark:text-[#D5C3A8]",
+                            ? "border border-[#C1660B]/50 bg-[#C1660B]/15 font-bold text-[#231A12] dark:border-[#E2A84B]/50 dark:bg-[#E2A84B]/15 dark:text-[#EDE2CF]"
+                            : "font-bold text-[#3C2E20] dark:text-[#D5C3A8]",
                       ].join(" ")}
                     >
                       {d.dayNum}
@@ -648,7 +705,10 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
           </div>
         )}
 
-        <ReadPlanDevotional viewAhead={viewAhead} />
+        <ReadPlanDevotional
+          viewAhead={viewAhead}
+          onOpenCatalog={openDevotionalCatalog}
+        />
 
         {isNtDeepRepeat ? (
           <ReadNtDeepRepeatStagesBelowToday
@@ -661,33 +721,40 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
       </div>
 
       <div className="read-plan-play-screen__dock pointer-events-none sticky bottom-0 z-20 flex justify-center px-3">
-        <ReadScripturePlaybackDock
-          visible={hasQueue}
-          busy={busy}
-          disabled={!hasQueue}
-          playing={isScripturePlaying}
-          preparing={isPreparing}
-          currentSec={currentSec}
-          durationSec={durationSec}
-          seekRatio={seekRatio}
-          scripturePlaybackRate={scripturePlaybackRate}
-          loopMode={loopMode}
-          onTogglePlay={() => void onTogglePlay()}
-          onNext={() => void onNext()}
-          onRead={() => router.push("/read/search")}
-          readIconName="search"
-          readAccessibilityLabel={t("pages.read.chapterChromeSearch")}
-          onCycleRate={() => setScripturePlaybackRate(nextScripturePlaybackRate(scripturePlaybackRate))}
-          onCycleLoop={() => {
-            const next =
-              scriptureAudioRepeatMode === "off"
-                ? "chapter"
-                : scriptureAudioRepeatMode === "chapter"
-                  ? "book"
-                  : "off";
-            setScriptureAudioRepeatMode(next);
-          }}
-        />
+        {activeDevotionalMd ? (
+          <ReadDevotionalPlaybackDock
+            md={activeDevotionalMd}
+            onOpen={openDevotionalCatalog}
+          />
+        ) : (
+          <ReadScripturePlaybackDock
+            visible={hasQueue}
+            busy={busy}
+            disabled={!hasQueue}
+            playing={isScripturePlaying}
+            preparing={isPreparing}
+            currentSec={currentSec}
+            durationSec={durationSec}
+            seekRatio={seekRatio}
+            scripturePlaybackRate={scripturePlaybackRate}
+            loopMode={loopMode}
+            onTogglePlay={() => void onTogglePlay()}
+            onNext={() => void onNext()}
+            onRead={() => router.push("/read/search")}
+            readIconName="search"
+            readAccessibilityLabel={t("pages.read.chapterChromeSearch")}
+            onCycleRate={() => setScripturePlaybackRate(nextScripturePlaybackRate(scripturePlaybackRate))}
+            onCycleLoop={() => {
+              const next =
+                scriptureAudioRepeatMode === "off"
+                  ? "chapter"
+                  : scriptureAudioRepeatMode === "chapter"
+                    ? "book"
+                    : "off";
+              setScriptureAudioRepeatMode(next);
+            }}
+          />
+        )}
       </div>
     </div>
   );

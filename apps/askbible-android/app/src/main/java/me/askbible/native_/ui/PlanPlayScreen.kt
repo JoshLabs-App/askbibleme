@@ -411,38 +411,52 @@ private fun PlanGentleWeekCard(
                     Column(
                         Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(999.dp))
-                            .background(
-                                when {
-                                    isSelected -> accent
-                                    isToday -> accent.copy(alpha = 0.16f)
-                                    else -> Color.Transparent
-                                },
-                            )
                             .alpha(if (!selectable && !isRead) 0.38f else 1f)
                             .clickableNoRipple { if (selectable) onSelectAhead(ahead) }
-                            .padding(vertical = 8.dp),
+                            .padding(vertical = 4.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
                         Text(
                             weekdaysShort[idx],
-                            color = if (isSelected) Color(0xFFFFFBF4).copy(alpha = 0.88f) else muted,
+                            color = if (isSelected) accent else muted,
                             fontSize = 11.sp,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                         )
-                        Text(
-                            "${d.dayOfMonth}",
-                            color = if (isSelected) Color(0xFFFFFBF4) else ink,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold,
-                        )
+                        Box(
+                            Modifier
+                                .size(width = 34.dp, height = 30.dp)
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(
+                                    when {
+                                        isSelected -> accent
+                                        isToday -> accent.copy(alpha = 0.16f)
+                                        else -> Color.Transparent
+                                    },
+                                )
+                                .then(
+                                    if (!isSelected && isToday) {
+                                        Modifier.border(1.dp, accent.copy(alpha = 0.45f), RoundedCornerShape(999.dp))
+                                    } else {
+                                        Modifier
+                                    },
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                "${d.dayOfMonth}",
+                                color = if (isSelected) Color(0xFFFFFBF4) else ink,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
                         Box(
                             Modifier
                                 .size(4.5.dp)
                                 .clip(RoundedCornerShape(999.dp))
                                 .background(
                                     if (isRead || isToday) {
-                                        if (isSelected) Color(0xFFFFFBF4) else Brand.logo.toColor()
+                                        Brand.logo.toColor()
                                     } else {
                                         Color.Transparent
                                     },

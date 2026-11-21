@@ -244,7 +244,7 @@ export function HomePrayerVerseDockSettings({
       className={
         isDock
           ? "mt-2 space-y-3 rounded-xl border border-white/12 bg-black/25 px-3 py-3 text-[12px] text-white/88 sm:text-[13px]"
-          : "space-y-3 rounded-lg border border-neutral-200/80 bg-white/60 px-2.5 py-2.5 text-[13px] text-[#37352f]/90 backdrop-blur-sm sm:text-[14px]"
+          : "space-y-3 rounded-lg border border-border/60 bg-surface px-2.5 py-2.5 text-[13px] text-ink sm:text-[14px]"
       }
     >
       {showVersePoolScope && placement === "drawer" ? (

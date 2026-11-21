@@ -172,7 +172,7 @@ export function RelaxCalmExperience({ initial, layout = "standalone" }: Props) {
         className={
           inTemplateChrome
             ? "relative z-20 flex min-h-0 w-full flex-1 flex-col overflow-hidden"
-            : `relative z-20 flex w-full flex-1 flex-col min-h-[100dvh] supports-[height:100dvh]:min-h-[100dvh] ${ln}:absolute ${ln}:inset-y-0 ${ln}:right-0 ${ln}:left-auto ${ln}:min-h-0 ${ln}:w-[min(44vw,20rem)] ${ln}:max-w-[48%] ${ln}:justify-between ${ln}:bg-gradient-to-l ${ln}:pl-5 ${ln}:backdrop-blur-md ${ln}:pt-[max(0.35rem,env(safe-area-inset-top))] ${ln}:pb-[max(0.35rem,env(safe-area-inset-bottom))] ${ln}:pr-[max(0.35rem,env(safe-area-inset-right))] ${ln}:from-sky-100/95 ${ln}:via-cyan-50/85 ${ln}:to-transparent`
+            : `relative z-20 flex w-full flex-1 flex-col min-h-[100dvh] supports-[height:100dvh]:min-h-[100dvh] ${ln}:absolute ${ln}:inset-y-0 ${ln}:right-0 ${ln}:left-auto ${ln}:min-h-0 ${ln}:w-[min(44vw,20rem)] ${ln}:max-w-[48%] ${ln}:justify-between ${ln}:bg-gradient-to-l ${ln}:pl-5 ${ln}:pt-[max(0.35rem,env(safe-area-inset-top))] ${ln}:pb-[max(0.35rem,env(safe-area-inset-bottom))] ${ln}:pr-[max(0.35rem,env(safe-area-inset-right))] ${ln}:from-sky-100/95 ${ln}:via-cyan-50/90 ${ln}:to-transparent`
         }
       >
         {!inTemplateChrome ? (

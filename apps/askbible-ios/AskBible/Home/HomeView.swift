@@ -82,21 +82,27 @@ struct HomeView: View {
                             }
                             HStack(spacing: 32) {
                                 musicControl
-                                soundButton("speaker.wave.2", title: copy("朗读", "Read aloud"), on: home.voiceOn, id: "home.voice") {
+                                soundButton(MI.volumeUp, title: copy("朗读", "Read aloud"), on: home.voiceOn, id: "home.voice") {
                                     touch(); home.toggleVoice()
                                 }
                                 .disabled(!home.voiceAvailable).opacity(home.voiceAvailable ? 1 : 0.35)
                             }
                             HStack(spacing: 24) {
                                 Button { touch(); music.next() } label: {
-                                    Label(copy("下一首", "Next track"), systemImage: "forward.end")
-                                        .frame(minHeight: 44)
+                                    HStack(spacing: 6) {
+                                        MaterialIcon(glyph: MI.skipNext, size: 20, color: .white)
+                                        Text(copy("下一首", "Next track"))
+                                    }
+                                    .frame(minHeight: 44)
                                 }
                                 .disabled(music.nextTrack == nil)
                                 .accessibilityIdentifier("home.music.next")
                                 Button { touch(); onOpenMusic() } label: {
-                                    Label(copy("选音乐", "Choose music"), systemImage: "music.note.list")
-                                        .frame(minHeight: 44)
+                                    HStack(spacing: 6) {
+                                        MaterialIcon(glyph: MI.musicNote, size: 20, color: .white)
+                                        Text(copy("选音乐", "Choose music"))
+                                    }
+                                    .frame(minHeight: 44)
                                 }
                                 .accessibilityIdentifier("home.music.choose")
                             }
@@ -172,12 +178,13 @@ struct HomeView: View {
         withAnimation(.easeInOut(duration: 0.2)) { albumsOpen = true }
     }
     private var musicControl: some View {
-        VStack(spacing: 6) {
-            Image(systemName: albumSymbol(music.album)).font(.system(size: 26))
+        let g = MusicAlbumGlyph.glyph(music.album)
+        return VStack(spacing: 6) {
+            MaterialIcon(glyph: g.glyph, size: 28, color: music.isPlaying ? Brand.logo : .white, community: g.community)
             Text(copy("音乐", "Music")).askFont(size: 12)
         }
         .foregroundStyle(music.isPlaying ? Brand.logo : .white).verseTextShadow()
-        .frame(minWidth: 64, minHeight: 64).contentShape(Rectangle())
+        .frame(minWidth: 72, minHeight: 72).contentShape(Rectangle())
         // 长按和短按互斥：展开专辑时不顺带播放或暂停。
         .gesture(LongPressGesture(minimumDuration: 0.45).exclusively(before: TapGesture()).onEnded { result in
             switch result {
@@ -199,13 +206,14 @@ struct HomeView: View {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
                         ForEach(MusicCatalog.albums, id: \.self) { album in
                             let selected = music.album == album
+                            let g = MusicAlbumGlyph.glyph(album)
                             Button { onSelect(album) } label: {
-                                VStack(spacing: 7) {
-                                    Image(systemName: albumSymbol(album)).font(.system(size: 23))
+                                VStack(spacing: 6) {
+                                    MaterialIcon(glyph: g.glyph, size: 24, color: ink, community: g.community)
                                     Text(copy(album, albumEnglish(album)))
                                         .askFont(size: 12).multilineTextAlignment(.center)
                                 }
-                                .frame(maxWidth: .infinity, minHeight: 68)
+                                .frame(maxWidth: .infinity, minHeight: 64)
                                 .padding(.vertical, 6)
                                 .background(selected ? Brand.logo.opacity(0.22) : ink.opacity(0.05), in: RoundedRectangle(cornerRadius: 14))
                                 .overlay(RoundedRectangle(cornerRadius: 14).stroke(selected ? Color(rgb: 0xb88a35) : .clear, lineWidth: 1))
@@ -217,14 +225,14 @@ struct HomeView: View {
                         }
                     }
     }
-    private func soundButton(_ symbol: String, title: String, on: Bool, id: String, action: @escaping () -> Void) -> some View {
+    private func soundButton(_ glyph: String, title: String, on: Bool, id: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 6) {
-                Image(systemName: symbol).font(.system(size: 26))
+                MaterialIcon(glyph: glyph, size: 28, color: on ? Brand.logo : .white)
                 Text(title).askFont(size: 12)
             }
             .foregroundStyle(on ? Brand.logo : .white).verseTextShadow()
-            .frame(minWidth: 64, minHeight: 64).contentShape(Rectangle())
+            .frame(minWidth: 72, minHeight: 72).contentShape(Rectangle())
         }
         .buttonStyle(.plain).accessibilityLabel(title)
         .accessibilityValue(on ? copy("开启", "On") : copy("关闭", "Off"))
@@ -255,11 +263,11 @@ struct HomeView: View {
                         HStack(spacing: 10) {
                             ForEach(AmbientScenes.slots) { slot in
                                 Button { onToggleAmbient(slot.id) } label: {
-                                    VStack(spacing: 7) {
-                                        Image(systemName: ambientSymbol(slot.id)).font(.system(size: 23))
+                                    VStack(spacing: 6) {
+                                        MaterialIcon(glyph: ambientGlyph(slot.id), size: 24, color: ink, community: true)
                                         Text(copy(slot.label, slot.labelEn)).askFont(size: 12)
                                     }
-                                    .frame(minWidth: 64, minHeight: 68).padding(.horizontal, 6)
+                                    .frame(minWidth: 74, minHeight: 64).padding(.horizontal, 6)
                                     .background(ambient.slotId == slot.id ? Brand.logo.opacity(0.22) : ink.opacity(0.05), in: RoundedRectangle(cornerRadius: 14))
                                 }.buttonStyle(.plain)
                                 .accessibilityLabel(copy(slot.label, slot.labelEn))
@@ -321,28 +329,17 @@ struct HomeView: View {
     private func sectionTitle(_ title: String) -> some View {
         HStack { Text(title).askFont(size: 13, weight: .medium); Rectangle().fill(ink.opacity(0.12)).frame(height: 1) }
     }
-    private func ambientSymbol(_ id: String) -> String {
+    private func ambientGlyph(_ id: String) -> String {
         switch id {
-        case "scene-water": return "drop"
-        case "scene-rain": return "cloud.rain"
-        case "scene-birds": return "bird"
-        case "scene-white-noise": return "waveform"
-        case "scene-wind": return "wind"
-        case "scene-fire": return "flame"
-        case "scene-waves": return "water.waves"
-        case "scene-thunder": return "cloud.bolt.rain"
-        default: return "cup.and.saucer"
-        }
-    }
-    private func albumSymbol(_ album: String) -> String {
-        switch album {
-        case "安静": return "leaf"
-        case "下午茶": return "cup.and.saucer"
-        case "赞美诗": return "music.note.list"
-        case "钢琴": return "pianokeys"
-        case "睡眠": return "moon.stars"
-        case "专注工作": return "deskclock"
-        default: return "music.note"
+        case "scene-water": return MCI.water
+        case "scene-rain": return MCI.weatherRainy
+        case "scene-birds": return MCI.bird
+        case "scene-white-noise": return MCI.radioTower
+        case "scene-wind": return MCI.weatherWindy
+        case "scene-fire": return MCI.fire
+        case "scene-waves": return MCI.waves
+        case "scene-thunder": return MCI.weatherLightning
+        default: return MCI.coffee
         }
     }
     private func albumEnglish(_ album: String) -> String {

@@ -91,20 +91,20 @@ export function ReadBibleHomeTopActions() {
       <button
         type="button"
         className={sizeBtnClass}
-        aria-label={t("pages.read.typography.sizeSmallerAria")}
-        disabled={sizeAtMin}
-        onClick={() => bumpSize(-1)}
-      >
-        −
-      </button>
-      <button
-        type="button"
-        className={sizeBtnClass}
         aria-label={t("pages.read.typography.sizeLargerAria")}
         disabled={sizeAtMax}
         onClick={() => bumpSize(1)}
       >
         +
+      </button>
+      <button
+        type="button"
+        className={sizeBtnClass}
+        aria-label={t("pages.read.typography.sizeSmallerAria")}
+        disabled={sizeAtMin}
+        onClick={() => bumpSize(-1)}
+      >
+        −
       </button>
       <button
         type="button"

@@ -20,9 +20,6 @@ struct CatalogView: View {
     @Environment(\.parchment) private var theme
     /// 右侧竖排最后一个按钮的底边（全局坐标）：落在它上面的行要给图标让位
     @State private var railBottom: CGFloat = 0
-    /// 右栏工具簇是否展开（收起时只留一颗钮，不挡卷名）
-    @State private var railOpen = false
-    @Namespace private var railNamespace
 
     var body: some View {
         GeometryReader { geo in
@@ -100,40 +97,17 @@ struct CatalogView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// 右栏：收起时留三颗 —— 展开钮 + **搜索** + **最近读**（Josh 2026-09-23
-    /// 「打开圣经目录页时，搜索、最近读图标要放出来」）。这两件是进目录页最常做的事，
-    /// 藏在「⋮」后面等于多一次点击。
-    /// 其余四颗（设置 / 收藏 / 字号加减）仍然收着 —— 6 颗全常驻会压住新约那一列的卷名
-    /// （实测「马太福音」右侧被切），这条约束没变。
+    /// 目录页右侧竖排：对齐安卓 `CatalogScreen.kt`（设置 / 搜索 / 收藏 / + / − / 历史，无玻璃胶囊）。
     private func rail(safeTop: CGFloat) -> some View {
-        AskGlassGroup(spacing: 8) {
         VStack(spacing: ShellMetrics.topChromeGap) {
-            railButton(railOpen ? MI.close : MI.moreVert) {
-                withAnimation(.smooth(duration: 0.3)) { railOpen.toggle() }
-            }
-            .askGlassID("catalog-rail-toggle", in: railNamespace)
-
-            if railOpen {
-                railButton(MI.settings) { railOpen = false; onOpenSettings() }
-                    .askGlassID("catalog-rail-settings", in: railNamespace)
-            }
-            // 常驻：搜索
-            railButton(MI.search) { railOpen = false; onOpenSearch() }
-                .askGlassID("catalog-rail-search", in: railNamespace)
-            if railOpen {
-                railButton(MI.bookmarkBorder) { railOpen = false; onOpenFavorites() }
-                    .askGlassID("catalog-rail-favorites", in: railNamespace)
-                railLabel("+") { if let n = size.next { size = n } }
-                    .askGlassID("catalog-rail-bigger", in: railNamespace)
-                railLabel("\u{2212}") { if let p = size.previous { size = p } }
-                    .askGlassID("catalog-rail-smaller", in: railNamespace)
-            }
-            // 常驻：最近读（没有历史时压淡并禁用，但槽位保留，不塌缩）
-            railButton(MI.history) { railOpen = false; (onLastRead ?? {})() }
+            railButton(MI.settings, action: onOpenSettings)
+            railButton(MI.search, action: onOpenSearch)
+            railButton(MI.bookmarkBorder, action: onOpenFavorites)
+            railLabel("+") { if let n = size.next { size = n } }
+            railLabel("\u{2212}") { if let p = size.previous { size = p } }
+            railButton(MI.history) { (onLastRead ?? {})() }
                 .opacity(onLastRead == nil ? 0.4 : 1)
                 .disabled(onLastRead == nil)
-                .askGlassID("catalog-rail-history", in: railNamespace)
-        }
         }
         .padding(.top, safeTop + ShellMetrics.topChromeOffset)
         .padding(.trailing, ShellMetrics.topChromeSideInset)
@@ -143,16 +117,12 @@ struct CatalogView: View {
         })
     }
 
-    /// 右栏图标走 RN 同一套 Material 字形（READ_TOP_CHROME.iconSize = 32）
     private func railButton(_ glyph: String, action: @escaping () -> Void = {}) -> some View {
         Button(action: action) {
-            // 羊皮页上的壳层按钮＝浅调玻璃小圆钮（DECISIONS 2026-09-15）。
-            // 原来是白字压双层黑影：白色在米色纸上本来就没对比，只能靠影子硬撑，越看越脏。
-            MaterialIcon(glyph: glyph, size: ShellMetrics.topChromeIcon * 0.84, color: theme.ink.opacity(0.78))
+            MaterialIcon(glyph: glyph, size: ShellMetrics.topChromeIcon, color: .white)
                 .frame(width: ShellMetrics.topChromeButton, height: ShellMetrics.topChromeButton)
+                .shellIconShadow()
                 .contentShape(Rectangle())
-                .askGlassCapsule(tone: .light, interactive: true)
-                .askFloatingShadow()
         }
         .buttonStyle(.plain)
     }
@@ -160,12 +130,11 @@ struct CatalogView: View {
     private func railLabel(_ text: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(text)
-                .askFont(size: ShellMetrics.topChromeSizeLabel * 0.84, weight: .medium)
-                .foregroundStyle(theme.ink.opacity(0.78))
+                .askFont(size: ShellMetrics.topChromeSizeLabel, weight: .medium)
+                .foregroundStyle(Color.white)
                 .frame(width: ShellMetrics.topChromeButton, height: ShellMetrics.topChromeButton)
+                .shellIconShadow()
                 .contentShape(Rectangle())
-                .askGlassCapsule(tone: .light, interactive: true)
-                .askFloatingShadow()
         }
         .buttonStyle(.plain)
     }

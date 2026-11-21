@@ -537,7 +537,7 @@ export function HomeDashboard() {
                   <div
                     id="home-user-menu"
                     role="menu"
-                    className="absolute right-0 top-[calc(100%+0.35rem)] z-[60] min-w-[10.5rem] rounded-xl border border-white/20 bg-ink/88 py-1 shadow-xl backdrop-blur-md"
+                    className="absolute right-0 top-[calc(100%+0.35rem)] z-[60] min-w-[10.5rem] rounded-xl border border-white/18 bg-[#241a13] py-1 shadow-xl"
                   >
                   {bootstrapped && user ? (
                     <>
@@ -653,8 +653,8 @@ export function HomeDashboard() {
                 aria-label="首页背景"
                 className={
                   useCanvasChrome
-                    ? "inline-flex rounded-full bg-white/[0.04] p-[3px] backdrop-blur-sm"
-                    : "inline-flex rounded-full bg-ink/[0.035] p-[3px] backdrop-blur-sm"
+                    ? "inline-flex rounded-full bg-white/[0.06] p-[3px]"
+                    : "inline-flex rounded-full bg-ink/[0.05] p-[3px]"
                 }
               >
                 <button

@@ -55,7 +55,7 @@ struct ConfirmSheet: View {
             }
             .padding(.horizontal, 18).padding(.top, 16).padding(.bottom, 28)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .askGlassRect(tone: .light, radius: AskCorner.card)
+            .parchmentCard(cornerRadius: AskCorner.card)
             .askFloatingShadow(.overlay)
             .contentShape(Rectangle())
             .onTapGesture {}

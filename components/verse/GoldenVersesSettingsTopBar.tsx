@@ -76,7 +76,7 @@ export function GoldenVersesSettingsTopBar({ variant = "light" }: { variant?: "l
           id="golden-verse-settings-popover"
           role="dialog"
           aria-label={t("pages.goldenVerses.settings")}
-          className="absolute right-0 top-[calc(100%+0.35rem)] z-[60] w-[min(22rem,calc(100vw-1.25rem))] max-h-[min(32rem,72vh)] overflow-y-auto overscroll-y-contain rounded-xl border border-white/20 bg-ink/88 py-1 text-canvas shadow-xl backdrop-blur-md [-webkit-overflow-scrolling:touch]"
+          className="absolute right-0 top-[calc(100%+0.35rem)] z-[60] w-[min(22rem,calc(100vw-1.25rem))] max-h-[min(32rem,72vh)] overflow-y-auto overscroll-y-contain rounded-xl border border-white/18 bg-[#241a13] py-1 text-canvas shadow-xl [-webkit-overflow-scrolling:touch]"
         >
           <HomePrayerVerseDockSettings placement="popover" sections={["goldenFont"]} />
           <p className="mt-3 px-4 text-[13px] font-medium leading-snug text-canvas/70">

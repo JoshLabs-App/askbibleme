@@ -90,7 +90,7 @@ export function GoldenVersesTopActions({
   };
 
   const wrapClass = floating
-    ? "pointer-events-auto fixed right-[max(0.75rem,env(safe-area-inset-right))] top-[max(0.5rem,env(safe-area-inset-top))] z-[60] flex items-center gap-1 rounded-full border border-white/22 bg-black/40 px-1.5 py-1 shadow-lg backdrop-blur-md"
+    ? "pointer-events-auto fixed right-[max(0.75rem,env(safe-area-inset-right))] top-[max(0.5rem,env(safe-area-inset-top))] z-[60] flex items-center gap-1 rounded-full border border-white/18 bg-[#241a13] px-1.5 py-1 shadow-lg"
     : "pointer-events-auto flex items-center gap-1";
 
   return (

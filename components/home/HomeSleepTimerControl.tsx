@@ -226,7 +226,7 @@ export function HomeSleepTimerControl({ className = "", embedded = false, compac
           role="dialog"
           aria-label={t("music.sleepTimer.watchAria")}
           className={[
-            "absolute z-[60] w-[min(calc(100vw-2rem),17.5rem)] min-w-[12.5rem] rounded-xl border border-white/25 bg-black/35 px-2.5 py-2 shadow-xl ring-1 ring-white/15 backdrop-blur-xl",
+            "absolute z-[60] w-[min(calc(100vw-2rem),17.5rem)] min-w-[12.5rem] rounded-xl border border-white/20 bg-[#241a13] px-2.5 py-2 shadow-xl",
             "right-0 top-full mt-2 translate-y-0",
             "landscape:right-full landscape:top-1/2 landscape:mt-0 landscape:mr-2 landscape:-translate-y-1/2",
           ].join(" ")}

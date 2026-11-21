@@ -51,9 +51,7 @@ struct TimePickerSheet: View {
             }
             .padding(.horizontal, 18).padding(.top, 16).padding(.bottom, 28)
             .frame(maxWidth: .infinity, alignment: .leading)
-            // 纯控件弹层 = 玻璃（DECISIONS 2026-09-15：Glass = Interface）。
-            // 带经文的弹层（串珠 / 节操作 / 章节选择）仍是纸，不要一起改。
-            .askGlassRect(tone: .light, radius: AskCorner.card)
+            .parchmentCard(cornerRadius: AskCorner.card)
             .askFloatingShadow(.overlay)
             .contentShape(Rectangle())
             .onTapGesture {}

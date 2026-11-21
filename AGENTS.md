@@ -64,9 +64,8 @@
 - **少汇报过程**：只在「开始 / 遇到阻塞 / 完成」三个节点说明进度。
 - **先结果，后解释**：确认方向后，先把可交付结果做出来，再补必要说明。
 - **不允许**擅自扩展功能；超出范围的想法写入 `docs/10-parking-lot.md`，**不要**在代码里实现。
-- 平台实现与优化顺序固定为：**苹果（iOS）第一优先，安卓第二，网页第三**。
-- 安卓与网页在交互、视觉与体验节奏上，默认**对齐苹果版本**；若受平台能力限制，先记录差异与原因，再给降级方案。
-- 涉及后台/管理端开发流程时，按同一顺序推进：先在苹果标准上完成与验证，再同步安卓，最后同步网页。
+- **全端外观与交互基准（2026-11-20 Josh 定，D-45）**：全端（iOS / Android / Web）的整体外观、壳层版面与操作体验统一**对齐安卓 App（`apps/askbible-android`）的简洁羊皮卷实底版面**；**禁止**使用苹果 Liquid Glass（`glassEffect` / 毛玻璃 `Material` / 悬浮玻璃胶囊底栏或玻璃圆钮簇）。若受平台系统能力限制，先记录差异与原因，再给降级方案。
+- 多端开发推进顺序：按任务涉及端完成对齐验收（Web/Studio 专属任务无需先做原生端）。
 - 移动端媒体（音乐/视频/金句音频）默认**本地播放优先**：播放只走安装包内或设备已下载的商店资源包，不作为常规直连远端播放源。
 - **大体积增量不走 Render**：禁止用 `askbible.me` / Render 当 App 媒体增量下发通道。详见 `.cursor/rules/mobile-local-media-playback-first.mdc`。
 - **金句**：首页文字默认全量池；语音 **TEMPORARY** 走 Cloudflare R2 HTTPS 直链点播（不进安装包、不走 Render）。见 `docs/mobile-golden-verse-audio.md`。恢复本地 zip：`EXPO_PUBLIC_GOLDEN_VERSE_AUDIO_STREAM=0` + `MOBILE_BUNDLE_GOLDEN_VERSE_AUDIO=1`。

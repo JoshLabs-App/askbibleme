@@ -98,9 +98,9 @@ export function ScriptureAudioDockStrip({ placement }: Props) {
     <div
       data-shell-swipe-nav-exclude
       className={[
-        "pointer-events-auto flex w-full min-w-0 max-w-[min(100%,var(--read-parchment-column-max,28rem))] items-center gap-2 rounded-full border-0",
-        "bg-black/40 px-3 py-1.5 text-[11px] leading-tight text-white/88 shadow-[0_6px_28px_-8px_rgba(0,0,0,0.55)] backdrop-blur-md",
-        "supports-[backdrop-filter]:bg-black/34 sm:gap-2.5 sm:px-3 sm:py-1.5 sm:text-xs",
+        "pointer-events-auto flex w-full min-w-0 max-w-[min(100%,var(--read-parchment-column-max,28rem))] items-center gap-2 rounded-full border border-[rgba(255,255,255,0.14)]",
+        "bg-[#241a13] px-3 py-1.5 text-[11px] leading-tight text-white/92 shadow-[0_6px_20px_-8px_rgba(0,0,0,0.5)]",
+        "sm:gap-2.5 sm:px-3 sm:py-1.5 sm:text-xs",
       ].join(" ")}
       aria-label={t("playback.scriptureDockLabel")}
     >

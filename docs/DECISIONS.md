@@ -1630,3 +1630,18 @@ Play 要求**所有轨道**（正式 / 测试）上的包都不能再声明 `USE
   3. **目录、章页、首页与弹层全面同构**：圣经目录右侧直接常驻 6 键（设置 / 搜索 / 收藏 / `+` / `−` / 历史），章页左上返回 + 右侧常驻 5 键，不再收进 `⋮` 玻璃簇；确认单、时间选择、划重点底栏统一用羊皮实底卡片（`parchmentCard`），侧边设置抽屉与首页图标统一对齐安卓 `MaterialIcon`。
 - **为什么**：苹果 Liquid Glass 在低对比羊皮卷底上既破坏纸张安静感，又导致底栏胶囊、迷你播放卡、折叠玻璃圆钮等一系列为迁就玻璃折射而生的交互曲折（多点一次展开、透字难读、三端视觉分裂）；安卓版的纯图标底栏 + 羊皮实底是最安静、最直接、最耐看的产品形态。
 - **日期**：2026-11-20
+
+## D-46 全端内置双层自动升级 + 左侧抽屉手动「检查更新」（2026-11-20）
+
+- **决定了什么**（JOSHUA 2026-11-20 明确要求：「软件要自带自动升级功能，并且有一个检查更新功能」）：
+  1. **双层自动升级（启动 + 回到前台自动运行）**：
+     - **第一层：离线内容包静默自动热更（`PackStore`）**：iOS（`scenePhase == .active`）与 Android（`MainActivity.onStart`）按 6 小时节流静默拉取 `v2/catalog.json`（兼容 `"schemaVersion": 2` 与语义包名 `bible.*` / `companion.xrefs` 映射，按 `[mediaBase, siteBase]` 自动回落下载），经 `SHA-256` + SQLite 100 字节页头与页数防截断校验通过后原子覆盖本地库。
+     - **第二层：客户端二进制 / 网页构建自动升级**：
+       - **Android 站外分发版（`web` buildType，`SELF_UPDATE=true`）**：启动及回前台自检 `version.json`，发现新版弹出羊皮实底更新卡，由系统 `DownloadManager` 断点下载 APK 并拉起系统安装器。
+       - **Android 商店版（`release` Play，`SELF_UPDATE=false`）**：严格遵守 Google Play 政策（绝不自下载 APK），启动及回前台走官方 `AppUpdateManager`（`FLEXIBLE` 后台下载，下完自动 `completeUpdate()`，注册前释放旧监听器防泄漏）。
+       - **iOS**：启动及回前台自检 Apple `iTunes Lookup API`，发现新版弹出羊皮实底更新卡跳转 App Store。
+       - **Web / PWA**：`AppUpdateNotifier` 除定时轮询 `/app-build.json` 外，新增标签回到前台（`visibilitychange`）与恢复联网（`online`）即时检测，发现新构建自动清离线缓存、切换新 Service Worker 并无感刷新。
+  2. **手动「检查更新」入口（三端左侧设置抽屉统一提供 + 底部版本号页脚可点按触发）**：
+     - iOS（`NavDrawer.swift`）、Android（`NavDrawer.kt`）、Web（`ShellNavDrawerContent.tsx`，替换原先只弹固定 `window.alert` 的假占位项）统一提供「检查更新 / 檢查更新 / Check for updates」行，并支持点按抽屉底部版本号直接触发。
+     - 手动触发时强制绕过 6 小时静默节流与已跳过版本抑制（`force = true`），同时检查客户端新版本与离线内容包更新：有新客户端版本则直接拉起升级流程；内容包有更新则立即热更并刷新当前章；已是最新则在行内与羊皮轻提示回显当前最新版本号。
+- **日期**：2026-11-20

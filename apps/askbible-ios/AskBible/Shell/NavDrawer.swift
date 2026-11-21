@@ -24,6 +24,9 @@ struct NavDrawerView: View {
     var reminderTime = "07:00"
     var onToggleReminder: () -> Void = {}
     var onPickReminderTime: () -> Void = {}
+    /// 检查更新（手动检查客户端版本与离线包热更）
+    var updateDetail: String? = nil
+    var onCheckUpdates: () -> Void = {}
 
     /// 删除账户（只在登录后出；二次确认在壳里弹）
     var onDeleteAccount: () -> Void = {}
@@ -43,11 +46,15 @@ struct NavDrawerView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     header
                     ScrollView(showsIndicators: false) { rows }
-                    Text(SiteCopy.t("native.appVersion", locale).replacingOccurrences(of: "{{version}}", with: Self.versionLabel))
-                        .askFont(size: 11)
-                        .foregroundStyle(theme.ink.opacity(0.42))
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 8)
+                    Button(action: onCheckUpdates) {
+                        Text(SiteCopy.t("native.appVersion", locale).replacingOccurrences(of: "{{version}}", with: Self.versionLabel))
+                            .askFont(size: 11)
+                            .foregroundStyle(theme.ink.opacity(0.42))
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 8)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
                 }
                 .padding(.horizontal, 14)
                 .padding(.top, max(geo.safeAreaInsets.top, 12))
@@ -94,6 +101,7 @@ struct NavDrawerView: View {
             menuRow(SiteCopy.t("auth.pageTitle", locale), action: onLogin)
         }
         reminderRow
+        menuRow(SiteCopy.t("native.checkForUpdates", locale), detail: updateDetail ?? Self.versionLabel, action: onCheckUpdates)
         menuRow(SiteCopy.t("native.sendFeedback", locale), detail: Self.supportEmail, action: onFeedback)
         if let syncDetail {
             menuRow(SiteCopy.t("native.readingSync", locale), detail: syncDetail, action: onClose)

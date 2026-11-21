@@ -4,6 +4,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useAppImmersive } from "@/components/app-shell/AppImmersiveProvider";
 import {
+  ASKBIBLE_UPDATE_APPLIED_EVENT,
+  fetchRemoteBuildId,
+  getLoadedBuildId,
+  shouldSkipBuildId,
+} from "@/lib/pwa/check-app-update";
+import {
   purgeOfflineCachesForBuildUpdate,
   refreshServiceWorkerRegistration,
   skipWaitingServiceWorker,
@@ -11,56 +17,25 @@ import {
 
 const POLL_MS = 5 * 60 * 1000;
 const FIRST_CHECK_MS = 45_000;
+const FOREGROUND_THROTTLE_MS = 30_000;
 const RELOAD_DELAY_MS = 1200;
 
-/** 本地开发或未写入构建 id 时不提示，避免误报 */
-function shouldSkipBuildId(id: string | null | undefined): boolean {
-  const v = (id ?? "").trim();
-  return v.length === 0 || v === "development" || v === "unknown";
-}
-
-async function fetchRemoteBuildId(): Promise<string | null> {
-  try {
-    const r1 = await fetch("/app-build.json", { cache: "no-store" });
-    if (r1.ok) {
-      const j = (await r1.json()) as { id?: string };
-      const v = j.id?.trim() ?? "";
-      if (v) return v;
-    }
-  } catch {
-    /* ignore */
-  }
-  try {
-    const r2 = await fetch("/api/app-build", { cache: "no-store" });
-    if (!r2.ok) return null;
-    const data = (await r2.json()) as { id?: string };
-    return data.id?.trim() ?? null;
-  } catch {
-    return null;
-  }
-}
-
 /**
- * 部署新版本后：已打开的标签可能仍是旧 HTML/旧 chunk。
- * 优先拉取 `/app-build.json`（与静态资源同源）；发现不一致则提示并在短延迟后强制刷新。
+ * 部署新版本后：已打开的标签或主屏幕 PWA 可能仍是旧 HTML/旧 chunk。
+ * 自动轮询 + 标签回到前台（`visibilitychange`）+ 网络恢复（`online`）拉取 `/app-build.json`；
+ * 发现不一致则清理缓存、切换新 Service Worker 并在短延迟后无感刷新。
  */
 export function AppUpdateNotifier() {
   const { t } = useLocale();
   const { immersive } = useAppImmersive();
   const [visible, setVisible] = useState(false);
   const loadedRef = useRef<string | null>(null);
+  const lastCheckAtRef = useRef(0);
   const reloadScheduledRef = useRef(false);
   const reloadTimerRef = useRef<number | null>(null);
 
-  const check = useCallback(async () => {
+  const scheduleReload = useCallback((delayMs: number) => {
     if (reloadScheduledRef.current) return;
-    const loaded =
-      loadedRef.current ?? document.body?.getAttribute("data-app-build")?.trim() ?? "";
-    if (shouldSkipBuildId(loaded)) return;
-    loadedRef.current = loaded;
-    const remote = await fetchRemoteBuildId();
-    if (shouldSkipBuildId(remote)) return;
-    if (remote === loaded) return;
     void purgeOfflineCachesForBuildUpdate();
     void skipWaitingServiceWorker();
     void refreshServiceWorkerRegistration();
@@ -70,19 +45,53 @@ export function AppUpdateNotifier() {
     reloadTimerRef.current = window.setTimeout(() => {
       reloadTimerRef.current = null;
       window.location.reload();
-    }, RELOAD_DELAY_MS);
+    }, delayMs);
   }, []);
 
+  const check = useCallback(async () => {
+    if (reloadScheduledRef.current) return;
+    lastCheckAtRef.current = Date.now();
+    const loaded = loadedRef.current ?? getLoadedBuildId();
+    if (shouldSkipBuildId(loaded)) return;
+    loadedRef.current = loaded;
+    const remote = await fetchRemoteBuildId();
+    if (shouldSkipBuildId(remote)) return;
+    if (remote === loaded) return;
+    scheduleReload(RELOAD_DELAY_MS);
+  }, [scheduleReload]);
+
   useEffect(() => {
-    loadedRef.current = document.body?.getAttribute("data-app-build")?.trim() ?? null;
+    loadedRef.current = getLoadedBuildId() || null;
     const first = window.setTimeout(() => void check(), FIRST_CHECK_MS);
     const loop = window.setInterval(() => void check(), POLL_MS);
+
+    const onVisibility = () => {
+      if (document.visibilityState !== "visible") return;
+      if (Date.now() - lastCheckAtRef.current < FOREGROUND_THROTTLE_MS) return;
+      void check();
+    };
+    const onOnline = () => {
+      void check();
+    };
+    const onManualReload = (event: Event) => {
+      event.preventDefault();
+      const custom = event as CustomEvent<{ delayMs?: number }>;
+      scheduleReload(custom.detail?.delayMs ?? 900);
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("online", onOnline);
+    window.addEventListener(ASKBIBLE_UPDATE_APPLIED_EVENT, onManualReload);
+
     return () => {
       window.clearTimeout(first);
       window.clearInterval(loop);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener(ASKBIBLE_UPDATE_APPLIED_EVENT, onManualReload);
       if (reloadTimerRef.current != null) window.clearTimeout(reloadTimerRef.current);
     };
-  }, [check]);
+  }, [check, scheduleReload]);
 
   // 沉浸模式（首页全屏、电视常开）只是不弹提示条，已排定的刷新照样执行；
   // 以前这里会取消刷新定时器，而 reloadScheduledRef 又不复位，结果这个标签再也不会自动更新

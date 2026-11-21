@@ -105,6 +105,10 @@ struct RootView: View {
     /// 每日读经提醒
     @StateObject private var reminder = ReadingReminder.shared
     @State private var showReminderTime = false
+    /// 客户端自动/手动升级检查
+    @StateObject private var updateChecker = AppUpdateChecker()
+    @State private var checkingUpdates = false
+    @State private var updateStatusDetail: String?
     /// 首次打开的欢迎页（语言 + 登录），完成后写盘不再出
     @State private var showWelcome = !OnboardingPrefs.completed
     /// 读经计划流：今日逐章队列，一章播完顺到下一章并记已读
@@ -415,11 +419,12 @@ struct RootView: View {
                 if SolidJoys.available(locale: appLocale, isAdmin: auth.isAdmin) { await devotionals.load(locale: appLocale) }
             }
             .task {
-                // 防封换线：先挑线路，后面的登录校验 / 同步 / 离线包热更才不会打到已经不通的域
+                // 防封换线：先挑线路，后面的登录校验 / 同步 / 自动升级与离线包热更才不会打到已经不通的域
                 await Endpoints.refresh()
                 await auth.verifyRemote()
                 await sync.flushNow(reason: "foreground")
-                await PackStore.refreshInstalledPacksIfNeeded()
+                _ = await updateChecker.check(force: false)
+                _ = await PackStore.refreshInstalledPacksIfNeeded(force: false)
             }
             .onChange(of: scenePhase) { _, phase in
                 // 听读 XP 只在前台给（A 方案防刷：后台放整夜不算）
@@ -430,7 +435,8 @@ struct RootView: View {
                     Task {
                         await Endpoints.refresh()
                         await sync.flushNow(reason: "foreground")
-                        await PackStore.refreshInstalledPacksIfNeeded()
+                        _ = await updateChecker.check(force: false)
+                        _ = await PackStore.refreshInstalledPacksIfNeeded(force: false)
                     }
                 } else {
                     music.saveResume()
@@ -651,6 +657,8 @@ struct RootView: View {
                         }
                     },
                     onPickReminderTime: { showMenu = false; showReminderTime = true },
+                    updateDetail: checkingUpdates ? SiteCopy.t("native.updateChecking", appLocale) : updateStatusDetail,
+                    onCheckUpdates: { checkUpdatesManually() },
                     onDeleteAccount: { showMenu = false; confirmDeleteAccount = true },
                     onClose: { showMenu = false })
                 .zIndex(20)
@@ -727,7 +735,7 @@ struct RootView: View {
             }
 
             // 版本对照：有新版就弹羊皮卡片（放顶层，对齐安卓 UpdateGate.kt）
-            AppUpdateGate()
+            AppUpdateGate(checker: updateChecker, locale: appLocale)
                 .onAppear { RatePrompt.noteLaunch() }
                 .zIndex(28)
         }
@@ -741,6 +749,44 @@ struct RootView: View {
         .overlay(alignment: .top) {
             if tab != .home {
                 EarnedToast().environmentObject(achievements).padding(.top, 8).padding(.horizontal, 16)
+            }
+        }
+    }
+
+    /// 手动「检查更新」：强制探测客户端新版本与离线内容包 SHA-256 热更（忽略 6 小时冷却与已跳过标记）。
+    private func checkUpdatesManually() {
+        guard !checkingUpdates else { return }
+        checkingUpdates = true
+        Task {
+            await Endpoints.refresh()
+            async let appCheck = updateChecker.check(force: true)
+            async let packCheck = PackStore.refreshInstalledPacksIfNeeded(force: true)
+            let (appOutcome, packOutcome) = await (appCheck, packCheck)
+            checkingUpdates = false
+            switch appOutcome {
+            case .updateAvailable(let ver):
+                updateStatusDetail = SiteCopy.f("native.updateTitle", ["version": ver], appLocale)
+                showMenu = false
+            case .upToDate, .throttled:
+                if packOutcome.updatedCount > 0 {
+                    updateStatusDetail = SiteCopy.t("native.updateUpToDate", appLocale)
+                    showToast(SiteCopy.f("native.updatePacksApplied", ["count": "\(packOutcome.updatedCount)"], appLocale))
+                } else {
+                    updateStatusDetail = SiteCopy.t("native.updateUpToDate", appLocale)
+                    showToast(SiteCopy.f("native.updateUpToDateToast", ["version": NavDrawerView.versionLabel], appLocale))
+                }
+            case .networkFailed:
+                if packOutcome.catalogReachable {
+                    if packOutcome.updatedCount > 0 {
+                        updateStatusDetail = SiteCopy.t("native.updateUpToDate", appLocale)
+                        showToast(SiteCopy.f("native.updatePacksApplied", ["count": "\(packOutcome.updatedCount)"], appLocale))
+                    } else {
+                        updateStatusDetail = SiteCopy.t("native.updateUpToDate", appLocale)
+                        showToast(SiteCopy.f("native.updateUpToDateToast", ["version": NavDrawerView.versionLabel], appLocale))
+                    }
+                } else {
+                    showToast(SiteCopy.t("native.updateCheckFailed", appLocale))
+                }
             }
         }
     }

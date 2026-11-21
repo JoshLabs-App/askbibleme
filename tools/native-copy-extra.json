@@ -608,6 +608,30 @@
     "zh": "在 App Store 点「更新」就好，读经进度不受影响。",
     "en": "Tap Update in the App Store — your reading progress is safe."
   },
+  "native.checkForUpdates": {
+    "zh": "检查更新",
+    "en": "Check for updates"
+  },
+  "native.updateChecking": {
+    "zh": "正在检查…",
+    "en": "Checking…"
+  },
+  "native.updateUpToDate": {
+    "zh": "已是最新版本",
+    "en": "Up to date"
+  },
+  "native.updateUpToDateToast": {
+    "zh": "当前已是最新版本（{{version}}）",
+    "en": "You’re on the latest version ({{version}})"
+  },
+  "native.updatePacksApplied": {
+    "zh": "已自动更新 {{count}} 个内容包",
+    "en": "Updated {{count}} content pack(s)"
+  },
+  "native.updateCheckFailed": {
+    "zh": "检查更新失败，请检查网络后重试",
+    "en": "Could not check for updates. Check your connection."
+  },
   "native.rateTitle": {
     "zh": "喜欢 AskBible 吗？",
     "en": "Enjoying AskBible?"

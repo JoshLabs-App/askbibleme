@@ -1,7 +1,7 @@
 import CryptoKit
 import Foundation
 
-/// 本地离线包托管与 SHA-256 静默原子热更新（DECISIONS D-44，对齐 JoshBox PackStore）。
+/// 本地离线包托管与 SHA-256 静默原子热更新（DECISIONS D-44 / D-46，对齐 JoshBox PackStore）。
 ///
 /// 原则：
 /// 1. 核心译本（cuv-simp / cuv-trad / web-en / ust-en / scripture-xrefs）随包内置，飞行模式 0ms 秒开；
@@ -18,9 +18,15 @@ enum PackStore {
     }
 
     struct PackCatalog: Codable, Equatable {
-        let version: Int
+        let schemaVersion: Int?
+        let version: Int?
         let generatedAt: String?
         let packs: [PackDescriptor]
+    }
+
+    struct RefreshOutcome: Equatable {
+        let catalogReachable: Bool
+        let updatedCount: Int
     }
 
     enum PackError: LocalizedError {
@@ -43,6 +49,18 @@ enum PackStore {
     private static let shaPrefix = "askbible.packstore.sha256."
     private static let lastCheckKey = "askbible.packstore.last-check"
     private static let checkInterval: TimeInterval = 6 * 3600
+
+    /// 将 catalog 里的语义 id（如 `bible.cuv-simp`、`companion.xrefs`）映射为本地资源/落盘文件名 stem。
+    static func localPackKey(for pack: PackDescriptor) -> String {
+        if pack.id == "companion.xrefs" || pack.path.hasSuffix("/scripture-xrefs.sqlite") || pack.path == "bible/scripture-xrefs.sqlite" {
+            return "scripture-xrefs"
+        }
+        if pack.id.hasPrefix("bible.") {
+            return String(pack.id.dropFirst("bible.".count))
+        }
+        let base = URL(fileURLWithPath: pack.path).deletingPathExtension().lastPathComponent
+        return base.isEmpty ? pack.id : base
+    }
 
     /// 计算文件 SHA-256（流式分块读取，不把整本 SQLite 一次性塞进内存）
     static func sha256Hex(of url: URL) -> String? {
@@ -138,52 +156,68 @@ enum PackStore {
     }
 
     /// 当前本机正在生效的离线包路径（已热更版本优先，否则内置 Bundle）
-    private static func activeLocalFile(for packId: String) -> URL? {
-        if packId == "info-edition" {
+    private static func activeLocalFile(for localKey: String) -> URL? {
+        if localKey == "info-edition" {
             let u = InfoEditionDownloader.localFileURL
             return FileManager.default.fileExists(atPath: u.path) ? u : nil
         }
-        if ScriptureDatabase.isInstalled(packId) {
-            return ScriptureDatabase.installedFile(packId)
+        if ScriptureDatabase.isInstalled(localKey) {
+            return ScriptureDatabase.installedFile(localKey)
         }
-        return Bundle.main.url(forResource: packId, withExtension: "sqlite")
+        return Bundle.main.url(forResource: localKey, withExtension: "sqlite")
     }
 
-    /// 启动/回前台后台静默检查热更：只对本机已存在（内置或已下载）且 SHA-256 发生变化的包做静默原子更新
-    static func refreshInstalledPacksIfNeeded(force: Bool = false, defaults: UserDefaults = .standard) async {
+    /// 启动/回前台后台静默检查热更，或用户点「检查更新」时强制同步（`force = true`）。
+    @discardableResult
+    static func refreshInstalledPacksIfNeeded(force: Bool = false, defaults: UserDefaults = .standard) async -> RefreshOutcome {
         let now = Date().timeIntervalSince1970
-        if !force, now - defaults.double(forKey: lastCheckKey) < checkInterval { return }
-        guard let catalog = await fetchCatalog() else { return }
+        if !force, now - defaults.double(forKey: lastCheckKey) < checkInterval {
+            return RefreshOutcome(catalogReachable: true, updatedCount: 0)
+        }
+        guard let catalog = await fetchCatalog() else {
+            return RefreshOutcome(catalogReachable: false, updatedCount: 0)
+        }
         defaults.set(now, forKey: lastCheckKey)
 
+        var updated = 0
         for pack in catalog.packs where pack.path.hasSuffix(".sqlite") {
-            guard let currentURL = activeLocalFile(for: pack.id) else { continue }
-            let cachedSha = defaults.string(forKey: shaPrefix + pack.id)
+            let localKey = localPackKey(for: pack)
+            guard let currentURL = activeLocalFile(for: localKey) else { continue }
+            let shaKey = shaPrefix + localKey
+            let cachedSha = force ? nil : defaults.string(forKey: shaKey)
             let localSha: String? = cachedSha ?? sha256Hex(of: currentURL)
             if let localSha, cachedSha == nil {
-                defaults.set(localSha, forKey: shaPrefix + pack.id)
+                defaults.set(localSha, forKey: shaKey)
             }
             guard let localSha, localSha != pack.sha256.lowercased() else { continue }
 
             let rel = pack.path.hasPrefix("/") ? pack.path : "/" + pack.path
-            let sourceURL = URL(string: Endpoints.siteBase + rel)
-            guard let sourceURL else { continue }
-            do {
-                let (tmp, resp) = try await URLSession.shared.download(from: sourceURL)
-                guard let http = resp as? HTTPURLResponse, (200..<300).contains(http.statusCode) else { continue }
-                let dest = pack.id == "info-edition"
-                    ? InfoEditionDownloader.localFileURL
-                    : ScriptureDatabase.installedFile(pack.id)
-                try installSQLiteAtomically(
-                    from: tmp,
-                    to: dest,
-                    expectedSha256: pack.sha256,
-                    expectedSizeBytes: pack.sizeBytes
-                )
-                defaults.set(pack.sha256.lowercased(), forKey: shaPrefix + pack.id)
-            } catch {
-                // 静默失败：保留现有内置包或旧包，绝不影响当前阅读
+            let sourceCandidates = [
+                Endpoints.mediaBase + rel,
+                Endpoints.siteBase + rel,
+            ]
+            for rawSource in sourceCandidates {
+                guard let sourceURL = URL(string: rawSource) else { continue }
+                do {
+                    let (tmp, resp) = try await URLSession.shared.download(from: sourceURL)
+                    guard let http = resp as? HTTPURLResponse, (200..<300).contains(http.statusCode) else { continue }
+                    let dest = localKey == "info-edition"
+                        ? InfoEditionDownloader.localFileURL
+                        : ScriptureDatabase.installedFile(localKey)
+                    try installSQLiteAtomically(
+                        from: tmp,
+                        to: dest,
+                        expectedSha256: pack.sha256,
+                        expectedSizeBytes: pack.sizeBytes
+                    )
+                    defaults.set(pack.sha256.lowercased(), forKey: shaKey)
+                    updated += 1
+                    break
+                } catch {
+                    // 当前线路失败则试下一条候选线，绝不破坏本地已有库
+                }
             }
         }
+        return RefreshOutcome(catalogReachable: true, updatedCount: updated)
     }
 }

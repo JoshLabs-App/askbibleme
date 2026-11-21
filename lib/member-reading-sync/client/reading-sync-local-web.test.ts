@@ -167,4 +167,47 @@ describe("member local data isolation", () => {
     expect(fraction.readTodayReadingChapterFractionRecord()).toBeNull();
     expect(sync.localHasMemberReadingProgressWeb()).toBe(false);
   });
+
+  it("exports bookmark tombstones and highlight _t tombstones even when live stores are empty", async () => {
+    const sync = await import("./reading-sync-local-web");
+    const bookmarks = await import("@/lib/bible/scripture-verse-bookmarks-client");
+    const highlights = await import("@/lib/read/read-verse-text-highlights");
+
+    const ref = {
+      bookId: "JHN",
+      bookName: "约翰福音",
+      chapter: 3,
+      verse: 16,
+      translationId: "cuv-simp",
+      text: "神爱世人",
+    };
+    await bookmarks.toggleScriptureVerseBookmark(ref);
+    await bookmarks.toggleScriptureVerseBookmark(ref);
+    expect(bookmarks.getScriptureVerseBookmarkStoreSnapshot()).toEqual({});
+
+    highlights.writeVerseTextHighlightIndices(
+      { translationId: "cuv-simp", bookId: "JHN", chapter: 3, verse: 16 },
+      [[0, "#FFB103"]],
+    );
+    highlights.writeVerseTextHighlightIndices(
+      { translationId: "cuv-simp", bookId: "JHN", chapter: 3, verse: 16 },
+      [],
+    );
+    expect(highlights.readVerseTextHighlightStore()).toEqual({});
+
+    expect(sync.localHasMemberReadingProgressWeb()).toBe(true);
+    const exported = await sync.exportLocalReadingBlobsWeb();
+    const bmVal = exported.blobs.bookmarks?.value as Record<string, { deleted?: boolean; deletedAt?: number }>;
+    expect(bmVal["cuv-simp:JHN:3:16"]?.deleted).toBe(true);
+    expect(typeof bmVal["cuv-simp:JHN:3:16"]?.deletedAt).toBe("number");
+
+    const hlVal = exported.blobs.highlights?.value as Record<string, unknown>;
+    expect(hlVal["cuv-simp:JHN:3:16"]).toBeUndefined();
+    expect(typeof (hlVal._t as Record<string, number>)["cuv-simp:JHN:3:16"]).toBe("number");
+
+    sync.clearMemberReadingLocalDataWeb();
+    expect(sync.localHasMemberReadingProgressWeb()).toBe(false);
+    expect(bookmarks.getScriptureVerseBookmarkTombstonesSnapshot()).toEqual({});
+    expect(highlights.readVerseTextHighlightTimestamps()).toEqual({});
+  });
 });

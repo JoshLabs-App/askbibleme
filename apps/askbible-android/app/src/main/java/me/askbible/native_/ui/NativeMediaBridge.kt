@@ -2,7 +2,10 @@ package me.askbible.native_.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Color
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
@@ -13,18 +16,20 @@ import me.askbible.native_.ReadingReminder
 import me.askbible.native_.audio.AmbientPlayer
 import me.askbible.native_.audio.ChapterAudioPlayer
 import me.askbible.native_.audio.MusicPlayer
+import me.askbible.native_.data.PackStore
 import me.askbible.native_.data.TranslationDownloader
 import me.askbible.native_.home.HomeVerseController
 import me.askbible.native_.widget.DailyVerseWidget
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
 import java.io.File
+import java.lang.ref.WeakReference
 
 /**
  * 亲儿子极薄原生底座桥（DECISIONS D-44，与 iOS `NativeMediaBridge.swift` 对称）：
- * 1. `https://pack.askbible.local/` 本地离线资源加载器（优先读取 [PackStore] 热更目录，回退 APK `assets/`，0ms 离线秒开，严防路径穿越）；
- * 2. `window.askbibleNative` JS 接口：将三路后台音频引擎（读经 / 音乐 / 金句）、睡眠定时、本地提醒与桌面小组件能力暴露给共享内容层；
- * 3. 锁死过度滚动露白与系统默认长按菜单。
+ * 1. `https://pack.askbible.local/` 本地离线资源加载器（优先从 [PackStore.loadWebPackFiles] 内存胶囊零拷贝直出，回退 SQLite 与 APK `assets/`，严防路径穿越）；
+ * 2. `window.askbibleNative` 双向消息桥：读经跳转 / 继续阅读 / bootHealthy 心跳 / 三路后台音频 / 睡眠定时 / 提醒 / 小组件；
+ * 3. 锁死过度滚动露白与系统默认长按菜单，并内置 3 秒防变砖健康看门狗（热更超时自动拉黑坏包并瞬切内置包）。
  */
 class NativeMediaBridge(
     private val context: Context,
@@ -32,16 +37,49 @@ class NativeMediaBridge(
     private val musicPlayer: MusicPlayer? = null,
     private val homeController: HomeVerseController? = null,
     private val ambientPlayer: AmbientPlayer? = null,
-    private val onSetSleepTimer: ((Int) -> Unit)? = null,
+    var onSetSleepTimer: ((Int) -> Unit)? = null,
+    var onOpenChapter: ((String, Int) -> Unit)? = null,
+    var onResumeReading: (() -> Unit)? = null,
+    var onBootHealthy: (() -> Unit)? = null,
+    var onPageFinishedCallback: ((WebView) -> Unit)? = null,
 ) {
     companion object {
         const val HOST = "pack.askbible.local"
+        const val BASE_ORIGIN = "https://$HOST"
         const val BRIDGE_NAME = "askbibleNativeBridge"
+        const val WATCHDOG_TIMEOUT_MS = 3_000L
     }
 
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var observedWebView: WeakReference<WebView>? = null
+    private var watchdogUrl: String? = null
+    private var watchdogRunnable: Runnable? = null
+    @Volatile
+    private var bootHealthyReceived = false
+
+    private val bootstrapJS = """
+        (function(){
+          if (document.documentElement) {
+            document.documentElement.style.overscrollBehavior = 'none';
+          }
+          if (!window.__askbibleCtxHooked) {
+            window.__askbibleCtxHooked = true;
+            document.addEventListener('contextmenu', function(e){ e.preventDefault(); }, { passive: false });
+          }
+          window.askbibleNative = {
+            platform: 'android',
+            send: function(action, payload) {
+              if (window.$BRIDGE_NAME) {
+                window.$BRIDGE_NAME.postMessage(action, JSON.stringify(payload || {}));
+              }
+            }
+          };
+        })();
+    """.trimIndent()
+
     @SuppressLint("SetJavaScriptEnabled")
-    fun configureWebView(webView: WebView) {
-        webView.setBackgroundColor(Color.TRANSPARENT)
+    fun configureWebView(webView: WebView, isDark: Boolean = false) {
+        webView.setBackgroundColor(if (isDark) Color.parseColor("#1A1512") else Color.parseColor("#ECD9B9"))
         webView.overScrollMode = View.OVER_SCROLL_NEVER
         webView.isVerticalScrollBarEnabled = false
         webView.isHorizontalScrollBarEnabled = false
@@ -54,6 +92,14 @@ class NativeMediaBridge(
             allowContentAccess = false
         }
         webView.addJavascriptInterface(this, BRIDGE_NAME)
+        webView.webChromeClient = object : android.webkit.WebChromeClient() {
+            override fun onConsoleMessage(cm: android.webkit.ConsoleMessage?): Boolean {
+                if (cm != null) {
+                    android.util.Log.i("AskBiblePack", "[JS:${cm.messageLevel()}] ${cm.message()} @${cm.lineNumber()}")
+                }
+                return true
+            }
+        }
         webView.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
                 val url = request?.url ?: return null
@@ -65,33 +111,105 @@ class NativeMediaBridge(
                 return serveLocalAsset(rawPath)
             }
 
+            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                view?.evaluateJavascript(bootstrapJS, null)
+            }
+
             override fun onPageFinished(view: WebView?, url: String?) {
-                view?.evaluateJavascript(
-                    """
-                    (function(){
-                      document.documentElement.style.overscrollBehavior = 'none';
-                      document.addEventListener('contextmenu', function(e){ e.preventDefault(); }, { passive: false });
-                      window.askbibleNative = {
-                        platform: 'android',
-                        send: function(action, payload) {
-                          if (window.$BRIDGE_NAME) {
-                            window.$BRIDGE_NAME.postMessage(action, JSON.stringify(payload || {}));
-                          }
-                        }
-                      };
-                    })();
-                    """.trimIndent(),
-                    null
-                )
+                val wv = view ?: return
+                wv.evaluateJavascript(bootstrapJS, null)
+                onPageFinishedCallback?.invoke(wv)
             }
         }
     }
 
+    private var watchdogInitStateJson: String? = null
+
+    /** 直接以内存内联自包含 HTML 加载胶囊（零网络/零拦截器子请求/防三星透明图层丢失）并启动 3 秒看门狗 */
+    fun loadInlinePack(webView: WebView, initialStateJson: String): Boolean {
+        val snap = PackStore.loadWebPackFiles(context) ?: return false
+        val rawHtmlBytes = snap.files["index.html"] ?: return false
+        var html = String(rawHtmlBytes, Charsets.UTF_8)
+        val cssBytes = snap.files["app.css"]
+        if (cssBytes != null && html.contains("<link rel='stylesheet' href='app.css'>")) {
+            html = html.replace("<link rel='stylesheet' href='app.css'>", "<style>${String(cssBytes, Charsets.UTF_8)}</style>")
+        }
+        val jsBytes = snap.files["app.js"]
+        if (jsBytes != null && html.contains("<script src='app.js'></script>")) {
+            html = html.replace("<script src='app.js'></script>", "<script>${String(jsBytes, Charsets.UTF_8)}</script>")
+        }
+        val initScript = "<script>$bootstrapJS;window.__ASKBIBLE_INIT__=$initialStateJson;</script>"
+        html = if (html.contains("<!--__ASKBIBLE_INIT_SLOT__-->")) {
+            html.replace("<!--__ASKBIBLE_INIT_SLOT__-->", initScript)
+        } else {
+            html.replace("</head>", "$initScript</head>")
+        }
+
+        observedWebView = WeakReference(webView)
+        watchdogUrl = null
+        watchdogInitStateJson = initialStateJson
+        beginWatchdogIfHotPack()
+        webView.loadDataWithBaseURL("$BASE_ORIGIN/", html, "text/html", "UTF-8", null)
+        return true
+    }
+
+    /** 加载本地胶囊 URL 并启动 3 秒防变砖看门狗（仅加载热更胶囊时启用） */
+    fun loadLocalPack(webView: WebView, url: String) {
+        observedWebView = WeakReference(webView)
+        watchdogUrl = url
+        watchdogInitStateJson = null
+        beginWatchdogIfHotPack()
+        webView.loadUrl(url)
+    }
+
+    private fun beginWatchdogIfHotPack() {
+        cancelWatchdog()
+        bootHealthyReceived = false
+        val isHot = PackStore.loadWebPackFiles(context)?.isHotPack == true
+        if (!isHot) return
+
+        val task = Runnable {
+            if (bootHealthyReceived) return@Runnable
+            android.util.Log.w("AskBiblePack", "Watchdog timeout on hot web-pack; rolling back to builtin")
+            PackStore.rollbackHotWebPack(context)
+            val wv = observedWebView?.get() ?: return@Runnable
+            val initJson = watchdogInitStateJson
+            if (initJson != null) {
+                loadInlinePack(wv, initJson)
+            } else {
+                watchdogUrl?.let { wv.loadUrl(it) }
+            }
+        }
+        watchdogRunnable = task
+        mainHandler.postDelayed(task, WATCHDOG_TIMEOUT_MS)
+    }
+
+    fun cancelWatchdog() {
+        watchdogRunnable?.let { mainHandler.removeCallbacks(it) }
+        watchdogRunnable = null
+    }
+
     @JavascriptInterface
     fun postMessage(action: String, payloadJson: String?) {
-        val payload = runCatching { if (payloadJson.isNullOrBlank()) JSONObject() else JSONObject(payloadJson) }.getOrDefault(JSONObject())
-        android.os.Handler(android.os.Looper.getMainLooper()).post {
+        val payload = runCatching {
+            if (payloadJson.isNullOrBlank()) JSONObject() else JSONObject(payloadJson)
+        }.getOrDefault(JSONObject())
+
+        mainHandler.post {
             when (action) {
+                "bootHealthy" -> {
+                    bootHealthyReceived = true
+                    cancelWatchdog()
+                    onBootHealthy?.invoke()
+                }
+                "openChapter" -> {
+                    val bookId = payload.optString("bookId", "").trim()
+                    val chapter = maxOf(1, payload.optInt("chapter", 1))
+                    if (bookId.isNotEmpty()) {
+                        onOpenChapter?.invoke(bookId, chapter)
+                    }
+                }
+                "resumeReading" -> onResumeReading?.invoke()
                 "pauseChapter" -> chapterAudio?.pause()
                 "resumeChapter" -> chapterAudio?.resume()
                 "seekChapter" -> chapterAudio?.seekTo(payload.optDouble("seconds", 0.0))
@@ -112,10 +230,21 @@ class NativeMediaBridge(
     }
 
     private fun serveLocalAsset(relativePath: String): WebResourceResponse {
-        val fileName = relativePath.substringAfterLast('/')
-        val ext = fileName.substringAfterLast('.', "")
-        val baseName = fileName.substringBeforeLast('.')
+        val ext = relativePath.substringAfterLast('/', "").substringAfterLast('.', "")
+        val packBytes = PackStore.loadWebPackFiles(context)?.files?.get(relativePath)
+        if (packBytes != null) {
+            return WebResourceResponse(
+                mimeType(ext),
+                "utf-8",
+                200,
+                "OK",
+                corsHeaders(),
+                ByteArrayInputStream(packBytes),
+            )
+        }
 
+        val fileName = relativePath.substringAfterLast('/')
+        val baseName = fileName.substringBeforeLast('.')
         if (ext == "sqlite") {
             val f = if (baseName == "info-edition") File(context.filesDir, "info-edition.sqlite")
             else TranslationDownloader.localFile(context, baseName)

@@ -119,7 +119,7 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
     }
 
     // 同进程多个 MediaSession id 必须不同
-    private val mediaSession = MediaSession.Builder(context, sessionPlayer).setId("chapter").build()
+    private val mediaSession = PlaybackSessions.createSession(context, sessionPlayer, "chapter")
         .also { PlaybackSessions.register(it) { wantsPlayback } }
 
     /** 开播前先让别的播放器（音乐压低 / 灵修停下 / 金句停下）协调 */

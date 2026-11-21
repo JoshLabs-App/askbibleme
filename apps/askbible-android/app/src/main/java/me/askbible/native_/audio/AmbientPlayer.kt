@@ -61,7 +61,7 @@ class AmbientPlayer(context: Context, private val scope: CoroutineScope) {
             )
         )
         .build()
-    private val mediaSession = MediaSession.Builder(context, player).setId("ambient").build()
+    private val mediaSession = PlaybackSessions.createSession(context, player, "ambient")
 
     init {
         player.setAudioAttributes(

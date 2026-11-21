@@ -112,7 +112,7 @@ final class MemberReadingSyncEngine: ObservableObject {
     }
 
     func localHasProgress() -> Bool {
-        if !bookmarks.store.isEmpty || !highlights.store.isEmpty || achievements.hasProgress { return true }
+        if !bookmarks.store.isEmpty || !bookmarks.tombstones.isEmpty || !highlights.store.isEmpty || !highlights.verseTimestamps.isEmpty || achievements.hasProgress { return true }
         if activity.lastPosition != nil { return true }
         if activity.listenTotalSec > 0 { return true }
         if !plans.completed.isEmpty { return true }
@@ -176,7 +176,7 @@ final class MemberReadingSyncEngine: ObservableObject {
         case "recentSearches":
             if let d = R.dict(value), R.num(d["version"]) == 1, let arr = d["terms"] as? [Any] { search.replaceRecent(arr.compactMap { $0 as? String }) }
         case "highlights":
-            if let o = R.dict(value) { highlights.replace(VerseHighlightStore.parse(json: o)) }
+            if let o = R.dict(value) { highlights.replace(json: o) }
         case "achievements":
             if let d = R.dict(value) { achievements.mergeRemote(d) }
         case "appUsageTime":

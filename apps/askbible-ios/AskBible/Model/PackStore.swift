@@ -29,9 +29,24 @@ enum PackStore {
         let updatedCount: Int
     }
 
+    struct WebPackCapsule: Codable, Equatable {
+        let schemaVersion: Int?
+        let version: String?
+        let files: [String: String]
+    }
+
+    struct WebPackSnapshot {
+        let version: String
+        let isHotPack: Bool
+        let sha256: String
+        let files: [String: Data]
+    }
+
     enum PackError: LocalizedError {
         case badHTTPStatus(Int)
         case invalidSQLite
+        case invalidWebPack
+        case blacklistedWebPack
         case sha256Mismatch(expected: String, actual: String)
         case sizeMismatch(expected: Int, actual: Int)
 
@@ -39,16 +54,23 @@ enum PackStore {
             switch self {
             case .badHTTPStatus(let code): return "HTTP \(code)"
             case .invalidSQLite: return "invalid sqlite pack"
+            case .invalidWebPack: return "invalid web-pack capsule"
+            case .blacklistedWebPack: return "blacklisted web-pack sha256"
             case .sha256Mismatch: return "pack sha256 mismatch"
             case .sizeMismatch: return "pack size mismatch"
             }
         }
     }
 
+    static let webPackId = "ui.web-pack"
+    static let badWebPackShaKey = "askbible.packstore.bad-webpack-sha256"
+
     private static let sqliteMagic = Data("SQLite format 3\u{0}".utf8)
     private static let shaPrefix = "askbible.packstore.sha256."
     private static let lastCheckKey = "askbible.packstore.last-check"
     private static let checkInterval: TimeInterval = 6 * 3600
+    private static let webPackLock = NSLock()
+    private static var cachedWebPack: WebPackSnapshot?
 
     /// 将 catalog 里的语义 id（如 `bible.cuv-simp`、`companion.xrefs`）映射为本地资源/落盘文件名 stem。
     static func localPackKey(for pack: PackDescriptor) -> String {
@@ -167,6 +189,151 @@ enum PackStore {
         return Bundle.main.url(forResource: localKey, withExtension: "sqlite")
     }
 
+    /// 热更 UI 胶囊落盘路径：`Application Support/web-pack/web-pack.json`
+    static var hotWebPackFileURL: URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("web-pack", isDirectory: true)
+            .appendingPathComponent("web-pack.json")
+    }
+
+    static func sha256Hex(of data: Data) -> String {
+        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+    }
+
+    static func badWebPackSha256Set(defaults: UserDefaults = .standard) -> Set<String> {
+        let raw = defaults.string(forKey: badWebPackShaKey) ?? ""
+        let items = raw.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }.filter { !$0.isEmpty }
+        return Set(items)
+    }
+
+    static func isBadWebPackSha256(_ sha256: String, defaults: UserDefaults = .standard) -> Bool {
+        let norm = sha256.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return !norm.isEmpty && badWebPackSha256Set(defaults: defaults).contains(norm)
+    }
+
+    static func markBadWebPackSha256(_ sha256: String, defaults: UserDefaults = .standard) {
+        let norm = sha256.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !norm.isEmpty else { return }
+        var list = (defaults.string(forKey: badWebPackShaKey) ?? "")
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+            .filter { !$0.isEmpty && $0 != norm }
+        list.append(norm)
+        if list.count > 20 { list = Array(list.suffix(20)) }
+        defaults.set(list.joined(separator: ","), forKey: badWebPackShaKey)
+    }
+
+    private static func parseWebPackSnapshot(from data: Data, isHotPack: Bool, sha256: String) -> WebPackSnapshot? {
+        guard let capsule = try? JSONDecoder().decode(WebPackCapsule.self, from: data),
+              let html = capsule.files["index.html"], !html.isEmpty,
+              let js = capsule.files["app.js"], !js.isEmpty else {
+            return nil
+        }
+        var encoded: [String: Data] = [:]
+        encoded.reserveCapacity(capsule.files.count)
+        for (name, content) in capsule.files {
+            encoded[name] = Data(content.utf8)
+        }
+        let ver = (capsule.version?.isEmpty == false ? capsule.version : nil) ?? String(sha256.prefix(12))
+        return WebPackSnapshot(version: ver, isHotPack: isHotPack, sha256: sha256, files: encoded)
+    }
+
+    /// 读取本地离线 UI 胶囊（优先热更槽 `Application Support/web-pack/web-pack.json`，异常或黑名单时瞬切内置 Bundle），内存缓存实现 0ms 直出。
+    static func loadWebPackFiles(defaults: UserDefaults = .standard) -> WebPackSnapshot? {
+        webPackLock.lock()
+        defer { webPackLock.unlock() }
+        if let cached = cachedWebPack { return cached }
+
+        let fm = FileManager.default
+        let hotURL = hotWebPackFileURL
+        if fm.fileExists(atPath: hotURL.path) {
+            if let data = try? Data(contentsOf: hotURL) {
+                let sha = sha256Hex(of: data)
+                if !isBadWebPackSha256(sha, defaults: defaults),
+                   let snap = parseWebPackSnapshot(from: data, isHotPack: true, sha256: sha) {
+                    cachedWebPack = snap
+                    return snap
+                }
+            }
+            // 热更包损坏或已进看门狗黑名单：立即清理并回退内置包
+            try? fm.removeItem(at: hotURL)
+        }
+
+        if let builtinURL = Bundle.main.url(forResource: "web-pack", withExtension: "json"),
+           let data = try? Data(contentsOf: builtinURL) {
+            let sha = sha256Hex(of: data)
+            if let snap = parseWebPackSnapshot(from: data, isHotPack: false, sha256: sha) {
+                cachedWebPack = snap
+                return snap
+            }
+        }
+        return nil
+    }
+
+    /// 看门狗触发回滚：记录当前热更包的 SHA-256 到黑名单，删除本地热更包并清空内存缓存，瞬间退回 builtin 胶囊。
+    static func rollbackHotWebPack(defaults: UserDefaults = .standard) {
+        webPackLock.lock()
+        defer { webPackLock.unlock() }
+
+        let hotURL = hotWebPackFileURL
+        var badSha: String? = cachedWebPack?.isHotPack == true ? cachedWebPack?.sha256 : nil
+        if badSha == nil, FileManager.default.fileExists(atPath: hotURL.path) {
+            badSha = sha256Hex(of: hotURL)
+        }
+        if let badSha, !badSha.isEmpty {
+            markBadWebPackSha256(badSha, defaults: defaults)
+        }
+        try? FileManager.default.removeItem(at: hotURL)
+        defaults.removeObject(forKey: shaPrefix + webPackId)
+        cachedWebPack = nil
+    }
+
+    /// 校验并原子安装 `ui.web-pack` 单文件胶囊（大小 + SHA-256 + JSON 与必需入口文件 + 黑名单校验）
+    static func installWebPackAtomically(
+        from downloadedTempURL: URL,
+        to destinationURL: URL = hotWebPackFileURL,
+        expectedSha256: String? = nil,
+        expectedSizeBytes: Int? = nil,
+        defaults: UserDefaults = .standard
+    ) throws {
+        let fm = FileManager.default
+        let parent = destinationURL.deletingLastPathComponent()
+        try fm.createDirectory(at: parent, withIntermediateDirectories: true)
+        let staging = parent.appendingPathComponent(".\(destinationURL.lastPathComponent).\(UUID().uuidString).part")
+        defer { try? fm.removeItem(at: staging) }
+
+        if fm.fileExists(atPath: staging.path) { try? fm.removeItem(at: staging) }
+        try fm.moveItem(at: downloadedTempURL, to: staging)
+
+        if let expectedSizeBytes, expectedSizeBytes > 0,
+           let size = (try? fm.attributesOfItem(atPath: staging.path)[.size] as? NSNumber)?.intValue,
+           size != expectedSizeBytes {
+            throw PackError.sizeMismatch(expected: expectedSizeBytes, actual: size)
+        }
+        let actualSha = sha256Hex(of: staging) ?? ""
+        if let expected = expectedSha256?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(), !expected.isEmpty {
+            guard actualSha == expected else {
+                throw PackError.sha256Mismatch(expected: expected, actual: actualSha)
+            }
+        }
+        guard !actualSha.isEmpty, !isBadWebPackSha256(actualSha, defaults: defaults) else {
+            throw PackError.blacklistedWebPack
+        }
+        guard let data = try? Data(contentsOf: staging),
+              parseWebPackSnapshot(from: data, isHotPack: true, sha256: actualSha) != nil else {
+            throw PackError.invalidWebPack
+        }
+
+        if fm.fileExists(atPath: destinationURL.path) {
+            _ = try fm.replaceItemAt(destinationURL, withItemAt: staging)
+        } else {
+            try fm.moveItem(at: staging, to: destinationURL)
+        }
+        webPackLock.lock()
+        cachedWebPack = nil
+        webPackLock.unlock()
+    }
+
     /// 启动/回前台后台静默检查热更，或用户点「检查更新」时强制同步（`force = true`）。
     @discardableResult
     static func refreshInstalledPacksIfNeeded(force: Bool = false, defaults: UserDefaults = .standard) async -> RefreshOutcome {
@@ -180,7 +347,41 @@ enum PackStore {
         defaults.set(now, forKey: lastCheckKey)
 
         var updated = 0
-        for pack in catalog.packs where pack.path.hasSuffix(".sqlite") {
+        for pack in catalog.packs {
+            if pack.id == webPackId || pack.kind == "web-pack" {
+                let targetSha = pack.sha256.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                guard !targetSha.isEmpty, !isBadWebPackSha256(targetSha, defaults: defaults) else { continue }
+                let localSha = loadWebPackFiles(defaults: defaults)?.sha256
+                guard localSha != targetSha else { continue }
+
+                let rel = pack.path.hasPrefix("/") ? pack.path : "/" + pack.path
+                let sourceCandidates = [
+                    Endpoints.mediaBase + rel,
+                    Endpoints.siteBase + rel,
+                ]
+                for rawSource in sourceCandidates {
+                    guard let sourceURL = URL(string: rawSource) else { continue }
+                    do {
+                        let (tmp, resp) = try await URLSession.shared.download(from: sourceURL)
+                        guard let http = resp as? HTTPURLResponse, (200..<300).contains(http.statusCode) else { continue }
+                        try installWebPackAtomically(
+                            from: tmp,
+                            to: hotWebPackFileURL,
+                            expectedSha256: targetSha,
+                            expectedSizeBytes: pack.sizeBytes,
+                            defaults: defaults
+                        )
+                        defaults.set(targetSha, forKey: shaPrefix + webPackId)
+                        updated += 1
+                        break
+                    } catch {
+                        // 失败则尝试下一条候选线，绝不破坏本地已有胶囊
+                    }
+                }
+                continue
+            }
+
+            guard pack.path.hasSuffix(".sqlite") else { continue }
             let localKey = localPackKey(for: pack)
             guard let currentURL = activeLocalFile(for: localKey) else { continue }
             let shaKey = shaPrefix + localKey

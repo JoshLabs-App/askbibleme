@@ -1,4 +1,7 @@
 export const READ_VERSE_TEXT_HIGHLIGHTS_STORAGE_KEY = "askbible-read-verse-text-highlights-v1";
+export const READ_VERSE_TEXT_HIGHLIGHTS_TIMESTAMPS_STORAGE_KEY =
+  "askbible-read-verse-text-highlights-timestamps-v1";
+export const READ_VERSE_TEXT_HIGHLIGHT_TOMBSTONE_TTL_MS = 60 * 24 * 60 * 60 * 1000;
 export const DEFAULT_VERSE_TEXT_HIGHLIGHT_COLOR = "#FFB103";
 /**
  * 划重点四色板（2026-09-19 改版，见 `docs/design-color-system.md`）。
@@ -70,7 +73,8 @@ type VerseTextHighlightRef = {
 
 type VerseCharHighlightMap = Map<number, string>;
 type VerseTextHighlightEntry = { i: number; c: string };
-type VerseTextHighlightStore = Record<string, VerseTextHighlightEntry[]>;
+export type VerseTextHighlightStore = Record<string, VerseTextHighlightEntry[]>;
+export type VerseTextHighlightTimestampStore = Record<string, number>;
 
 function highlightKey(ref: VerseTextHighlightRef): string {
   return `${ref.translationId}:${ref.bookId}:${ref.chapter}:${ref.verse}`;
@@ -80,34 +84,42 @@ function normalizeHighlightColor(input: unknown): string {
   return normalizeVerseTextHighlightColor(input);
 }
 
+function isFreshTimestamp(ts: unknown, nowMs: number, isLive: boolean): ts is number {
+  if (typeof ts !== "number" || !Number.isFinite(ts) || ts <= 0) return false;
+  return isLive || nowMs - ts <= READ_VERSE_TEXT_HIGHLIGHT_TOMBSTONE_TTL_MS;
+}
+
+export function parseVerseTextHighlightStoreValue(rawObj: unknown): VerseTextHighlightStore {
+  if (!rawObj || typeof rawObj !== "object" || Array.isArray(rawObj)) return {};
+  const out: VerseTextHighlightStore = {};
+  for (const [key, value] of Object.entries(rawObj as Record<string, unknown>)) {
+    if (key === "_t" || !Array.isArray(value)) continue;
+    const byIndex = new Map<number, string>();
+    for (const item of value) {
+      if (typeof item === "number") {
+        if (Number.isInteger(item) && item >= 0) {
+          byIndex.set(item, DEFAULT_VERSE_TEXT_HIGHLIGHT_COLOR);
+        }
+        continue;
+      }
+      if (!item || typeof item !== "object") continue;
+      const idx = Number((item as { i?: unknown }).i);
+      if (!Number.isInteger(idx) || idx < 0) continue;
+      byIndex.set(idx, normalizeHighlightColor((item as { c?: unknown }).c));
+    }
+    if (byIndex.size) {
+      out[key] = Array.from(byIndex.entries())
+        .sort((a, b) => a[0] - b[0])
+        .map(([i, c]) => ({ i, c }));
+    }
+  }
+  return out;
+}
+
 function parseStore(raw: string | null): VerseTextHighlightStore {
   if (!raw) return {};
   try {
-    const parsed = JSON.parse(raw) as Record<string, unknown>;
-    if (!parsed || typeof parsed !== "object") return {};
-    const out: VerseTextHighlightStore = {};
-    for (const [key, value] of Object.entries(parsed)) {
-      if (!Array.isArray(value)) continue;
-      const byIndex = new Map<number, string>();
-      for (const item of value) {
-        if (typeof item === "number") {
-          if (Number.isInteger(item) && item >= 0) {
-            byIndex.set(item, DEFAULT_VERSE_TEXT_HIGHLIGHT_COLOR);
-          }
-          continue;
-        }
-        if (!item || typeof item !== "object") continue;
-        const idx = Number((item as { i?: unknown }).i);
-        if (!Number.isInteger(idx) || idx < 0) continue;
-        byIndex.set(idx, normalizeHighlightColor((item as { c?: unknown }).c));
-      }
-      if (byIndex.size) {
-        out[key] = Array.from(byIndex.entries())
-          .sort((a, b) => a[0] - b[0])
-          .map(([i, c]) => ({ i, c }));
-      }
-    }
-    return out;
+    return parseVerseTextHighlightStoreValue(JSON.parse(raw));
   } catch {
     return {};
   }
@@ -127,12 +139,105 @@ function writeStore(store: VerseTextHighlightStore): void {
   localStorage.setItem(READ_VERSE_TEXT_HIGHLIGHTS_STORAGE_KEY, JSON.stringify(store));
 }
 
+export function pruneVerseTextHighlightTimestamps(
+  timestamps: VerseTextHighlightTimestampStore,
+  liveStore: VerseTextHighlightStore,
+  nowMs = Date.now(),
+): VerseTextHighlightTimestampStore {
+  const out: VerseTextHighlightTimestampStore = {};
+  for (const [key, ts] of Object.entries(timestamps)) {
+    if (key === "_t") continue;
+    if (isFreshTimestamp(ts, nowMs, Boolean(liveStore[key]?.length))) {
+      out[key] = ts;
+    }
+  }
+  return out;
+}
+
+export function readVerseTextHighlightTimestamps(
+  nowMs = Date.now(),
+  liveStore?: VerseTextHighlightStore,
+): VerseTextHighlightTimestampStore {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(READ_VERSE_TEXT_HIGHLIGHTS_TIMESTAMPS_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    const store = liveStore ?? readStore();
+    const out: VerseTextHighlightTimestampStore = {};
+    for (const [key, ts] of Object.entries(parsed)) {
+      if (key === "_t") continue;
+      if (isFreshTimestamp(ts, nowMs, Boolean(store[key]?.length))) {
+        out[key] = ts;
+      }
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+export function replaceVerseTextHighlightTimestamps(
+  timestamps: VerseTextHighlightTimestampStore,
+  nowMs = Date.now(),
+  liveStore?: VerseTextHighlightStore,
+): void {
+  if (typeof window === "undefined") return;
+  const pruned = pruneVerseTextHighlightTimestamps(timestamps, liveStore ?? readStore(), nowMs);
+  localStorage.setItem(READ_VERSE_TEXT_HIGHLIGHTS_TIMESTAMPS_STORAGE_KEY, JSON.stringify(pruned));
+}
+
+export function extractHighlightTimestampsFromSyncValue(
+  value: unknown,
+  nowMs = Date.now(),
+): VerseTextHighlightTimestampStore {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const rec = value as Record<string, unknown>;
+  const rawMap = rec._t;
+  if (!rawMap || typeof rawMap !== "object" || Array.isArray(rawMap)) return {};
+  const liveStore = parseVerseTextHighlightStoreValue(rec);
+  const out: VerseTextHighlightTimestampStore = {};
+  for (const [key, rawTs] of Object.entries(rawMap as Record<string, unknown>)) {
+    if (key === "_t") continue;
+    const ts = Number(rawTs);
+    if (isFreshTimestamp(ts, nowMs, Boolean(liveStore[key]?.length))) {
+      out[key] = ts;
+    }
+  }
+  return out;
+}
+
+export function exportVerseTextHighlightSyncValue(
+  store = readStore(),
+  timestamps?: VerseTextHighlightTimestampStore,
+  nowMs = Date.now(),
+): Record<string, unknown> {
+  const live = parseVerseTextHighlightStoreValue(store);
+  const prunedTs = pruneVerseTextHighlightTimestamps(
+    timestamps ?? readVerseTextHighlightTimestamps(nowMs, live),
+    live,
+    nowMs,
+  );
+  const out: Record<string, unknown> = { ...live };
+  if (Object.keys(prunedTs).length > 0) {
+    out._t = prunedTs;
+  }
+  return out;
+}
+
 export function readVerseTextHighlightStore(): VerseTextHighlightStore {
   return readStore();
 }
 
 export function replaceVerseTextHighlightStore(store: VerseTextHighlightStore): void {
-  writeStore(store);
+  writeStore(parseVerseTextHighlightStoreValue(store));
+}
+
+export function clearVerseTextHighlightsForAccountSwitch(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(READ_VERSE_TEXT_HIGHLIGHTS_TIMESTAMPS_STORAGE_KEY);
+  writeStore({});
 }
 
 export function readChapterVerseTextHighlights(ref: {
@@ -162,6 +267,7 @@ export function writeVerseTextHighlightIndices(
   ref: VerseTextHighlightRef,
   highlights: Iterable<[number, string]>,
 ): void {
+  const nowMs = Date.now();
   const store = readStore();
   const byIndex = new Map<number, string>();
   for (const [idx, color] of highlights) {
@@ -174,5 +280,7 @@ export function writeVerseTextHighlightIndices(
   const key = highlightKey(ref);
   if (!normalized.length) delete store[key];
   else store[key] = normalized;
+  const timestamps = { ...readVerseTextHighlightTimestamps(nowMs, store), [key]: nowMs };
   writeStore(store);
+  replaceVerseTextHighlightTimestamps(timestamps, nowMs, store);
 }

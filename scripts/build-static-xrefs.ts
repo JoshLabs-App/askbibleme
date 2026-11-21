@@ -13,29 +13,104 @@
  * 逐字一致（含 incoming/outgoing 的排序与 priority 处理）。
  *
  * 产物不入库（.gitignore），由 prebuild 生成。
+ * 增量缓存：scripture-xrefs.sqlite 与脚本指纹未变且产物完整时跳过 WASM 加载；支持 FORCE_PREBUILD=1。
  * 需用 scripts/tsconfig.config-build.json 跑（server-only stub）。
  */
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadChapterXrefs } from "@/lib/bible/load-chapter-xrefs";
-import { scriptureBooks } from "@/lib/bible/scripture-books";
-import {
-  STATIC_XREFS_DIR_REL,
-  staticXrefsBookRelPath,
-  type StaticXrefsBookFile,
-} from "@/lib/bible/static-xrefs-shape";
+import type { StaticXrefsBookFile } from "@/lib/bible/static-xrefs-shape";
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const outRoot = path.join(repoRoot, STATIC_XREFS_DIR_REL);
+const scriptPath = fileURLToPath(import.meta.url);
+const repoRoot = path.resolve(path.dirname(scriptPath), "..");
+const outRoot = path.join(repoRoot, "public", "xrefs");
+const cachePath = path.join(repoRoot, "node_modules", ".cache", "askbible-prebuild", "build-static-xrefs.json");
+const force = process.argv.includes("--force") || process.env.FORCE_PREBUILD === "1";
+
+type CacheFile = {
+  version: 1;
+  fingerprint: string;
+  files: string[];
+};
+
+function sha256File(absPath: string): string {
+  return crypto.createHash("sha256").update(fs.readFileSync(absPath)).digest("hex");
+}
+
+function computeFingerprint(): string {
+  const hash = crypto.createHash("sha256");
+  const inputs = [
+    scriptPath,
+    path.join(repoRoot, "lib/bible/load-chapter-xrefs.ts"),
+    path.join(repoRoot, "lib/bible/scripture-xref-db.ts"),
+    path.join(repoRoot, "lib/bible/scripture-xref-sqlite-path.ts"),
+    path.join(repoRoot, "lib/bible/scripture-books.ts"),
+    path.join(repoRoot, "lib/bible/static-xrefs-shape.ts"),
+    path.join(repoRoot, "data/bible/sqlite/scripture-xrefs.sqlite"),
+  ];
+  for (const abs of inputs) {
+    if (!fs.existsSync(abs)) {
+      hash.update(`${abs}:missing\n`);
+      continue;
+    }
+    const st = fs.statSync(abs);
+    hash.update(`${path.relative(repoRoot, abs)}:${st.size}:${sha256File(abs)}\n`);
+  }
+  return hash.digest("hex");
+}
+
+function readCache(): CacheFile | null {
+  if (!fs.existsSync(cachePath)) return null;
+  try {
+    const parsed = JSON.parse(fs.readFileSync(cachePath, "utf8")) as Partial<CacheFile>;
+    if (parsed?.version === 1 && typeof parsed.fingerprint === "string" && Array.isArray(parsed.files)) {
+      return { version: 1, fingerprint: parsed.fingerprint, files: parsed.files };
+    }
+  } catch {
+    /* ignore corrupt cache */
+  }
+  return null;
+}
+
+function outputIntact(expectedFiles: string[]): boolean {
+  if (expectedFiles.length === 0 || !fs.existsSync(outRoot)) return false;
+  let actual: string[];
+  try {
+    actual = fs.readdirSync(outRoot).filter((n) => n.endsWith(".json"));
+  } catch {
+    return false;
+  }
+  if (actual.length !== expectedFiles.length) return false;
+  const actualSet = new Set(actual);
+  for (const name of expectedFiles) {
+    if (!actualSet.has(name)) return false;
+  }
+  return true;
+}
 
 async function main(): Promise<void> {
+  const fingerprint = computeFingerprint();
+  const prev = readCache();
+  if (!force && prev && prev.fingerprint === fingerprint && outputIntact(prev.files)) {
+    console.log(`静态交叉引用：未变动，跳过（${prev.files.length} 个文件 → public/xrefs/）`);
+    return;
+  }
+
+  const [{ loadChapterXrefs }, { scriptureBooks }, { STATIC_XREFS_DIR_REL, staticXrefsBookRelPath }] =
+    await Promise.all([
+      import("@/lib/bible/load-chapter-xrefs"),
+      import("@/lib/bible/scripture-books"),
+      import("@/lib/bible/static-xrefs-shape"),
+    ]);
+
   fs.rmSync(outRoot, { recursive: true, force: true });
   fs.mkdirSync(outRoot, { recursive: true });
 
   let files = 0;
   let bytes = 0;
   let chaptersWithXrefs = 0;
+  const writtenFiles: string[] = [];
 
   for (const book of scriptureBooks) {
     const chapters: StaticXrefsBookFile["c"] = {};
@@ -49,10 +124,19 @@ async function main(): Promise<void> {
     /** 整卷无 xref 就不写文件；读取端取不到会当作「本章没有」，与 sqlite 结果一致。 */
     if (Object.keys(chapters).length === 0) continue;
     const body = JSON.stringify({ v: 1, c: chapters } satisfies StaticXrefsBookFile);
-    fs.writeFileSync(path.join(repoRoot, staticXrefsBookRelPath(book.bookId)), body, "utf8");
+    const rel = staticXrefsBookRelPath(book.bookId);
+    fs.writeFileSync(path.join(repoRoot, rel), body, "utf8");
+    writtenFiles.push(path.basename(rel));
     files += 1;
     bytes += Buffer.byteLength(body);
   }
+
+  fs.mkdirSync(path.dirname(cachePath), { recursive: true });
+  fs.writeFileSync(
+    cachePath,
+    `${JSON.stringify({ version: 1, fingerprint, files: writtenFiles } satisfies CacheFile)}\n`,
+    "utf8",
+  );
 
   console.log(
     `静态交叉引用：${files} 个文件，${chaptersWithXrefs} 章有 xref，` +

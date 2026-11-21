@@ -3,11 +3,12 @@ import WebKit
 import WidgetKit
 
 /// 亲儿子极薄原生底座桥（DECISIONS D-44，参考 JoshBox）：
-/// 1. `askbible-pack://` 本地离线协议处理器（内置 Bundle + PackStore 热更目录 0ms 秒开，严防路径穿越，断网永不白屏）；
-/// 2. `window.askbibleNative` 消息桥：将三路后台音频（读经 / 音乐 / 金句）、睡眠定时、每日读经提醒与桌面小组件能力暴露给本地静态内容层；
-/// 3. 锁死橡皮筋露白与系统默认长按菜单，保持纯正羊皮卷原生质感。
+/// 1. `askbible-pack://` 本地离线协议处理器（内存零拷贝直出 `PackStore.loadWebPackFiles()` + 内置 Bundle/SQLite 回退，严防路径穿越）；
+/// 2. `window.askbibleNative` 双向消息桥：读经跳转 / 继续阅读 / bootHealthy 健康心跳 / 三路后台音频 / 睡眠定时 / 提醒 / 小组件；
+/// 3. 锁死橡皮筋露白与系统默认长按菜单，并内置 3 秒热更健康看门狗（超时自动拉黑坏包并瞬切内置包）。
 final class LocalPackURLSchemeHandler: NSObject, WKURLSchemeHandler {
     static let scheme = "askbible-pack"
+    static let baseOrigin = "askbible-pack://app"
 
     func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
         guard let url = urlSchemeTask.request.url else {
@@ -17,6 +18,14 @@ final class LocalPackURLSchemeHandler: NSObject, WKURLSchemeHandler {
         let rawPath = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         guard !rawPath.isEmpty, !rawPath.contains(".."), !rawPath.contains("\\") else {
             urlSchemeTask.didFailWithError(URLError(.noPermissionsToReadFile))
+            return
+        }
+
+        // 优先从 PackStore 内存胶囊 0ms 零拷贝直出（index.html / app.css / app.js）
+        if let snapshot = PackStore.loadWebPackFiles(),
+           let data = snapshot.files[rawPath] {
+            let ext = (rawPath as NSString).pathExtension
+            respondOK(urlSchemeTask: urlSchemeTask, url: url, data: data, ext: ext)
             return
         }
 
@@ -32,8 +41,14 @@ final class LocalPackURLSchemeHandler: NSObject, WKURLSchemeHandler {
             return
         }
 
+        respondOK(urlSchemeTask: urlSchemeTask, url: url, data: data, ext: fileURL.pathExtension)
+    }
+
+    func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {}
+
+    private func respondOK(urlSchemeTask: WKURLSchemeTask, url: URL, data: Data, ext: String) {
         let resp = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: [
-            "Content-Type": Self.mimeType(for: fileURL.pathExtension),
+            "Content-Type": Self.mimeType(for: ext),
             "Content-Length": "\(data.count)",
             "Cache-Control": "no-cache",
             "Access-Control-Allow-Origin": "*",
@@ -42,8 +57,6 @@ final class LocalPackURLSchemeHandler: NSObject, WKURLSchemeHandler {
         urlSchemeTask.didReceive(data)
         urlSchemeTask.didFinish()
     }
-
-    func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {}
 
     private func resolveLocalAsset(relativePath: String) -> URL? {
         let fm = FileManager.default
@@ -86,22 +99,39 @@ final class LocalPackURLSchemeHandler: NSObject, WKURLSchemeHandler {
     }
 }
 
+private final class WeakScriptMessageProxy: NSObject, WKScriptMessageHandler {
+    weak var target: WKScriptMessageHandler?
+    init(_ target: WKScriptMessageHandler) { self.target = target }
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        target?.userContentController(userContentController, didReceive: message)
+    }
+}
+
 @MainActor
 final class NativeMediaBridge: NSObject, WKScriptMessageHandler {
     static let handlerName = "askbibleNative"
+    static let watchdogTimeoutSec: TimeInterval = 3.0
 
     weak var chapterAudio: ChapterAudioPlayer?
     weak var musicPlayer: MusicPlayer?
     weak var homeController: HomeVerseController?
     weak var ambientPlayer: AmbientPlayer?
     var onSetSleepTimer: ((Int) -> Void)?
+    var onOpenChapter: ((String, Int) -> Void)?
+    var onResumeReading: (() -> Void)?
+    var onBootHealthy: (() -> Void)?
+
+    private weak var observedWebView: WKWebView?
+    private var watchdogURL: URL?
+    private var watchdogWorkItem: DispatchWorkItem?
+    private var bootHealthyReceived = false
 
     /// 构造锁定橡皮筋露白、禁用系统默认长按菜单并注入 `window.askbibleNative` 的 WKWebViewConfiguration
     func makeWebViewConfiguration() -> WKWebViewConfiguration {
         let config = WKWebViewConfiguration()
         config.setURLSchemeHandler(LocalPackURLSchemeHandler(), forURLScheme: LocalPackURLSchemeHandler.scheme)
         let ucc = WKUserContentController()
-        ucc.add(self, name: Self.handlerName)
+        ucc.add(WeakScriptMessageProxy(self), name: Self.handlerName)
         let bootstrapJS = """
         (function(){
           document.documentElement.style.overscrollBehavior = 'none';
@@ -122,7 +152,7 @@ final class NativeMediaBridge: NSObject, WKScriptMessageHandler {
         return config
     }
 
-    /// 配置 WKWebView 滚动与背景：透明羊皮卷底 + 禁止回弹露白
+    /// 配置 WKWebView 滚动与背景：透明羊皮卷底 + 禁止回弹露白 + 关掉系统自动 inset 偏移
     static func hardenWebView(_ webView: WKWebView) {
         webView.isOpaque = false
         webView.backgroundColor = .clear
@@ -130,7 +160,76 @@ final class NativeMediaBridge: NSObject, WKScriptMessageHandler {
         webView.scrollView.bounces = false
         webView.scrollView.alwaysBounceVertical = false
         webView.scrollView.alwaysBounceHorizontal = false
+        webView.scrollView.showsVerticalScrollIndicator = false
+        webView.scrollView.showsHorizontalScrollIndicator = false
+        webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.allowsLinkPreview = false
+    }
+
+    private var watchdogInitStateJSON: String?
+
+    /// 直接以内存自包含 HTML 加载胶囊（零子请求等待、0ms 秒开）并启动 3 秒看门狗
+    @discardableResult
+    func loadInlinePack(in webView: WKWebView, initialStateJSON: String) -> Bool {
+        guard let snap = PackStore.loadWebPackFiles(),
+              let htmlData = snap.files["index.html"],
+              var html = String(data: htmlData, encoding: .utf8) else {
+            return false
+        }
+        if let cssData = snap.files["app.css"], let css = String(data: cssData, encoding: .utf8),
+           html.contains("<link rel='stylesheet' href='app.css'>") {
+            html = html.replacingOccurrences(of: "<link rel='stylesheet' href='app.css'>", with: "<style>\(css)</style>")
+        }
+        if let jsData = snap.files["app.js"], let js = String(data: jsData, encoding: .utf8),
+           html.contains("<script src='app.js'></script>") {
+            html = html.replacingOccurrences(of: "<script src='app.js'></script>", with: "<script>\(js)</script>")
+        }
+        let initScript = "<script>window.__ASKBIBLE_INIT__=\(initialStateJSON);</script>"
+        if html.contains("<!--__ASKBIBLE_INIT_SLOT__-->") {
+            html = html.replacingOccurrences(of: "<!--__ASKBIBLE_INIT_SLOT__-->", with: initScript)
+        } else {
+            html = html.replacingOccurrences(of: "</head>", with: "\(initScript)</head>")
+        }
+        observedWebView = webView
+        watchdogURL = nil
+        watchdogInitStateJSON = initialStateJSON
+        beginWatchdogIfHotPack()
+        webView.loadHTMLString(html, baseURL: URL(string: "\(LocalPackURLSchemeHandler.baseOrigin)/"))
+        return true
+    }
+
+    /// 加载本地胶囊并启动 3 秒防变砖健康看门狗（仅当加载热更胶囊时启用）
+    func loadLocalPack(in webView: WKWebView, url: URL) {
+        observedWebView = webView
+        watchdogURL = url
+        watchdogInitStateJSON = nil
+        beginWatchdogIfHotPack()
+        webView.load(URLRequest(url: url))
+    }
+
+    private func beginWatchdogIfHotPack() {
+        cancelWatchdog()
+        bootHealthyReceived = false
+        guard PackStore.loadWebPackFiles()?.isHotPack == true else { return }
+
+        let item = DispatchWorkItem { [weak self] in
+            guard let self, !self.bootHealthyReceived else { return }
+            PackStore.rollbackHotWebPack()
+            if let wv = self.observedWebView {
+                if let initJSON = self.watchdogInitStateJSON {
+                    self.loadInlinePack(in: wv, initialStateJSON: initJSON)
+                } else if let url = self.watchdogURL {
+                    wv.load(URLRequest(url: url))
+                }
+            }
+        }
+        watchdogWorkItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.watchdogTimeoutSec, execute: item)
+    }
+
+    func cancelWatchdog() {
+        watchdogWorkItem?.cancel()
+        watchdogWorkItem = nil
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
@@ -140,6 +239,18 @@ final class NativeMediaBridge: NSObject, WKScriptMessageHandler {
         let payload = (body["payload"] as? [String: Any]) ?? [:]
 
         switch action {
+        case "bootHealthy":
+            bootHealthyReceived = true
+            cancelWatchdog()
+            onBootHealthy?()
+        case "openChapter":
+            let bookId = (payload["bookId"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let chapter = max(1, (payload["chapter"] as? NSNumber)?.intValue ?? 1)
+            if !bookId.isEmpty {
+                onOpenChapter?(bookId, chapter)
+            }
+        case "resumeReading":
+            onResumeReading?()
         case "pauseChapter":
             chapterAudio?.pause()
         case "resumeChapter":

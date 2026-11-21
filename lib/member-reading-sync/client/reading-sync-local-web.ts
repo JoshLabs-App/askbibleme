@@ -1,12 +1,18 @@
 "use client";
 
 import {
+  clearScriptureVerseBookmarksForAccountSwitch,
   getScriptureVerseBookmarkStoreSnapshot,
+  getScriptureVerseBookmarkTombstonesSnapshot,
   replaceScriptureVerseBookmarkStore,
+  replaceScriptureVerseBookmarkTombstones,
 } from "@/lib/bible/scripture-verse-bookmarks-client";
 import {
+  exportBookmarkSyncValue,
+  extractBookmarkTombstonesFromSyncValue,
   parseScriptureVerseBookmarkStore,
   type ScriptureVerseBookmarkStore,
+  type ScriptureVerseBookmarkTombstoneStore,
 } from "@/lib/bible/scripture-verse-bookmarks";
 import {
   isCuvChapterAudioVoiceId,
@@ -75,8 +81,15 @@ import {
   type ReadBibleTypographyPrefsV1,
 } from "@/lib/read/read-bible-typography-prefs";
 import {
+  clearVerseTextHighlightsForAccountSwitch,
+  exportVerseTextHighlightSyncValue,
+  extractHighlightTimestampsFromSyncValue,
+  parseVerseTextHighlightStoreValue,
   readVerseTextHighlightStore,
+  readVerseTextHighlightTimestamps,
   replaceVerseTextHighlightStore,
+  replaceVerseTextHighlightTimestamps,
+  type VerseTextHighlightTimestampStore,
 } from "@/lib/read/read-verse-text-highlights";
 import {
   localeValueWithReadingPlan,
@@ -169,8 +182,8 @@ export function clearMemberReadingLocalDataWeb(): void {
   clearNtDeepRepeatProgressForAccountSwitch();
   clearTodayReadingDoneForAccountSwitch();
   clearTodayReadingChapterFractionForAccountSwitch();
-  replaceScriptureVerseBookmarkStore({});
-  replaceVerseTextHighlightStore({});
+  clearScriptureVerseBookmarksForAccountSwitch();
+  clearVerseTextHighlightsForAccountSwitch();
   clearLastReadPosition();
   clearReadRecentChapters();
   clearReadChapterCompletionForAccountSwitch();
@@ -239,7 +252,9 @@ function isReadingPlanPrefs(value: unknown): value is ReadingPlanPrefs {
 export function localHasMemberReadingProgressWeb(): boolean {
   if (typeof window === "undefined") return false;
   const bookmarks = getScriptureVerseBookmarkStoreSnapshot();
+  const bookmarkTombstones = getScriptureVerseBookmarkTombstonesSnapshot();
   const highlights = readVerseTextHighlightStore();
+  const highlightTimestamps = readVerseTextHighlightTimestamps(Date.now(), highlights);
   const lastPosition = readLastReadPosition();
   const listen = readScriptureListenTotalsWeb();
   const completion = readReadChapterCompletionRecord();
@@ -247,8 +262,8 @@ export function localHasMemberReadingProgressWeb(): boolean {
   const fraction = readTodayReadingChapterFractionRecord();
   const habit = readReadingHabitStats();
   const plan = readReadingPlanPrefs();
-  if (Object.keys(bookmarks).length) return true;
-  if (Object.keys(highlights).length) return true;
+  if (Object.keys(bookmarks).length || Object.keys(bookmarkTombstones).length) return true;
+  if (Object.keys(highlights).length || Object.keys(highlightTimestamps).length) return true;
   if (lastPosition) return true;
   if (listen.totalSec > 0) return true;
   if (completion.completed.length) return true;
@@ -299,7 +314,9 @@ function collectLocalReadingBlobsWeb(index: BibleTranslationsIndex | null): Memb
   const blobs: Partial<Record<MemberReadingSyncBlobKey, MemberReadingSyncBlob>> = {};
 
   const bookmarks = getScriptureVerseBookmarkStoreSnapshot();
+  const bookmarkTombstones = getScriptureVerseBookmarkTombstonesSnapshot();
   const highlights = readVerseTextHighlightStore();
+  const highlightTimestamps = readVerseTextHighlightTimestamps(Date.now(), highlights);
   const lastPosition = readLastReadPosition();
   const chapterCompletion = readReadChapterCompletionRecord();
   const readingPlanPrefs = readReadingPlanPrefs();
@@ -319,8 +336,12 @@ function collectLocalReadingBlobsWeb(index: BibleTranslationsIndex | null): Memb
   const exploreYearDayProfile = readExploreYearDayProfile();
   const appLocale = readAppLocaleSyncBundle();
 
-  if (Object.keys(bookmarks).length) blobs.bookmarks = wrapBlob(bookmarks, now);
-  if (Object.keys(highlights).length) blobs.highlights = wrapBlob(highlights, now);
+  if (Object.keys(bookmarks).length || Object.keys(bookmarkTombstones).length) {
+    blobs.bookmarks = wrapBlob(exportBookmarkSyncValue(bookmarks, bookmarkTombstones), now);
+  }
+  if (Object.keys(highlights).length || Object.keys(highlightTimestamps).length) {
+    blobs.highlights = wrapBlob(exportVerseTextHighlightSyncValue(highlights, highlightTimestamps), now);
+  }
   if (lastPosition) blobs.lastPosition = wrapBlob(lastPosition, now);
   if (chapterCompletion.completed.length) blobs.chapterCompletion = wrapBlob(chapterCompletion, now);
   if (readingPlanPrefs && shouldSyncReadingPlanPrefs(readingPlanPrefs)) {
@@ -368,14 +389,35 @@ async function applyBlob(key: MemberReadingSyncBlobKey, value: unknown, isCurren
   switch (key) {
     case "bookmarks":
       if (value && typeof value === "object" && !Array.isArray(value)) {
-        replaceScriptureVerseBookmarkStore(
-          parseScriptureVerseBookmarkStore(JSON.stringify(value as ScriptureVerseBookmarkStore)),
+        const nowMs = Date.now();
+        const liveStore = parseScriptureVerseBookmarkStore(
+          JSON.stringify(value as ScriptureVerseBookmarkStore),
         );
+        const remoteTombstones = extractBookmarkTombstonesFromSyncValue(value, nowMs);
+        const localTombstones = getScriptureVerseBookmarkTombstonesSnapshot(nowMs);
+        const nextTombstones: ScriptureVerseBookmarkTombstoneStore = { ...localTombstones };
+        for (const [k, ts] of Object.entries(remoteTombstones)) {
+          nextTombstones[k] = Math.max(nextTombstones[k] ?? 0, ts);
+        }
+        for (const k of Object.keys(liveStore)) {
+          delete nextTombstones[k];
+        }
+        replaceScriptureVerseBookmarkStore(liveStore);
+        replaceScriptureVerseBookmarkTombstones(nextTombstones, nowMs);
       }
       break;
     case "highlights":
       if (value && typeof value === "object" && !Array.isArray(value)) {
-        replaceVerseTextHighlightStore(value as Record<string, { i: number; c: string }[]>);
+        const nowMs = Date.now();
+        const liveHighlights = parseVerseTextHighlightStoreValue(value);
+        const remoteTs = extractHighlightTimestampsFromSyncValue(value, nowMs);
+        const localTs = readVerseTextHighlightTimestamps(nowMs, liveHighlights);
+        const nextTs: VerseTextHighlightTimestampStore = { ...localTs };
+        for (const [k, ts] of Object.entries(remoteTs)) {
+          nextTs[k] = Math.max(nextTs[k] ?? 0, ts);
+        }
+        replaceVerseTextHighlightStore(liveHighlights);
+        replaceVerseTextHighlightTimestamps(nextTs, nowMs, liveHighlights);
       }
       break;
     case "lastPosition":

@@ -48,7 +48,7 @@ class GoldenVersePlayer(context: Context) {
             )
         )
         .build()
-    private val mediaSession = MediaSession.Builder(context, player).setId("golden").build()
+    private val mediaSession = PlaybackSessions.createSession(context, player, "golden")
         .also { PlaybackSessions.register(it) { wantsPlayback() } }
 
     init {

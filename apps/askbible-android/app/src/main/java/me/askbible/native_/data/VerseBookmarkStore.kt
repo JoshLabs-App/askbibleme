@@ -10,18 +10,38 @@ class VerseBookmarkStore(context: Context) {
     private val sp = context.applicationContext.getSharedPreferences("verse-bookmarks", Context.MODE_PRIVATE)
     var store by mutableStateOf(VerseBookmarkRules.parse(sp.getString(VerseBookmarkRules.STORAGE_KEY, null)))
         private set
+    var tombstones by mutableStateOf(VerseBookmarkRules.parseTombstones(sp.getString(VerseBookmarkRules.TOMBSTONES_STORAGE_KEY, null)))
+        private set
 
     val list: List<VerseBookmark> get() = VerseBookmarkRules.list(store)
     /** 本机改动通知（会员同步） */
     var onLocalChange: (() -> Unit)? = null
-    /** 序列化成 RN 同形的 JSON 对象（同步 blob） */
-    val json: org.json.JSONObject get() = try { org.json.JSONObject(VerseBookmarkRules.serialize(store)) } catch (_: Exception) { org.json.JSONObject() }
+    /** 序列化成 RN 同形的 JSON 对象（同步 blob，含 60 天墓碑） */
+    val json: org.json.JSONObject get() = VerseBookmarkRules.serializeForSync(store, tombstones)
     /** 云端书签落本机（RN replaceScriptureVerseBookmarkStore） */
     fun replace(json: org.json.JSONObject) {
-        store = VerseBookmarkRules.parse(json.toString())
-        sp.edit().putString(VerseBookmarkRules.STORAGE_KEY, VerseBookmarkRules.serialize(store)).apply()
+        val nowMs = System.currentTimeMillis().toDouble()
+        val nextStore = VerseBookmarkRules.parse(json.toString(), nowMs)
+        val remoteTombstones = VerseBookmarkRules.extractTombstones(json, nowMs)
+        val nextTombstones = LinkedHashMap(VerseBookmarkRules.pruneTombstones(tombstones, nowMs))
+        for ((k, ts) in remoteTombstones) {
+            nextTombstones[k] = maxOf(nextTombstones[k] ?: 0.0, ts)
+        }
+        for (k in nextStore.keys) {
+            nextTombstones.remove(k)
+        }
+        store = nextStore
+        tombstones = nextTombstones
+        sp.edit()
+            .putString(VerseBookmarkRules.STORAGE_KEY, VerseBookmarkRules.serialize(nextStore))
+            .putString(VerseBookmarkRules.TOMBSTONES_STORAGE_KEY, VerseBookmarkRules.serializeTombstones(nextTombstones))
+            .apply()
     }
-    fun clearForAccountSwitch() { store = emptyMap(); sp.edit().remove(VerseBookmarkRules.STORAGE_KEY).apply() }
+    fun clearForAccountSwitch() {
+        store = emptyMap()
+        tombstones = emptyMap()
+        sp.edit().remove(VerseBookmarkRules.STORAGE_KEY).remove(VerseBookmarkRules.TOMBSTONES_STORAGE_KEY).apply()
+    }
 
     fun isBookmarked(translationId: String, bookId: String, chapter: Int, verse: Int) =
         store.containsKey(VerseBookmarkRules.key(translationId, bookId, chapter, verse))
@@ -29,15 +49,27 @@ class VerseBookmarkStore(context: Context) {
     fun bookmarkedVerses(translationId: String, bookId: String, chapter: Int): Set<Int> =
         store.values.filter { it.translationId == translationId && it.bookId == bookId && it.chapter == chapter }.map { it.verse }.toSet()
 
-    /** toggleScriptureVerseBookmark：有则删，无则加；返回是否为新加 */
+    /** toggleScriptureVerseBookmark：有则删并记墓碑，无则加并清墓碑；返回是否为新加 */
     fun toggle(bookId: String, bookName: String, chapter: Int, verse: Int, translationId: String, text: String): Boolean {
         val key = VerseBookmarkRules.key(translationId, bookId, chapter, verse)
+        val nowMs = System.currentTimeMillis().toDouble()
         val next = LinkedHashMap(store)
-        val added = if (next.containsKey(key)) { next.remove(key); false } else {
-            next[key] = VerseBookmark(bookId, bookName, chapter, verse, translationId, text, System.currentTimeMillis().toDouble()); true
+        val nextTombstones = LinkedHashMap(VerseBookmarkRules.pruneTombstones(tombstones, nowMs))
+        val added = if (next.containsKey(key)) {
+            next.remove(key)
+            nextTombstones[key] = nowMs
+            false
+        } else {
+            next[key] = VerseBookmark(bookId, bookName, chapter, verse, translationId, text, nowMs)
+            nextTombstones.remove(key)
+            true
         }
         store = next
-        sp.edit().putString(VerseBookmarkRules.STORAGE_KEY, VerseBookmarkRules.serialize(next)).apply()
+        tombstones = nextTombstones
+        sp.edit()
+            .putString(VerseBookmarkRules.STORAGE_KEY, VerseBookmarkRules.serialize(next))
+            .putString(VerseBookmarkRules.TOMBSTONES_STORAGE_KEY, VerseBookmarkRules.serializeTombstones(nextTombstones))
+            .apply()
         onLocalChange?.invoke()
         return added
     }

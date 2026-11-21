@@ -8,6 +8,8 @@ import UIKit
 /// 同一份也是会员同步的 `highlights` blob，网页端读得懂。
 enum VerseHighlightRules {
     static let storageKey = "askbible-read-verse-text-highlights-v1"
+    static let timestampsStorageKey = "askbible-read-verse-text-highlights-timestamps-v1"
+    static let tombstoneTtlMs: Double = 60 * 24 * 60 * 60 * 1000
     static let defaultColor = "#FFB103"
     /// RN VERSE_TEXT_HIGHLIGHT_PALETTE（2026-09-19 改版，见 docs/design-color-system.md）。
     /// 存的是「颜料」hex，渲染时一律走 `fillColor(_:)` 叠 alpha 铺在羊皮底上，
@@ -59,13 +61,18 @@ enum VerseHighlightRules {
 final class VerseHighlightStore: ObservableObject {
     /// 键 → （字符下标 → 颜色）
     @Published private(set) var store: [String: [Int: String]] = [:]
+    private(set) var verseTimestamps: [String: Double] = [:]
     private let defaults = UserDefaults.standard
 
     /// 本机改动通知（会员同步用）
     var onLocalChange: ((String) -> Void)?
     var suppressChangeNotify = false
 
-    init() { store = Self.parse(defaults.string(forKey: VerseHighlightRules.storageKey)) }
+    init() {
+        let loaded = Self.parse(defaults.string(forKey: VerseHighlightRules.storageKey))
+        store = loaded
+        verseTimestamps = Self.parseTimestamps(defaults.string(forKey: VerseHighlightRules.timestampsStorageKey), liveStore: loaded)
+    }
 
     func colors(translationId: String, bookId: String, chapter: Int, verse: Int) -> [Int: String] {
         store[VerseHighlightRules.key(translationId: translationId, bookId: bookId, chapter: chapter, verse: verse)] ?? [:]
@@ -85,22 +92,43 @@ final class VerseHighlightStore: ObservableObject {
             if let color { byIndex[i] = VerseHighlightRules.normalizeColor(color) } else { byIndex[i] = nil }
         }
         if byIndex.isEmpty { store[key] = nil } else { store[key] = byIndex }
+        let nowMs = Date().timeIntervalSince1970 * 1000
+        verseTimestamps[key] = nowMs
+        verseTimestamps = Self.pruneTimestamps(verseTimestamps, liveStore: store, now: nowMs)
         persist()
     }
 
     func clear(translationId: String, bookId: String, chapter: Int, verse: Int) {
-        store[VerseHighlightRules.key(translationId: translationId, bookId: bookId, chapter: chapter, verse: verse)] = nil
+        let key = VerseHighlightRules.key(translationId: translationId, bookId: bookId, chapter: chapter, verse: verse)
+        store[key] = nil
+        let nowMs = Date().timeIntervalSince1970 * 1000
+        verseTimestamps[key] = nowMs
+        verseTimestamps = Self.pruneTimestamps(verseTimestamps, liveStore: store, now: nowMs)
         persist()
     }
 
     /// 云端并入（会员同步 highlights blob）
     func replace(_ next: [String: [Int: String]]) {
         store = next
+        verseTimestamps = Self.pruneTimestamps(verseTimestamps, liveStore: next)
         persist(notify: false)
     }
 
-    /// 同步用：`{"译本:卷:章:节": [{i, c}]}`
-    var json: [String: Any] {
+    /// 云端并入（含 `_t` 节级时间戳与擦除墓碑）
+    func replace(json o: [String: Any]) {
+        let nowMs = Date().timeIntervalSince1970 * 1000
+        let nextStore = Self.parse(json: o)
+        let remoteTs = Self.extractTimestamps(json: o, liveStore: nextStore, now: nowMs)
+        var mergedTs = verseTimestamps
+        for (k, ts) in remoteTs {
+            mergedTs[k] = max(mergedTs[k] ?? 0, ts)
+        }
+        store = nextStore
+        verseTimestamps = Self.pruneTimestamps(mergedTs, liveStore: nextStore, now: nowMs)
+        persist(notify: false)
+    }
+
+    private var storeJSON: [String: Any] {
         var out: [String: Any] = [:]
         for (key, byIndex) in store where !byIndex.isEmpty {
             out[key] = byIndex.keys.sorted().map { ["i": $0, "c": byIndex[$0] ?? VerseHighlightRules.defaultColor] as [String: Any] }
@@ -108,16 +136,68 @@ final class VerseHighlightStore: ObservableObject {
         return out
     }
 
+    /// 同步用：`{"译本:卷:章:节": [{i, c}], "_t": {"译本:卷:章:节": tsMs}}`
+    var json: [String: Any] {
+        var out = storeJSON
+        let prunedTs = Self.pruneTimestamps(verseTimestamps, liveStore: store)
+        if !prunedTs.isEmpty {
+            out["_t"] = prunedTs
+        }
+        return out
+    }
+
     func clearForAccountSwitch() {
         store = [:]
-        persist(notify: false)
+        verseTimestamps = [:]
+        defaults.removeObject(forKey: VerseHighlightRules.storageKey)
+        defaults.removeObject(forKey: VerseHighlightRules.timestampsStorageKey)
     }
 
     private func persist(notify: Bool = true) {
-        if let data = try? JSONSerialization.data(withJSONObject: json) {
+        if let data = try? JSONSerialization.data(withJSONObject: storeJSON) {
             defaults.set(String(decoding: data, as: UTF8.self), forKey: VerseHighlightRules.storageKey)
         }
+        if let tsData = try? JSONSerialization.data(withJSONObject: verseTimestamps, options: [.sortedKeys]) {
+            defaults.set(String(decoding: tsData, as: UTF8.self), forKey: VerseHighlightRules.timestampsStorageKey)
+        }
         if notify, !suppressChangeNotify { onLocalChange?("highlights") }
+    }
+
+    static func pruneTimestamps(_ ts: [String: Double], liveStore: [String: [Int: String]],
+                                now: Double = Date().timeIntervalSince1970 * 1000) -> [String: Double] {
+        var out: [String: Double] = [:]
+        for (k, v) in ts where k != "_t" && v.isFinite && v > 0 {
+            let isLive = !(liveStore[k]?.isEmpty ?? true)
+            if isLive || now - v <= VerseHighlightRules.tombstoneTtlMs {
+                out[k] = v
+            }
+        }
+        return out
+    }
+
+    static func parseTimestamps(_ raw: String?, liveStore: [String: [Int: String]],
+                                now: Double = Date().timeIntervalSince1970 * 1000) -> [String: Double] {
+        guard let raw, let data = raw.data(using: .utf8),
+              let o = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else { return [:] }
+        var rawTs: [String: Double] = [:]
+        for (k, v) in o where k != "_t" {
+            if let num = MemberReadingSyncRules.num(v), num.isFinite, num > 0 {
+                rawTs[k] = num
+            }
+        }
+        return pruneTimestamps(rawTs, liveStore: liveStore, now: now)
+    }
+
+    static func extractTimestamps(json o: [String: Any], liveStore: [String: [Int: String]],
+                                  now: Double = Date().timeIntervalSince1970 * 1000) -> [String: Double] {
+        guard let tMap = o["_t"] as? [String: Any] else { return [:] }
+        var rawTs: [String: Double] = [:]
+        for (k, v) in tMap where k != "_t" {
+            if let num = MemberReadingSyncRules.num(v), num.isFinite, num > 0 {
+                rawTs[k] = num
+            }
+        }
+        return pruneTimestamps(rawTs, liveStore: liveStore, now: now)
     }
 
     static func parse(_ raw: String?) -> [String: [Int: String]] {
@@ -129,6 +209,7 @@ final class VerseHighlightStore: ObservableObject {
     static func parse(json o: [String: Any]) -> [String: [Int: String]] {
         var out: [String: [Int: String]] = [:]
         for (key, value) in o {
+            if key == "_t" { continue }
             guard let rows = value as? [Any] else { continue }
             var byIndex: [Int: String] = [:]
             for row in rows {

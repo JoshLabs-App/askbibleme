@@ -38,6 +38,17 @@ let activeAuthOwner: string | null = null;
 const pendingArchives = new Map<string, string>();
 let pendingMeta: MemberReadingSyncMeta | null = null;
 
+function stableJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map((item) => stableJson(item)).join(",")}]`;
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, v]) => v !== undefined)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+    return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${stableJson(v)}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
 function syncApiBase(): string {
   return endpointBase("api").replace(/\/+$/, "");
 }
@@ -282,8 +293,8 @@ async function runForOwner(
   const merged = mergeMemberReadingSyncPush(pushed.doc.blobs, freshLocal);
   const localChanged = Object.entries(merged).some(
     ([key, blob]) =>
-      JSON.stringify(blob?.value) !==
-      JSON.stringify(pushed.doc.blobs[key as keyof typeof pushed.doc.blobs]?.value),
+      stableJson(blob?.value) !==
+      stableJson(pushed.doc.blobs[key as keyof typeof pushed.doc.blobs]?.value),
   );
   const needsReconcile = await applyMemberReadingSyncBlobsWeb(merged, isCurrent);
   if (!isCurrent()) return "unauthorized";

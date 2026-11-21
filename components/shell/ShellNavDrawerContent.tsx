@@ -18,8 +18,11 @@ import { isMemberRegisterEnabledClient } from "@/lib/member-register-enabled";
 import {
   ASKBIBLE_MANUAL_CHECK_EVENT,
   checkWebBuildUpdate,
+  formatBuildVersionWithTime,
+  formatLocalDateTime,
   formatShortBuildId,
   getLoadedBuildId,
+  getLoadedBuiltAt,
   triggerWebBuildReload,
 } from "@/lib/pwa/check-app-update";
 
@@ -95,28 +98,38 @@ function ShellNavDrawerLocaleRow() {
 function ShellNavDrawerCheckUpdate({ onClose }: { onClose: () => void }) {
   const { locale } = useLocale();
   const [phase, setPhase] = useState<"idle" | "checking" | "up-to-date" | "updating" | "failed">("idle");
-  const [buildLabel, setBuildLabel] = useState<string>(() => formatShortBuildId(getLoadedBuildId()));
+  const [versionText, setVersionText] = useState<string>(() => formatShortBuildId(getLoadedBuildId()));
+  const [timeText, setTimeText] = useState<string>(() => {
+    const builtAt = getLoadedBuiltAt();
+    return builtAt ? formatLocalDateTime(builtAt) : "";
+  });
 
   const runCheck = useCallback(async () => {
     setPhase((prev) => (prev === "checking" || prev === "updating" ? prev : "checking"));
     const outcome = await checkWebBuildUpdate();
+    const checkedNow = formatLocalDateTime();
     if (outcome.status === "update-available") {
-      setBuildLabel(formatShortBuildId(outcome.remoteId));
+      setVersionText(formatShortBuildId(outcome.remoteId));
+      setTimeText(outcome.builtAt ? formatLocalDateTime(outcome.builtAt) : checkedNow);
       setPhase("updating");
       onClose();
       triggerWebBuildReload(900);
       return;
     }
     if (outcome.status === "up-to-date") {
-      setBuildLabel(formatShortBuildId(outcome.buildId));
+      setVersionText(formatShortBuildId(outcome.buildId));
+      setTimeText(checkedNow);
       setPhase("up-to-date");
       return;
     }
+    setTimeText(checkedNow);
     setPhase("failed");
   }, [onClose]);
 
   useEffect(() => {
-    setBuildLabel(formatShortBuildId(getLoadedBuildId()));
+    setVersionText(formatShortBuildId(getLoadedBuildId()));
+    const builtAt = getLoadedBuiltAt();
+    if (builtAt) setTimeText(formatLocalDateTime(builtAt));
     const onFooterCheck = () => {
       void runCheck();
     };
@@ -133,30 +146,34 @@ function ShellNavDrawerCheckUpdate({ onClose }: { onClose: () => void }) {
 
   const detail = (() => {
     if (phase === "checking") {
-      return locale === "zh-CN" ? "正在检查…" : locale === "zh-TW" ? "正在檢查…" : "Checking…";
+      return locale === "zh-CN"
+        ? `${versionText} · 正在检查…`
+        : locale === "zh-TW"
+          ? `${versionText} · 正在檢查…`
+          : `${versionText} · Checking…`;
     }
     if (phase === "updating") {
       return locale === "zh-CN"
-        ? "发现新版本，正在更新…"
+        ? `${versionText} · 正在更新… · ${timeText}`
         : locale === "zh-TW"
-          ? "發現新版本，正在更新…"
-          : "Updating to latest…";
+          ? `${versionText} · 正在更新… · ${timeText}`
+          : `${versionText} · Updating… · ${timeText}`;
     }
     if (phase === "up-to-date") {
       return locale === "zh-CN"
-        ? `已是最新版本（${buildLabel}）`
+        ? `${versionText} · 已是最新版本 · ${timeText}`
         : locale === "zh-TW"
-          ? `已是最新版本（${buildLabel}）`
-          : `Up to date (${buildLabel})`;
+          ? `${versionText} · 已是最新版本 · ${timeText}`
+          : `${versionText} · Up to date · ${timeText}`;
     }
     if (phase === "failed") {
       return locale === "zh-CN"
-        ? "无法连接更新服务器"
+        ? `${versionText} · 无法连接服务器 · ${timeText}`
         : locale === "zh-TW"
-          ? "無法連線更新伺服器"
-          : "Unable to check for updates";
+          ? `${versionText} · 無法連線伺服器 · ${timeText}`
+          : `${versionText} · Offline · ${timeText}`;
     }
-    return buildLabel;
+    return formatBuildVersionWithTime(getLoadedBuildId(), getLoadedBuiltAt());
   })();
 
   return (

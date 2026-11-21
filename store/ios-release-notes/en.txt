@@ -1,1 +1,3 @@
-Adds an option to continue with today’s devotional after daily reading, with improved playback handoff.
+• Refined compact calendar date pills and single-screen layout on Today’s Walk
+• Added full-year monthly directory, search, and on-demand audio playback for Daily Devotional
+• Improved seamless playback handoff after completing daily Scripture readings

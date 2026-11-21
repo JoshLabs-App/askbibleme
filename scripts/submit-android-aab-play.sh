@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# 本机 AAB 直传 Google Play（fastlane supply）
+set -euo pipefail
+
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+PLAY_PACKAGE_NAME="${PLAY_PACKAGE_NAME:-me.askbible}"
+PLAY_TRACK="${PLAY_TRACK:-production}"
+PLAY_RELEASE_STATUS="${PLAY_RELEASE_STATUS:-completed}"
+PLAY_TIMEOUT_SECONDS="${PLAY_TIMEOUT_SECONDS:-1800}"
+
+resolve_google_key() {
+  local candidate
+  for candidate in \
+    "${GOOGLE_SERVICE_ACCOUNT_KEY_PATH:-}" \
+    "$ROOT/AA/askbibleme-6e637caa2ceb.json" \
+    "$HOME/Desktop/APP/00/projects/01AskBible/AA/askbibleme-6e637caa2ceb.json"
+  do
+    if [[ -n "$candidate" && -f "$candidate" ]]; then
+      printf '%s' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+if [[ -z "${GOOGLE_SERVICE_ACCOUNT_KEY_PATH:-}" ]]; then
+  if DEFAULT_GOOGLE_KEY="$(resolve_google_key)"; then
+    export GOOGLE_SERVICE_ACCOUNT_KEY_PATH="$DEFAULT_GOOGLE_KEY"
+  fi
+fi
+
+if [[ -z "${GOOGLE_SERVICE_ACCOUNT_KEY_PATH:-}" || ! -f "${GOOGLE_SERVICE_ACCOUNT_KEY_PATH}" ]]; then
+  echo "缺少 Google Play 服务账号密钥：GOOGLE_SERVICE_ACCOUNT_KEY_PATH" >&2
+  exit 1
+fi
+
+AAB_PATH="${ANDROID_AAB_PATH:-}"
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --path) AAB_PATH="${2:-}"; shift 2 ;;
+    --track) PLAY_TRACK="${2:-}"; shift 2 ;;
+    --release-status) PLAY_RELEASE_STATUS="${2:-}"; shift 2 ;;
+    *) echo "未知参数：$1" >&2; exit 1 ;;
+  esac
+done
+
+if [[ -z "$AAB_PATH" || ! -f "$AAB_PATH" ]]; then
+  echo "AAB 不存在：$AAB_PATH" >&2
+  exit 1
+fi
+
+METADATA_DIR="$ROOT/store/android-play-metadata"
+CHANGELOG_ARGS=(--skip_upload_changelogs true)
+if [[ "$PLAY_TRACK" == "production" || "${PLAY_UPLOAD_CHANGELOGS:-}" == "1" ]] && [[ -d "$METADATA_DIR" ]]; then
+  CHANGELOG_ARGS=(--skip_upload_changelogs false --metadata_path "$METADATA_DIR")
+fi
+
+fastlane supply run \
+  --package_name "$PLAY_PACKAGE_NAME" \
+  --aab "$AAB_PATH" \
+  --track "$PLAY_TRACK" \
+  --release_status "$PLAY_RELEASE_STATUS" \
+  --timeout "$PLAY_TIMEOUT_SECONDS" \
+  --json_key "$GOOGLE_SERVICE_ACCOUNT_KEY_PATH" \
+  --skip_upload_apk true \
+  --skip_upload_metadata true \
+  "${CHANGELOG_ARGS[@]}" \
+  --skip_upload_images true \
+  --skip_upload_screenshots true
+
+echo "已提交到 Google Play (${PLAY_TRACK})。"

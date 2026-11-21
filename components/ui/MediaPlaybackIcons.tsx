@@ -1,10 +1,10 @@
 /**
- * 媒体控件图标（跳过与循环为圆润几何描边；播放 / 暂停为圆角楔形 + 胶囊竖条）。
+ * 媒体控件图标（循环图标逐路径对齐安卓 `PlaybackDock.kt` 的 `RepeatGlyph`）。
  * 避免用 ▶ ⏸ Unicode，以免在 iOS/Android 上变成彩色 emoji。
  */
 const stroke = {
   stroke: "currentColor",
-  strokeWidth: 1.9,
+  strokeWidth: 2,
   strokeLinecap: "round" as const,
   strokeLinejoin: "round" as const,
 };
@@ -50,40 +50,44 @@ export function IconSkipForward({ className }: { className?: string }) {
   );
 }
 
-const repeatStroke = {
-  stroke: "currentColor",
-  strokeWidth: 1.85,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
-
-/** 经文朗读：单章循环（对称圆角循环轨 + 居中数字 1） */
-export function IconScriptureRepeatChapter({ className }: { className?: string }) {
+/**
+ * 100% 对齐安卓 `PlaybackDock.kt` 的 `RepeatGlyph`：
+ * 24 格里两段圆角箭头（M7 7h8a4 4 0 0 1 4 4v1 / M17 17H9a4 4 0 0 1-4-4v-1 / M7 4 4 7l3 3 / M17 20l3-3-3-3），
+ * 描边 1.6 圆头；角标：本章「1」、本书「B」、继续往前 null。
+ */
+export function IconScriptureRepeatGlyph({
+  badge = null,
+  className,
+}: {
+  badge?: "1" | "B" | null;
+  className?: string;
+}) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-      <path d="M17 3l3.5 3.5L17 10" {...repeatStroke} />
-      <path d="M3.5 11V9.5a3 3 0 0 1 3-3H20.5" {...repeatStroke} />
-      <path d="M7 21l-3.5-3.5L7 14" {...repeatStroke} />
-      <path d="M20.5 13v1.5a3 3 0 0 1-3 3H3.5" {...repeatStroke} />
-      <path
-        d="M11.1 10.4l1.4-.9v5"
-        stroke="currentColor"
-        strokeWidth={1.85}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <span className={["relative inline-flex items-center justify-center", className].filter(Boolean).join(" ")} aria-hidden>
+      <svg viewBox="0 0 24 24" fill="none" className="h-full w-full">
+        <path
+          d="M7 7h8a4 4 0 0 1 4 4v1M17 17H9a4 4 0 0 1-4-4v-1M7 4L4 7l3 3M17 20l3-3-3-3"
+          stroke="currentColor"
+          strokeWidth={1.6}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      {badge ? (
+        <span className="pointer-events-none absolute inset-0 flex items-center justify-center translate-y-[0.3px] text-[8px] font-bold leading-none">
+          {badge}
+        </span>
+      ) : null}
+    </span>
   );
 }
 
-/** 经文朗读：整卷循环 / 默认循环图标（干净对称圆角循环轨，不塞杂乱横线） */
+/** 经文朗读：重复本章（循环箭头 + 居中 1） */
+export function IconScriptureRepeatChapter({ className }: { className?: string }) {
+  return <IconScriptureRepeatGlyph badge="1" className={className} />;
+}
+
+/** 经文朗读：重复本卷（循环箭头 + 居中 B） */
 export function IconScriptureRepeatBook({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-      <path d="M17 3l3.5 3.5L17 10" {...repeatStroke} />
-      <path d="M3.5 11V9.5a3 3 0 0 1 3-3H20.5" {...repeatStroke} />
-      <path d="M7 21l-3.5-3.5L7 14" {...repeatStroke} />
-      <path d="M20.5 13v1.5a3 3 0 0 1-3 3H3.5" {...repeatStroke} />
-    </svg>
-  );
+  return <IconScriptureRepeatGlyph badge="B" className={className} />;
 }

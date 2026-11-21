@@ -1,16 +1,10 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
 import { ScriptureSpeedRateIcon } from "@/components/bible/ScriptureSpeedRateIcon";
-import {
-  IconPause,
-  IconPlay,
-  IconScriptureRepeatBook,
-  IconScriptureRepeatChapter,
-  IconSkipForward,
-} from "@/components/ui/MediaPlaybackIcons";
+import { IconScriptureRepeatGlyph } from "@/components/ui/MediaPlaybackIcons";
 
 function formatClock(sec: number): string {
   if (!Number.isFinite(sec) || sec < 0) return "0:00";
@@ -48,13 +42,11 @@ type Props = {
   readAccessibilityLabel?: string;
 };
 
-const seekClass =
-  "read-scripture-dock-seek h-5 w-full min-w-[2.75rem] max-w-full flex-1 cursor-pointer appearance-none bg-transparent accent-amber-700/80 dark:accent-amber-400 disabled:cursor-not-allowed disabled:opacity-35";
-
-const sideBtnClass =
-  "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#3d2e24] dark:text-[#EDE2CF] transition active:scale-[0.97] disabled:opacity-35";
-
-/** 读经播放坞 — 对齐 App `ReadScripturePlaybackDock`。 */
+/**
+ * 读经播放坞 — 100% 对齐安卓 `PlaybackDock.kt`（D-45）：
+ * - 进度行：左已播时长 · 中 3px 金色细进度条（无浏览器圆滑块） · 右总时长
+ * - 传输行：左 `MI.SEARCH` (24) | 中 `SpeedRateImage` (56×22) + `MI.PLAY_ARROW/PAUSE` (34 in 圆钮) + `RepeatGlyph` (24, 角标 1/B/无) | 右 `MI.SKIP_NEXT` (36)
+ */
 export function ReadScripturePlaybackDock({
   visible = true,
   busy = false,
@@ -76,29 +68,20 @@ export function ReadScripturePlaybackDock({
   readAccessibilityLabel,
 }: Props) {
   const { t } = useLocale();
-  const [dragging, setDragging] = useState(false);
-  const [moved, setMoved] = useState(false);
-  const [seekVal, setSeekVal] = useState(0);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const [dragFraction, setDragFraction] = useState<number | null>(null);
 
   const durOk = durationSec > 0.05 && Number.isFinite(durationSec);
   const prog = durOk ? clamp01(currentSec / durationSec) : 0;
-  const sliderValue = dragging && moved ? seekVal : prog;
+  const fraction = dragFraction ?? prog;
   const playLocked = disabled || busy;
-  const live = playing || preparing;
 
-  const onSeekInput = useCallback(
-    (e: React.FormEvent<HTMLInputElement>) => {
-      const v = clamp01(Number(e.currentTarget.value));
-      setMoved(true);
-      setSeekVal(v);
-      seekRatio(v);
-    },
-    [seekRatio],
-  );
-
-  const endDrag = useCallback(() => {
-    setDragging(false);
-    setMoved(false);
+  const ratioFromClientX = useCallback((clientX: number): number | null => {
+    const el = trackRef.current;
+    if (!el) return null;
+    const rect = el.getBoundingClientRect();
+    if (rect.width <= 0) return null;
+    return clamp01((clientX - rect.left) / rect.width);
   }, []);
 
   if (!visible) return null;
@@ -110,31 +93,32 @@ export function ReadScripturePlaybackDock({
         ? t("playback.scriptureRepeatBookShort")
         : t("pages.read.planPlayRepeatOff");
 
+  const repeatBadge = loopMode === "chapter" ? "1" : loopMode === "book" ? "B" : null;
+
   return (
     <div
       data-shell-swipe-nav-exclude
       className={[
         "pointer-events-auto w-full min-w-0 max-w-[min(100%,var(--read-parchment-column-max,28rem))]",
-        "rounded-2xl border border-[#DFD0B8] bg-[#F4EBDD] px-3.5 pt-2.5 pb-1 text-[#231A12] shadow-[0_6px_22px_rgba(24,16,10,0.14)] dark:border-[#3A3026] dark:bg-[#1E1914] dark:text-[#EDE2CF] dark:shadow-[0_8px_26px_rgba(0,0,0,0.42)]",
+        "rounded-2xl border border-[#DFD0B8] bg-[#F4EBDD] px-4 pt-2 pb-1.5 text-[#1C1410] shadow-[0_6px_22px_rgba(24,16,10,0.14)] dark:border-[#3A3026] dark:bg-[#1E1914] dark:text-[#F4EBE1] dark:shadow-[0_8px_26px_rgba(0,0,0,0.42)]",
         className,
       ]
         .filter(Boolean)
         .join(" ")}
       aria-label={t("playback.scriptureDockLabel")}
     >
-      <div className="mb-2 flex items-center gap-2 text-[11px] tabular-nums text-[#3d2e24] dark:text-[#D8C8B4] sm:text-xs">
-        <span className="shrink-0">{formatClock(currentSec)}</span>
-        <span className="text-[rgba(61,46,36,0.45)] dark:text-[rgba(216,200,180,0.45)]">/</span>
-        <span className="shrink-0 opacity-80">{durOk ? formatClock(durationSec) : "—"}</span>
-        <input
-          type="range"
-          className={seekClass}
-          min={0}
-          max={1}
-          step={0.001}
-          value={sliderValue}
-          disabled={!durOk || !live}
+      {/* 进度行：对齐安卓 PlaybackDock.kt（左时间 · 3px 细进度轨 · 右总时长） */}
+      <div className="flex min-h-[23px] items-center gap-2 px-1 text-[12px] font-medium tabular-nums text-[#5C4030] dark:text-[#D8C8B4]">
+        <span className="min-w-[36px] shrink-0">{formatClock(currentSec)}</span>
+
+        <div
+          ref={trackRef}
+          role="slider"
+          tabIndex={durOk ? 0 : -1}
           aria-label={t("playback.scriptureSeekAria")}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(fraction * 100)}
           onPointerDown={(e) => {
             if (!durOk) return;
             if (e.pointerType === "mouse" && e.button !== 0) return;
@@ -143,34 +127,69 @@ export function ReadScripturePlaybackDock({
             } catch {
               /* ignore */
             }
-            setDragging(true);
-            setMoved(false);
+            const r = ratioFromClientX(e.clientX);
+            if (r != null) setDragFraction(r);
           }}
-          onPointerUp={endDrag}
-          onPointerCancel={endDrag}
-          onInput={onSeekInput}
-        />
+          onPointerMove={(e) => {
+            if (dragFraction == null || !durOk) return;
+            const r = ratioFromClientX(e.clientX);
+            if (r != null) setDragFraction(r);
+          }}
+          onPointerUp={(e) => {
+            if (!durOk) return;
+            const r = ratioFromClientX(e.clientX) ?? dragFraction;
+            setDragFraction(null);
+            if (r != null) seekRatio(r);
+          }}
+          onPointerCancel={() => setDragFraction(null)}
+          onKeyDown={(e) => {
+            if (!durOk) return;
+            if (e.key === "ArrowRight") {
+              e.preventDefault();
+              seekRatio(clamp01(prog + 0.05));
+            } else if (e.key === "ArrowLeft") {
+              e.preventDefault();
+              seekRatio(clamp01(prog - 0.05));
+            }
+          }}
+          className={[
+            "flex h-6 flex-1 items-center",
+            durOk ? "cursor-pointer touch-none" : "cursor-default",
+          ].join(" ")}
+        >
+          <div className="h-[3px] w-full overflow-hidden rounded-full bg-[rgba(92,64,48,0.22)] dark:bg-[rgba(237,226,207,0.28)]">
+            <div
+              className="h-full rounded-full bg-[#FFB101]"
+              style={{ width: `${fraction * 100}%` }}
+            />
+          </div>
+        </div>
+
+        <span className="min-w-[36px] shrink-0 text-right">
+          {durOk ? formatClock(durationSec) : "—:—"}
+        </span>
       </div>
 
-      <div className="flex items-center justify-between gap-1 pb-1">
+      {/* 传输行：对齐安卓 PlaybackDock.kt 经典 5 键对称布局 */}
+      <div className="mt-0.5 flex items-center justify-between px-1">
         {onRead ? (
           <button
             type="button"
-            className={sideBtnClass}
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-0 bg-transparent p-0 text-[#1C1410] outline-none transition active:scale-95 disabled:opacity-35 focus-visible:ring-2 focus-visible:ring-amber-700/50 dark:text-[#F4EBE1]"
             disabled={disabled}
             aria-label={readAccessibilityLabel ?? t("pages.read.planPlayReadChapter")}
             onClick={onRead}
           >
-            <ShellMaterialIcon name={readIconName} size={22} color="currentColor" />
+            <ShellMaterialIcon name={readIconName} size={24} color="currentColor" />
           </button>
         ) : (
-          <div className="h-10 w-10 shrink-0" aria-hidden />
+          <div className="h-11 w-11 shrink-0" aria-hidden />
         )}
 
-        <div className="flex min-w-0 flex-1 items-center justify-center gap-4 sm:gap-5">
+        <div className="flex items-center justify-center gap-5 sm:gap-7">
           <button
             type="button"
-            className={`${sideBtnClass} min-w-[2.75rem] px-1`}
+            className="inline-flex min-h-[44px] min-w-[56px] shrink-0 items-center justify-center rounded-full border-0 bg-transparent p-0 text-[#1C1410] outline-none transition active:scale-95 disabled:opacity-35 focus-visible:ring-2 focus-visible:ring-amber-700/50 dark:text-[#F4EBE1]"
             disabled={disabled}
             aria-label={`语音速度 ${scripturePlaybackRate}x`}
             onClick={onCycleRate}
@@ -181,10 +200,10 @@ export function ReadScripturePlaybackDock({
           <button
             type="button"
             className={[
-              "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition active:scale-[0.97] disabled:opacity-35",
+              "inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-0 p-0 outline-none transition active:scale-[0.97] disabled:opacity-35 focus-visible:ring-2 focus-visible:ring-amber-700/50",
               playing
-                ? "bg-[#FFB101] text-[#231A12]"
-                : "bg-[#3d2e24] text-white dark:bg-[#EDE2CF] dark:text-[#1C1713]",
+                ? "bg-[#FFB101] text-[#1C1410]"
+                : "bg-[#1C1410] text-[#FAF5EC] dark:bg-[#F4EBE1] dark:text-[#1C1410]",
             ].join(" ")}
             disabled={playLocked}
             aria-label={
@@ -199,42 +218,40 @@ export function ReadScripturePlaybackDock({
             onClick={onTogglePlay}
           >
             {busy || preparing ? (
-              <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-current border-r-transparent" aria-hidden />
-            ) : playing ? (
-              <IconPause className="h-[22px] w-[22px]" />
+              <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-current border-r-transparent" aria-hidden />
             ) : (
-              <IconPlay className="h-[22px] w-[22px] translate-x-[0.5px]" />
+              <ShellMaterialIcon
+                name={playing ? "pause" : "play-arrow"}
+                size={34}
+                color="currentColor"
+              />
             )}
           </button>
 
           <button
             type="button"
             className={[
-              sideBtnClass,
+              "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-0 p-0 outline-none transition active:scale-95 focus-visible:ring-2 focus-visible:ring-amber-700/50",
               loopMode !== "off"
-                ? "bg-[#C1660B]/15 text-[#C1660B] dark:bg-[#E2A84B]/15 dark:text-[#E2A84B]"
-                : "opacity-70 hover:opacity-100",
+                ? "bg-[rgba(92,64,48,0.10)] text-[#1C1410] dark:bg-[rgba(237,226,207,0.18)] dark:text-[#F4EBE1]"
+                : "bg-transparent text-[#5C4030] dark:text-[#D8C8B4]",
             ].join(" ")}
             aria-pressed={loopMode !== "off"}
             aria-label={loopLabel}
             onClick={onCycleLoop}
           >
-            {loopMode === "chapter" ? (
-              <IconScriptureRepeatChapter className="h-[21px] w-[21px]" />
-            ) : (
-              <IconScriptureRepeatBook className="h-[21px] w-[21px]" />
-            )}
+            <IconScriptureRepeatGlyph badge={repeatBadge} className="h-6 w-6" />
           </button>
         </div>
 
         <button
           type="button"
-          className={sideBtnClass}
+          className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-0 bg-transparent p-0 text-[#1C1410] outline-none transition active:scale-95 disabled:opacity-35 focus-visible:ring-2 focus-visible:ring-amber-700/50 dark:text-[#F4EBE1]"
           disabled={playLocked}
           aria-label={t("pages.read.planPlayNextChapter")}
           onClick={onNext}
         >
-          <IconSkipForward className="h-[22px] w-[22px]" />
+          <ShellMaterialIcon name="skip-next" size={36} color="currentColor" />
         </button>
       </div>
     </div>

@@ -9,8 +9,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -166,7 +165,7 @@ fun PlaybackDock(
                             .clickableNoRipple { audio.cycleRate() },
                         contentAlignment = Alignment.Center,
                     ) {
-                        SpeedRateImage(audio.rate.toDouble(), ink, theme.accentOt.toColor())
+                        SpeedRateImage(audio.rate.toDouble(), ink)
                     }
 
                     Box(
@@ -192,15 +191,15 @@ fun PlaybackDock(
                         Modifier.size(ShellMetrics.loopButtonSize.dp).clip(CircleShape)
                             .background(
                                 if (audio.loopMode != LoopMode.FORWARD)
-                                    theme.accentOt.toColor().copy(alpha = 0.15f)
+                                    (if (theme == Parchment.dark) Color(0x2EEDE2CF) else Color(0x1A5C4030))
                                 else Color.Transparent
                             )
                             .clickableNoRipple { audio.cycleLoop() },
                         contentAlignment = Alignment.Center,
                     ) {
                         RepeatGlyph(
-                            badge = if (audio.loopMode == LoopMode.CHAPTER) "1" else null,
-                            color = if (audio.loopMode == LoopMode.FORWARD) theme.muted.toColor().copy(alpha = 0.85f) else theme.accentOt.toColor(),
+                            badge = audio.loopMode.badge,
+                            color = if (audio.loopMode == LoopMode.FORWARD) theme.muted.toColor() else ink,
                             size = ShellMetrics.loopIconSize,
                         )
                     }
@@ -225,56 +224,56 @@ private fun GlyphBox(box: Float, icon: Float, glyph: String, tint: Color, onClic
     }
 }
 
-/** 圆角线框倍速徽章（1.0x / 1.25x / 1.5x / 2.0x），与循环、跳章保持同一描边粗细与视觉高度 */
+/** 语速档位用 RN 同一套预渲染图（scripture-speed-*.png，56×22，tint 成 ink），不受系统字体大小影响 */
 @Composable
-fun SpeedRateImage(rate: Double, color: Color, accent: Color = Color(0xFFC1660B)) {
-    val label = when (Math.round(rate * 100).toInt()) {
-        75 -> "0.75x"; 125 -> "1.25x"; 150 -> "1.5x"; 175 -> "1.75x"; 200 -> "2.0x"; else -> "1.0x"
+fun SpeedRateImage(rate: Double, color: Color) {
+    val key = when (Math.round(rate * 100).toInt()) {
+        75 -> "075"; 125 -> "125"; 150 -> "15"; 175 -> "175"; 200 -> "2"; else -> "1"
     }
-    val active = kotlin.math.abs(rate - 1.0) > 0.01
-    val shape = RoundedCornerShape(7.dp)
-    Box(
-        Modifier
-            .defaultMinSize(minWidth = 38.dp, minHeight = 22.dp)
-            .clip(shape)
-            .background(if (active) accent.copy(alpha = 0.15f) else Color.Transparent)
-            .border(1.55.dp, if (active) accent else color.copy(alpha = 0.55f), shape)
-            .padding(horizontal = 6.dp, vertical = 2.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            label,
-            color = if (active) accent else color,
-            fontSize = 11.5.sp,
-            fontWeight = FontWeight.Bold,
-            softWrap = false,
+    val context = LocalContext.current
+    val bitmap = remember(key) {
+        runCatching {
+            context.assets.open("images/scripture-speed-$key.png").use { BitmapFactory.decodeStream(it) }
+        }.getOrNull()?.asImageBitmap()
+    }
+    if (bitmap != null) {
+        Image(
+            bitmap, contentDescription = null,
+            modifier = Modifier.size(ShellMetrics.speedButtonSize.dp, 22.dp),
+            contentScale = ContentScale.Fit,
+            colorFilter = ColorFilter.tint(color),
         )
+    } else {
+        Text(if (key == "1") "1x" else "${rate}x", color = color, fontSize = 22.sp, fontWeight = FontWeight.Bold)
     }
 }
 
-/** 对称圆角循环轨（单章循环正中显 "1"，整卷循环与关闭态不塞杂乱细线） */
+/** RN `MusicRepeatAllIcon` / `MusicRepeatOneIcon`（react-native-svg 手绘）：24 格里两段圆角箭头，描边 1.6 圆头；单章版中间一个 8sp 粗体 "1" */
 @Composable
+/** 角标：本章「1」、本书「B」、继续往前 null */
 fun RepeatGlyph(badge: String?, color: Color, size: Float = 24f) {
     val s = size / 24f
     Box(Modifier.size(size.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.size(size.dp)) {
             val u = this.size.width / 24f
             val p = Path().apply {
-                moveTo(17f * u, 3f * u); lineTo(20.5f * u, 6.5f * u); lineTo(17f * u, 10f * u)
-                moveTo(3.5f * u, 11f * u); lineTo(3.5f * u, 9.5f * u)
-                cubicTo(3.5f * u, 7.84f * u, 4.84f * u, 6.5f * u, 6.5f * u, 6.5f * u)
-                lineTo(20.5f * u, 6.5f * u)
-
-                moveTo(7f * u, 21f * u); lineTo(3.5f * u, 17.5f * u); lineTo(7f * u, 14f * u)
-                moveTo(20.5f * u, 13f * u); lineTo(20.5f * u, 14.5f * u)
-                cubicTo(20.5f * u, 16.16f * u, 19.16f * u, 17.5f * u, 17.5f * u, 17.5f * u)
-                lineTo(3.5f * u, 17.5f * u)
+                // M7 7h8a4 4 0 0 1 4 4v1（四分之一圆用三次贝塞尔近似，k = 0.5523 × 4）
+                moveTo(7 * u, 7 * u); lineTo(15 * u, 7 * u)
+                cubicTo(17.21f * u, 7 * u, 19 * u, 8.79f * u, 19 * u, 11 * u)
+                lineTo(19 * u, 12 * u)
+                // M17 17H9a4 4 0 0 1-4-4v-1
+                moveTo(17 * u, 17 * u); lineTo(9 * u, 17 * u)
+                cubicTo(6.79f * u, 17 * u, 5 * u, 15.21f * u, 5 * u, 13 * u)
+                lineTo(5 * u, 12 * u)
+                // M7 4 4 7l3 3   M17 20l3-3-3-3
+                moveTo(7 * u, 4 * u); lineTo(4 * u, 7 * u); lineTo(7 * u, 10 * u)
+                moveTo(17 * u, 20 * u); lineTo(20 * u, 17 * u); lineTo(17 * u, 14 * u)
             }
-            drawPath(p, color, style = Stroke(width = 1.8f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            drawPath(p, color, style = Stroke(width = 1.6f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
         }
         if (badge != null) {
-            Text(badge, color = color, fontSize = (8.5f * s).sp, fontWeight = FontWeight.Bold,
-                 modifier = Modifier.offset(y = (0.1f * s).dp))
+            Text(badge, color = color, fontSize = (8 * s).sp, fontWeight = FontWeight.Bold,
+                 modifier = Modifier.offset(y = (0.3f * s).dp))
         }
     }
 }

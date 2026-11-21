@@ -75,7 +75,7 @@ struct PlaybackDock: View {
 
             HStack(spacing: ShellMetrics.transportMainGap) {
                 Button { audio.cycleRate() } label: {
-                    SpeedRateImage(rate: Double(audio.rate), color: theme.ink, accent: theme.accentOt)
+                    SpeedRateImage(rate: Double(audio.rate), color: theme.ink)
                         .frame(minWidth: ShellMetrics.speedButtonSize,
                                minHeight: ShellMetrics.transportButtonSize)
                         .contentShape(Rectangle())
@@ -85,13 +85,13 @@ struct PlaybackDock: View {
                 playButton
 
                 Button { audio.cycleLoop() } label: {
-                    RepeatGlyph(badge: audio.loopMode == .chapter ? "1" : nil,
-                                color: audio.loopMode == .forward ? theme.muted.opacity(0.85) : theme.accentOt,
+                    RepeatGlyph(badge: audio.loopMode.badge,
+                                color: audio.loopMode == .forward ? theme.muted : theme.ink,
                                 size: ShellMetrics.loopIconSize)
                         .frame(width: ShellMetrics.loopButtonSize, height: ShellMetrics.loopButtonSize)
                         .background {
                             if audio.loopMode != .forward {
-                                Circle().fill(theme.accentOt.opacity(0.15))
+                                Circle().fill(theme.isDark ? Color.white.opacity(0.14) : Color(parchment: 0x5c4030, opacity: 0.1))
                             }
                         }
                         .contentShape(Circle())
@@ -143,42 +143,34 @@ struct PlaybackDock: View {
     }
 }
 
-/// 圆角线框倍速徽章（1.0x / 1.25x / 1.5x / 2.0x），与循环、跳章保持同一描边粗细与视觉高度
+/// 语速档位预渲染图（scripture-speed-*.png，56×22，tint 成 ink）
 struct SpeedRateImage: View {
     let rate: Double
     let color: Color
-    var accent: Color = Color(rgb: 0xC1660B)
 
-    private var label: String {
+    private var key: String {
         switch Int((rate * 100).rounded()) {
-        case 75: return "0.75x"
-        case 125: return "1.25x"
-        case 150: return "1.5x"
-        case 175: return "1.75x"
-        case 200: return "2.0x"
-        default: return "1.0x"
+        case 75: return "075"
+        case 125: return "125"
+        case 150: return "15"
+        case 175: return "175"
+        case 200: return "2"
+        default: return "1"
         }
     }
 
-    private var active: Bool {
-        abs(rate - 1.0) > 0.01
-    }
-
     var body: some View {
-        Text(label)
-            .font(.system(size: 11.5, weight: .bold, design: .rounded))
-            .monospacedDigit()
-            .foregroundStyle(active ? accent : color)
-            .padding(.horizontal, 7)
-            .frame(minWidth: 38, minHeight: 22)
-            .background(
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(active ? accent.opacity(0.15) : Color.clear)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .strokeBorder(active ? accent : color.opacity(0.55), lineWidth: 1.55)
-            )
+        Group {
+            if let img = UIImage(named: "scripture-speed-\(key)") {
+                Image(uiImage: img.withRenderingMode(.alwaysTemplate))
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .foregroundStyle(color)
+            } else {
+                Text(key == "1" ? "1x" : "\(rate)x").askFont(size: 22, weight: .bold).foregroundStyle(color)
+            }
+        }
+        .frame(width: ShellMetrics.speedButtonSize, height: 22)
     }
 }
 
@@ -191,24 +183,23 @@ struct RepeatGlyph: View {
         let s = size / 24
         ZStack {
             Path { p in
-                p.move(to: CGPoint(x: 17, y: 3)); p.addLine(to: CGPoint(x: 20.5, y: 6.5)); p.addLine(to: CGPoint(x: 17, y: 10))
-                p.move(to: CGPoint(x: 3.5, y: 11)); p.addLine(to: CGPoint(x: 3.5, y: 9.5))
-                p.addCurve(to: CGPoint(x: 6.5, y: 6.5), control1: CGPoint(x: 3.5, y: 7.84), control2: CGPoint(x: 4.84, y: 6.5))
-                p.addLine(to: CGPoint(x: 20.5, y: 6.5))
-
-                p.move(to: CGPoint(x: 7, y: 21)); p.addLine(to: CGPoint(x: 3.5, y: 17.5)); p.addLine(to: CGPoint(x: 7, y: 14))
-                p.move(to: CGPoint(x: 20.5, y: 13)); p.addLine(to: CGPoint(x: 20.5, y: 14.5))
-                p.addCurve(to: CGPoint(x: 17.5, y: 17.5), control1: CGPoint(x: 20.5, y: 16.16), control2: CGPoint(x: 19.16, y: 17.5))
-                p.addLine(to: CGPoint(x: 3.5, y: 17.5))
+                p.move(to: CGPoint(x: 7, y: 7)); p.addLine(to: CGPoint(x: 15, y: 7))
+                p.addCurve(to: CGPoint(x: 19, y: 11), control1: CGPoint(x: 17.21, y: 7), control2: CGPoint(x: 19, y: 8.79))
+                p.addLine(to: CGPoint(x: 19, y: 12))
+                p.move(to: CGPoint(x: 17, y: 17)); p.addLine(to: CGPoint(x: 9, y: 17))
+                p.addCurve(to: CGPoint(x: 5, y: 13), control1: CGPoint(x: 6.79, y: 17), control2: CGPoint(x: 5, y: 15.21))
+                p.addLine(to: CGPoint(x: 5, y: 12))
+                p.move(to: CGPoint(x: 7, y: 4)); p.addLine(to: CGPoint(x: 4, y: 7)); p.addLine(to: CGPoint(x: 7, y: 10))
+                p.move(to: CGPoint(x: 17, y: 20)); p.addLine(to: CGPoint(x: 20, y: 17)); p.addLine(to: CGPoint(x: 17, y: 14))
             }
             .applying(CGAffineTransform(scaleX: s, y: s))
-            .stroke(color, style: StrokeStyle(lineWidth: 1.8 * s, lineCap: .round, lineJoin: .round))
+            .stroke(color, style: StrokeStyle(lineWidth: 1.6 * s, lineCap: .round, lineJoin: .round))
 
             if let badge {
                 Text(badge)
-                    .font(.system(size: 8.5 * s, weight: .bold, design: .rounded))
+                    .askFont(size: 8 * s, weight: .bold)
                     .foregroundStyle(color)
-                    .position(x: 12 * s, y: 12.1 * s)
+                    .position(x: 12 * s, y: 12.3 * s)
             }
         }
         .frame(width: size, height: size)

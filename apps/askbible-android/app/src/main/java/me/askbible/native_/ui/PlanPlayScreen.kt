@@ -172,11 +172,11 @@ fun PlanPlayScreen(
 
                     if (needsConfirm) {
                         Box(
-                            Modifier.fillMaxWidth().padding(top = 12.dp).height(44.dp).clip(RoundedCornerShape(12.dp)).background(ink)
+                            Modifier.fillMaxWidth().padding(top = 12.dp).height(44.dp).clip(RoundedCornerShape(12.dp)).background(accent)
                                 .clickableNoRipple(onConfirmDay),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text(locale.zh(PlanCopy.t("pages.read.planPlayConfirmDay")), color = Color(0xFFF5EFE4), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                            Text(locale.zh(PlanCopy.t("pages.read.planPlayConfirmDay")), color = Color(0xFFFFFBF4), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
 
@@ -299,21 +299,24 @@ fun PlanPlayScreen(
                     val seg = stages[i]
                     val isCurrent = i == s.curriculumIndex
                     val done = i < s.curriculumIndex
+                    val isDark = theme == Parchment.dark
+                    val currentBg = if (isDark) Brand.logo.toColor().copy(alpha = 0.18f) else Color(0xE6FFECBF)
+                    val currentAccent = if (isDark) Brand.logo.toColor() else Color(0xFF8A5A00)
                     Row(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-                            .background(if (isCurrent) Color(0xE6FFECBF) else theme.surface.toColor().copy(alpha = 0.45f))
+                            .background(if (isCurrent) currentBg else theme.surface.toColor().copy(alpha = 0.45f))
                             .border(if (isCurrent) 1.dp else 0.5.dp, if (isCurrent) Color(0xB3FFB101) else theme.border.toColor(), RoundedCornerShape(10.dp))
                             .clickableNoRipple { if (!isCurrent || s.dayInSegment > 1) stageToConfirm = i } // 当前阶也能点：本阶从第 1 天重来
                             .padding(horizontal = 12.dp, vertical = 9.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         Text(locale.zh(PlanCopy.f("pages.read.ntDeepRepeatStageLabel", mapOf("n" to "${i + 1}"))), Modifier.width(58.dp),
-                             color = if (isCurrent) Color(0xFF8A5A00) else faint, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                             color = if (isCurrent) currentAccent else faint, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                         Text(NtDeepRepeat.stageRange(seg), Modifier.weight(1f), color = ink, fontSize = 16.sp,
                              fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Normal)
                         if (isCurrent) {
                             Text(locale.zh(PlanCopy.f("pages.read.ntDeepRepeatStageCurrent", mapOf("day" to "${s.dayInSegment}", "total" to "${s.segmentDayTarget}"))),
-                                 color = Color(0xFF8A5A00), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                 color = currentAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         } else if (done) {
                             Text(locale.zh(PlanCopy.t("pages.read.ntDeepRepeatStageDone")), color = faint, fontSize = 12.sp)
                         }
@@ -411,8 +414,8 @@ private fun PlanGentleWeekCard(
                             .clip(RoundedCornerShape(999.dp))
                             .background(
                                 when {
-                                    isSelected -> ink
-                                    isToday -> accent.copy(alpha = 0.14f)
+                                    isSelected -> accent
+                                    isToday -> accent.copy(alpha = 0.16f)
                                     else -> Color.Transparent
                                 },
                             )
@@ -424,12 +427,12 @@ private fun PlanGentleWeekCard(
                     ) {
                         Text(
                             weekdaysShort[idx],
-                            color = if (isSelected) Color(0xFFF5EFE4).copy(alpha = 0.78f) else muted,
+                            color = if (isSelected) Color(0xFFFFFBF4).copy(alpha = 0.88f) else muted,
                             fontSize = 11.sp,
                         )
                         Text(
                             "${d.dayOfMonth}",
-                            color = if (isSelected) Color(0xFFF5EFE4) else ink,
+                            color = if (isSelected) Color(0xFFFFFBF4) else ink,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                         )
@@ -437,7 +440,13 @@ private fun PlanGentleWeekCard(
                             Modifier
                                 .size(4.5.dp)
                                 .clip(RoundedCornerShape(999.dp))
-                                .background(if (isRead || isToday) Brand.logo.toColor() else Color.Transparent),
+                                .background(
+                                    if (isRead || isToday) {
+                                        if (isSelected) Color(0xFFFFFBF4) else Brand.logo.toColor()
+                                    } else {
+                                        Color.Transparent
+                                    },
+                                ),
                         )
                     }
                 }
@@ -468,6 +477,7 @@ fun PlanMonthCalendar(
     val rows = PlanPlay.monthGrid(cursorYear, cursorMonth, today, viewAhead, listened) { ahead -> PlanPlay.isAheadSelectable(prefs, dayCount, ahead) }
     val weekdays = if (locale == AppLocale.EN) PlanPlay.WEEKDAYS_EN else PlanPlay.WEEKDAYS_ZH
     val ink = theme.ink.toColor()
+    val accent = theme.accentOt.toColor()
     fun move(delta: Int) {
         var m = cursorMonth + delta; var y = cursorYear
         if (m < 1) { m = 12; y -= 1 }
@@ -491,20 +501,26 @@ fun PlanMonthCalendar(
                     val day = cell.day
                     if (day == null) { Spacer(Modifier.weight(1f).height(44.dp)); continue }
                     val disabled = !cell.selectable
-                    // 颜色只各管一件事（D-8）：黑 = 今天，黄 = 已读，描边 = 正在看的那天；原来选中也涂黄，和「已读」分不清
+                    // 颜色只各管一件事（D-8）：琥珀 = 今天，金黄 = 已读（固定深棕字），描边 = 正在看的那天
                     val todayFill = cell.isToday
                     val accentFill = !todayFill && cell.isListened
                     val viewing = cell.isSelected && !todayFill
                     val fadeDisabled = disabled && !cell.isListened
+                    val dayTextColor = when {
+                        todayFill -> Color(0xFFFFFBF4)
+                        accentFill -> Color(0xFF1C1410)
+                        fadeDisabled -> theme.faint.toColor()
+                        else -> ink
+                    }
                     Box(
                         Modifier.weight(1f).padding(horizontal = 2.dp, vertical = 2.dp).height(40.dp).clip(RoundedCornerShape(7.dp))
-                            .background(if (todayFill) ink else if (accentFill) Brand.logo.toColor() else Color.Transparent)
-                            .then(if (viewing) Modifier.border(2.dp, ink, RoundedCornerShape(7.dp)) else Modifier)
+                            .background(if (todayFill) accent else if (accentFill) Brand.logo.toColor() else Color.Transparent)
+                            .then(if (viewing) Modifier.border(2.dp, accent, RoundedCornerShape(7.dp)) else Modifier)
                             .alpha(if (fadeDisabled) 0.35f else 1f)
                             .clickableNoRipple { if (!disabled) onSelectAhead(cell.ahead) },
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text("$day", color = if (todayFill) theme.surfaceSolid.toColor() else if (fadeDisabled) theme.faint.toColor() else ink,
+                        Text("$day", color = dayTextColor,
                              fontSize = 18.sp, fontWeight = if (todayFill || accentFill || viewing) FontWeight.Bold else FontWeight.Medium)
                     }
                 }
@@ -517,9 +533,9 @@ fun PlanMonthCalendar(
                 Box(Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).then(mod))
                 Text(locale.zh(me.askbible.native_.data.SiteCopy.t("native.$key", locale)), Modifier.padding(start = 5.dp, end = 16.dp), color = muted, fontSize = 13.sp)
             }
-            Legend(Modifier.background(ink), "planLegendToday")
+            Legend(Modifier.background(accent), "planLegendToday")
             Legend(Modifier.background(Brand.logo.toColor()), "planLegendRead")
-            Legend(Modifier.border(1.5.dp, ink, RoundedCornerShape(3.dp)), "planLegendViewing")
+            Legend(Modifier.border(1.5.dp, accent, RoundedCornerShape(3.dp)), "planLegendViewing")
         }
     }
 }

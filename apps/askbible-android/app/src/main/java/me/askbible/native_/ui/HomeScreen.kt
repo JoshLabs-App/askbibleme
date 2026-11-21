@@ -71,7 +71,15 @@ fun HomeScreen(
     val wide = LocalConfiguration.current.let { it.screenWidthDp > it.screenHeightDp }
     Box(Modifier.fillMaxSize().background(Color(0xFF1A1512))) {
         val poster = rememberAssetImage(if (liveVideo) NatureScenes.posterAsset(sceneId) else NatureScenes.softPosterAsset(sceneId))
-        if (poster != null) Image(poster, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        if (poster != null) {
+            Image(
+                poster,
+                null,
+                Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alignment = if (wide) Alignment.Center else androidx.compose.ui.BiasAlignment(-1f, 0f),
+            )
+        }
         if (liveVideo) HomeSceneVideo(sceneId, Modifier.fillMaxSize())
         Box(Modifier.fillMaxSize()
             .semantics { contentDescription = t("风景", "Scenery"); customActions = listOf(
@@ -123,32 +131,19 @@ fun HomeScreen(
                     shadow = shadow,
                 ),
             )
-            Spacer(Modifier.height(14.dp))
-            Row(
-                Modifier
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(Color.Black.copy(alpha = 0.36f))
-                    .border(0.75.dp, Color.White.copy(alpha = 0.24f), RoundedCornerShape(999.dp))
-                    .clickableNoRipple { touch(); onOpenVerseContext() }
-                    .padding(horizontal = 14.dp, vertical = 7.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Text(
-                    verse.reference,
-                    color = Color.White.copy(alpha = 0.96f),
-                    fontSize = maxOf(13f, HomeVerseTypography.refSize(vScale) * 0.78f).sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text("·", color = Color.White.copy(alpha = 0.48f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                Text(
-                    t("读上下文", "Read context"),
-                    color = Color(0xFFFFE3A3),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                MaterialIcon(MI.CHEVRON_RIGHT, 14f, Color(0xFFFFE3A3))
-            }
+            Spacer(Modifier.height(HomeVerseTypography.refTopGap(vScale).dp))
+            Text(
+                verse.reference,
+                modifier = Modifier.clickableNoRipple { touch(); onOpenVerseContext() },
+                style = TextStyle(
+                    color = Color.White,
+                    fontSize = HomeVerseTypography.refSize(vScale).sp,
+                    lineHeight = HomeVerseTypography.refLineHeight(vScale).sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    shadow = shadow,
+                ),
+            )
         }
         Column(
             Modifier

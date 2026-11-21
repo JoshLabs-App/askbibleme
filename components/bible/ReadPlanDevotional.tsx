@@ -52,9 +52,9 @@ export function ReadPlanDevotional({ viewAhead }: { viewAhead: number }) {
   return (
     <section
       aria-label={tw ? "今日靈修" : "今日灵修"}
-      className="mt-6 rounded-2xl border border-[color:var(--bc-read-border,rgba(92,64,48,0.18))] bg-[var(--bc-read-surface-solid,#faf6ee)] p-4 text-[var(--bc-read-book)]"
+      className="mt-6 rounded-2xl border border-[#DFD0B8] bg-[#FAF5EC]/90 p-4 text-[#231A12] dark:border-[#3A3026] dark:bg-[#221C16]/92 dark:text-[#EDE2CF]"
     >
-      <p className="text-sm text-[var(--bc-read-muted)]">
+      <p className="text-sm font-semibold text-[#C1660B] dark:text-[#FFC845]">
         {tw ? "今日靈修" : "今日灵修"}
         {day
           ? ` · ${Number(day.md.slice(0, 2))}月${Number(day.md.slice(3))}日`
@@ -75,7 +75,7 @@ export function ReadPlanDevotional({ viewAhead }: { viewAhead: number }) {
         />
         <span
           aria-hidden="true"
-          className="relative h-6 w-11 shrink-0 rounded-full bg-stone-300 after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform peer-checked:bg-stone-800 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-amber-700"
+          className="relative h-6 w-11 shrink-0 rounded-full bg-stone-300 after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform peer-checked:bg-[#C1660B] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-amber-700 dark:bg-stone-700 dark:peer-checked:bg-[#D97707]"
         />
       </label>
       {day ? (

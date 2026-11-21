@@ -65,9 +65,9 @@ struct PlanPlayView: View {
                                 confirmBusy = false
                             } label: {
                                 Text(locale.zh(PlanCopy.t(confirmBusy ? "pages.read.todayPlanLoading" : "pages.read.planPlayConfirmDay")))
-                                    .askFont(size: 15, weight: .semibold).foregroundStyle(Color(parchment: 0xF5EFE4))
+                                    .askFont(size: 15, weight: .semibold).foregroundStyle(.white)
                                     .frame(maxWidth: .infinity).frame(height: 44)
-                                    .background(RoundedRectangle(cornerRadius: 12).fill(theme.ink))
+                                    .background(RoundedRectangle(cornerRadius: 12).fill(theme.accentOt))
                             }
                             .buttonStyle(.plain).opacity(confirmBusy ? 0.35 : 1).padding(.top, 10)
                         }
@@ -200,19 +200,19 @@ struct PlanPlayView: View {
                         VStack(spacing: 5) {
                             Text(weekLabels[step])
                                 .askFont(size: 11, weight: .medium)
-                                .foregroundStyle(isSelected ? theme.canvas.opacity(0.8) : theme.muted)
+                                .foregroundStyle(isSelected ? Color.white.opacity(0.88) : theme.muted)
                             Text("\(dayNum)")
                                 .askFont(size: 15, weight: .bold).monospacedDigit()
-                                .foregroundStyle(isSelected ? theme.canvas : theme.ink)
+                                .foregroundStyle(isSelected ? Color.white : theme.ink)
                             Circle()
-                                .fill(isDone ? (isSelected ? Brand.logo : doneOlive) : Color.clear)
+                                .fill(isDone ? (isSelected ? Color.white : doneOlive) : Color.clear)
                                 .frame(width: 5, height: 5)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
                         .background(
                             Capsule()
-                                .fill(isSelected ? theme.ink : (isToday ? theme.accentOt.opacity(0.14) : Color.clear))
+                                .fill(isSelected ? theme.accentOt : (isToday ? theme.accentOt.opacity(0.16) : Color.clear))
                         )
                         .opacity(!selectable && !isDone ? 0.38 : 1)
                     }
@@ -358,21 +358,22 @@ struct PlanPlayView: View {
                         if !isCurrent || s.dayInSegment > 1 { stageToConfirm = i }
                     } label: {
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
+                            let currentAccent = theme.isDark ? Brand.logo : Color(parchment: 0x8A5A00)
                             Text(locale.zh(PlanCopy.f("pages.read.ntDeepRepeatStageLabel", ["n": "\(i + 1)"])))
-                                .askFont(size: 13, weight: .semibold).foregroundStyle(isCurrent ? Color(parchment: 0x8A5A00) : theme.faint)
+                                .askFont(size: 13, weight: .semibold).foregroundStyle(isCurrent ? currentAccent : theme.faint)
                                 .frame(width: 58, alignment: .leading)
                             Text(NtDeepRepeat.stageRange(seg))
                                 .askFont(size: 16, weight: isCurrent ? .semibold : .regular).foregroundStyle(isCurrent ? theme.ink : theme.inkSoft)
                             Spacer(minLength: 6)
                             if isCurrent {
                                 Text(locale.zh(PlanCopy.f("pages.read.ntDeepRepeatStageCurrent", ["day": "\(s.dayInSegment)", "total": "\(s.segmentDayTarget)"])))
-                                    .askFont(size: 12, weight: .semibold).foregroundStyle(Color(parchment: 0x8A5A00))
+                                    .askFont(size: 12, weight: .semibold).foregroundStyle(currentAccent)
                             } else if done {
                                 Text(locale.zh(PlanCopy.t("pages.read.ntDeepRepeatStageDone"))).askFont(size: 12).foregroundStyle(theme.faint)
                             }
                         }
                         .padding(.horizontal, 12).padding(.vertical, 9)
-                        .background(RoundedRectangle(cornerRadius: 10).fill(isCurrent ? Color(parchment: 0xFFECBF, opacity: 0.9) : theme.surface.opacity(0.45)))
+                        .background(RoundedRectangle(cornerRadius: 10).fill(isCurrent ? (theme.isDark ? Brand.logo.opacity(0.18) : Color(parchment: 0xFFECBF, opacity: 0.9)) : theme.surface.opacity(0.45)))
                         .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(isCurrent ? Color(rgb: 0xFFB101, opacity: 0.7) : theme.border, lineWidth: isCurrent ? 1 : 0.5))
                     }
                     .buttonStyle(.plain)
@@ -459,12 +460,15 @@ struct PlanMonthCalendar: View {
                 let todayFill = cell.isToday
                 let accentFill = !todayFill && (cell.isSelected || cell.isListened)
                 let fadeDisabled = disabled && !cell.isListened
+                let dayTextColor: Color = todayFill
+                    ? .white
+                    : (accentFill ? Color(rgb: 0x1C1410) : (fadeDisabled ? theme.faint : theme.ink))
                 Button { onSelectAhead(cell.ahead) } label: {
                     Text("\(day)")
                         .askFont(size: 18, weight: todayFill || accentFill ? .bold : .medium).monospacedDigit()
-                        .foregroundStyle(todayFill ? theme.surfaceSolid : (fadeDisabled ? theme.faint : theme.ink))
+                        .foregroundStyle(dayTextColor)
                         .frame(maxWidth: .infinity).frame(height: 40)
-                        .background(RoundedRectangle(cornerRadius: 7).fill(todayFill ? theme.ink : (accentFill ? Brand.logo : Color.clear)))
+                        .background(RoundedRectangle(cornerRadius: 7).fill(todayFill ? theme.accentOt : (accentFill ? Brand.logo : Color.clear)))
                         .padding(.vertical, 2).padding(.horizontal, 2)
                 }
                 .buttonStyle(.plain)

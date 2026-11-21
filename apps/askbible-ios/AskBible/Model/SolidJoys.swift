@@ -14,7 +14,7 @@ struct DevotionalDay: Decodable, Identifiable {
     var audioURL: URL? { audio.flatMap(URL.init(string:)) }
 }
 
-/// 与安卓同一份授权内容：只在中文管理员界面出现，全文仅缓存到设备，不进入安装包或仓库。
+/// 与安卓同一份授权内容：只在中文界面出现，全文仅缓存到设备，不进入安装包或仓库。
 @MainActor
 final class SolidJoys: ObservableObject {
     @Published private(set) var days: [String: DevotionalDay] = [:]
@@ -24,7 +24,7 @@ final class SolidJoys: ObservableObject {
     private var generation = UUID()
     static let title = "约翰·派博每日灵修"
 
-    static func available(locale: AppLocale, isAdmin: Bool) -> Bool { isAdmin && locale != .en }
+    static func available(locale: AppLocale, isAdmin: Bool = true) -> Bool { locale != .en }
     func day(_ date: Date) -> DevotionalDay? {
         let c = Calendar.current.dateComponents([.month, .day], from: date)
         let key = c.month == 2 && c.day == 29 ? "02-28" : String(format: "%02d-%02d", c.month!, c.day!)

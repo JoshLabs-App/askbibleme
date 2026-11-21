@@ -34,7 +34,9 @@ struct HomeView: View {
                 Color(rgb: 0x1a1512)
                 if let poster = NatureScenes.posterImage(id: prefs.sceneId, soft: !prefs.liveVideo) {
                     Image(uiImage: poster).resizable().scaledToFill()
-                        .frame(width: geo.size.width, height: fullHeight).clipped().allowsHitTesting(false)
+                        .frame(width: geo.size.width, height: fullHeight, alignment: geo.size.width > fullHeight ? .center : .leading)
+                        .environment(\.layoutDirection, .leftToRight)
+                        .clipped().allowsHitTesting(false)
                 }
                 if prefs.liveVideo {
                     HomeSceneVideo(sceneId: prefs.sceneId, paused: scenePhase != .active)
@@ -208,27 +210,11 @@ struct HomeView: View {
                 touch()
                 onOpenVerseContext()
             } label: {
-                HStack(spacing: 6) {
-                    Text(home.verse.reference)
-                        .askFont(size: max(13, HomeVerseTypography.refSize(scale: prefs.textScale) * 0.78), weight: .semibold)
-                        .foregroundStyle(.white.opacity(0.96))
-                    Text("·")
-                        .askFont(size: 12, weight: .bold)
-                        .foregroundStyle(.white.opacity(0.48))
-                    Text(copy("读上下文", "Read context"))
-                        .askFont(size: 12, weight: .semibold)
-                        .foregroundStyle(Color(rgb: 0xFFE3A3))
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 9.5, weight: .bold))
-                        .foregroundStyle(Color(rgb: 0xFFE3A3))
-                }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 7)
-                .background(
-                    Capsule()
-                        .fill(Color.black.opacity(0.36))
-                        .overlay(Capsule().strokeBorder(.white.opacity(0.24), lineWidth: 0.75))
-                )
+                Text(home.verse.reference)
+                    .askFont(size: HomeVerseTypography.refSize(scale: prefs.textScale), weight: .bold)
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
+                    .verseTextShadow()
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("home.verse.context")

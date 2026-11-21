@@ -90,7 +90,12 @@ fun ParchmentPinnedBottom(modifier: Modifier = Modifier, theme: Parchment = Loca
             if (texture != null) {
                 val w = view.width.takeIf { it > 0 } ?: size.width.toInt()
                 val h = view.height.takeIf { it > 0 } ?: size.height.toInt()
-                drawImage(image = texture, dstOffset = IntOffset(0, size.height.toInt() - h), dstSize = IntSize(w, h))
+                drawImage(
+                    image = texture,
+                    dstOffset = IntOffset(0, size.height.toInt() - h),
+                    dstSize = IntSize(w, h),
+                    alpha = if (theme == Parchment.dark) 0.07f else 1f,
+                )
             }
         }
     }

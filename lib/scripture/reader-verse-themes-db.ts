@@ -25,6 +25,7 @@ export async function getReaderVerseThemesDatabase(cwd: string): Promise<Databas
   const abs = readerVerseThemesSqlitePath(cwd);
   if (!fs.existsSync(abs)) return null;
   const st = fs.statSync(abs);
+  if (st.size < 100) return null;
   if (cached && cached.mtimeMs === st.mtimeMs) return cached.db;
 
   invalidateReaderVerseThemesDbCache();

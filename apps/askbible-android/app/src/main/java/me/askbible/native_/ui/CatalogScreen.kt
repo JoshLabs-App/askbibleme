@@ -1,145 +1,206 @@
 package me.askbible.native_.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInWindow
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import me.askbible.native_.data.AppLocale
 import me.askbible.native_.data.BibleCatalog
 import me.askbible.native_.data.BookGroup
 import me.askbible.native_.data.BookRef
 import me.askbible.native_.data.Parchment
-import me.askbible.native_.data.title
-import me.askbible.native_.data.name
 import me.askbible.native_.data.ReadChrome
-import me.askbible.native_.data.AppLocale
 import me.askbible.native_.data.ReadSize
-import me.askbible.native_.data.ShellMetrics
+import me.askbible.native_.data.SiteCopy
+import me.askbible.native_.data.name
+import me.askbible.native_.data.title
 
 /**
- * 圣经目录。双栏 + 彩色分组，右侧竖排在这一页是 6 个（比章页多搜索和历史）。
- * 与 iOS 的 CatalogView 对等；书卷数据来自 core 的 BibleCatalog（已三端对拍）。
+ * 圣经目录（对齐 iOS CatalogView）：
+ * 移除右侧遮挡新约书名的 6 颗竖排圆钮，改为顶部「圣经 + 译本胶囊 + 收藏」页眉 + 搜索直达入口条 +
+ * 「继续上次阅读」暖琥珀书签条 + 对称无遮挡双栏目录。
  */
 @Composable
 fun CatalogScreen(
     size: ReadSize,
     onOpenBook: (BookRef) -> Unit,
-    /** 书卷名：在线译本用它自己那套（西语版本 → Génesis）；默认退回目录里的中英名 */
     bookLabel: (BookRef) -> String = { it.name(AppLocale.current) },
-    /** 读经展示语言：书名 / 分组 / 「圣经 · 旧约 · 新约」都按它（英文译本 → 英文面） */
     locale: AppLocale = AppLocale.ZH_CN,
+    translationLabel: String = "",
+    lastReadTitle: String? = null,
     onOpenSettings: () -> Unit,
-    onSizeUp: () -> Unit,
-    onSizeDown: () -> Unit,
+    onSizeUp: () -> Unit = {},
+    onSizeDown: () -> Unit = {},
     onOpenSearch: () -> Unit = {},
     onOpenFavorites: () -> Unit = {},
-    /** 右侧竖排最后一个「历史」：回到上次读到的那一章；没有记录时按钮变淡且点不动 */
     onLastRead: (() -> Unit)? = null,
-    theme: Parchment = LocalParchment.current,
+    theme: Parchment = Parchment.light,
 ) {
+    val insets = WindowInsets.systemBars.asPaddingValues()
+    val density = LocalDensity.current
+    val ink = theme.ink.toColor()
+    val muted = theme.muted.toColor()
+    val faint = theme.faint.toColor()
+    val accent = theme.accentOt.toColor()
+
     Box(Modifier.fillMaxSize()) {
         ParchmentBackground(theme = theme)
 
-        // RN tabbar preset：视口从屏幕顶到屏幕底，顶 70 / 底 120 渐隐，正文从透明底栏下面滑过去；
-        // 底部留 72 + 导航栏 + 120（SHELL_TAB_BAR_CLEARANCE + readParchmentFadeSafePadding.bottom）
-        val insets = WindowInsets.systemBars.asPaddingValues()
-        // 右侧竖排最后一个按钮的底边，用来判断哪几行会被它压住
-        val density = LocalDensity.current
-        val railBottomPx = with(density) {
-            (insets.calculateTopPadding() + ShellMetrics.topChromeOffset.dp +
-                (ShellMetrics.topChromeButton * 6 + ShellMetrics.topChromeGap * 5).dp).toPx()
-        }
         LazyColumn(
             Modifier.fillMaxSize().parchmentFade(ParchmentFadePreset.TABBAR),
             contentPadding = PaddingValues(
-                start = 14.dp, end = 14.dp, top = 42.dp + insets.calculateTopPadding(),
-                bottom = TAB_BAR_CLEARANCE.dp + insets.calculateBottomPadding() + 120.dp,
+                start = 20.dp,
+                end = 20.dp,
+                top = 16.dp + insets.calculateTopPadding(),
+                bottom = TAB_BAR_CLEARANCE.dp + insets.calculateBottomPadding() + 110.dp,
             ),
         ) {
-            item {
-                Text(
-                    ReadChrome.catalogTitle(locale),
-                    Modifier.fillMaxWidth(),
-                    color = theme.ink.toColor(),
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                )
-                Spacer(Modifier.height(18.dp))
+            item(key = "header") {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        ReadChrome.catalogTitle(locale),
+                        color = ink,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (translationLabel.isNotEmpty()) {
+                        Row(
+                            Modifier
+                                .clip(CircleShape)
+                                .background(theme.surface.toColor().copy(alpha = 0.85f))
+                                .border(1.dp, theme.border.toColor(), CircleShape)
+                                .clickableNoRipple(onOpenSettings)
+                                .padding(horizontal = 11.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(3.dp),
+                        ) {
+                            Text(translationLabel, color = muted, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                            MaterialIcon(MI.EXPAND_MORE, 15f, muted)
+                        }
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Box(
+                        Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(theme.surface.toColor().copy(alpha = 0.85f))
+                            .border(1.dp, theme.border.toColor(), CircleShape)
+                            .clickableNoRipple(onOpenFavorites),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        MaterialIcon(MI.BOOKMARK_BORDER, 18f, muted)
+                    }
+                }
+
+                // 温润搜索入口条（支持输入 约 3:16 直达）
                 Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 14.dp)
+                        .height(42.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(theme.surface.toColor().copy(alpha = 0.86f))
+                        .border(1.dp, theme.border.toColor(), RoundedCornerShape(12.dp))
+                        .clickableNoRipple(onOpenSearch)
+                        .padding(horizontal = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Text(ReadChrome.testamentOld(locale), color = if (theme.isDark) Color(0xFF8DB6E6) else Color(0xFF2F6291),
-                         fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    // RN BibleCatalogOutlineContent：MaterialIcons notes 22，未开时 faint
-                    MaterialIcon(MI.NOTES, 22f, theme.faint.toColor(), modifier = Modifier.padding(horizontal = 14.dp))
-                    Text(ReadChrome.testamentNew(locale), color = if (theme.isDark) Color(0xFFF29A4A) else Color(0xFFC1660B),
-                         fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    MaterialIcon(MI.SEARCH, 18f, muted)
+                    Text(
+                        AppLocale.pick("搜索经文，或输入如 约 3:16 直达…", "Search scripture or jump e.g. John 3:16…", locale),
+                        color = faint,
+                        fontSize = 14.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
-                Spacer(Modifier.height(16.dp))
+
+                // 上次阅读暖琥珀书签条
+                if (onLastRead != null && !lastReadTitle.isNullOrEmpty()) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 10.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(accent.copy(alpha = 0.12f))
+                            .border(0.75.dp, accent.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                            .clickableNoRipple(onLastRead)
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        MaterialIcon(MI.BOOKMARK, 16f, accent)
+                        Text(
+                            AppLocale.pick("继续上次阅读：$lastReadTitle", "Continue reading: $lastReadTitle", locale),
+                            color = ink,
+                            fontSize = 13.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                        MaterialIcon(MI.CHEVRON_RIGHT, 16f, accent)
+                    }
+                }
+
+                Spacer(Modifier.height(20.dp))
             }
 
-            item {
-                // Josh 2026-09-10「让目录的左边距大一些」：只挪书卷两栏，标题那几行仍旧居中
-                if (density.fontScale >= 1.3f) Column(Modifier.padding(start=10.dp,end=RAIL_CLEARANCE.dp)) {
-                    CatalogColumn(BibleCatalog.oldTestament, size, theme, onOpenBook, Modifier.fillMaxWidth(), locale=locale, bookLabel=bookLabel)
-                    Spacer(Modifier.height(20.dp))
-                    CatalogColumn(BibleCatalog.newTestament, size, theme, onOpenBook, Modifier.fillMaxWidth(), locale=locale, bookLabel=bookLabel)
-                } else Row(Modifier.padding(start = 10.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    CatalogColumn(BibleCatalog.oldTestament, size, theme, onOpenBook, Modifier.weight(1f), locale = locale, bookLabel = bookLabel)
-                    // 右列顶上那几行正好压在右侧竖排下面：不让开的话点书卷会点到设置 / + / − 上
-                    // （Josh 2026-09-10 实测「点 Luc 右边字号变小了」）
-                    CatalogColumn(BibleCatalog.newTestament, size, theme, onOpenBook, Modifier.weight(1f),
-                                  locale = locale, bookLabel = bookLabel, railBottomPx = railBottomPx)
+            item(key = "columns") {
+                if (density.fontScale >= 1.3f) {
+                    Column {
+                        Text(ReadChrome.testamentOld(locale), color = Color(0xFF2F6291), fontSize = 19.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
+                        CatalogColumn(BibleCatalog.oldTestament, size, theme, onOpenBook, Modifier.fillMaxWidth(), locale = locale, bookLabel = bookLabel)
+                        Spacer(Modifier.height(20.dp))
+                        Text(ReadChrome.testamentNew(locale), color = Color(0xFFC1660B), fontSize = 19.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
+                        CatalogColumn(BibleCatalog.newTestament, size, theme, onOpenBook, Modifier.fillMaxWidth(), locale = locale, bookLabel = bookLabel)
+                    }
+                } else {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(18.dp), verticalAlignment = Alignment.Top) {
+                        Column(Modifier.weight(1f)) {
+                            Text(ReadChrome.testamentOld(locale), color = Color(0xFF2F6291), fontSize = 19.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
+                            CatalogColumn(BibleCatalog.oldTestament, size, theme, onOpenBook, Modifier.fillMaxWidth(), locale = locale, bookLabel = bookLabel)
+                        }
+                        Column(Modifier.weight(1f)) {
+                            Text(ReadChrome.testamentNew(locale), color = Color(0xFFC1660B), fontSize = 19.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
+                            CatalogColumn(BibleCatalog.newTestament, size, theme, onOpenBook, Modifier.fillMaxWidth(), locale = locale, bookLabel = bookLabel)
+                        }
+                    }
                 }
             }
-            // 目录页底下不再放读经计划区块（Josh 2026-09-09「圣经目录面下面不需要展示读经计划」），读经计划走底栏中央键
         }
-
-        CatalogRail(theme, onOpenSettings, onSizeUp, onSizeDown, onOpenSearch = onOpenSearch,
-                    onOpenFavorites = onOpenFavorites, onLastRead = onLastRead)
     }
 }
-
-/**
- * 让位宽度：图标栏从屏幕右边算起是 8 + 50 = 58，行本身右边已经有 14 的页边距，所以再退 44 就够。
- * 退多了「马太福音」这种四字书名会被截成「马太福…」（Josh 2026-09-10 真机）。
- */
-private const val RAIL_CLEARANCE = 44f
 
 @Composable
 private fun CatalogColumn(
@@ -149,102 +210,54 @@ private fun CatalogColumn(
     onOpenBook: (BookRef) -> Unit,
     modifier: Modifier = Modifier,
     locale: AppLocale = AppLocale.ZH_CN,
-    /** 书卷名：在线译本用它自己那套 */
     bookLabel: (BookRef) -> String = { it.name(locale) },
-    /** >0 时：纵向落在这个位置以上的行，右边留出图标栏的宽度 */
-    railBottomPx: Float = 0f,
 ) {
-    // RN 的 catalogBookLine：行高跟着字号档走，放大字号时行距也跟着开，手指更好点
     val rowHeight = maxOf(40f, size.metrics.catalogBookLine.toFloat()).dp
     Column(modifier) {
         for (group in groups) {
             Text(
                 group.title(locale),
-                Modifier.padding(top = 7.dp, bottom = 3.dp),
-                color = if (theme.isDark) theme.ink.toColor() else Color(0xFF000000 or group.colorHex.toLong()),
-                fontSize = 16.sp,
+                Modifier.padding(top = 8.dp, bottom = 3.dp),
+                color = Color(0xFF000000 or group.colorHex.toLong()),
+                fontSize = 15.5.sp,
                 fontWeight = FontWeight.Bold,
             )
             Row {
-                Box(Modifier.width(2.5.dp).fillMaxWidth(0f)
-                    .height(rowHeight * group.books.size)
-                    .background(Color(0xFF000000 or group.colorHex.toLong())))
-                Column(Modifier.padding(start = 5.dp)) {
+                Box(
+                    Modifier
+                        .width(2.2.dp)
+                        .height(rowHeight * group.books.size)
+                        .background(Color(0xFF000000 or group.colorHex.toLong())),
+                )
+                Column(Modifier.padding(start = 6.dp)) {
                     for (book in group.books) {
-                        var underRail by remember(book.id) { mutableStateOf(false) }
                         Row(
-                            Modifier.fillMaxWidth().heightIn(min=rowHeight)
-                                .onGloballyPositioned { c ->
-                                    underRail = railBottomPx > 0f &&
-                                        c.positionInWindow().y < railBottomPx
-                                }
-                                .padding(end = if (underRail) RAIL_CLEARANCE.dp else 0.dp)
+                            Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = rowHeight)
                                 .clickableNoRipple { onOpenBook(book) }
-                                .padding(horizontal = 5.dp),
+                                .padding(horizontal = 4.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            Text(book.displayNumber,
-                                 color = if (theme.isDark) theme.ink.toColor() else Color(0xFF000000 or group.colorHex.toLong()),
-                                 fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-                            // softWrap=false + Ellipsis：否则「1 Thessalonians」装不下时会在空格处折行，
-                            // maxLines=1 只留下第一行的「1」。iOS 的 lineLimit(1) 默认就是截断加省略号。
-                            Text(bookLabel(book), color = theme.ink.toColor(),
-                                 fontSize = (size.metrics.catalogBookSize * 0.85f).sp,
-                                 softWrap = true,
-                                 modifier = Modifier.weight(1f))
+                            Text(
+                                book.displayNumber,
+                                color = Color(0xFF000000 or group.colorHex.toLong()),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            Text(
+                                bookLabel(book),
+                                color = theme.ink.toColor(),
+                                fontSize = (size.metrics.catalogBookSize * 0.85f).sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f),
+                            )
                         }
                     }
                 }
             }
         }
-    }
-}
-
-/** 目录页的右侧竖排：设置 / 搜索 / 收藏 / + / − / 历史，共 6 个 */
-@Composable
-private fun CatalogRail(
-    theme: Parchment,
-    onOpenSettings: () -> Unit,
-    onSizeUp: () -> Unit,
-    onSizeDown: () -> Unit,
-    onOpenSearch: () -> Unit = {},
-    onOpenFavorites: () -> Unit = {},
-    onLastRead: (() -> Unit)? = null,
-) {
-    Column(
-        Modifier.fillMaxWidth()
-            .statusBarsPadding()
-            .padding(horizontal = ShellMetrics.topChromeSideInset.dp,
-                     vertical = ShellMetrics.topChromeOffset.dp),
-        horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.spacedBy(ShellMetrics.topChromeGap.dp),
-    ) {
-        RailIcon(MI.SETTINGS, onClick = onOpenSettings)
-        RailIcon(MI.SEARCH, onClick = onOpenSearch)
-        RailIcon(MI.BOOKMARK_BORDER, onClick = onOpenFavorites)
-        RailLabel("+", onSizeUp)
-        RailLabel("\u2212", onSizeDown)
-        RailIcon(MI.HISTORY, enabled = onLastRead != null) { onLastRead?.invoke() }
-    }
-}
-
-@Composable
-private fun RailIcon(glyph: String, enabled: Boolean = true, onClick: () -> Unit) {
-    Box(Modifier.size(ShellMetrics.topChromeButton.dp).alpha(if (enabled) 1f else 0.4f)
-            .clickableNoRipple { if (enabled) onClick() },
-        contentAlignment = Alignment.Center) {
-        MaterialIcon(glyph, ShellMetrics.topChromeIcon, Color.White, shadow = true)
-    }
-}
-
-@Composable
-private fun RailLabel(text: String, onClick: () -> Unit) {
-    Box(Modifier.size(ShellMetrics.topChromeButton.dp).clickableNoRipple(onClick),
-        contentAlignment = Alignment.Center) {
-        // 与旁边的图标一样带投影（Josh 真机：「右边 + - 没有阴影」）
-        Text(text, color = Color.White,
-             fontSize = ShellMetrics.topChromeSizeLabel.sp, fontWeight = FontWeight.Medium,
-             style = androidx.compose.ui.text.TextStyle(shadow = ShellIconShadow))
     }
 }

@@ -41,6 +41,13 @@ struct ChapterView: View {
     var paintColor: String?
     var eraseMode = false
     var onPaint: (Int, ClosedRange<Int>) -> Void = { _, _ in }
+    var onInstantPaint: (Int, ClosedRange<Int>, String?) -> Void = { _, _, _ in }
+    var onOpenShareCard: (String, String) -> Void = { _, _ in }
+    var onCopiedToast: () -> Void = {}
+    /// 串珠跳转来源：有值时左上显示「↩ 回 罗马书 4:3」防迷航胶囊
+    var xrefReturnLabel: String? = nil
+    var onReturnXrefOrigin: () -> Void = {}
+    var onOpenChapterPicker: () -> Void = {}
     /// 结尾中间的书名 → 回目录
     var onOpenCatalog: () -> Void = {}
     /// 结尾左右的上一章 / 下一章（可跨卷）
@@ -92,6 +99,9 @@ struct ChapterView: View {
             onHighlight: { number in
                 searchFocus = number; pendingFocusScroll = true; onStartHighlight()
             },
+            onInstantPaint: onInstantPaint,
+            onOpenShareCard: onOpenShareCard,
+            onCopiedToast: onCopiedToast,
             onReadVerses: { numbers in
                 for (index, group) in groups.enumerated() where group.contains(where: { numbers.contains($0.number) }) {
                     let tag = "\(bookId):\(chapter):\(index)"
@@ -103,7 +113,7 @@ struct ChapterView: View {
                 if reportedEnd != tag { reportedEnd = tag; onReachedEnd() }
             }
         )
-        .shellBottomInset(hasDock: true)
+        .padding(.bottom, ShellMetrics.dockContentHeight)
         .parchmentFade(.chapter)
     }
 
@@ -278,6 +288,8 @@ struct ChapterView: View {
     enum LoadState { case idle, loading, failed }
     @State private var loadState: LoadState = .idle
     @State private var reloadToken = 0
+    /// Aa 排版与译本对照半屏面板开关
+    @State private var showTypographySheet = false
 
     private var bookmarkedVerses: Set<Int> { bookmarks.bookmarkedVerses(translationId: store.translation.id, bookId: bookId, chapter: chapter) }
 
@@ -293,6 +305,19 @@ struct ChapterView: View {
             }
 
             topChrome()
+
+            if showTypographySheet {
+                ReaderTypographySheet(
+                    size: $size,
+                    locale: uiLocale,
+                    onOpenMoreTranslations: onOpenSettings,
+                    onOpenSearch: onOpenSearch,
+                    onOpenFavorites: onOpenFavorites,
+                    onClose: { showTypographySheet = false }
+                )
+                .environmentObject(store)
+                .zIndex(30)
+            }
         }
         .background(ParchmentBackground(theme: theme).ignoresSafeArea())
         .onChange(of: ach.pending.count) { _, _ in pumpChapterDoneGlow() }
@@ -421,11 +446,19 @@ struct ChapterView: View {
                     .padding(.top, 18)
                     .padding(.bottom, 16)
             }
-            flowParagraph(group, metrics: m)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            // 副译本对照行：0.82× 字号，muted（verseContrast）
-            ForEach(group.filter { contrast[$0.number] != nil }) { v in
-                contrastLine(v, metrics: m)
+            if group.allSatisfy({ contrast[$0.number] == nil }) {
+                flowParagraph(group, metrics: m)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                // 开了对照：逐节交错（主译本一节 → 对照一节），对齐 Android ChapterScreen
+                ForEach(Array(group.enumerated()), id: \.element.id) { i, v in
+                    if i > 0 { Color.clear.frame(height: 10) }
+                    flowParagraph([v], metrics: m)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    if contrast[v.number] != nil {
+                        contrastLine(v, metrics: m)
+                    }
+                }
             }
         }
         .padding(.bottom, 14)  // verseParagraphBlock.marginBottom
@@ -518,43 +551,99 @@ struct ChapterView: View {
     }
 
 
-    /// 左上返回 + 右上竖排：对齐安卓 `ChapterScreen.kt` `TopChrome`（无玻璃圆钮簇）。
+    /// 零遮挡沉浸顶栏：左「‹」+ 串珠回程胶囊，中「书名 章 · 译本 ▾」，右单颗「Aa」（告别压住经文的 5 颗悬浮球与冒充译本的齿轮）
     private func topChrome() -> some View {
-        HStack(alignment: .top) {
-            chromeGlyph(MI.arrowBack, action: onBack)
-            Spacer()
-            VStack(spacing: ShellMetrics.topChromeGap) {
-                chromeGlyph(MI.settings, action: onOpenSettings)
-                chromeGlyph(MI.search, action: onOpenSearch)
-                chromeGlyph(MI.bookmarkBorder, action: onOpenFavorites)
-                chromeLabel("+") { if let n = size.next { size = n } }
-                chromeLabel("\u{2212}") { if let p = size.previous { size = p } }
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Button(action: onBack) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(theme.ink.opacity(0.84))
+                        .frame(width: 38, height: 38)
+                        .background(Circle().fill(theme.surface.opacity(0.86)))
+                        .overlay(Circle().strokeBorder(theme.border, lineWidth: 0.75))
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+
+                Spacer(minLength: 4)
+
+                Menu {
+                    Button {
+                        onOpenChapterPicker()
+                    } label: {
+                        Label(AppLocale.pick("切换章节…", "Choose Chapter…", uiLocale), systemImage: "square.grid.3x3")
+                    }
+                    Button {
+                        onOpenSettings()
+                    } label: {
+                        Label(AppLocale.pick("切换圣经译本 / 对照…", "Bible Translations…", uiLocale), systemImage: "book")
+                    }
+                    Button {
+                        onOpenSearch()
+                    } label: {
+                        Label(AppLocale.pick("搜索经文…", "Search Scripture…", uiLocale), systemImage: "magnifyingglass")
+                    }
+                } label: {
+                    HStack(spacing: 5) {
+                        Text("\(bookName) \(chapter) · \(shortTranslationTitle)")
+                            .askFont(size: 13, weight: .semibold)
+                            .foregroundStyle(theme.ink)
+                            .lineLimit(1)
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 9.5, weight: .bold))
+                            .foregroundStyle(theme.accentOt)
+                    }
+                    .padding(.horizontal, 13)
+                    .frame(height: 36)
+                    .background(Capsule().fill(theme.surface.opacity(0.90)))
+                    .overlay(Capsule().strokeBorder(theme.border, lineWidth: 0.75))
+                }
+
+                Spacer(minLength: 4)
+
+                Button {
+                    withAnimation(.easeInOut(duration: 0.22)) { showTypographySheet = true }
+                } label: {
+                    Text("Aa")
+                        .askFont(size: 14, weight: .bold)
+                        .foregroundStyle(theme.ink.opacity(0.86))
+                        .frame(width: 38, height: 38)
+                        .background(Circle().fill(theme.surface.opacity(0.86)))
+                        .overlay(Circle().strokeBorder(theme.border, lineWidth: 0.75))
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(AppLocale.pick("排版与译本", "Typography & Translation", uiLocale))
+            }
+
+            if let backLabel = xrefReturnLabel {
+                Button(action: onReturnXrefOrigin) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.uturn.backward")
+                            .font(.system(size: 10.5, weight: .bold))
+                        Text(AppLocale.pick("回 \(backLabel)", "Back to \(backLabel)", uiLocale))
+                            .askFont(size: 12, weight: .semibold)
+                            .lineLimit(1)
+                    }
+                    .foregroundStyle(theme.ink)
+                    .padding(.horizontal, 11)
+                    .padding(.vertical, 6)
+                    .background(Capsule().fill(Brand.logo.opacity(0.32)))
+                    .overlay(Capsule().strokeBorder(theme.accentOt.opacity(0.55), lineWidth: 0.75))
+                }
+                .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, ShellMetrics.topChromeSideInset)
-        .padding(.top, ShellMetrics.topChromeOffset)
+        .padding(.horizontal, 14)
+        .padding(.top, 6)
     }
 
-    private func chromeGlyph(_ glyph: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            MaterialIcon(glyph: glyph, size: ShellMetrics.topChromeIcon, color: .white)
-                .frame(width: ShellMetrics.topChromeButton, height: ShellMetrics.topChromeButton)
-                .shellIconShadow()
-                .contentShape(Rectangle())
+    private var shortTranslationTitle: String {
+        if let sec = store.secondary {
+            return AppLocale.pick("对照", "Dual", uiLocale) + "(\(sec.id.uppercased().prefix(3)))"
         }
-        .buttonStyle(.plain)
-    }
-
-    private func chromeLabel(_ text: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(text)
-                .askFont(size: ShellMetrics.topChromeSizeLabel, weight: .medium)
-                .foregroundStyle(Color.white)
-                .frame(width: ShellMetrics.topChromeButton, height: ShellMetrics.topChromeButton)
-                .shellIconShadow()
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
+        return store.translation.label(uiLocale)
     }
 }
 

@@ -96,7 +96,11 @@ import java.time.LocalDate
 import androidx.compose.runtime.mutableIntStateOf
 import me.askbible.native_.data.BookRef
 import androidx.compose.foundation.layout.navigationBarsPadding
+import me.askbible.native_.ui.clickableNoRipple
 import me.askbible.native_.ui.VerseShareText
+import me.askbible.native_.ui.VerseShareCardSheet
+import me.askbible.native_.ui.VerseSharePayload
+import me.askbible.native_.ui.InstantVerseHighlightBar
 import me.askbible.native_.ui.VerseFeedbackToast
 import me.askbible.native_.ui.VerseActionSheet
 import me.askbible.native_.ui.FavoritesScreen
@@ -135,6 +139,16 @@ import me.askbible.native_.ui.SleepTimerSheet
 import me.askbible.native_.data.VerseXrefs
 import me.askbible.native_.data.BibleCatalog
 
+object VerseDeepLinkBus {
+    var pendingKey by mutableStateOf<String?>(null)
+    fun deliver(rawUrl: String?) {
+        val u = rawUrl?.let { runCatching { android.net.Uri.parse(it) }.getOrNull() } ?: return
+        if (u.scheme.equals("askbible", ignoreCase = true) && u.host.equals("verse", ignoreCase = true)) {
+            u.getQueryParameter("key")?.takeIf { it.isNotBlank() }?.let { pendingKey = it }
+        }
+    }
+}
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -143,6 +157,7 @@ class MainActivity : ComponentActivity() {
         EndpointsStore.attach(this)
         // 全量在线译本目录先读盘：记住的远端译本要在 TranslationPrefs 解析之前就认得
         me.askbible.native_.data.RemoteTranslations.attach(cacheDir)
+        VerseDeepLinkBus.deliver(intent?.dataString)
         // 商店版：Play 官方的应用内更新（web 变体里是空操作）
         PlayUpdateGate.start(this)
         // 记下「首次运行」时间，好评邀请要用（装机满 3 天才问）
@@ -165,6 +180,12 @@ class MainActivity : ComponentActivity() {
         PackStore.refreshInstalledPacksInBackground(this)
         AppUpdater.checkInBackground(this)
         PlayUpdateGate.start(this)
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        VerseDeepLinkBus.deliver(intent.dataString)
     }
 }
 
@@ -296,6 +317,9 @@ private fun RootScreen() {
     var listenChapter by remember { mutableIntStateOf(1) }
     // 章页是从计划页开的：返回回计划 Tab、不停播
     var chapterFromPlan by remember { mutableStateOf(false) }
+    var chapterFromHome by remember { mutableStateOf(false) }
+    var xrefReturnOrigin by remember { mutableStateOf<Triple<BookRef, Int, Int>?>(null) }
+    var shareCardPayload by remember { mutableStateOf<VerseSharePayload?>(null) }
     /** 章页是从搜索结果点进来的：记下当时的关键词，返回时回到搜索页并恢复结果 */
     var searchReturnQuery by remember { mutableStateOf<String?>(null) }
     // 读经计划流：今日逐章队列，一章播完顺到下一章并记已读
@@ -558,12 +582,27 @@ private fun RootScreen() {
         if (autoPlayPending) { autoPlayPending = false; audio.resume() }
     }
 
+    val deepLinkKey = VerseDeepLinkBus.pendingKey
+    LaunchedEffect(deepLinkKey) {
+        val key = deepLinkKey ?: return@LaunchedEffect
+        VerseDeepLinkBus.pendingKey = null
+        val loc = me.askbible.native_.data.GoldenVerseAudioSource.parseVerseKey(key) ?: return@LaunchedEffect
+        val b = BibleCatalog.book(loc.bookId) ?: return@LaunchedEffect
+        OnboardingPrefs.complete(context)
+        showWelcome = false
+        homeChromeHidden = false
+        planFlowActive = false; listenBook = null; chapterFromPlan = false; chapterFromHome = false; xrefReturnOrigin = null
+        pickingBook = null; showSearch = false; showFavorites = false; searchReturnQuery = null
+        focusKeyword = null; focusVerse = loc.verse; chapter = loc.chapter; openedBook = b; tab = ShellTab.READ
+    }
+
     // 系统返回键按层级逐层收起：弹层 → 章页 → 回首页；到首页才真正退出。
     // Compose 弹层是普通 Box，不会自动接管返回键，不加这段整个 App 会直接被退出。
-    val backHandled = highlighting || showReminderTime || confirmDeleteAccount || selectedVerses.isNotEmpty() || showMenu || authRoute != null || showSleepSheet || showSearch || showFavorites || actionVerse != null || xrefVerse != null || showTranslationPanel || exploreArticle != null ||
+    val backHandled = shareCardPayload != null || highlighting || showReminderTime || confirmDeleteAccount || selectedVerses.isNotEmpty() || showMenu || authRoute != null || showSleepSheet || showSearch || showFavorites || actionVerse != null || xrefVerse != null || showTranslationPanel || exploreArticle != null ||
         pickingBook != null || openedBook != null || (tab == ShellTab.PLAN && planRoute != "play") || tab != ShellTab.HOME
     BackHandler(enabled = backHandled) {
         when {
+            shareCardPayload != null -> shareCardPayload = null
             highlighting -> { highlighting = false; erasing = false }
             showReminderTime -> showReminderTime = false
             confirmDeleteAccount -> confirmDeleteAccount = false
@@ -582,12 +621,16 @@ private fun RootScreen() {
             tab == ShellTab.MUSIC -> tab = ShellTab.HOME
             pickingBook != null -> pickingBook = null
             openedBook != null -> {
+                xrefReturnOrigin = null
                 openedBook = null
-                // 从计划页进来的章页：回计划 Tab、不停播（RN 返回上一页仍在放）
-                if (chapterFromPlan) { chapterFromPlan = false; planFlowListen = true; tab = ShellTab.PLAN; if (!planFlowActive) listenBook = null }
-                else { audio.pause(); planFlowActive = false; listenBook = null }
-                // 从搜索结果进来的：回到搜索页，关键词和结果原样恢复
-                searchReturnQuery?.let { q -> searchReturnQuery = null; searchPrefs.resumeQuery = q; showSearch = true }
+                if (chapterFromHome) {
+                    chapterFromHome = false
+                    tab = ShellTab.HOME
+                } else {
+                    if (chapterFromPlan) { chapterFromPlan = false; planFlowListen = true; tab = ShellTab.PLAN; if (!planFlowActive) listenBook = null }
+                    else { audio.pause(); planFlowActive = false; listenBook = null }
+                    searchReturnQuery?.let { q -> searchReturnQuery = null; searchPrefs.resumeQuery = q; showSearch = true }
+                }
             }
             tab == ShellTab.PLAN && planRoute != "play" -> planRoute = if (planRoute == "detail") "plans" else "play"
             else -> tab = ShellTab.HOME
@@ -713,6 +756,24 @@ private fun RootScreen() {
                     else { val wasPlaying = music.isPlaying; music.selectAlbum(album); if (!wasPlaying) music.toggle() }
                 },
                 onOpenMenu = { showMenu = true },
+                onOpenVerseContext = {
+                    val loc = me.askbible.native_.data.GoldenVerseAudioSource.parseVerseKey(home.verseKey)
+                    val b = loc?.let { BibleCatalog.book(it.bookId) }
+                    if (loc != null && b != null) {
+                        planFlowActive = false; listenBook = null; chapterFromPlan = false; chapterFromHome = true; xrefReturnOrigin = null
+                        pickingBook = null; showSearch = false; showFavorites = false; searchReturnQuery = null
+                        focusKeyword = null; focusVerse = loc.verse; chapter = loc.chapter; openedBook = b; tab = ShellTab.READ
+                    }
+                },
+                onBookmarkVerse = {
+                    val loc = me.askbible.native_.data.GoldenVerseAudioSource.parseVerseKey(home.verseKey)
+                    val b = loc?.let { BibleCatalog.book(it.bookId) }
+                    if (loc != null && b != null) {
+                        val added = bookmarks.toggle(b.id, b.name(displayLocale), loc.chapter, loc.verse, translation.id, home.verse.text)
+                        if (added) copyText(context, "${home.verse.reference} ${home.verse.text}")
+                        toast = SiteCopy.t(if (added) "pages.read.verseBookmarkSaved" else "pages.read.verseBookmarkRemoved", appLocale)
+                    }
+                },
                 chromeHidden = homeChromeHidden,
                 onChromeHidden = { homeChromeHidden = it },
             )
@@ -723,21 +784,22 @@ private fun RootScreen() {
             ShellTab.EXPLORE -> ExploreScreen(
                 size = size, article = exploreArticle, onOpenArticle = { exploreArticle = it },
                 auth = auth, locale = appLocale, onOpenLogin = { authRoute = "login" },
+                onOpenSettings = { showMenu = true },
                 activity = activity, onSignOut = { scope.launch { syncEngine.prepareSignOut(); auth.signOut() } },
                 achievements = achievements, onOpenAchievements = { showAchievements = true },
                 favorites = bookmarks.list,
+                bookmarks = bookmarks,
+                highlights = highlights,
                 onOpenVerse = { id, ch, v ->
-                    // 探索页的收藏：跳到读经 Tab 的那一节
                     BibleCatalog.book(id)?.let { b ->
-                        planFlowActive = false; listenBook = null; chapterFromPlan = false; pickingBook = null
+                        planFlowActive = false; listenBook = null; chapterFromPlan = false; chapterFromHome = false; xrefReturnOrigin = null; pickingBook = null
                         focusVerse = v; focusKeyword = null; chapter = ch; searchReturnQuery = null; openedBook = b; tab = ShellTab.READ
                     }
                 },
                 onOpenFavorites = { showFavorites = true; tab = ShellTab.READ },
                 onOpenChapter = { id, ch ->
-                    // 文章里的经文链接：切到读经 Tab 直接开章
                     BibleCatalog.book(id)?.let { b ->
-                        planFlowActive = false; listenBook = null; chapterFromPlan = false; pickingBook = null; chapter = ch; searchReturnQuery = null; openedBook = b; tab = ShellTab.READ
+                        planFlowActive = false; listenBook = null; chapterFromPlan = false; chapterFromHome = false; xrefReturnOrigin = null; pickingBook = null; chapter = ch; searchReturnQuery = null; openedBook = b; tab = ShellTab.READ
                     }
                 })
             ShellTab.PLAN -> if (showSearch) SearchScreen(
@@ -789,27 +851,46 @@ private fun RootScreen() {
                 onOpenHit = { hit, keyword ->
                     showSearch = false
                     BibleCatalog.book(hit.bookId)?.let { b ->
-                        planFlowActive = false; listenBook = null; chapterFromPlan = false; pickingBook = null; focusVerse = hit.verse; focusKeyword = keyword; searchReturnQuery = keyword; chapter = hit.chapter; openedBook = b
+                        planFlowActive = false; listenBook = null; chapterFromPlan = false; chapterFromHome = false; xrefReturnOrigin = null; pickingBook = null
+                        focusVerse = hit.verse
+                        focusKeyword = keyword.ifEmpty { null }
+                        searchReturnQuery = keyword.ifEmpty { null }
+                        chapter = hit.chapter; openedBook = b
                     }
                 })
             else if (showFavorites) FavoritesScreen(
                 locale = displayLocale,
-                bookmarks = bookmarks, size = size,
+                bookmarks = bookmarks,
+                highlights = highlights,
+                size = size,
                 onBack = { showFavorites = false },
                 onOpen = { item ->
                     showFavorites = false
                     BibleCatalog.book(item.bookId)?.let { b ->
-                        planFlowActive = false; listenBook = null; chapterFromPlan = false; pickingBook = null; focusVerse = item.verse; focusKeyword = null; chapter = item.chapter; searchReturnQuery = null; openedBook = b
+                        planFlowActive = false; listenBook = null; chapterFromPlan = false; chapterFromHome = false; xrefReturnOrigin = null; pickingBook = null
+                        focusVerse = item.verse; focusKeyword = null; chapter = item.chapter; searchReturnQuery = null; openedBook = b
+                    }
+                },
+                onOpenVerse = { bid, ch, vs ->
+                    showFavorites = false
+                    BibleCatalog.book(bid)?.let { b ->
+                        planFlowActive = false; listenBook = null; chapterFromPlan = false; chapterFromHome = false; xrefReturnOrigin = null; pickingBook = null
+                        focusVerse = vs; focusKeyword = null; chapter = ch; searchReturnQuery = null; openedBook = b
                     }
                 })
             else if (book == null) CatalogScreen(
                 bookLabel = bookLabel,
                 locale = readChromeLocale,
-                // 右侧竖排最后一个「历史」：回到上次读到的那一章（RN onLastRead）
+                translationLabel = translation.label(appLocale),
+                lastReadTitle = activity.lastPosition?.let { last ->
+                    BibleCatalog.book(last.bookId)?.let { b ->
+                        ReadChrome.chapterTitle(bookLabel(b), last.chapter, readChromeLocale)
+                    }
+                },
                 onLastRead = activity.lastPosition?.let { last ->
                     BibleCatalog.book(last.bookId)?.let { b ->
                         {
-                            planFlowActive = false; listenBook = null; chapterFromPlan = false
+                            planFlowActive = false; listenBook = null; chapterFromPlan = false; chapterFromHome = false; xrefReturnOrigin = null
                             pickingBook = null; focusVerse = null; focusKeyword = null
                             chapter = last.chapter; searchReturnQuery = null; openedBook = b
                         }
@@ -824,7 +905,6 @@ private fun RootScreen() {
                 onOpenFavorites = { showFavorites = true },
             )
             else {
-                // RN writeLastReadPosition + pushReadRecentChapter：最后位置 + 探索页「最近阅读」
                 LaunchedEffect(book.id, chapter) {
                     activity.recordOpened(book.id, chapter, book.name(displayLocale))
                     achievements.noteChapterOpened(book.id, chapter)
@@ -832,7 +912,6 @@ private fun RootScreen() {
                 ChapterScreen(
                     onReachedEnd = {
                         achievements.noteChapterRead(book.id, chapter)
-                        // 读完一章之后才问好评 —— 条件不够时 maybeAsk 自己什么都不做
                         RatePrompt.maybeAsk(context, achievements.chaptersReadCount)
                     },
                     onVersesRead = { achievements.noteVersesRead(it) },
@@ -847,7 +926,6 @@ private fun RootScreen() {
                     onToggleSelection = { v ->
                         selectedVerses = if (v in selectedVerses) selectedVerses - v else selectedVerses + v
                     },
-
                     locale = displayLocale,
                     uiLocale = appLocale,
                     foreignText = ReadDisplayLocale.isForeign(translation.language),
@@ -855,18 +933,49 @@ private fun RootScreen() {
                     bookName = bookLabel(book),
                     chapter = chapter,
                     verses = data.verses,
-                    translationId = translation.id, loading = data.loading, failed = data.failed, onRetry = { reloadToken += 1 },
+                    translationId = translation.id,
+                    translationLabel = translation.label(appLocale),
+                    secondaryLabel = secondary?.label(appLocale),
+                    onSelectSize = { size = it },
+                    onToggleBilingual = { on ->
+                        if (on) {
+                            val defaultSecId = if (translation.isZh) "web-en" else "cuv-simp"
+                            ScriptureTranslation.find(defaultSecId)?.let {
+                                secondary = it
+                                translationPrefs.write(translation, it)
+                            }
+                        } else {
+                            secondary = null
+                            translationPrefs.write(translation, null)
+                        }
+                    },
+                    onOpenChapterPicker = { pickingBook = book },
+                    xrefReturnLabel = xrefReturnOrigin?.let { (ob, oc, ov) -> "${ob.name(displayLocale)} $oc:$ov" },
+                    onReturnXrefOrigin = {
+                        xrefReturnOrigin?.let { (ob, oc, ov) ->
+                            xrefReturnOrigin = null
+                            focusKeyword = null
+                            focusVerse = ov
+                            chapter = oc
+                            openedBook = ob
+                        }
+                    },
+                    loading = data.loading, failed = data.failed, onRetry = { reloadToken += 1 },
                     xrefVerses = data.xrefs,
                     size = size,
                     activeVerse = audio.activeVerse,
                     activeVerseProgress = audio.activeVerseProgress,
                     onBack = {
+                        xrefReturnOrigin = null
                         openedBook = null
-                        // 从计划页进来的章页：回计划 Tab、不停播（RN 返回上一页仍在放）
-                        if (chapterFromPlan) { chapterFromPlan = false; planFlowListen = true; tab = ShellTab.PLAN; if (!planFlowActive) listenBook = null }
-                        else { audio.pause(); planFlowActive = false; listenBook = null }
-                        // 从搜索结果进来的：回到搜索页，关键词和结果原样恢复
-                        searchReturnQuery?.let { q -> searchReturnQuery = null; searchPrefs.resumeQuery = q; showSearch = true }
+                        if (chapterFromHome) {
+                            chapterFromHome = false
+                            tab = ShellTab.HOME
+                        } else {
+                            if (chapterFromPlan) { chapterFromPlan = false; planFlowListen = true; tab = ShellTab.PLAN; if (!planFlowActive) listenBook = null }
+                            else { audio.pause(); planFlowActive = false; listenBook = null }
+                            searchReturnQuery?.let { q -> searchReturnQuery = null; searchPrefs.resumeQuery = q; showSearch = true }
+                        }
                     },
                     onOpenPanorama = { panoramaLocate += 1; tab = ShellTab.MAP },
                     onOpenSettings = { showTranslationPanel = true },
@@ -879,7 +988,6 @@ private fun RootScreen() {
                     focusVerse = focusVerse,
                     focusKeyword = focusKeyword,
                     onDoubleTapVerse = { v ->
-                        // 双击收藏：新加时顺手复制（RN「已收藏，经文已复制」）
                         val added = bookmarks.toggle(book.id, book.name(displayLocale), chapter, v.number, translation.id, v.text)
                         if (added) copyText(context, VerseShareText.clipboard(book.name(displayLocale), chapter, v.number, v.text))
                         toast = SiteCopy.t(if (added) "pages.read.verseBookmarkSaved" else "pages.read.verseBookmarkRemoved", appLocale)
@@ -887,12 +995,11 @@ private fun RootScreen() {
                     onLongPressVerse = { actionVerse = it },
                     onOpenSearch = { searchRef = SearchChapterRef(book.id, chapter); showSearch = true },
                     onOpenFavorites = { showFavorites = true },
-                    onOpenCatalog = { searchReturnQuery = null; openedBook = null; audio.pause(); planFlowActive = false; listenBook = null; chapterFromPlan = false },
+                    onOpenCatalog = { searchReturnQuery = null; xrefReturnOrigin = null; chapterFromHome = false; openedBook = null; audio.pause(); planFlowActive = false; listenBook = null; chapterFromPlan = false },
                     onNavigate = { id, ch ->
-                        // 结尾的上一章 / 下一章：手动翻页就退出计划流
-                        BibleCatalog.book(id)?.let { b -> planFlowActive = false; listenBook = null; chapterFromPlan = false; chapter = ch; openedBook = b }
+                        BibleCatalog.book(id)?.let { b -> planFlowActive = false; listenBook = null; chapterFromPlan = false; chapterFromHome = false; xrefReturnOrigin = null; chapter = ch; openedBook = b }
                     },
-                    achievements = achievements
+                    achievements = achievements,
                 )
             }
         }
@@ -1138,23 +1245,58 @@ private fun RootScreen() {
 
         actionVerse?.let { v ->
             val b = book
-            if (b != null) VerseActionSheet(
-                verse = v.number, bookmarked = bookmarks.isBookmarked(translation.id, b.id, chapter, v.number), size = size,
-                onCopy = { copyText(context, VerseShareText.clipboard(b.name(displayLocale), chapter, v.number, v.text)); toast = SiteCopy.t("pages.read.verseCopied", appLocale); actionVerse = null },
-                onBookmark = {
-                    val added = bookmarks.toggle(b.id, b.name(displayLocale), chapter, v.number, translation.id, v.text)
-                    if (added) copyText(context, VerseShareText.clipboard(b.name(displayLocale), chapter, v.number, v.text))
-                    toast = SiteCopy.t(if (added) "pages.read.verseBookmarkSaved" else "pages.read.verseBookmarkRemoved", appLocale); actionVerse = null
-                },
-                onShare = {
-                    val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                        type = "text/plain"; putExtra(android.content.Intent.EXTRA_TEXT, VerseShareText.share(b.name(displayLocale), chapter, v.number, v.text))
-                    }
-                    context.startActivity(android.content.Intent.createChooser(intent, null)); actionVerse = null
-                },
-                onMultiCopy = { selectedVerses = setOf(v.number); actionVerse = null },
-                onHighlight = { highlighting = true; erasing = false; actionVerse = null },
-                onClose = { actionVerse = null },
+            if (b != null) {
+                val verseColors = highlights.colors(translation.id, b.id, chapter, v.number)
+                val currentHex = verseColors.values.firstOrNull()
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .clickableNoRipple { actionVerse = null }
+                        .navigationBarsPadding()
+                        .padding(bottom = (ShellMetrics.tabRowHeight + ShellMetrics.dockContentHeight + 22f).dp),
+                    contentAlignment = Alignment.BottomCenter,
+                ) {
+                    InstantVerseHighlightBar(
+                        verseNumber = v.number,
+                        bookmarked = bookmarks.isBookmarked(translation.id, b.id, chapter, v.number),
+                        currentHex = currentHex,
+                        locale = appLocale,
+                        onPickColor = { hex ->
+                            highlights.paint(translation.id, b.id, chapter, v.number, 0 until maxOf(1, v.text.length), hex)
+                            actionVerse = null
+                        },
+                        onCopy = {
+                            copyText(context, VerseShareText.clipboard(b.name(displayLocale), chapter, v.number, v.text))
+                            toast = SiteCopy.t("pages.read.verseCopied", appLocale)
+                            actionVerse = null
+                        },
+                        onBookmark = {
+                            val added = bookmarks.toggle(b.id, b.name(displayLocale), chapter, v.number, translation.id, v.text)
+                            if (added) copyText(context, VerseShareText.clipboard(b.name(displayLocale), chapter, v.number, v.text))
+                            toast = SiteCopy.t(if (added) "pages.read.verseBookmarkSaved" else "pages.read.verseBookmarkRemoved", appLocale)
+                            actionVerse = null
+                        },
+                        onShareCard = {
+                            shareCardPayload = VerseSharePayload(
+                                reference = "${b.name(displayLocale)} $chapter:${v.number}",
+                                translationName = translation.label(appLocale),
+                                text = v.text.trim(),
+                            )
+                            actionVerse = null
+                        },
+                        onMultiSelect = { selectedVerses = setOf(v.number); actionVerse = null },
+                        onDismiss = { actionVerse = null },
+                    )
+                }
+            }
+        }
+
+        shareCardPayload?.let { payload ->
+            VerseShareCardSheet(
+                payload = payload,
+                locale = appLocale,
+                onCopied = { toast = SiteCopy.t("pages.read.verseCopied", appLocale) },
+                onClose = { shareCardPayload = null },
             )
         }
 
@@ -1199,8 +1341,15 @@ private fun RootScreen() {
                     }
                 },
                 onOpen = { ref ->
+                    val orig = xrefVerse
                     xrefVerse = null
-                    BibleCatalog.book(ref.bookId)?.let { b -> chapter = ref.chapter; openedBook = b }
+                    BibleCatalog.book(ref.bookId)?.let { b ->
+                        if (orig != null) xrefReturnOrigin = Triple(book, chapter, orig)
+                        focusKeyword = null
+                        focusVerse = ref.verseStart
+                        chapter = ref.chapter
+                        openedBook = b
+                    }
                 },
                 onClose = { xrefVerse = null },
             )

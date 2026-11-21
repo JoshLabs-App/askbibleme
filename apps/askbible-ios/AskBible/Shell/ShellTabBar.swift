@@ -1,11 +1,9 @@
 import SwiftUI
 
 enum ShellTab: String, CaseIterable, Identifiable {
-    /// `.plan` 是底栏中央键那页（读经计划播放页）：与首页平级的主页面，底栏照常
     case home, panorama, music, plan, read, explore
     var id: String { rawValue }
 
-    /// 与安卓 `ShellTabBar.kt` 同一套 MaterialIcons / MaterialCommunityIcons 字形
     var glyph: String {
         switch self {
         case .panorama: return "\u{e55b}"
@@ -17,93 +15,101 @@ enum ShellTab: String, CaseIterable, Identifiable {
         }
     }
 
+    var sfSymbol: String {
+        switch self {
+        case .home: return "house"
+        case .panorama: return "scroll"
+        case .music: return "music.note"
+        case .plan: return "sun.horizon"
+        case .read: return "book.closed"
+        case .explore: return "books.vertical"
+        }
+    }
+
     func label(_ locale: AppLocale) -> String {
         switch (self, locale) {
-        case (.panorama, .en): return "Panorama"
-        case (.panorama, _): return "全景"
         case (.home, .en): return "Home"
         case (.home, .zhTW): return "首頁"
         case (.home, _): return "首页"
+        case (.panorama, .en): return "Story"
+        case (.panorama, _): return "全景"
         case (.music, .en): return "Music"
         case (.music, .zhTW): return "音樂"
         case (.music, _): return "音乐"
-        case (.plan, .en): return "Plan"
-        case (.plan, .zhTW): return "讀經"
-        case (.plan, _): return "读经"
+        case (.plan, .en): return "Today"
+        case (.plan, _): return "今日"
         case (.read, .en): return "Bible"
         case (.read, .zhTW): return "聖經"
         case (.read, _): return "圣经"
-        case (.explore, .en): return "Explore"
-        case (.explore, _): return "探索"
+        case (.explore, .en): return "Study"
+        case (.explore, .zhTW): return "書房"
+        case (.explore, _): return "书房"
         }
     }
 }
 
-/// 底栏：100% 对齐安卓 `ShellTabBar.kt`（D-45，不用苹果 Liquid Glass 胶囊或底栏文字）。
-/// row maxWidth 400 / paddingH 12，左右两组各装 2 颗 36pt Material 图标，
-/// 中间 account-voice 60×60 marginH 8；选中 LOGO 黄，未选中纯白带轻阴影。
+/// 五栏对称羊皮纸胶囊底栏：首页 · 全景 · 今日 · 圣经 · 书房（全端对齐）。
 struct ShellTabBar: View {
+    @Environment(\.parchment) private var theme
     @Binding var selection: ShellTab
     var locale: AppLocale = .zhCN
     var onCenterTap: () -> Void = {}
 
     var body: some View {
-        HStack(spacing: 0) {
-            HStack(spacing: 0) {
-                tabButton(.home, active: selection == .home || selection == .music)
-                tabButton(.panorama, active: selection == .panorama)
-            }
-            .frame(maxWidth: .infinity)
-
-            centerFab
-                .padding(.horizontal, ShellMetrics.fabMarginH)
-
-            HStack(spacing: 0) {
-                tabButton(.read, active: selection == .read)
-                tabButton(.explore, active: selection == .explore)
-            }
-            .frame(maxWidth: .infinity)
+        let onScenery = selection == .home || selection == .music
+        HStack(spacing: 4) {
+            tabPill(.home, active: selection == .home || selection == .music) { selection = .home }
+            tabPill(.panorama, active: selection == .panorama) { selection = .panorama }
+            tabPill(.plan, active: selection == .plan) { onCenterTap() }
+            tabPill(.read, active: selection == .read) { selection = .read }
+            tabPill(.explore, active: selection == .explore) { selection = .explore }
         }
-        .padding(.horizontal, ShellMetrics.tabRowPaddingH)
-        .frame(maxWidth: ShellMetrics.tabRowMaxWidth)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 4)
+        .frame(maxWidth: 400)
+        .background(
+            Capsule()
+                .fill(theme.isDark
+                      ? Color(red: 34 / 255, green: 28 / 255, blue: 22 / 255).opacity(onScenery ? 0.92 : 0.96)
+                      : Color(red: 238 / 255, green: 227 / 255, blue: 208 / 255).opacity(onScenery ? 0.92 : 0.96))
+        )
+        .overlay(
+            Capsule()
+                .strokeBorder(theme.border, lineWidth: 0.75)
+        )
+        .shadow(color: .black.opacity(0.14), radius: 10, x: 0, y: 4)
+        .padding(.horizontal, 14)
         .frame(maxWidth: .infinity)
     }
 
-    private func tabButton(_ tab: ShellTab, active: Bool) -> some View {
-        Button {
-            selection = tab
-        } label: {
-            MaterialIcon(glyph: tab.glyph, size: ShellMetrics.tabIconSize,
-                         color: active ? Brand.logo : Brand.tabBarIcon)
-                .frame(maxWidth: .infinity)
-                .frame(height: ShellMetrics.tabButtonHeight)
-                .shellIconShadow()
-                .contentShape(Rectangle())
+    private func tabPill(_ tab: ShellTab, active: Bool, action: @escaping () -> Void) -> some View {
+        let activeColor = theme.isDark ? Brand.logo : Color(red: 181 / 255, green: 93 / 255, blue: 8 / 255)
+        let inactiveColor = theme.ink.opacity(0.76)
+        return Button(action: action) {
+            VStack(spacing: 2) {
+                Image(systemName: tab.sfSymbol)
+                    .font(.system(size: 18, weight: active ? .semibold : .regular))
+                Text(tab.label(locale))
+                    .askFont(size: 10.5, weight: active ? .bold : .medium)
+                    .lineLimit(1)
+            }
+            .foregroundStyle(active ? activeColor : inactiveColor)
+            .frame(maxWidth: .infinity)
+            .frame(height: 50)
+            .background {
+                if active {
+                    Capsule()
+                        .fill(activeColor.opacity(0.16))
+                }
+            }
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(tab.label(locale))
         .accessibilityAddTraits(active ? .isSelected : [])
     }
-
-    private var centerFab: some View {
-        Button(action: onCenterTap) {
-            MaterialIcon(glyph: MCI.accountVoice, size: ShellMetrics.fabIconSize,
-                         color: selection == .plan ? Brand.logo : Color.white.opacity(0.92),
-                         community: true)
-                .frame(width: ShellMetrics.fabSize, height: ShellMetrics.fabSize)
-                .shellIconShadow()
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(ShellTab.plan.label(locale))
-        .accessibilityAddTraits(selection == .plan ? .isSelected : [])
-    }
 }
 
-/// 壳层：100% 对齐安卓 `MainActivity.kt` 底部结构（D-45）。
-/// - 有播放坞（`dockActive`）时，`ParchmentPinnedBottom` 连坞带底栏整宽无缝铺羊皮实底；
-/// - 其余羊皮页底栏透明，正文在底栏前经 `ParchmentFade(.tabbar)` 自然渐隐；
-/// - 首页闲置收起（`homeBarHidden`）时底栏淡出至 0，点击该区域仅唤回界面、不误切 Tab。
 struct AskTabShell<Screen: View, Dock: View>: View {
     @Environment(\.parchment) private var theme
     @Binding var selection: ShellTab
@@ -164,7 +170,6 @@ struct AskTabShell<Screen: View, Dock: View>: View {
 }
 
 extension View {
-    /// 让滚动内容在底栏（+ 播放坞）上方干净结束（对齐安卓 bottom contentPadding）。
     func shellBottomInset(hasDock: Bool = false) -> some View {
         safeAreaInset(edge: .bottom) {
             Color.clear.frame(

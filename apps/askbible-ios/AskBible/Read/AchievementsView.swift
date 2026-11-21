@@ -13,17 +13,17 @@ struct AchievementsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 22) {
+            VStack(spacing: 24) {
                 header
-                soundToggle
-                medalWall
                 sealWall
+                medalWall
+                soundToggle
             }
             .padding(.horizontal, 18)
             .padding(.vertical, 18)
         }
         .background(ParchmentBackground().ignoresSafeArea())
-        .navigationTitle(SiteCopy.t("native.achievements"))
+        .navigationTitle(AppLocale.pick("书卷印鉴 · \(ach.seals.count) / 66 卷", "Book Seals · \(ach.seals.count) / 66"))
         .navigationBarTitleDisplayMode(.inline)
         .overlay {
             if let d = detail {
@@ -59,19 +59,10 @@ struct AchievementsView: View {
     }
 
     private var header: some View {
-        VStack(spacing: 14) {
-            XPBar()
-            HStack(spacing: 0) {
-                stat("\(ach.totalXP)", SiteCopy.t("native.totalXP"))
-                divider
-                stat("\(ach.chaptersReadCount)", SiteCopy.t("native.chaptersReadLabel"))
-                divider
-                stat(String(format: "×%.2f", ach.streakMultiplier), SiteCopy.t("native.streakBonus"))
-            }
-        }
-        .padding(16)
-        .background(Color(parchment: 0xFFFCF5, opacity: 0.92), in: RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color(parchment: 0xF2E4CF), lineWidth: 1))
+        XPBar(compact: true)
+            .padding(16)
+            .background(Color(parchment: 0xFFFCF5, opacity: 0.92), in: RoundedRectangle(cornerRadius: 18))
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color(parchment: 0xF2E4CF), lineWidth: 1))
     }
 
     private var divider: some View {
@@ -108,20 +99,20 @@ struct AchievementsView: View {
     }
 
     private var sealWall: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             sectionTitle(SiteCopy.t("native.bookSeals"),
                          SiteCopy.f("native.sealsProgress", ["n": "\(ach.seals.count)"]))
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 64), spacing: 10)], spacing: 14) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 88), spacing: 14)], spacing: 18) {
                 ForEach(BibleCatalog.all, id: \.id) { book in
                     let file = MedalCatalog.seals[min(max(book.number, 1), MedalCatalog.seals.count) - 1]
                     let lit = ach.seals[book.id] != nil
-                    VStack(spacing: 4) {
-                        MedalIcon(key: file, tier: ach.seals[book.id] != nil ? 1 : 0, size: 56)
+                    VStack(spacing: 6) {
+                        MedalIcon(key: file, tier: lit ? 1 : 0, size: 72)
                         Text(book.name(AppLocale.current))
-                            .askFont(size: 10)
-                            .foregroundStyle(Color(parchment: ach.seals[book.id] != nil ? 0x5C4030 : 0x7A633A))
-                            .opacity(ach.seals[book.id] != nil ? 1 : 0.55)
-                            .lineLimit(1).minimumScaleFactor(0.7)
+                            .askFont(size: 12, weight: lit ? .semibold : .regular)
+                            .foregroundStyle(Color(parchment: lit ? 0x2B1D15 : 0x7A633A))
+                            .opacity(lit ? 1 : 0.58)
+                            .lineLimit(1).minimumScaleFactor(0.75)
                     }
                     .contentShape(Rectangle())
                     .onTapGesture {

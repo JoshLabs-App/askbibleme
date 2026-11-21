@@ -24,21 +24,29 @@ import me.askbible.native_.data.Parchment
  * 内容要按 RN `readParchmentFadeSafePadding` 多留顶 70 / 底 120 的边，免得头尾被淡掉。
  */
 enum class ParchmentFadePreset(val edgeFadeTop: Float, val edgeFadeBottom: Float, val tabNear: Float, val topTabNear: Float, val tabMaskOpacity: Float) {
-    TABBAR(70f, 120f, 80f, 30f, 0.03f),
-    CHAPTER(70f, 0f, 0f, 30f, 0.03f);
+    TABBAR(0f, 60f, 30f, 0f, 0.03f),
+    CHAPTER(58f, 0f, 0f, 16f, 0.03f);
 
     /** RN maskStops：按视口高度（px）算出的渐变停靠点（0 = 顶） */
     fun stops(viewportPx: Float, density: Float): Array<Pair<Float, Color>> {
         val h = maxOf(viewportPx, 1f)
-        val topTab = minOf(0.4f, topTabNear * density / h)
-        val topEnd = minOf(0.48f, maxOf(topTab + 0.02f, edgeFadeTop * density / h))
-        val topBlend = topTab + (topEnd - topTab) * 0.45f
-        val top = arrayOf(
-            0f to Color.Black.copy(alpha = 0f),
-            topTab to Color.Black.copy(alpha = tabMaskOpacity),
-            topBlend to Color.Black.copy(alpha = 0.42f),
-            topEnd to Color.Black,
-        )
+        val topEnd: Float
+        val top: Array<Pair<Float, Color>>
+        if (edgeFadeTop <= 0f) {
+            topEnd = 0f
+            top = arrayOf(0f to Color.Black)
+        } else {
+            val topTab = minOf(0.4f, topTabNear * density / h)
+            val te = minOf(0.48f, maxOf(topTab + 0.02f, edgeFadeTop * density / h))
+            val topBlend = topTab + (te - topTab) * 0.45f
+            topEnd = te
+            top = arrayOf(
+                0f to Color.Black.copy(alpha = 0f),
+                topTab to Color.Black.copy(alpha = tabMaskOpacity),
+                topBlend to Color.Black.copy(alpha = 0.42f),
+                te to Color.Black,
+            )
+        }
         if (edgeFadeBottom <= 0f) return top + arrayOf(1f to Color.Black)
         val fadeStart = maxOf(topEnd + 0.02f, 1f - edgeFadeBottom * density / h)
         val tabNearLoc = minOf(0.999f, maxOf(fadeStart + 0.02f, 1f - tabNear * density / h))
@@ -72,7 +80,7 @@ const val TAB_BAR_CLEARANCE = 72f
  * 与 iOS 的 ParchmentPinnedBottom 对等。
  */
 @Composable
-fun ParchmentPinnedBottom(modifier: Modifier = Modifier, theme: Parchment = LocalParchment.current) {
+fun ParchmentPinnedBottom(modifier: Modifier = Modifier, theme: Parchment = Parchment.light) {
     val texture = rememberAssetImage("parchment.jpg")
     val view = LocalView.current
     // Canvas 默认不裁切：整窗口大的 drawImage 会画到宿主外面、盖住上面的正文（实测章页整页被盖成空羊皮），必须 clipToBounds
@@ -82,7 +90,7 @@ fun ParchmentPinnedBottom(modifier: Modifier = Modifier, theme: Parchment = Loca
             if (texture != null) {
                 val w = view.width.takeIf { it > 0 } ?: size.width.toInt()
                 val h = view.height.takeIf { it > 0 } ?: size.height.toInt()
-                drawImage(image = texture, dstOffset = IntOffset(0, size.height.toInt() - h), dstSize = IntSize(w, h), alpha = if (theme == Parchment.dark) 0.07f else 1f)
+                drawImage(image = texture, dstOffset = IntOffset(0, size.height.toInt() - h), dstSize = IntSize(w, h))
             }
         }
     }

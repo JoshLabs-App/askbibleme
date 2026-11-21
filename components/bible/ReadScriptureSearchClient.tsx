@@ -6,6 +6,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ScriptureSearchHighlightedText } from "@/components/bible/ScriptureSearchHighlightedText";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useReadBibleTranslationSettings } from "@/components/bible/ReadBibleTypographyProvider";
+import { getScriptureBookDisplayName } from "@/lib/bible/scripture-book-display-name";
+import { parseScriptureReference } from "@/lib/bible/scripture-reference-parser";
+import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import {
   SCRIPTURE_SEARCH_MIN_LEN,
   type ScriptureSearchChapterRef,
@@ -163,17 +166,76 @@ export function ReadScriptureSearchClient({ routeChapterRef: routeChapterRefProp
     return () => clearTimeout(timer);
   }, [query, scope, chapterRef, runSearch]);
 
+  const parsedRef = useMemo(() => parseScriptureReference(query), [query]);
+
   const hint =
-    query.trim().length > 0 && query.trim().length < SCRIPTURE_SEARCH_MIN_LEN
+    !parsedRef && query.trim().length > 0 && query.trim().length < SCRIPTURE_SEARCH_MIN_LEN
       ? t("pages.read.scriptureSearchMinHint")
       : scope === "chapter" && !chapterRef
         ? t("pages.read.scriptureSearchNoChapterHint")
         : null;
 
+  const placeholderText =
+    locale === "en"
+      ? "Search verses, or jump e.g. John 3:16…"
+      : locale === "zh-TW"
+        ? toZhTwText("搜索经文，或输入如 约 3:16 直达…")
+        : "搜索经文，或输入如 约 3:16 直达…";
+
   return (
     <div className="read-scripture-search">
       <h1 className="read-scripture-search-title">{t("pages.read.scriptureSearchTitle")}</h1>
       <p className="read-scripture-search-lead">{t("pages.read.scriptureSearchLead")}</p>
+
+      <label className="read-scripture-search-field relative">
+        <span className="sr-only">{placeholderText}</span>
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={placeholderText}
+          className="read-scripture-search-input pr-9"
+          autoComplete="off"
+          spellCheck={false}
+        />
+        {query ? (
+          <button
+            type="button"
+            aria-label={locale === "en" ? "Clear search" : "清除输入"}
+            onClick={() => setQuery("")}
+            className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border-0 bg-black/10 text-xs text-[#6E563A] dark:bg-white/10 dark:text-[#EDE2CF]"
+          >
+            ×
+          </button>
+        ) : null}
+      </label>
+
+      {parsedRef ? (
+        <Link
+          href={`/read/${encodeURIComponent(parsedRef.book.bookId)}/${parsedRef.chapter}${
+            parsedRef.verse != null ? `?verse=${parsedRef.verse}` : ""
+          }`}
+          onClick={() => pushRecentSearch(query)}
+          className="mb-3 mt-2 flex items-center justify-between gap-3 rounded-2xl border border-[#C1660B]/40 bg-[#FBF4E4] px-4 py-3 no-underline shadow-sm transition hover:border-[#C1660B]/70 dark:border-[#E2A84B]/40 dark:bg-[#2A2218]"
+        >
+          <div className="min-w-0">
+            <div className="text-[11px] font-bold tracking-wider text-[#C1660B] dark:text-[#E2A84B]">
+              {locale === "en"
+                ? "✦ DIRECT SCRIPTURE JUMP"
+                : locale === "zh-TW"
+                  ? toZhTwText("✦ 书卷章节直达")
+                  : "✦ 书卷章节直达"}
+            </div>
+            <div className="mt-0.5 font-serif text-[16px] font-bold text-[#231A12] dark:text-[#EDE2CF]">
+              {getScriptureBookDisplayName(parsedRef.book.bookId, locale)} {parsedRef.chapter}
+              {parsedRef.verse != null ? `:${parsedRef.verse}` : ""}
+            </div>
+          </div>
+          <span className="inline-flex shrink-0 items-center rounded-full bg-[#C1660B] px-3 py-1 text-[12px] font-semibold text-[#FFFDF9] dark:bg-[#E2A84B] dark:text-[#1A1511]">
+            {locale === "en" ? "Open ›" : "直达 ›"}
+          </span>
+        </Link>
+      ) : null}
 
       <div className="read-scripture-search-scope" role="tablist" aria-label={t("pages.read.scriptureSearchScopeAria")}>
         {SCOPE_OPTIONS.map((opt) => {
@@ -192,19 +254,6 @@ export function ReadScriptureSearchClient({ routeChapterRef: routeChapterRefProp
           );
         })}
       </div>
-
-      <label className="read-scripture-search-field">
-        <span className="sr-only">{t("pages.read.scriptureSearchPlaceholder")}</span>
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={t("pages.read.scriptureSearchPlaceholder")}
-          className="read-scripture-search-input"
-          autoComplete="off"
-          spellCheck={false}
-        />
-      </label>
 
       {recentSearches.length > 0 ? (
         <section className="read-scripture-search-recent" aria-label={t("pages.read.scriptureSearchRecentAria")}>

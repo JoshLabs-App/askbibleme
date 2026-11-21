@@ -55,9 +55,12 @@ object AchievementFeedback {
      * 但完全没反馈又会觉得「读了没记上」。所以小额只给一记轻触感、不出声，
      * 只有整章读完这种大额才出声。
      */
+    /**
+     * 去游戏化（Josh 2026-11-20 支持去游戏化）：不再为小额增量 XP 触发街机式木叩或震动，
+     * 仅在整章读完时轻响一记修道院小钵（Cue.CHAPTER）。
+     */
     fun playXp(context: Context, milestone: Boolean) {
-        // 里程碑用小钵而不是木叩：木叩配不上「读完一章」这件事
-        if (milestone) play(context, Cue.CHAPTER) else play(context, Cue.XP, silent = true)
+        if (milestone) play(context, Cue.CHAPTER)
     }
 
     fun play(context: Context, cue: Cue) = play(context, cue, silent = false)

@@ -18,10 +18,10 @@
   background: transparent;
 }
 
-/* 实际滚动区：顶/底 mask 渐隐（与 App `SHELL_TAB_SCROLL_FADE_PRESET` / tabbar 对齐） */
+/* 实际滚动区：底缘 mask 渐隐；顶缘在普通 Tab 页保持 0px 锐利标题，仅章页浮动顶栏下渐隐 56px（对齐 iOS/Android ParchmentFadePreset） */
 .read-bible-parchment-scroll,
 .read-chapter-scroll {
-  --read-parchment-edge-fade-top: 70px;
+  --read-parchment-edge-fade-top: 0px;
   --read-parchment-edge-fade-bottom: 120px;
   box-sizing: border-box;
   flex: 1;
@@ -60,7 +60,7 @@
 
 /* @deprecated 探索/长文已与 shell tab scroll mask 对齐；保留类名避免旧链接失效 */
 .read-bible-parchment-scroll.read-bible-parchment-scroll--explore-prose {
-  --read-parchment-edge-fade-top: 70px;
+  --read-parchment-edge-fade-top: 0px;
   --read-parchment-edge-fade-bottom: 120px;
 }
 
@@ -107,6 +107,7 @@
 }
 
 .read-bible-parchment-scroll:has(.read-chapter-header) {
+  --read-parchment-edge-fade-top: 56px;
   padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
 }
 
@@ -1177,18 +1178,22 @@
 
 .read-chapter-verse-contrast {
   display: block;
-  margin-top: 0.2rem;
-  font-size: var(--read-bible-contrast-verse-font-size, 1.02rem);
+  margin-top: 0.42rem;
+  margin-left: 0.2rem;
+  padding-left: 0.72rem;
+  border-left: 2px solid rgba(193, 102, 11, 0.52);
+  font-size: var(--read-bible-contrast-verse-font-size, 0.98rem);
   font-weight: 450;
-  line-height: 1.15;
+  line-height: 1.5;
   letter-spacing: 0.01em;
-  color: color-mix(in srgb, rgb(120 75 30) 62%, transparent);
+  color: color-mix(in srgb, rgb(105 70 34) 76%, transparent);
   user-select: text;
   -webkit-user-select: text;
 }
 
 .dark .read-chapter-verse-contrast {
-  color: color-mix(in srgb, rgb(214 211 209) 78%, transparent);
+  border-left-color: rgba(226, 168, 75, 0.48);
+  color: color-mix(in srgb, rgb(214 205 192) 82%, transparent);
 }
 
 /* 经文正文区（与章标题、下方信息版分区） */

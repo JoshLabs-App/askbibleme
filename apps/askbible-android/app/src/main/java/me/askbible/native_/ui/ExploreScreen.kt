@@ -1,15 +1,9 @@
 package me.askbible.native_.ui
 
-import me.askbible.native_.data.name
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.offset
-import me.askbible.native_.data.MemberReadingSyncRules
-import me.askbible.native_.data.ReadingActivityStore
-import me.askbible.native_.data.ReadSize
-import me.askbible.native_.data.ExploreArticle
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.runtime.remember
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,271 +11,276 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.MeetingRoom
-import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.QuestionAnswer
-import androidx.compose.material.icons.filled.ShowChart
-import androidx.compose.material.icons.filled.VolunteerActivism
-import androidx.compose.material.icons.filled.WavingHand
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import me.askbible.native_.data.MemberUser
-import me.askbible.native_.data.BibleCatalog
-import me.askbible.native_.data.SiteCopy
-import me.askbible.native_.data.Brand
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import kotlinx.coroutines.launch
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import me.askbible.native_.data.AppLocale
-import me.askbible.native_.data.MemberAuthRules
-import me.askbible.native_.data.MemberAuthStore
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import me.askbible.native_.data.AchievementStore
+import me.askbible.native_.data.AppLocale
+import me.askbible.native_.data.BibleCatalog
+import me.askbible.native_.data.ExploreArticle
+import me.askbible.native_.data.MemberAuthRules
+import me.askbible.native_.data.MemberAuthStore
+import me.askbible.native_.data.MemberUser
 import me.askbible.native_.data.Parchment
-import me.askbible.native_.data.ShellMetrics
+import me.askbible.native_.data.ReadSize
+import me.askbible.native_.data.ReadingActivityStore
+import me.askbible.native_.data.SiteCopy
+import me.askbible.native_.data.VerseBookmark
+import me.askbible.native_.data.VerseBookmarkStore
+import me.askbible.native_.data.VerseHighlightStore
+import me.askbible.native_.data.name
 
-/** 探索页：统计 → 使用时长 → 最近阅读 → 查经资料格子。与 iOS 的 ExploreView 对等。 */
+/**
+ * 私人读经书房（对齐 iOS ExploreView）：
+ * - 温润问候语「平安，旅人 / 名字」+ 右上偏好设置齿轮（唤起底部三分组偏好抽屉）
+ * - 去游戏化「手抄本藏书票与书卷火漆印」卡片（点击进入 66 卷印鉴墙）
+ * - 四色「摘录与印记」统一模块（支持筛选、书签图分享与撤销）
+ * - 最近阅读轨迹卡片 + 同系列软件入口
+ */
 @Composable
 fun ExploreScreen(
     size: ReadSize = ReadSize.DEFAULT,
-    /** 当前打开的文章（宿主持有，系统返回键要能关） */
     article: ExploreArticle? = null,
     onOpenArticle: (ExploreArticle?) -> Unit = {},
-    /** 文章里的经文链接 → 读经 Tab 打开那一章 */
     onOpenChapter: (bookId: String, chapter: Int) -> Unit = { _, _ -> },
-    /** 收藏（Josh 2026-09-11「探索里要放收藏，前 3 条 + 更多」） */
-    favorites: List<me.askbible.native_.data.VerseBookmark> = emptyList(),
-    /** 点一条收藏 → 打开那一节 */
+    favorites: List<VerseBookmark> = emptyList(),
+    bookmarks: VerseBookmarkStore? = null,
+    highlights: VerseHighlightStore? = null,
     onOpenVerse: (String, Int, Int) -> Unit = { _, _, _ -> },
-    /** 「更多」→ 收藏页 */
     onOpenFavorites: () -> Unit = {},
-    /** 会员状态：抬头「请登录，解锁更多」→ 登录页；登录后「你好，名字」→ 改称呼 */
     auth: MemberAuthStore? = null,
     locale: AppLocale = AppLocale.ZH_CN,
     onOpenLogin: () -> Unit = {},
-    /** 读经活动：今年已过 / 读经天 / 连续天 / 使用时长 / 累计听 / 最近阅读（RN ExploreReadingHabitStats） */
+    onOpenSettings: () -> Unit = {},
     activity: ReadingActivityStore? = null,
-    /** 退出登录（先把本机进度推上云端再清本机，由壳接线） */
     onSignOut: () -> Unit = {},
-    /** 成就 / XP：等级条卡片，点进成就页 */
-    achievements: me.askbible.native_.data.AchievementStore? = null,
+    achievements: AchievementStore? = null,
     onOpenAchievements: () -> Unit = {},
-    theme: Parchment = LocalParchment.current,
+    theme: Parchment = Parchment.light,
 ) {
     if (article != null) {
         ExploreArticleScreen(article, size, onBack = { onOpenArticle(null) }, onOpenChapter = onOpenChapter,
                              onOpenArticle = onOpenArticle, theme = theme)
         return
     }
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var nameEditorOpen by remember { mutableStateOf(false) }
     var nameDraft by remember { mutableStateOf("") }
+    var sharePayload by remember { mutableStateOf<VerseSharePayload?>(null) }
+    var undoState by remember { mutableStateOf<Pair<String, () -> Unit>?>(null) }
     val recent = activity?.recent ?: emptyList()
-    // 统计行跟界面语言走（三语文案见 SiteCopy；Josh 2026-09-10 决定补齐整套英文）
     val isEn = locale == AppLocale.EN
-    val tl = remember { MemberReadingSyncRules.yearTimeline() }
-    val completedDates = activity?.completedDates ?: emptyList()
-    val ranges = remember(completedDates) { val d = java.time.LocalDate.now(); MemberReadingSyncRules.yearReadRanges(completedDates, d.year, d.monthValue, d.dayOfMonth) }
-    val usageLine = "${SiteCopy.t("native.usageTime", locale)}  ${MemberReadingSyncRules.formatUsageDuration((activity?.usageTotalSec ?: 0.0).toInt(), isEn)}"
-    val listenDuration = MemberReadingSyncRules.formatListenDuration((activity?.listenTotalSec ?: 0.0).toInt(), isEn)
-    val listenLine = SiteCopy.f("native.listenTotal", mapOf("duration" to listenDuration), locale)
+    val ink = theme.ink.toColor()
+    val muted = theme.muted.toColor()
+    val faint = theme.faint.toColor()
+    val accent = theme.accentOt.toColor()
 
-    // RN ExploreGreetingNameModal：改称呼（最多 24 字）
+    LaunchedEffect(undoState) {
+        if (undoState != null) {
+            delay(3400)
+            undoState = null
+        }
+    }
+
     if (nameEditorOpen && auth != null) {
-        androidx.compose.material3.AlertDialog(
+        AlertDialog(
             onDismissRequest = { nameEditorOpen = false },
             title = { Text(SiteCopy.t("pages.explore.greetingEditTitle", locale)) },
             text = {
-                androidx.compose.material3.OutlinedTextField(value = nameDraft, onValueChange = { nameDraft = it }, singleLine = true,
-                    placeholder = { Text(SiteCopy.t("pages.explore.birthYearModalNamePlaceholder", locale)) })
+                OutlinedTextField(
+                    value = nameDraft,
+                    onValueChange = { nameDraft = it },
+                    singleLine = true,
+                    placeholder = { Text(SiteCopy.t("pages.explore.birthYearModalNamePlaceholder", locale)) },
+                )
             },
             confirmButton = {
-                androidx.compose.material3.TextButton(enabled = MemberAuthRules.isValidDisplayName(nameDraft),
-                    onClick = { val n = nameDraft; nameEditorOpen = false; scope.launch { auth.updateDisplayName(n) } }) { Text(SiteCopy.t("native.save", locale)) }
+                TextButton(
+                    enabled = MemberAuthRules.isValidDisplayName(nameDraft),
+                    onClick = { val n = nameDraft; nameEditorOpen = false; scope.launch { auth.updateDisplayName(n) } },
+                ) { Text(SiteCopy.t("native.save", locale)) }
             },
-            dismissButton = { androidx.compose.material3.TextButton(onClick = { nameEditorOpen = false }) { Text(SiteCopy.t("native.cancel", locale)) } },
+            dismissButton = { TextButton(onClick = { nameEditorOpen = false }) { Text(SiteCopy.t("native.cancel", locale)) } },
         )
     }
+
+    val insets = WindowInsets.systemBars.asPaddingValues()
     Box(Modifier.fillMaxSize()) {
         ParchmentBackground(theme = theme)
 
-        val insets = WindowInsets.systemBars.asPaddingValues()
         LazyColumn(
             Modifier.fillMaxSize().parchmentFade(ParchmentFadePreset.TABBAR),
-            contentPadding = PaddingValues(top = 37.dp + insets.calculateTopPadding(),
-                                           bottom = TAB_BAR_CLEARANCE.dp + insets.calculateBottomPadding() + 120.dp + 120.dp),
+            contentPadding = PaddingValues(
+                top = 18.dp + insets.calculateTopPadding(),
+                bottom = TAB_BAR_CLEARANCE.dp + insets.calculateBottomPadding() + 110.dp,
+            ),
         ) {
             item {
-                // RN ExploreScreen 抬头：没登录点了去登录页；登录了显示「你好，名字」，点了改称呼
-                val user = auth?.user
-                Text(greetingText(user, locale),
-                     Modifier.fillMaxWidth().clickableNoRipple { if (user != null) { nameDraft = user.name; nameEditorOpen = true } else onOpenLogin() },
-                     color = theme.ink.toColor(), fontSize = 25.sp,
-                     fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, maxLines = 1)
-                if (user != null) {
-                    // RN 的「退出登录」在侧边抽屉里；原生版还没有抽屉，先放在抬头下面
-                    Text(SiteCopy.t("auth.drawerLogout", locale), Modifier.fillMaxWidth().padding(top = 8.dp).clickableNoRipple { onSignOut() },
-                         color = theme.faint.toColor(), fontSize = 13.sp, textAlign = TextAlign.Center,
-                         textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline)
-                }
-                Spacer(Modifier.height(26.dp))
-
-                // RN ReadYearDayTimeline：淡底轨 + 实色已读区段 + 今日橙点
-                BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = 52.dp).height(22.dp), contentAlignment = Alignment.CenterStart) {
-                    val w = maxWidth
-                    Box(Modifier.fillMaxWidth().height(3.dp).clip(CircleShape).background(theme.border.toColor().copy(alpha = 0.8f)))
-                    val minW = 2.0 / maxOf(tl.daysInYear, 1)
-                    for ((start, end) in ranges) {
-                        val (left, width) = MemberReadingSyncRules.rangeToTrackFraction(start, end, tl.daysInYear)
-                        val drawW = maxOf(width, minW)
-                        val drawLeft = minOf(left, maxOf(0.0, 1 - drawW))
-                        Box(Modifier.offset(x = w * drawLeft.toFloat()).width(w * drawW.toFloat()).height(5.dp).clip(CircleShape).background(Color(0xFFE8A017)))
-                    }
-                    Box(Modifier.offset(x = w * tl.progress.toFloat() - 5.5.dp).size(11.dp).clip(CircleShape).background(theme.parchmentAccent.toColor()))
-                }
-                Spacer(Modifier.height(22.dp))
-
-                Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp),
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Stat(tl.dayOfYear.toString(), SiteCopy.t("pages.read.todayReadingStatYearDayLabel", locale), theme.parchmentAccent.toColor(), theme, Modifier.weight(1f))
-                    Divider(theme)
-                    Stat((activity?.readDays ?: 0).toString(), SiteCopy.t("pages.read.todayReadingStatReadLabel", locale), if (theme.isDark) Color(0xFF8FC79A) else Color(0xFF4F7A54), theme, Modifier.weight(1f))
-                    Divider(theme)
-                    Stat((activity?.streakDays ?: 0).toString(), SiteCopy.t("pages.read.todayReadingStatStreakLabel", locale), if (theme.isDark) Color(0xFF8FC79A) else Color(0xFF4F7A54), theme, Modifier.weight(1f))
-                }
-                // 等级条：探索页最显眼的常驻反馈，整张卡片可点进成就页
-                if (achievements != null) {
-                    Spacer(Modifier.height(20.dp))
-                    Column(
-                        Modifier.fillMaxWidth().padding(horizontal = 24.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(theme.surface.toColor())
-                            .border(1.dp, theme.border.toColor(), RoundedCornerShape(16.dp))
-                            .clickableNoRipple(onOpenAchievements)
-                            .padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        XPBar(achievements, locale, theme)
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(SiteCopy.t("native.achievementsSub", locale),
-                                 color = theme.muted.toColor(), fontSize = 12.sp)
-                            Spacer(Modifier.width(4.dp))
-                            Text("\u203A", color = theme.muted.toColor(), fontSize = 14.sp)
+                Column(Modifier.padding(horizontal = 22.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                    // 顶栏问候与偏好齿轮
+                    val user = auth?.user
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Column(
+                            Modifier.weight(1f).clickableNoRipple {
+                                if (user != null) { nameDraft = user.name; nameEditorOpen = true } else onOpenLogin()
+                            },
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Text(
+                                studyGreeting(user, locale),
+                                color = ink,
+                                fontSize = 26.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                if (user != null) AppLocale.pick("进入优先于完成 · 私人读经书房", "Entry over completion · Personal study", locale)
+                                else AppLocale.pick("点此登录，跨设备同步印记与摘录 ›", "Tap to sign in and sync notes & seals ›", locale),
+                                color = if (user != null) muted else accent,
+                                fontSize = 13.sp,
+                            )
+                        }
+                        Box(
+                            Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(theme.surface.toColor().copy(alpha = 0.85f))
+                                .border(1.dp, theme.border.toColor(), CircleShape)
+                                .clickableNoRipple(onOpenSettings),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            MaterialIcon(MI.SETTINGS, 20f, ink.copy(alpha = 0.82f))
                         }
                     }
-                }
-                Spacer(Modifier.height(18.dp))
 
-                Text(usageLine, Modifier.fillMaxWidth(),
-                     color = theme.muted.toColor(), fontSize = 17.sp, textAlign = TextAlign.Center)
-                Spacer(Modifier.height(6.dp))
-                Text(listenLine, Modifier.fillMaxWidth(),
-                     color = theme.muted.toColor(), fontSize = 17.sp, textAlign = TextAlign.Center)
-                Spacer(Modifier.height(20.dp))
-                Text(SiteCopy.t("native.recentReading", locale), Modifier.fillMaxWidth(),
-                     color = theme.faint.toColor(), fontSize = 15.sp, textAlign = TextAlign.Center)
-                Spacer(Modifier.height(8.dp))
-
-                Column(Modifier.padding(horizontal = 26.dp)) {
-                    for (r in recent) {
-                        val name = BibleCatalog.book(r.bookId)?.name(locale) ?: locale.zh(r.bookName)
-                        val label = if (isEn) "$name ${r.chapter}" else SiteCopy.f("native.chapterUnit", mapOf("bookName" to name, "chapter" to "${r.chapter}"), locale)
-                        Row(Modifier.fillMaxWidth().height(38.dp).clickableNoRipple { onOpenChapter(r.bookId, r.chapter) }, verticalAlignment = Alignment.CenterVertically) {
-                            Text(label, color = theme.ink.toColor(), fontSize = 18.sp, modifier = Modifier.weight(1f))
-                            Text("\u203A", color = theme.faint.toColor().copy(alpha = 0.58f), fontSize = 24.sp, lineHeight = 24.sp)
+                    // 手抄本藏书票与书卷火漆印卡片
+                    if (achievements != null) {
+                        Column(
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(theme.surface.toColor())
+                                .border(1.dp, theme.borderStrong.toColor(), RoundedCornerShape(20.dp))
+                                .clickableNoRipple(onOpenAchievements)
+                                .padding(16.dp),
+                        ) {
+                            XPBar(achievements, locale, theme, readDaysOverride = activity?.readDays)
                         }
                     }
-                    if (recent.isEmpty()) {
-                        Text(SiteCopy.t("native.noReadingRecord", locale), Modifier.fillMaxWidth().height(38.dp), color = theme.faint.toColor(), fontSize = 15.sp, textAlign = TextAlign.Center)
+
+                    // 统一摘录与印记
+                    if (bookmarks != null) {
+                        UnifiedNotesBlock(
+                            bookmarks = bookmarks,
+                            highlights = highlights,
+                            locale = locale,
+                            theme = theme,
+                            limit = 6,
+                            onOpenVerse = onOpenVerse,
+                            onOpenMore = onOpenFavorites,
+                            onShareCard = { sharePayload = it },
+                            onUndoAvailable = { msg, restore -> undoState = msg to restore },
+                        )
                     }
-                }
-                // 收藏：最近 3 条 + 「更多」（Josh 2026-09-11「探索里要放收藏」）；点一条跳到那一节
-                Spacer(Modifier.height(20.dp))
-                Row(Modifier.fillMaxWidth().padding(horizontal = 26.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(SiteCopy.t("pages.read.favoritesTitle", locale), Modifier.weight(1f),
-                         color = theme.faint.toColor(), fontSize = 15.sp)
-                    if (favorites.size > 3) {
-                        Text(SiteCopy.t("native.favoritesMore", locale),
-                             Modifier.clickableNoRipple(onOpenFavorites).padding(4.dp),
-                             color = theme.muted.toColor(), fontSize = 14.sp)
-                    }
-                }
-                Spacer(Modifier.height(4.dp))
-                Column(Modifier.padding(horizontal = 26.dp)) {
-                    for (b in favorites.take(3)) {
-                        val name = BibleCatalog.book(b.bookId)?.name(locale) ?: locale.zh(b.bookName)
-                        Column(Modifier.fillMaxWidth().clickableNoRipple { onOpenVerse(b.bookId, b.chapter, b.verse) }
-                                   .padding(vertical = 8.dp)) {
-                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                Text("$name ${b.chapter}:${b.verse}", Modifier.weight(1f),
-                                     color = theme.ink.toColor(), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                                Text("\u203A", color = theme.faint.toColor().copy(alpha = 0.58f), fontSize = 24.sp, lineHeight = 24.sp)
+
+                    // 最近阅读轨迹
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(SiteCopy.t("native.recentReading", locale), color = ink, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        Column(
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(theme.surface.toColor())
+                                .border(1.dp, theme.border.toColor(), RoundedCornerShape(16.dp)),
+                        ) {
+                            if (recent.isEmpty()) {
+                                Text(
+                                    SiteCopy.t("native.noReadingRecord", locale),
+                                    color = faint,
+                                    fontSize = 14.sp,
+                                    modifier = Modifier.padding(16.dp),
+                                )
+                            } else {
+                                recent.take(5).forEachIndexed { idx, r ->
+                                    if (idx > 0) {
+                                        Box(Modifier.fillMaxWidth().padding(horizontal = 14.dp).height(0.5.dp).background(theme.border.toColor()))
+                                    }
+                                    val name = BibleCatalog.book(r.bookId)?.name(locale) ?: locale.zh(r.bookName)
+                                    val label = if (isEn) "$name ${r.chapter}" else SiteCopy.f("native.chapterUnit", mapOf("bookName" to name, "chapter" to "${r.chapter}"), locale)
+                                    Row(
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .clickableNoRipple { onOpenChapter(r.bookId, r.chapter) }
+                                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Text(label, color = ink, fontSize = 15.5.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                                        MaterialIcon(MI.CHEVRON_RIGHT, 18f, faint)
+                                    }
+                                }
                             }
-                            Text(locale.zh(b.text), color = theme.muted.toColor(), fontSize = 14.sp,
-                                 maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
-                    }
-                    if (favorites.isEmpty()) {
-                        Text(SiteCopy.t("native.noFavorites", locale), Modifier.fillMaxWidth().height(38.dp),
-                             color = theme.faint.toColor(), fontSize = 15.sp, textAlign = TextAlign.Center)
                     }
                 }
 
-                // 同系列圣经软件（D-42）：直接列在收藏下面，不进菜单
+                Spacer(Modifier.height(18.dp))
                 SiblingAppsSection(locale, theme)
-
-                // 与 iOS 一致，不再展示三个文档入口。
-
             }
+        }
+
+        AnimatedVisibility(
+            visible = undoState != null,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = TAB_BAR_CLEARANCE.dp + insets.calculateBottomPadding() + 20.dp),
+        ) {
+            undoState?.let { (msg, restore) ->
+                UndoCapsuleToast(msg, locale) {
+                    restore()
+                    undoState = null
+                }
+            }
+        }
+
+        sharePayload?.let { payload ->
+            VerseShareCardSheet(payload = payload, locale = locale, theme = theme, onClose = { sharePayload = null })
         }
     }
 }
 
-@Composable
-private fun Stat(value: String, label: String, color: Color, theme: Parchment, modifier: Modifier) {
-    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally,
-           verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(value, color = color, fontSize = 34.sp, fontWeight = FontWeight.Bold)
-        Text(label, color = theme.muted.toColor(), fontSize = 15.sp)
-    }
-}
-
-@Composable
-private fun Divider(theme: Parchment) {
-    Box(Modifier.width(1.dp).height(56.dp).background(theme.border.toColor().copy(alpha = 0.8f)))
-}
-
-
-/** 抬头：登录了「你好，名字」，没登录「请登录，解锁更多」（MemberAuthRules.greeting 的三语版） */
-private fun greetingText(user: MemberUser?, locale: AppLocale): String {
-    if (user == null) return SiteCopy.t("native.authGreetingGuest", locale)
-    val n = MemberAuthRules.shortAccountName(user.name)
-    return SiteCopy.f("native.authGreetingNamed", mapOf("name" to (n.ifEmpty { SiteCopy.t("native.authDefaultName", locale) })), locale)
+private fun studyGreeting(user: MemberUser?, locale: AppLocale): String {
+    if (user == null) return AppLocale.pick("平安，旅人", "Peace, Pilgrim", locale)
+    val n = MemberAuthRules.shortAccountName(user.name.ifEmpty { user.email })
+    return AppLocale.pick("平安，${n.ifEmpty { "朋友" }}", "Peace, ${n.ifEmpty { "Friend" }}", locale)
 }

@@ -34,10 +34,12 @@ import {
   ReadChapterHighlightModeBar,
   DEFAULT_VERSE_TEXT_HIGHLIGHT_COLOR,
 } from "@/components/bible/ReadChapterHighlightModeBar";
+import type { VerseActionMenuState } from "@/components/bible/ReadChapterVerseActionSheet";
 import {
-  ReadChapterVerseActionSheet,
-  type VerseActionMenuState,
-} from "@/components/bible/ReadChapterVerseActionSheet";
+  InstantVerseHighlightPopover,
+  VerseShareCardModal,
+  type VerseShareCardPayload,
+} from "@/components/bible/VerseShareCardModal";
 import {
   cloneHighlightMap,
   countHighlightedChars,
@@ -137,7 +139,8 @@ export function ReadChapterVersesClient({
   const isWideScreen = useReadChapterSpreadLayout();
   const [xrefSheetVerse, setXrefSheetVerse] = useState<number | null>(null);
   const searchParams = useSearchParams();
-  const { chapterAudioTranslationId, contrastTranslationIds } = useReadBibleTranslationSettings();
+  const { chapterAudioTranslationId, contrastTranslationIds, translationCatalog } =
+    useReadBibleTranslationSettings();
   const { typography } = useReadBibleTypography();
   const [resolvedSegments, setResolvedSegments] = useState<ChapterSegment[] | null>(segments ?? null);
   const { isBookmarked, toggle: toggleVerseBookmark } = useScriptureVerseBookmarks();
@@ -148,6 +151,7 @@ export function ReadChapterVersesClient({
   const [highlightDraftMap, setHighlightDraftMap] = useState<ChapterHighlightMap | null>(null);
   const [activeHighlightColor, setActiveHighlightColor] = useState(DEFAULT_VERSE_TEXT_HIGHLIGHT_COLOR);
   const [verseActionMenu, setVerseActionMenu] = useState<VerseActionMenuState>(null);
+  const [shareCardPayload, setShareCardPayload] = useState<VerseShareCardPayload | null>(null);
   const [verseSelectionMode, setVerseSelectionMode] = useState(false);
   const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
   const highlightDraftMapRef = useRef<ChapterHighlightMap | null>(null);
@@ -458,7 +462,7 @@ export function ReadChapterVersesClient({
   }, [bookId, chapter, isBookmarked, translationId, verseActionMenu]);
 
   const runToggleBookmarkFromMenu = useCallback(() => {
-    if (!verseActionMenu || verseActionMenuBookmarked) return;
+    if (!verseActionMenu) return;
     void (async () => {
       const ref = {
         bookId,
@@ -489,8 +493,50 @@ export function ReadChapterVersesClient({
     toggleVerseBookmark,
     translationId,
     verseActionMenu,
-    verseActionMenuBookmarked,
   ]);
+
+  const verseActionMenuCurrentColor = useMemo(() => {
+    if (!verseActionMenu) return null;
+    const map = activeHighlightMap.get(verseActionMenu.verse);
+    if (!map || map.size === 0) return null;
+    return map.values().next().value ?? null;
+  }, [activeHighlightMap, verseActionMenu]);
+
+  const runInstantPickColor = useCallback(
+    (hex: string | null) => {
+      if (!verseActionMenu) return;
+      const { verse, text } = verseActionMenu;
+      const entries: [number, string][] =
+        hex != null ? Array.from({ length: text.length }, (_, idx) => [idx, hex]) : [];
+      writeVerseTextHighlightIndices({ translationId, bookId, chapter, verse }, entries);
+      const persisted = readChapterVerseTextHighlights({ translationId, bookId, chapter });
+      setHighlightedVerseIndexes(persisted);
+      if (hex != null) setActiveHighlightColor(hex);
+      setBookmarkFeedback(
+        hex != null ? t("pages.read.verseHighlightSaved") : t("pages.read.verseHighlightCleared"),
+      );
+      setVerseActionMenu(null);
+    },
+    [bookId, chapter, t, translationId, verseActionMenu],
+  );
+
+  const openShareCardFromMenu = useCallback(() => {
+    if (!verseActionMenu) return;
+    const trRow = translationCatalog.find((tr) => tr.id === translationId);
+    const trLabel = trRow
+      ? locale === "en"
+        ? trRow.labelEn
+        : locale === "zh-TW"
+          ? toZhTwText(trRow.labelZh)
+          : trRow.labelZh
+      : translationId.toUpperCase();
+    setShareCardPayload({
+      reference: `${bookName} ${chapter}:${verseActionMenu.verse}`,
+      text: verseActionMenu.text,
+      translationName: trLabel,
+    });
+    setVerseActionMenu(null);
+  }, [bookName, chapter, locale, translationCatalog, translationId, verseActionMenu]);
 
   const runCopyCurrentVerse = () => {
     if (!verseActionMenu) return;
@@ -815,16 +861,22 @@ export function ReadChapterVersesClient({
           enableLongPress={!isWideScreen}
         />
       ))}
-      <ReadChapterVerseActionSheet
-        menu={verseActionMenu}
-        highlightModeActive={highlightModeActive}
+      <InstantVerseHighlightPopover
+        open={verseActionMenu !== null && !highlightModeActive}
+        verseNumber={verseActionMenu?.verse ?? 1}
         bookmarked={verseActionMenuBookmarked}
-        onClose={() => setVerseActionMenu(null)}
+        currentColor={verseActionMenuCurrentColor}
+        onPickColor={runInstantPickColor}
         onCopy={runCopyCurrentVerse}
-        onOpenMultiCopy={openMultiCopyMode}
-        onOpenHighlight={runOpenHighlightEditor}
         onToggleBookmark={runToggleBookmarkFromMenu}
-        onShare={shareCurrentVerse}
+        onOpenShareCard={openShareCardFromMenu}
+        onOpenMultiSelect={openMultiCopyMode}
+        onOpenFineBrush={runOpenHighlightEditor}
+        onClose={() => setVerseActionMenu(null)}
+      />
+      <VerseShareCardModal
+        payload={shareCardPayload}
+        onClose={() => setShareCardPayload(null)}
       />
       {highlightModeActive ? (
         <ReadChapterHighlightModeBar
@@ -935,6 +987,14 @@ function ReadChapterInlineVerseChunk({
       onDoubleClick={onDoubleClick}
       onClick={selectionMode ? onToggleSelected : undefined}
       {...(highlightModeActive || !enableLongPress ? {} : longPressHandlers)}
+      onContextMenu={
+        highlightModeActive
+          ? undefined
+          : (e) => {
+              e.preventDefault();
+              onOpenActionMenu();
+            }
+      }
     >
       <sup className="read-chapter-verse-inline-num">{v.verse}</sup>
       <ReadChapterVerseText
@@ -1039,6 +1099,14 @@ function ReadChapterVerseParagraph({
         data-verse={v.verse}
         onDoubleClick={onDoubleClick}
         {...(highlightModeActive || !enableLongPress ? {} : longPressHandlers)}
+        onContextMenu={
+          highlightModeActive
+            ? undefined
+            : (e) => {
+                e.preventDefault();
+                onOpenActionMenu();
+              }
+        }
         aria-current={searchFocus || active || bookmarked ? "location" : undefined}
         className={[
           "read-chapter-verse [text-wrap:pretty]",

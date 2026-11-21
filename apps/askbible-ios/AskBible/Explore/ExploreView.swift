@@ -1,36 +1,29 @@
 import SwiftUI
 
-/// 探索页：统计 → 使用时长 → 最近阅读。
-/// 九宫格功能块（欢迎 / 读经计划 / 数算年日 / 圣经人物…）按 Josh 的决定只留网站，App 暂不放（2026-09-09）。
+/// 书房（原探索页）：全面去游戏化「手抄本藏书票与书卷火漆印」+「摘录与印记（四色划线与收藏合一）」+ 最近阅读 + 同系列软件。
 struct ExploreView: View {
-    /// 当前打开的文章由 shell 持有：读经计划页的「麦克阿瑟研经法」链接要能从别的 Tab 直接打开一篇
     @Binding var article: ExploreArticle?
-    /// 会员状态：抬头「请登录，解锁更多」→ 登录页；登录后「你好，名字」→ 改称呼
     @ObservedObject var auth: MemberAuthStore
-    /// 读经活动：今年已过 / 读经天 / 连续天 / 使用时长 / 累计听 / 最近阅读（RN ExploreReadingHabitStats）
     @ObservedObject var activity: ReadingActivityStore
     var locale: AppLocale = .zhCN
     var onOpenLogin: () -> Void = {}
-    /// 退出登录（先把本机进度推上云端再清本机，由壳接线）
     var onSignOut: () -> Void = {}
-    /// 右上角「设置」：打开原首页左上角那块菜单（语言 / 译本 / 登录 / 提醒 / 反馈 / 删号），Josh 2026-09-16 移到探索
     var onOpenSettings: () -> Void = {}
     var size: ReadSize = .default
-    /// 收藏（Josh 2026-09-11「探索里要放收藏，前 3 条 + 更多」）
     @ObservedObject var bookmarks: VerseBookmarkStore
-    /// 点一条收藏 → 打开那一节
+    @ObservedObject var highlights: VerseHighlightStore
     var onOpenVerse: (_ bookId: String, _ chapter: Int, _ verse: Int) -> Void = { _, _, _ in }
-    /// 「更多」→ 收藏页
     var onOpenFavorites: () -> Void = {}
-    /// 文章里的经文链接 → 读经 Tab 打开那一章
     var onOpenChapter: (_ bookId: String, _ chapter: Int) -> Void = { _, _ in }
-    /// 成就页入口（等级条整条可点）
     var onOpenAchievements: () -> Void = {}
 
     @Environment(\.parchment) private var theme
     @State private var nameEditorOpen = false
     @State private var nameDraft = ""
-
+    @State private var sharePayload: VerseSharePayload?
+    @State private var undoMessage: String?
+    @State private var undoAction: (() -> Void)?
+    @State private var undoTask: Task<Void, Never>?
 
     var body: some View {
         if let a = article {
@@ -39,7 +32,6 @@ struct ExploreView: View {
                 .edgeSwipeBack { article = nil }
         } else {
             page
-                // RN ExploreGreetingNameModal：改称呼（最多 24 字）
                 .alert(SiteCopy.t("pages.explore.greetingEditTitle", locale), isPresented: $nameEditorOpen) {
                     TextField(SiteCopy.t("pages.explore.birthYearModalNamePlaceholder", locale), text: $nameDraft)
                     Button(SiteCopy.t("native.cancel", locale), role: .cancel) {}
@@ -51,282 +43,177 @@ struct ExploreView: View {
 
     private var page: some View {
         GeometryReader { geo in
-            let safeTop = geo.safeAreaInsets.top
-            ZStack(alignment: .topTrailing) {
+            ZStack(alignment: .bottom) {
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 0) {
-                        // RN ExploreScreen 抬头：没登录点了去登录页；登录了显示「你好，名字」，点了改称呼
-                        Button {
-                            if auth.user != nil { nameDraft = auth.user?.name ?? ""; nameEditorOpen = true } else { onOpenLogin() }
-                        } label: {
-                            Text(greetingText)
-                                .askFont(size: 25, weight: .bold)
-                                .foregroundStyle(theme.ink)
-                                .lineLimit(1)
-                        }
-                        .buttonStyle(.plain)
-                        .padding(.top, safeTop + 37)
-
-                        progressLine.padding(.top, 26)
-
-                        statsRow.padding(.top, 22)
-
-                        // 等级条：探索页最显眼的常驻反馈，整条可点进成就页
-                        Button(action: onOpenAchievements) {
-                            VStack(spacing: 8) {
-                                XPBar()
-                                HStack(spacing: 4) {
-                                    Text(SiteCopy.t("native.achievementsSub", locale))
-                                        .askFont(size: 12).foregroundStyle(theme.muted)
-                                    Image(systemName: "chevron.right").askFont(size: 10, weight: .semibold)
-                                        .foregroundStyle(theme.muted)
+                    VStack(alignment: .leading, spacing: 22) {
+                        // 顶栏：温润问候语 + 右上设置圆钮
+                        HStack(alignment: .top, spacing: 12) {
+                            Button {
+                                if auth.user != nil {
+                                    nameDraft = auth.user?.name ?? ""
+                                    nameEditorOpen = true
+                                } else {
+                                    onOpenLogin()
                                 }
+                            } label: {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(greetingText)
+                                        .askFont(size: 26, weight: .bold)
+                                        .foregroundStyle(theme.ink)
+                                        .lineLimit(1)
+                                    Text(auth.user != nil
+                                         ? AppLocale.pick("进入优先于完成 · 私人读经书房", "Entry over completion · Personal study", locale)
+                                         : AppLocale.pick("点此登录，跨设备同步印记与摘录 ›", "Tap to sign in and sync notes & seals ›", locale))
+                                        .askFont(size: 13)
+                                        .foregroundStyle(auth.user != nil ? theme.muted : theme.accentOt)
+                                }
+                                .contentShape(Rectangle())
                             }
-                            .padding(14)
-                            .background(theme.surface, in: RoundedRectangle(cornerRadius: 16))
-                            .overlay(RoundedRectangle(cornerRadius: 16).stroke(theme.border, lineWidth: 1))
+                            .buttonStyle(.plain)
+
+                            Spacer(minLength: 8)
+
+                            Button(action: onOpenSettings) {
+                                Image(systemName: "gearshape")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundStyle(theme.ink.opacity(0.82))
+                                    .frame(width: 40, height: 40)
+                                    .background(Circle().fill(theme.surface.opacity(0.85)))
+                                    .overlay(Circle().strokeBorder(theme.border, lineWidth: 1))
+                                    .contentShape(Circle())
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(AppLocale.pick("偏好设置", "Preferences", locale))
                         }
-                        .buttonStyle(.plain)
-                        .padding(.horizontal, 24)
                         .padding(.top, 20)
 
-                        Text(usageLine)
-                            .askFont(size: 17)
-                            .foregroundStyle(theme.muted)
-                            .padding(.top, 18)
-                        Text(listenLine)
-                            .askFont(size: 17)
-                            .foregroundStyle(theme.muted)
-                            .padding(.top, 6)
-
-                        Text(SiteCopy.t("native.recentReading", locale))
-                            .askFont(size: 15)
-                            .foregroundStyle(theme.faint)
-                            .padding(.top, 20)
-
-                        VStack(spacing: 0) {
-                            ForEach(activity.recent) { item in
-                                Button { onOpenChapter(item.bookId, item.chapter) } label: {
-                                    HStack {
-                                        Text(recentLabel(item))
-                                            .askFont(size: 18)
-                                            .foregroundStyle(theme.ink)
-                                        Spacer()
-                                        Image(systemName: "chevron.right")
-                                            .askFont(size: 12, weight: .semibold)
-                                            .foregroundStyle(theme.muted.opacity(0.5))
-                                    }
-                                    .frame(height: 38)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                            if activity.recent.isEmpty {
-                                Text(SiteCopy.t("native.noReadingRecord", locale))
-                                    .askFont(size: 15).foregroundStyle(theme.faint)
-                                    .frame(maxWidth: .infinity).frame(height: 38)
-                            }
+                        // 去游戏化「手抄本藏书票与书卷火漆印」卡片
+                        Button(action: onOpenAchievements) {
+                            XPBar(readDaysOverride: activity.readDays)
+                                .padding(16)
+                                .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(theme.surface))
+                                .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(theme.borderStrong, lineWidth: 1))
                         }
-                        .padding(.horizontal, 26)
-                        .padding(.top, 8)
+                        .buttonStyle(.plain)
 
+                        // 统一的摘录与四色印记模块（前 6 条 + 全部入口）
+                        UnifiedNotesBlock(
+                            bookmarks: bookmarks,
+                            highlights: highlights,
+                            locale: locale,
+                            limit: 6,
+                            onOpenVerse: onOpenVerse,
+                            onOpenMore: onOpenFavorites,
+                            onShareCard: { sharePayload = $0 },
+                            onUndoAvailable: { msg, restore in
+                                presentUndo(msg, restore: restore)
+                            }
+                        )
 
-                        favoritesBlock
+                        // 最近阅读轨迹
+                        recentSection
 
-                        // 同系列圣经软件（D-42）：直接列在探索页下面，不进菜单
+                        // 同系列圣经软件（D-42）
                         SiblingAppsSection(locale: locale)
+                            .padding(.horizontal, -22)
 
-                        // 查经资料格子（让经文发声 / 圣经的模型 / 正式研读）Josh 2026-09-18 收起来，探索页不再摆出来。
-                        // `articleGrid` 和文章数据都留着：读经计划页的「麦克阿瑟研经法」链接仍然要能打开文章页。
-                        // articleGrid(width: geo.size.width)
-                        //     .padding(.top, 36 + 8 + 16 + 8)
-                        //     .padding(.horizontal, 22)
-
-                        // RN：72 + 安全区 + 120（渐隐区）+ 探索首页再多留 120
-                        Color.clear.frame(height: ShellMetrics.tabBarClearance + geo.safeAreaInsets.bottom + 120 + 120)
+                        Color.clear.frame(height: ShellMetrics.tabBarClearance + geo.safeAreaInsets.bottom + 110)
                     }
+                    .padding(.horizontal, 22)
                 }
                 .ignoresSafeArea(edges: .bottom)
                 .parchmentFade(.tabbar)
 
-                Button(action: onOpenSettings) {
-                    MaterialIcon(glyph: MI.settings, size: 24, color: theme.ink.opacity(0.72))
-                        .frame(width: 44, height: 44)
-                        .contentShape(Rectangle())
+                if let msg = undoMessage {
+                    UndoCapsuleToast(message: msg, locale: locale) {
+                        undoTask?.cancel()
+                        undoAction?()
+                        withAnimation(.easeOut(duration: 0.18)) { undoMessage = nil; undoAction = nil }
+                    }
+                    .padding(.bottom, ShellMetrics.tabBarClearance + geo.safeAreaInsets.bottom + 18)
                 }
-                .buttonStyle(.plain)
-                .padding(.trailing, 12)
-                .padding(.top, safeTop + 34)
+
+                if let payload = sharePayload {
+                    VerseShareCardSheet(payload: payload, locale: locale) {
+                        sharePayload = nil
+                    }
+                    .zIndex(30)
+                }
             }
             .background(ParchmentBackground(theme: theme).ignoresSafeArea())
         }
     }
 
+    private var recentSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(SiteCopy.t("native.recentReading", locale))
+                    .askFont(size: 16, weight: .bold)
+                    .foregroundStyle(theme.ink)
+                Spacer()
+                if activity.listenTotalSec > 60 {
+                    Text(SiteCopy.f("native.listenTotal", ["duration": MemberReadingSyncRules.formatListenDuration(totalSec: Int(activity.listenTotalSec), en: locale == .en)], locale))
+                        .askFont(size: 12)
+                        .foregroundStyle(theme.faint)
+                }
+            }
 
-    /// RN renderArticleTile：64 圆角 18 的浅底圈 + MaterialCommunityIcons 28 ink + 12/600 两行标签，列宽按 useExploreIconGridLayout
-    private func articleGrid(width: CGFloat) -> some View {
-        let cols = 3
-        let gap: CGFloat = 10
-        let gridWidth = min(width, 448) - 22 * 2
-        let tileW = floor((gridWidth - gap * CGFloat(cols - 1)) / CGFloat(cols))
-        let items = ExploreArticles.grid
-        return VStack(alignment: .leading, spacing: gap) {
-            ForEach(Array(stride(from: 0, to: items.count, by: cols)), id: \.self) { start in
-                HStack(alignment: .top, spacing: gap) {
-                    ForEach(items[start..<min(start + cols, items.count)]) { a in
-                        Button { article = a } label: {
-                            VStack(spacing: 10) {
-                                MaterialIcon(glyph: a.icon, size: 28, color: theme.ink, community: true)
-                                    .frame(width: 64, height: 64)
-                                    .background(RoundedRectangle(cornerRadius: 18).fill(Color(parchment: 0xFFFCF5, opacity: 0.55)))
-                                    .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(theme.border, lineWidth: 1 / UIScreen.main.scale))
-                                Text(a.exploreLabel)
-                                    .askFont(size: 12, weight: .semibold)
-                                    .lineSpacing(3)
+            if activity.recent.isEmpty {
+                Text(SiteCopy.t("native.noReadingRecord", locale))
+                    .askFont(size: 13.5)
+                    .foregroundStyle(theme.faint)
+                    .padding(.vertical, 8)
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(Array(activity.recent.prefix(4).enumerated()), id: \.element.id) { idx, item in
+                        if idx > 0 { Divider().overlay(theme.border) }
+                        Button { onOpenChapter(item.bookId, item.chapter) } label: {
+                            HStack {
+                                Text(recentLabel(item))
+                                    .askFont(size: 15.5, weight: .medium)
                                     .foregroundStyle(theme.ink)
-                                    .multilineTextAlignment(.center)
-                                    .lineLimit(2)
-                                    .frame(width: tileW)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(theme.muted.opacity(0.6))
                             }
-                            .frame(width: tileW)
+                            .frame(height: 42)
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                     }
                 }
+                .padding(.horizontal, 14)
+                .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(theme.surface.opacity(0.75)))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(theme.border, lineWidth: 0.75))
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// 统计行跟界面语言走（三语文案见 SiteCopy；Josh 2026-09-10 决定补齐整套英文）
-    private var isEn: Bool { locale == .en }
-    private var usageLine: String {
-        "\(SiteCopy.t("native.usageTime", locale))  \(MemberReadingSyncRules.formatUsageDuration(totalSec: Int(activity.usageTotalSec), en: isEn))"
-    }
-    private var listenLine: String {
-        SiteCopy.f("native.listenTotal", ["duration": MemberReadingSyncRules.formatListenDuration(totalSec: Int(activity.listenTotalSec), en: isEn)], locale)
-    }
     private func recentLabel(_ item: ReadingActivityStore.RecentChapter) -> String {
         let name = BibleCatalog.book(id: item.bookId)?.name(locale) ?? locale.zh(item.bookName)
-        return isEn ? "\(name) \(item.chapter)" : SiteCopy.f("native.chapterUnit", ["bookName": name, "chapter": "\(item.chapter)"], locale)
-    }
-    /// 收藏：最近 3 条 + 「更多」；点一条直接跳到那一节
-    private var favoritesBlock: some View {
-        let list = bookmarks.list
-        return VStack(spacing: 0) {
-            HStack {
-                Text(SiteCopy.t("pages.read.favoritesTitle", locale))
-                    .askFont(size: 15)
-                    .foregroundStyle(theme.faint)
-                Spacer()
-                if list.count > 3 {
-                    Button(action: onOpenFavorites) {
-                        Text(SiteCopy.t("native.favoritesMore", locale))
-                            .askFont(size: 14)
-                            .foregroundStyle(theme.muted)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.top, 20)
-
-            VStack(spacing: 0) {
-                ForEach(list.prefix(3)) { b in
-                    Button { onOpenVerse(b.bookId, b.chapter, b.verse) } label: {
-                        VStack(alignment: .leading, spacing: 2) {
-                            HStack {
-                                Text(favoriteRef(b))
-                                    .askFont(size: 15, weight: .semibold)
-                                    .foregroundStyle(theme.ink)
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                                    .askFont(size: 12, weight: .semibold)
-                                    .foregroundStyle(theme.muted.opacity(0.5))
-                            }
-                            Text(locale.zh(b.text))
-                                .askFont(size: 14)
-                                .foregroundStyle(theme.muted)
-                                .lineLimit(1)
-                        }
-                        .padding(.vertical, 8)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
-                if list.isEmpty {
-                    Text(SiteCopy.t("native.noFavorites", locale))
-                        .askFont(size: 15).foregroundStyle(theme.faint)
-                        .frame(maxWidth: .infinity).frame(height: 38)
-                }
-            }
-            .padding(.top, 4)
-        }
-        .padding(.horizontal, 26)
+        return locale == .en ? "\(name) \(item.chapter)" : SiteCopy.f("native.chapterUnit", ["bookName": name, "chapter": "\(item.chapter)"], locale)
     }
 
-    /// 「哥林多后书 10:12」/「2 Corinthians 10:12」
-    private func favoriteRef(_ b: VerseBookmark) -> String {
-        let name = BibleCatalog.book(id: b.bookId)?.name(locale) ?? locale.zh(b.bookName)
-        return "\(name) \(b.chapter):\(b.verse)"
-    }
-
-    /// 抬头：登录了「你好，名字」，没登录「请登录，解锁更多」（MemberAuthRules.greeting 的三语版）
     private var greetingText: String {
-        guard let user = auth.user else { return SiteCopy.t("native.authGreetingGuest", locale) }
-        let n = MemberAuthRules.shortAccountName(user.name)
-        return SiteCopy.f("native.authGreetingNamed", ["name": n.isEmpty ? SiteCopy.t("native.authDefaultName", locale) : n], locale)
+        guard let user = auth.user else {
+            return AppLocale.pick("平安，旅人", "Peace, friend", locale)
+        }
+        let n = MemberAuthRules.shortAccountName(user.name.isEmpty ? user.email : user.name)
+        let who = n.isEmpty ? SiteCopy.t("native.authDefaultName", locale) : n
+        return AppLocale.pick("平安，\(who)", "Peace, \(who)", locale)
     }
 
-    /// RN ReadYearDayTimeline：淡底轨 + 实色已读区段 + 今日橙点
-    private var progressLine: some View {
-        let tl = MemberReadingSyncRules.yearTimeline()
-        let c = Calendar.current.dateComponents([.year, .month, .day], from: Date())
-        let ranges = MemberReadingSyncRules.yearReadRanges(activity.completedDates, year: c.year!, month: c.month!, day: c.day!)
-        return GeometryReader { g in
-            let w = g.size.width
-            let minW = 2 / Double(max(tl.daysInYear, 1))
-            ZStack(alignment: .leading) {
-                Capsule().fill(theme.border.opacity(0.8)).frame(height: 3).frame(maxHeight: .infinity)
-                ForEach(Array(ranges.enumerated()), id: \.offset) { _, r in
-                    let fr = MemberReadingSyncRules.rangeToTrackFraction(start: r.start, end: r.end, daysInYear: tl.daysInYear)
-                    let drawW = max(fr.width, minW)
-                    let drawLeft = min(fr.left, max(0, 1 - drawW))
-                    Capsule().fill(Color(parchment: 0xE8A017)).frame(width: w * drawW, height: 5)
-                        .frame(maxHeight: .infinity).offset(x: w * drawLeft)
-                }
-                Circle().fill(theme.parchmentAccent).frame(width: 11, height: 11)
-                    .frame(maxHeight: .infinity).offset(x: w * tl.progress - 5.5)
+    private func presentUndo(_ msg: String, restore: @escaping () -> Void) {
+        undoTask?.cancel()
+        undoAction = restore
+        withAnimation(.easeOut(duration: 0.18)) { undoMessage = msg }
+        undoTask = Task {
+            try? await Task.sleep(for: .seconds(3.4))
+            if Task.isCancelled { return }
+            await MainActor.run {
+                withAnimation(.easeIn(duration: 0.2)) { undoMessage = nil; undoAction = nil }
             }
         }
-        .frame(height: 22)
-        .padding(.horizontal, 52)
-    }
-
-    private var statsRow: some View {
-        let tl = MemberReadingSyncRules.yearTimeline()
-        return HStack(spacing: 0) {
-            stat(String(tl.dayOfYear), SiteCopy.t("pages.read.todayReadingStatYearDayLabel", locale), theme.parchmentAccent)
-            divider
-            stat(String(activity.readDays), SiteCopy.t("pages.read.todayReadingStatReadLabel", locale), Color(parchment: 0x4F7A54))
-            divider
-            stat(String(activity.streakDays), SiteCopy.t("pages.read.todayReadingStatStreakLabel", locale), Color(parchment: 0x4F7A54))
-        }
-        .padding(.horizontal, 24)
-    }
-
-    private var divider: some View {
-        Rectangle().fill(theme.border.opacity(0.8)).frame(width: 1, height: 56)
-    }
-
-    private func stat(_ value: String, _ label: String, _ color: Color) -> some View {
-        VStack(spacing: 6) {
-            Text(value)
-                .askFont(size: 34, weight: .bold)
-                .foregroundStyle(color)
-            Text(label)
-                .askFont(size: 15)
-                .foregroundStyle(theme.muted)
-        }
-        .frame(maxWidth: .infinity)
     }
 }

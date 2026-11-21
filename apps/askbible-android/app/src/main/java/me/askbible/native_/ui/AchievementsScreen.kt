@@ -58,34 +58,66 @@ fun AchievementsScreen(
     /** 成就大图的落款：登录用户的称呼；没登录为空，图上就不印 */
     userName: String = "",
     locale: AppLocale = AppLocale.current,
-    theme: Parchment = LocalParchment.current,
+    theme: Parchment = Parchment.light,
     onBack: () -> Unit = {},
 ) {
     val insets = WindowInsets.systemBars.asPaddingValues()
-    // 点开勋章 / 印章 → 成就大图（可分享、可存相册）
     var detail by remember { mutableStateOf<MedalDetail?>(null) }
-    /** 勋章一行 3 枚、印章一行 5 枚：和 iOS 的自适应格子在手机宽度下的结果一致 */
+    /** 66 卷书卷火漆印前置展示（一行 3 枚精雕印章，对齐 iOS AchievementsView） */
+    val sealRows = BibleCatalog.all.chunked(3)
     val medalRows = MedalCatalog.all.chunked(3)
-    val sealRows = BibleCatalog.all.chunked(5)
 
     Box(Modifier.fillMaxSize().background(theme.canvas.toColor())) {
-        ParchmentBackground(Modifier.fillMaxSize())
+        ParchmentBackground(theme = theme, modifier = Modifier.fillMaxSize())
         LazyColumn(
             Modifier.fillMaxSize(),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(
                 start = 18.dp, end = 18.dp,
-                top = insets.calculateTopPadding() + 56.dp,
-                bottom = insets.calculateBottomPadding() + 28.dp,
+                top = insets.calculateTopPadding() + 58.dp,
+                bottom = insets.calculateBottomPadding() + 32.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item { Header(ach, locale, theme) }
 
-            item { SoundToggle(locale, theme) }
+            item {
+                SectionTitle(
+                    SiteCopy.t("native.bookSeals", locale),
+                    SiteCopy.f("native.sealsProgress", mapOf("n" to ach.seals.size.toString()), locale),
+                    theme,
+                )
+            }
+            items(sealRows.size) { i ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    for (book in sealRows[i]) {
+                        val file = MedalCatalog.seals[book.number.coerceIn(1, MedalCatalog.seals.size) - 1]
+                        val lit = ach.seals[book.id] != null
+                        Column(
+                            Modifier.weight(1f).clickableNoRipple {
+                                detail = sealDetailOf(file, book.name(locale), lit, locale)
+                            },
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            MedalIcon(file, if (lit) 1 else 0, 1, 76.dp, theme)
+                            Text(
+                                book.name(locale),
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                                textAlign = TextAlign.Center,
+                                fontWeight = if (lit) FontWeight.SemiBold else FontWeight.Normal,
+                                color = (if (lit) theme.ink else theme.faint).toColor()
+                                    .copy(alpha = if (lit) 1f else 0.7f),
+                            )
+                        }
+                    }
+                    repeat(3 - sealRows[i].size) { Spacer(Modifier.weight(1f)) }
+                }
+            }
 
             item {
                 SectionTitle(
-                    SiteCopy.t("native.medals", locale),
+                    AppLocale.pick("阅读纪念章", "Reading Milestones", locale),
                     SiteCopy.f("native.medalsProgress",
                                mapOf("n" to ach.earned.size.toString(), "total" to MedalCatalog.all.size.toString()), locale),
                     theme,
@@ -101,50 +133,38 @@ fun AchievementsScreen(
                             }
                         }
                     }
-                    // 最后一行不足 3 枚：补空位，别把剩下的拉宽
                     repeat(3 - medalRows[i].size) { Spacer(Modifier.weight(1f)) }
                 }
             }
 
-            item {
-                SectionTitle(
-                    SiteCopy.t("native.bookSeals", locale),
-                    SiteCopy.f("native.sealsProgress", mapOf("n" to ach.seals.size.toString()), locale),
-                    theme,
-                )
-            }
-            items(sealRows.size) { i ->
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    for (book in sealRows[i]) {
-                        val file = MedalCatalog.seals[book.number.coerceIn(1, MedalCatalog.seals.size) - 1]
-                        val lit = ach.seals[book.id] != null
-                        Column(Modifier.weight(1f).clickableNoRipple {
-                                   detail = sealDetailOf(file, book.name(locale), lit, locale)
-                               },
-                               horizontalAlignment = Alignment.CenterHorizontally,
-                               verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            MedalIcon(file, if (lit) 1 else 0, 1, 52.dp, theme)
-                            Text(book.name(locale), fontSize = 10.sp, maxLines = 1,
-                                 textAlign = TextAlign.Center,
-                                 color = (if (lit) theme.muted else theme.faint).toColor()
-                                     .copy(alpha = if (lit) 1f else 0.55f))
-                        }
-                    }
-                    repeat(5 - sealRows[i].size) { Spacer(Modifier.weight(1f)) }
-                }
-            }
+            item { SoundToggle(locale, theme) }
         }
 
-        // 返回键：浮在顶上，不占内容位
-        Box(
-            Modifier.padding(top = insets.calculateTopPadding() + 8.dp, start = 10.dp)
-                .size(40.dp).clip(CircleShape)
-                .background(theme.surface.toColor())
-                .clickableNoRipple(onBack),
-            contentAlignment = Alignment.Center,
+        // 顶部栏：标题 + 完成键
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(top = insets.calculateTopPadding() + 8.dp, start = 14.dp, end = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(Icons.Filled.ArrowBack, SiteCopy.t("native.closeMenu", locale),
-                 Modifier.size(22.dp), tint = theme.ink.toColor())
+            Box(
+                Modifier
+                    .size(38.dp)
+                    .clip(CircleShape)
+                    .background(theme.surface.toColor())
+                    .border(1.dp, theme.border.toColor(), CircleShape)
+                    .clickableNoRipple(onBack),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.Filled.ArrowBack, SiteCopy.t("native.done", locale), Modifier.size(20.dp), tint = theme.ink.toColor())
+            }
+            Spacer(Modifier.width(12.dp))
+            Text(
+                AppLocale.pick("书卷印鉴 · ${ach.seals.size} / 66 卷", "Book Seals · ${ach.seals.size} / 66", locale),
+                color = theme.ink.toColor(),
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold,
+            )
         }
 
         detail?.let { MedalDetailDialog(it, userName, locale, theme) { detail = null } }
@@ -181,21 +201,11 @@ private fun Header(ach: AchievementStore, locale: AppLocale, theme: Parchment) {
     Column(
         Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(theme.surfaceSolid.toColor())
-            .border(1.dp, theme.border.toColor(), RoundedCornerShape(18.dp))
+            .background(theme.surface.toColor())
+            .border(1.dp, theme.borderStrong.toColor(), RoundedCornerShape(18.dp))
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        XPBar(ach, locale, theme)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Stat(ach.totalXP.toString(), SiteCopy.t("native.totalXP", locale), theme, Modifier.weight(1f))
-            VDivider(theme)
-            Stat(ach.chaptersReadCount.toString(),
-                 SiteCopy.t("native.chaptersReadLabel", locale), theme, Modifier.weight(1f))
-            VDivider(theme)
-            Stat("×%.2f".format(ach.streakMultiplier),
-                 SiteCopy.t("native.streakBonus", locale), theme, Modifier.weight(1f))
-        }
+        XPBar(ach, locale, theme, compact = true)
     }
 }
 

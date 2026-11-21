@@ -37,104 +37,123 @@ struct NavDrawerView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let panelW = min(geo.size.width * 0.8, 360)
-            ZStack(alignment: .leading) {
+            ZStack(alignment: .bottom) {
                 Color.black.opacity(0.42)
                     .ignoresSafeArea()
                     .onTapGesture { onClose() }
 
                 VStack(alignment: .leading, spacing: 0) {
+                    Capsule()
+                        .fill(theme.ink.opacity(0.24))
+                        .frame(width: 38, height: 4)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 10)
+                        .padding(.bottom, 6)
+
                     header
-                    ScrollView(showsIndicators: false) { rows }
-                    Button(action: onCheckUpdates) {
-                        Text(SiteCopy.t("native.appVersion", locale).replacingOccurrences(of: "{{version}}", with: Self.versionWithTimeLabel))
-                            .askFont(size: 11)
-                            .foregroundStyle(theme.ink.opacity(0.42))
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, 8)
-                            .contentShape(Rectangle())
+                    ScrollView(showsIndicators: false) {
+                        VStack(alignment: .leading, spacing: 14) {
+                            settingsGroup(AppLocale.pick("阅读与陪伴", "Reading & Companion", locale)) {
+                                localeRow
+                                Divider().overlay(theme.border)
+                                appearanceRow
+                                Divider().overlay(theme.border)
+                                menuRow(SiteCopy.t("native.bibleVersion", locale), detail: "\(translationLabel) \u{203A}", action: onOpenTranslations)
+                                Divider().overlay(theme.border)
+                                reminderRow
+                            }
+
+                            settingsGroup(AppLocale.pick("账号与云端同步", "Account & Sync", locale)) {
+                                if let userName {
+                                    menuRow(SiteCopy.t("native.signedIn", locale), detail: userName, action: onClose)
+                                    if let syncDetail {
+                                        Divider().overlay(theme.border)
+                                        menuRow(SiteCopy.t("native.readingSync", locale), detail: syncDetail, action: onClose)
+                                    }
+                                    Divider().overlay(theme.border)
+                                    menuRow(SiteCopy.t("auth.drawerLogout", locale), action: onLogout)
+                                } else {
+                                    menuRow(SiteCopy.t("auth.pageTitle", locale), detail: "\u{203A}", action: onLogin)
+                                }
+                            }
+
+                            settingsGroup(AppLocale.pick("全局字号与支持", "Display & Support", locale)) {
+                                AppTextSizePicker(locale: locale)
+                                Divider().overlay(theme.border)
+                                menuRow(SiteCopy.t("native.checkForUpdates", locale), detail: updateDetail ?? Self.versionWithTimeLabel, action: onCheckUpdates)
+                                Divider().overlay(theme.border)
+                                menuRow(SiteCopy.t("native.sendFeedback", locale), detail: Self.supportEmail, action: onFeedback)
+                            }
+
+                            if userName != nil {
+                                Button(action: onDeleteAccount) {
+                                    Text(SiteCopy.t("native.deleteAccount", locale))
+                                        .askFont(size: 12)
+                                        .foregroundStyle(theme.ink.opacity(0.42))
+                                        .frame(maxWidth: .infinity, alignment: .center)
+                                        .padding(.vertical, 6)
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                            }
+
+                            Button(action: onCheckUpdates) {
+                                Text(SiteCopy.t("native.appVersion", locale).replacingOccurrences(of: "{{version}}", with: Self.versionWithTimeLabel))
+                                    .askFont(size: 11)
+                                    .foregroundStyle(theme.ink.opacity(0.42))
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .padding(.bottom, 8)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.bottom, 12)
                     }
-                    .buttonStyle(.plain)
                 }
-                .padding(.horizontal, 14)
-                .padding(.top, max(geo.safeAreaInsets.top, 12))
+                .padding(.horizontal, 18)
                 .padding(.bottom, max(geo.safeAreaInsets.bottom, 16))
-                .frame(width: panelW, height: geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom)
+                .frame(maxWidth: 500)
+                .frame(maxHeight: geo.size.height * 0.84)
                 .background(ParchmentBackground(theme: theme))
-                .overlay(alignment: .trailing) {
-                    Rectangle().fill(theme.border).frame(width: 1 / UIScreen.main.scale)
-                }
-                .ignoresSafeArea()
+                .clipShape(UnevenRoundedRectangle(topLeadingRadius: 26, bottomLeadingRadius: 0, bottomTrailingRadius: 0, topTrailingRadius: 26, style: .continuous))
+                .askFloatingShadow(.overlay)
+                .ignoresSafeArea(edges: .bottom)
             }
         }
-        .transition(.move(edge: .leading).combined(with: .opacity))
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+    }
+
+    @ViewBuilder
+    private func settingsGroup<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .askFont(size: 12, weight: .semibold)
+                .foregroundStyle(theme.muted)
+                .padding(.horizontal, 4)
+            VStack(alignment: .leading, spacing: 0) {
+                content()
+            }
+            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(theme.surface))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(theme.border, lineWidth: 1))
+        }
     }
 
     private var header: some View {
         HStack {
-            Text(SiteCopy.t("native.userMenu", locale))
-                .askFont(size: 14, weight: .semibold)
-                .kerning(0.5)
-                .foregroundStyle(theme.ink.opacity(0.55))
+            Text(AppLocale.pick("书房偏好设置", "Study Preferences", locale))
+                .askFont(size: 18, weight: .bold)
+                .foregroundStyle(theme.ink)
             Spacer()
             Button(action: onClose) {
-                MaterialIcon(glyph: MI.close, size: 22, color: theme.ink.opacity(0.82))
-                    .frame(width: 40, height: 40)
+                Text(SiteCopy.t("native.done", locale))
+                    .askFont(size: 15, weight: .semibold)
+                    .foregroundStyle(theme.accentOt)
+                    .frame(minWidth: 44, minHeight: 40, alignment: .trailing)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         }
         .padding(.bottom, 10)
-    }
-
-    @ViewBuilder
-    private var rows: some View {
-        menuRow(AppLocale.pick("音乐", "Music", locale), action: onOpenMusic)
-        localeRow
-        AppTextSizePicker(locale:locale)
-        appearanceRow
-        menuRow(SiteCopy.t("native.bibleVersion", locale), detail: "\(translationLabel) \u{203A}", action: onOpenTranslations)
-        if let userName {
-            menuRow(SiteCopy.t("native.signedIn", locale), detail: userName, action: onClose)
-            menuRow(SiteCopy.t("auth.drawerLogout", locale), action: onLogout)
-        } else {
-            menuRow(SiteCopy.t("auth.pageTitle", locale), action: onLogin)
-        }
-        reminderRow
-        menuRow(SiteCopy.t("native.checkForUpdates", locale), detail: updateDetail ?? Self.versionWithTimeLabel, stacked: true, action: onCheckUpdates)
-        menuRow(SiteCopy.t("native.sendFeedback", locale), detail: Self.supportEmail, action: onFeedback)
-        if let syncDetail {
-            menuRow(SiteCopy.t("native.readingSync", locale), detail: syncDetail, action: onClose)
-        }
-        if userName != nil {
-            // RN 抽屉底部的「删除账户」：quiet 样式，小一号、淡色
-            Button(action: onDeleteAccount) {
-                Text(SiteCopy.t("native.deleteAccount", locale))
-                    .askFont(size: 12)
-                    .foregroundStyle(theme.ink.opacity(0.42))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .padding(.top, 10)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-        }
-    }
-
-    private var appearanceRow: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(SiteCopy.t("native.appearance", locale))
-                .font(.system(size: 16)).foregroundStyle(theme.ink)
-            Picker(SiteCopy.t("native.appearance", locale), selection: $appearance) {
-                Text(SiteCopy.t("native.followSystem", locale)).tag("system")
-                Text(SiteCopy.t("native.appearanceLight", locale)).tag("light")
-                Text(SiteCopy.t("native.appearanceDark", locale)).tag("dark")
-            }
-            .pickerStyle(.segmented)
-            .accessibilityIdentifier("appearancePicker")
-        }
-        .padding(.horizontal, 12).padding(.vertical, 10)
     }
 
     /// 每日读经提醒：左边开关（点文字切换），右边时间（点时间改）
@@ -176,10 +195,42 @@ struct NavDrawerView: View {
             Text(SiteCopy.t("nav.language", locale))
                 .askFont(size: 16)
                 .foregroundStyle(theme.ink)
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 118))], spacing: 8) {
+            HStack(spacing: 6) {
                 localeChip(nil, label: SiteCopy.t("native.followSystem", locale))
                 ForEach([AppLocale.zhCN, .zhTW, .en], id: \.rawValue) { l in
                     localeChip(l, label: l.settingLabel)
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+    }
+
+    private var appearanceRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(SiteCopy.t("native.appearance", locale))
+                .askFont(size: 16)
+                .foregroundStyle(theme.ink)
+            HStack(spacing: 6) {
+                ForEach([("system", "native.followSystem"), ("light", "native.appearanceLight"), ("dark", "native.appearanceDark")], id: \.0) { mode, key in
+                    let on = appearance == mode
+                    Button { appearance = mode } label: {
+                        Text(SiteCopy.t(key, locale))
+                            .askFont(size: 12, weight: .semibold)
+                            .foregroundStyle(on ? Color(parchment: 0x784b1e) : theme.ink.opacity(0.72))
+                            .lineLimit(1)
+                            .frame(maxWidth: .infinity, minHeight: 32)
+                            .background(
+                                RoundedRectangle(cornerRadius: 999)
+                                    .fill(on ? Color(rgb: 0xffb101, opacity: 0.18) : Color(parchment: 0xfff8eb, opacity: 0.45))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 999)
+                                    .stroke(on ? Color(rgb: 0xffb101, opacity: 0.75) : theme.border, lineWidth: 0.5)
+                            )
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
@@ -193,9 +244,8 @@ struct NavDrawerView: View {
             Text(label)
                 .askFont(size: 12, weight: .semibold)
                 .foregroundStyle(on ? Color(parchment: 0x784b1e) : theme.ink.opacity(0.72))
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 8)
-                .frame(maxWidth: .infinity, minHeight: 44)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, minHeight: 32)
                 .background(
                     RoundedRectangle(cornerRadius: 999)
                         .fill(on ? Color(rgb: 0xffb101, opacity: 0.18) : Color(parchment: 0xfff8eb, opacity: 0.45))
@@ -209,33 +259,19 @@ struct NavDrawerView: View {
         .buttonStyle(.plain)
     }
 
-    private func menuRow(_ label: String, detail: String? = nil, stacked: Bool = false, action: @escaping () -> Void) -> some View {
+    private func menuRow(_ label: String, detail: String? = nil, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Group {
-                if stacked, let detail {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(label)
-                            .askFont(size: 16)
-                            .foregroundStyle(theme.ink)
-                        Text(detail)
-                            .askFont(size: 12)
-                            .foregroundStyle(theme.ink.opacity(0.65))
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    HStack(spacing: 8) {
-                        Text(label)
-                            .askFont(size: 16)
-                            .foregroundStyle(theme.ink)
-                            .lineLimit(1)
-                        Spacer(minLength: 8)
-                        if let detail {
-                            Text(detail)
-                                .askFont(size: 12)
-                                .foregroundStyle(theme.ink.opacity(0.55))
-                                .lineLimit(1)
-                        }
-                    }
+            HStack(spacing: 8) {
+                Text(label)
+                    .askFont(size: 16)
+                    .foregroundStyle(theme.ink)
+                    .lineLimit(1)
+                Spacer(minLength: 8)
+                if let detail {
+                    Text(detail)
+                        .askFont(size: 12)
+                        .foregroundStyle(theme.ink.opacity(0.55))
+                        .lineLimit(1)
                 }
             }
             .padding(.horizontal, 12)
@@ -262,7 +298,6 @@ struct NavDrawerView: View {
         return fmt.string(from: date)
     }
 
-    /// 「1.2.3 (45) · 2026-11-20 20:32」（取主二进制编译链接时间）
     static var versionWithTimeLabel: String {
         let ver = versionLabel
         if let execPath = Bundle.main.executablePath,

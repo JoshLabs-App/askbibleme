@@ -1,182 +1,488 @@
 package me.askbible.native_.ui
 
-import androidx.compose.foundation.border
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import me.askbible.native_.data.*
 import kotlinx.coroutines.launch
+import me.askbible.native_.data.AppLocale
+import me.askbible.native_.data.BibleBookIntroductions
+import me.askbible.native_.data.BibleCatalog
+import me.askbible.native_.data.BiblePanorama
+import me.askbible.native_.data.BookRef
+import me.askbible.native_.data.PanoramaReadingGuide
+import me.askbible.native_.data.PanoramaSection
+import me.askbible.native_.data.PanoramaSpan
+import me.askbible.native_.data.Parchment
+import me.askbible.native_.data.ReadChrome
+import me.askbible.native_.data.ShellMetrics
+import me.askbible.native_.data.name
 
+private val ACT_NUMERALS_ZH = listOf("壹", "贰", "叁", "肆", "伍", "陆")
+
+/**
+ * 救赎全景（灵修画卷，对齐 iOS BiblePanoramaView）：
+ * - 置顶「✦ 你正在这一幕」沉浸定位卡（含单线手绘插画 + 一键续读按钮）
+ * - 纵向金线六幕时间轴（壹～陆），告别四层 +/- 树状目录
+ * - 书签式经文脉络导读卡 + 轻巧章节选择半屏弹层
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BiblePanoramaScreen(
     locale: AppLocale,
-    currentBook: String?, currentChapter: Int,
+    currentBook: String?,
+    currentChapter: Int,
     locateRequest: Int,
     onReturnReading: () -> Unit,
     onRead: (String, Int) -> Unit,
     musicPlaying: Boolean,
     onToggleMusic: () -> Unit,
+    theme: Parchment = Parchment.light,
 ) {
-    val theme = LocalParchment.current
     val ink = theme.ink.toColor()
+    val muted = theme.muted.toColor()
+    val faint = theme.faint.toColor()
+    val accent = theme.accentOt.toColor()
     fun t(zh: String, en: String) = AppLocale.pick(zh, en, locale)
-    var expandedActs by rememberSaveable { mutableIntStateOf(0) }
-    var expandedSections by rememberSaveable { mutableStateOf(listOf<String>()) }
-    var expandedBooks by rememberSaveable { mutableStateOf(listOf<String>()) }
+
+    val resolvedBookId = currentBook ?: "GEN"
+    val resolvedChapter = maxOf(1, currentChapter)
+    val resolvedBook = BibleCatalog.book(resolvedBookId) ?: BibleCatalog.all.first()
+    val heroLoc = BiblePanorama.location(resolvedBookId, resolvedChapter)
+    val heroActIdx = heroLoc?.first ?: 0
+    val heroSection = heroLoc?.second ?: BiblePanorama.acts.first().sections.first()
+
+    var activeAct by rememberSaveable { mutableIntStateOf(heroActIdx) }
     var handledRequest by rememberSaveable { mutableIntStateOf(-1) }
-    val list = rememberLazyListState()
+    var pickingSpan by remember { mutableStateOf<Pair<BookRef, PanoramaSpan>?>(null) }
+    val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
-    val current = currentBook?.let { BiblePanorama.location(it, currentChapter) }
-    fun locate() {
-        current?.let { (act, section) ->
-            expandedActs = expandedActs or (1 shl act)
-            expandedSections = (expandedSections + section.id).distinct()
-            scope.launch { list.scrollToItem(act + 1) }
+
+    LaunchedEffect(locateRequest) {
+        if (locateRequest > 0 && handledRequest != locateRequest) {
+            handledRequest = locateRequest
+            activeAct = heroActIdx
+            scope.launch { listState.animateScrollToItem(heroActIdx + 1) }
         }
     }
-    LaunchedEffect(locateRequest) {
-        if (locateRequest > 0 && handledRequest != locateRequest) { handledRequest = locateRequest; locate() }
+    LaunchedEffect(resolvedBookId, resolvedChapter) {
+        activeAct = heroActIdx
     }
-    val gold = Color(0xFFA77832)
+
     Box(Modifier.fillMaxSize()) {
         ParchmentBackground(theme = theme)
-        Column(Modifier.fillMaxSize().statusBarsPadding().padding(bottom = ShellMetrics.tabRowHeight.dp + shellTabBarBottomInset())) {
-        if (currentBook != null) Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(t("继续阅读", "Resume reading") + " · ${BibleCatalog.book(currentBook)?.name(locale)} $currentChapter", Modifier.weight(1f).clickable(onClick=onReturnReading).padding(vertical=14.dp),color=ink,fontSize=13.sp)
-            Text(t("定位", "Locate"),Modifier.clickable { locate() }.padding(12.dp),color=ink,fontSize=13.sp)
-        }
-        val contentModifier = Modifier.weight(1f).fillMaxWidth().clipToBounds()
-        LazyColumn(contentModifier, state = list, contentPadding = PaddingValues(24.dp, 20.dp, 24.dp, 24.dp)) {
-            item {
-                Text(t("圣经全景", "Bible panorama"), color = ink, fontSize = 30.sp, fontWeight = FontWeight.Bold)
-                Text(t("一个故事，从创造走向新创造。", "One story, from creation to new creation."), color = ink.copy(alpha = .7f), modifier = Modifier.padding(top = 8.dp, bottom = 16.dp))
-                if (musicPlaying) Text(t("♫ 暂停音乐", "♫ Pause music"), Modifier.clickable(onClick = onToggleMusic).padding(vertical = 12.dp), color = ink, fontSize = 13.sp)
-                Spacer(Modifier.height(12.dp))
-            }
-            BiblePanorama.acts.forEachIndexed { index, act ->
-                val expanded = expandedActs and (1 shl index) != 0
-                item(key = "act-$index") {
-                    Row(Modifier.fillMaxWidth().drawBehind {
-                        if (index < 5) drawLine(gold.copy(alpha=.55f),Offset(14.dp.toPx(),28.dp.toPx()),Offset(14.dp.toPx(),size.height),1.dp.toPx())
-                    }, verticalAlignment = Alignment.Top) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Box(Modifier.size(28.dp).clip(CircleShape).background(gold.copy(alpha = .18f)), contentAlignment = Alignment.Center) { Text("${index + 1}", color = ink, fontSize = 13.sp, fontWeight = FontWeight.Bold) }
-                        }
-                        Column(Modifier.weight(1f).padding(start = 16.dp, bottom = 24.dp).drawBehind {
-                            if (expanded) drawLine(gold.copy(alpha=.55f),Offset(-8.dp.toPx(),85.dp.toPx()),Offset(-8.dp.toPx(),size.height),1.dp.toPx())
-                        }) {
-                            Row(Modifier.fillMaxWidth().clickable {
-                                expandedActs = expandedActs xor (1 shl index)
-                            }.padding(bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                PanoramaSketch(index, Modifier.width(66.dp).height(70.dp), gold)
-                                Column(Modifier.weight(1f).padding(start = 10.dp)) {
-                                    Text(t(act.zh, act.en), color = ink, fontSize = 22.sp, lineHeight = 30.sp, fontWeight = FontWeight.Bold)
-                                    Text(t(act.subtitleZh, act.subtitleEn), color = ink.copy(alpha = .7f), fontSize = 14.sp, lineHeight = 22.sp)
-                                    if (current?.first == index) Text(t("你正在这里", "You are here"),color=gold,fontSize=12.sp)
-                                }
-                                Text(if (expanded) "−" else "+", color = ink, fontSize = 24.sp)
+        LazyColumn(
+            state = listState,
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .parchmentFade(ParchmentFadePreset.TABBAR),
+            contentPadding = PaddingValues(
+                start = 22.dp,
+                end = 22.dp,
+                top = 18.dp,
+                bottom = TAB_BAR_CLEARANCE.dp + shellTabBarBottomInset() + 100.dp,
+            ),
+        ) {
+            item(key = "header-hero") {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            t("救赎全景", "Redemption Story"),
+                            color = ink,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            t("在完整的救赎故事中安静灵修，看见今天所读经文的位置", "Dwell in the whole story of redemption and see where today's reading belongs"),
+                            color = muted,
+                            fontSize = 13.5.sp,
+                            lineHeight = 20.sp,
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
+                    }
+                }
+                Spacer(Modifier.height(18.dp))
+
+                // 置顶「你正在这一幕」沉浸定位卡
+                val actObj = BiblePanorama.acts[heroActIdx]
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(theme.surface.toColor())
+                        .border(1.dp, theme.borderStrong.toColor(), RoundedCornerShape(20.dp))
+                        .padding(18.dp),
+                ) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                            Box(
+                                Modifier
+                                    .clip(CircleShape)
+                                    .background(accent)
+                                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                            ) {
+                                Text(
+                                    t("✦ 你正在这一幕 · 第${heroActIdx + 1}幕", "✦ You are here · Act ${heroActIdx + 1}"),
+                                    color = Color(0xFFFFFBF4),
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
                             }
-                            if (expanded) act.sections.forEach { s ->
-                                val selected = act.sections.size <= 2 || s.id in expandedSections
-                                if (act.sections.size > 1) Text((if (current?.second?.id == s.id) "● " else "") + t(s.zh, s.en) + if (act.sections.size <= 2) "" else if (selected) "  −" else "  +",
-                                    Modifier.fillMaxWidth().drawBehind {
-                                        drawCircle(gold,4.dp.toPx(),Offset(-8.dp.toPx(),34.dp.toPx()))
-                                    }.clickable { expandedSections = if (selected) expandedSections - s.id else expandedSections + s.id }.padding(top = 20.dp, bottom = 10.dp), color = ink, fontSize = 18.sp, lineHeight = 26.sp, fontWeight = FontWeight.SemiBold)
-                                if (selected) {
-                                    Text(t(s.summaryZh, s.summaryEn), color = ink.copy(alpha = .75f), fontSize = 14.sp, lineHeight = 23.sp, modifier = Modifier.padding(bottom = 8.dp))
-                                    PanoramaReadingGuide.notes[s.id]?.let { note ->
-                                        Text(t("经文脉络", "Scripture in context"), color=ink, fontSize=15.sp, fontWeight=FontWeight.SemiBold, modifier=Modifier.padding(top=12.dp, bottom=6.dp))
-                                        Text(t(note.zh, note.en), color=ink.copy(alpha=.85f), fontSize=14.sp, lineHeight=23.sp, modifier=Modifier.padding(bottom=10.dp))
-                                        note.links.forEach { link ->
-                                            Column(Modifier.fillMaxWidth().padding(bottom=8.dp).clip(RoundedCornerShape(8.dp)).background(gold.copy(alpha=.07f))
-                                                .clickable { onRead(link.bookId, link.chapter) }.padding(12.dp)) {
-                                                Text(t(link.kindZh,link.kindEn) + " · " + BibleCatalog.book(link.bookId)!!.name(locale) + " " + link.chapter + if(link.verses.isEmpty()) "" else ":${link.verses}", color=ink, fontSize=14.sp, fontWeight=FontWeight.SemiBold)
-                                                Text(t(link.reasonZh,link.reasonEn),color=ink.copy(alpha=.8f),fontSize=13.sp,lineHeight=21.sp,modifier=Modifier.padding(top=5.dp))
-                                                Text(t("阅读所在章 ›", "Read this chapter ›"),color=ink,fontSize=12.sp,modifier=Modifier.padding(top=8.dp))
-                                            }
-                                        }
-                                    }
+                            Spacer(Modifier.height(10.dp))
+                            Text(
+                                "${t(actObj.zh, actObj.en)} · ${t(heroSection.zh, heroSection.en)}",
+                                color = ink,
+                                fontSize = 20.sp,
+                                lineHeight = 27.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                t(heroSection.summaryZh, heroSection.summaryEn),
+                                color = muted,
+                                fontSize = 13.5.sp,
+                                lineHeight = 21.sp,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(top = 4.dp),
+                            )
+                        }
+                        PanoramaSketch(heroActIdx, Modifier.width(64.dp).height(68.dp), accent)
+                    }
+                    Spacer(Modifier.height(14.dp))
+                    val ctaLabel = if (currentBook != null) {
+                        t("继续灵修 · ${ReadChrome.chapterTitle(resolvedBook.name(locale), resolvedChapter, locale)}",
+                          "Continue · ${ReadChrome.chapterTitle(resolvedBook.name(locale), resolvedChapter, locale)}")
+                    } else {
+                        t("从起初进入灵修 · 创世记 第 1 章", "Begin from Genesis 1")
+                    }
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(44.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(accent)
+                            .clickableNoRipple {
+                                if (currentBook != null) onReturnReading() else onRead("GEN", 1)
+                            }
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(ctaLabel, Modifier.weight(1f), color = Color(0xFFFFFBF4), fontSize = 14.5.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        MaterialIcon(MI.CHEVRON_RIGHT, 18f, Color(0xFFFFFBF4))
+                    }
+                }
+                Spacer(Modifier.height(22.dp))
+            }
+
+            BiblePanorama.acts.forEachIndexed { index, act ->
+                val expanded = activeAct == index
+                item(key = "act-$index") {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .drawBehind {
+                                if (index < BiblePanorama.acts.lastIndex) {
+                                    drawLine(
+                                        color = accent.copy(alpha = 0.36f),
+                                        start = Offset(6.dp.toPx(), 24.dp.toPx()),
+                                        end = Offset(6.dp.toPx(), size.height),
+                                        strokeWidth = 1.2.dp.toPx(),
+                                    )
                                 }
-                                s.spans.forEach { entry ->
-                                    val key = "${s.id}:${entry.bookId}:${entry.first}"
-                                    PanoramaInlineBook(entry, s, locale, currentBook, currentChapter, key in expandedBooks,
-                                        onToggle = { expandedBooks = if (key in expandedBooks) expandedBooks - key else expandedBooks + key },
-                                        onRead = onRead)
+                            },
+                        verticalAlignment = Alignment.Top,
+                    ) {
+                        // 左侧纵向金线节点
+                        Box(Modifier.padding(top = 18.dp).size(12.dp), contentAlignment = Alignment.Center) {
+                            if (expanded) {
+                                Box(Modifier.size(11.dp).clip(CircleShape).background(accent))
+                            } else {
+                                Box(Modifier.size(10.dp).clip(CircleShape).border(1.6.dp, accent, CircleShape).background(theme.canvas.toColor()))
+                            }
+                        }
+                        Spacer(Modifier.width(12.dp))
+
+                        // 幕卡片
+                        Column(
+                            Modifier
+                                .weight(1f)
+                                .padding(bottom = 12.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(if (expanded) theme.surface.toColor() else theme.surface.toColor().copy(alpha = 0.62f))
+                                .border(
+                                    if (expanded) 1.dp else 0.75.dp,
+                                    if (expanded) accent.copy(alpha = 0.45f) else theme.border.toColor(),
+                                    RoundedCornerShape(16.dp),
+                                ),
+                        ) {
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clickableNoRipple { activeAct = if (expanded) -1 else index }
+                                    .padding(horizontal = 14.dp, vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                val badgeText = if (locale == AppLocale.EN) "${index + 1}" else ACT_NUMERALS_ZH.getOrElse(index) { "${index + 1}" }
+                                Box(
+                                    Modifier
+                                        .size(28.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(if (expanded) accent else accent.copy(alpha = 0.14f)),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        badgeText,
+                                        color = if (expanded) Color(0xFFFFFBF4) else accent,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                }
+                                Spacer(Modifier.width(10.dp))
+                                Text(
+                                    t(act.zh, act.en),
+                                    color = ink,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    " · ${t(act.subtitleZh, act.subtitleEn)}",
+                                    color = muted,
+                                    fontSize = 13.5.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                MaterialIcon(if (expanded) MI.EXPAND_LESS else MI.EXPAND_MORE, 20f, muted)
+                            }
+
+                            if (expanded) {
+                                Column(
+                                    Modifier.padding(start = 14.dp, end = 14.dp, bottom = 16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                                ) {
+                                    act.sections.forEach { sec ->
+                                        PanoramaSectionBlock(
+                                            section = sec,
+                                            locale = locale,
+                                            theme = theme,
+                                            currentBook = currentBook,
+                                            currentChapter = currentChapter,
+                                            onRead = onRead,
+                                            onPickSpan = { b, sp -> pickingSpan = b to sp },
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-            item { Text(t("六幕是阅读导览，不是圣经原有的分卷。书卷可跨越多个故事路段；诗歌、智慧与先知书按处境和主题连接。", "The six acts are a reading guide, not the Bible's own divisions. Books can span several parts of the story; poetry, wisdom, and prophecy connect through context and themes."), color = ink.copy(alpha = .6f), fontSize = 12.sp, lineHeight = 20.sp) }
+
+            item(key = "footer") {
+                Text(
+                    t(
+                        "六幕为灵修导览脉络，帮助你在救赎历史中安放每一章经文；诗歌、智慧与先知书按历史处境与主题相联。",
+                        "The six acts serve as a devotional story guide, helping place each chapter within redemptive history.",
+                    ),
+                    color = faint,
+                    fontSize = 12.sp,
+                    lineHeight = 19.sp,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
         }
+    }
+
+    pickingSpan?.let { (book, span) ->
+        ModalBottomSheet(
+            onDismissRequest = { pickingSpan = null },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = theme.surfaceSolid.toColor(),
+            contentColor = ink,
+        ) {
+            val intro = BibleBookIntroductions.get(book.id)
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 8.dp)
+                    .padding(bottom = 24.dp),
+            ) {
+                Text(book.name(locale), color = ink, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text(intro.text(locale), color = muted, fontSize = 13.5.sp, lineHeight = 21.sp, modifier = Modifier.padding(top = 6.dp, bottom = 14.dp))
+                Text(
+                    if (span.first == 1 && span.last == book.chapterCount) t("选择章节（共 ${book.chapterCount} 章）", "Select chapter (${book.chapterCount})")
+                    else t("本幕书卷路段：第 ${span.first}–${span.last} 章", "Chapters ${span.first}–${span.last}"),
+                    color = accent,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(bottom = 10.dp),
+                )
+                BoxWithConstraints {
+                    val cols = (maxWidth.value / 56f).toInt().coerceIn(4, 6)
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        (span.first..span.last).toList().chunked(cols).forEach { rowChs ->
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                rowChs.forEach { ch ->
+                                    val isCur = currentBook == book.id && currentChapter == ch
+                                    Box(
+                                        Modifier
+                                            .weight(1f)
+                                            .height(42.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(if (isCur) accent else theme.canvas.toColor().copy(alpha = 0.65f))
+                                            .border(0.75.dp, if (isCur) accent else theme.border.toColor(), RoundedCornerShape(10.dp))
+                                            .clickableNoRipple {
+                                                pickingSpan = null
+                                                onRead(book.id, ch)
+                                            },
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(
+                                            "$ch",
+                                            color = if (isCur) Color(0xFFFFFBF4) else ink,
+                                            fontSize = 15.sp,
+                                            fontWeight = if (isCur) FontWeight.Bold else FontWeight.Medium,
+                                        )
+                                    }
+                                }
+                                repeat(cols - rowChs.size) { Spacer(Modifier.weight(1f)) }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun PanoramaInlineBook(
-    entry: PanoramaSpan, section: PanoramaSection, locale: AppLocale,
-    currentBook: String?, currentChapter: Int, expanded: Boolean,
-    onToggle: () -> Unit, onRead: (String, Int) -> Unit,
+private fun PanoramaSectionBlock(
+    section: PanoramaSection,
+    locale: AppLocale,
+    theme: Parchment,
+    currentBook: String?,
+    currentChapter: Int,
+    onRead: (String, Int) -> Unit,
+    onPickSpan: (BookRef, PanoramaSpan) -> Unit,
 ) {
-    val ink = LocalParchment.current.ink.toColor()
-    val gold = Color(0xFFA77832)
-    val book = BibleCatalog.book(entry.bookId)!!
-    val intro = BibleBookIntroductions.get(book.id)
-    val isCurrent = currentBook == book.id && currentChapter in entry.first..entry.last
+    val ink = theme.ink.toColor()
+    val muted = theme.muted.toColor()
+    val accent = theme.accentOt.toColor()
     fun t(zh: String, en: String) = AppLocale.pick(zh, en, locale)
-    Column(Modifier.fillMaxWidth().padding(vertical=5.dp).clip(RoundedCornerShape(10.dp))
-        .background(if(isCurrent) gold.copy(alpha=.12f) else Color.White.copy(alpha=.22f))
-        .border(1.dp, if(isCurrent) gold else gold.copy(alpha=.4f), RoundedCornerShape(10.dp))) {
-        Row(Modifier.fillMaxWidth().clickable(onClick=onToggle).padding(14.dp), verticalAlignment=Alignment.CenterVertically) {
-            PanoramaBookGlyph(Modifier.width(30.dp).height(44.dp), ink)
-            Column(Modifier.weight(1f).padding(horizontal=12.dp)) {
-                if(isCurrent) Text(t("你正在这里 · 第${currentChapter}章", "You are here · Chapter $currentChapter"),color=gold,fontSize=12.sp)
-                Text(book.name(locale),color=ink,fontSize=18.sp,lineHeight=26.sp,fontWeight=FontWeight.Bold)
-                Text(intro.text(locale),color=ink.copy(alpha=.85f),fontSize=13.sp,lineHeight=21.sp,modifier=Modifier.padding(top=5.dp,bottom=7.dp))
-                Text(if(entry.first==1 && entry.last==book.chapterCount) t("圣经书卷 · ${book.chapterCount}章", "Bible book · ${book.chapterCount} chapters") else t("圣经书卷 · 第${entry.first}—${entry.last}章", "Bible book · chapters ${entry.first}–${entry.last}"),color=ink.copy(alpha=.65f),fontSize=11.sp)
-            }
-            Text(if(expanded) "−" else "+",color=ink,fontSize=24.sp)
-        }
-        if(expanded) Column(Modifier.fillMaxWidth().padding(start=14.dp,end=14.dp,bottom=14.dp)) {
-            Text(t("在全经中的位置 · ", "In the story · ") + t(section.zh,section.en),color=ink,fontSize=15.sp,fontWeight=FontWeight.SemiBold,modifier=Modifier.padding(top=8.dp,bottom=8.dp))
-            Text(t(section.summaryZh,section.summaryEn),color=ink,fontSize=14.sp,lineHeight=23.sp)
-            Text(t("阅读线索：", "Reading pointers: ")+intro.references,color=ink.copy(alpha=.7f),fontSize=12.sp,modifier=Modifier.padding(top=10.dp))
-            Text(t("选择章节", "Choose a chapter"),color=ink,fontSize=15.sp,fontWeight=FontWeight.SemiBold,modifier=Modifier.padding(top=18.dp,bottom=8.dp))
-            BoxWithConstraints {
-                val columns = (maxWidth.value / (52f * androidx.compose.ui.platform.LocalDensity.current.fontScale)).toInt().coerceIn(2,5)
-                Column {
-                    (entry.first..entry.last).toList().chunked(columns).forEach { chapters ->
-                        Row(Modifier.fillMaxWidth()) {
-                            chapters.forEach { chapter ->
-                                Box(Modifier.weight(1f).heightIn(min=48.dp).clickable { onRead(book.id,chapter) }.padding(vertical=10.dp),contentAlignment=Alignment.Center) {
-                                    Text(chapter.toString(),color=ink,fontSize=18.sp)
-                                }
-                            }
-                            repeat(columns-chapters.size) { Spacer(Modifier.weight(1f)) }
-                        }
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Box(Modifier.fillMaxWidth().height(0.5.dp).background(theme.border.toColor()))
+        Text(t(section.zh, section.en), color = ink, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
+        Text(t(section.summaryZh, section.summaryEn), color = muted, fontSize = 13.5.sp, lineHeight = 21.sp)
+
+        PanoramaReadingGuide.notes[section.id]?.let { note ->
+            Text(t(note.zh, note.en), color = ink.copy(alpha = 0.86f), fontSize = 13.sp, lineHeight = 20.sp)
+            note.links.forEach { link ->
+                val b = BibleCatalog.book(link.bookId) ?: return@forEach
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(accent.copy(alpha = 0.08f))
+                        .border(0.75.dp, accent.copy(alpha = 0.25f), RoundedCornerShape(10.dp))
+                        .clickableNoRipple { onRead(link.bookId, link.chapter) }
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(Modifier.width(2.5.dp).height(34.dp).clip(CircleShape).background(accent))
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "${t(link.kindZh, link.kindEn)} · ${b.name(locale)} ${link.chapter}${if (link.verses.isEmpty()) "" else ":${link.verses}"}",
+                            color = ink,
+                            fontSize = 13.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(t(link.reasonZh, link.reasonEn), color = muted, fontSize = 12.5.sp, lineHeight = 18.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }
+                    MaterialIcon(MI.CHEVRON_RIGHT, 16f, accent)
                 }
             }
-            Text(t("收起详情", "Collapse details"),Modifier.fillMaxWidth().clickable(onClick=onToggle).padding(vertical=12.dp),color=ink,fontSize=13.sp)
+        }
+
+        // 本幕所含书卷胶囊行（一点即开或选章）
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            section.spans.forEach { span ->
+                val book = BibleCatalog.book(span.bookId) ?: return@forEach
+                val isCurrent = currentBook == book.id && currentChapter in span.first..span.last
+                val rangeLabel = if (span.first == 1 && span.last == book.chapterCount) {
+                    t("${book.chapterCount} 章", "${book.chapterCount} ch")
+                } else {
+                    t("${span.first}–${span.last} 章", "Ch ${span.first}–${span.last}")
+                }
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 44.dp)
+                        .clip(RoundedCornerShape(11.dp))
+                        .background(if (isCurrent) accent.copy(alpha = 0.12f) else theme.canvas.toColor().copy(alpha = 0.45f))
+                        .border(0.75.dp, if (isCurrent) accent else theme.border.toColor(), RoundedCornerShape(11.dp))
+                        .clickableNoRipple {
+                            if (span.first == span.last) onRead(book.id, span.first)
+                            else onPickSpan(book, span)
+                        }
+                        .padding(horizontal = 12.dp, vertical = 9.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    MaterialIcon(MI.MENU_BOOK, 16f, if (isCurrent) accent else muted)
+                    Spacer(Modifier.width(8.dp))
+                    Text(book.name(locale), color = ink, fontSize = 14.5.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                    Text(rangeLabel, color = muted, fontSize = 12.sp)
+                    Spacer(Modifier.width(4.dp))
+                    MaterialIcon(MI.CHEVRON_RIGHT, 15f, muted)
+                }
+            }
         }
     }
 }

@@ -41,7 +41,7 @@ type Props = {
   loopMode: LoopMode;
   onTogglePlay: () => void;
   onNext: () => void;
-  onRead: () => void;
+  onRead?: () => void;
   onCycleRate: () => void;
   onCycleLoop: () => void;
   readIconName?: "search" | "menu-book";
@@ -52,7 +52,7 @@ const seekClass =
   "read-scripture-dock-seek h-5 w-full min-w-[2.75rem] max-w-full flex-1 cursor-pointer appearance-none bg-transparent accent-amber-700/80 disabled:cursor-not-allowed disabled:opacity-35";
 
 const sideBtnClass =
-  "inline-flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-full text-[var(--bc-read-book,#3d2e24)] transition active:scale-[0.97] disabled:opacity-35";
+  "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--bc-read-book,#3d2e24)] transition active:scale-[0.97] disabled:opacity-35";
 
 /** 读经播放坞 — 对齐 App `ReadScripturePlaybackDock`。 */
 export function ReadScripturePlaybackDock({
@@ -153,20 +153,24 @@ export function ReadScripturePlaybackDock({
       </div>
 
       <div className="flex items-center justify-between gap-1 pb-1">
-        <button
-          type="button"
-          className={sideBtnClass}
-          disabled={disabled}
-          aria-label={readAccessibilityLabel ?? t("pages.read.planPlayReadChapter")}
-          onClick={onRead}
-        >
-          <ShellMaterialIcon name={readIconName} size={22} color="currentColor" />
-        </button>
+        {onRead ? (
+          <button
+            type="button"
+            className={sideBtnClass}
+            disabled={disabled}
+            aria-label={readAccessibilityLabel ?? t("pages.read.planPlayReadChapter")}
+            onClick={onRead}
+          >
+            <ShellMaterialIcon name={readIconName} size={22} color="currentColor" />
+          </button>
+        ) : (
+          <div className="h-10 w-10 shrink-0" aria-hidden />
+        )}
 
         <div className="flex min-w-0 flex-1 items-center justify-center gap-1 sm:gap-2">
           <button
             type="button"
-            className={sideBtnClass}
+            className={`${sideBtnClass} min-w-[2.5rem] px-1`}
             disabled={disabled}
             aria-label={`语音速度 ${scripturePlaybackRate}x`}
             onClick={onCycleRate}
@@ -177,7 +181,7 @@ export function ReadScripturePlaybackDock({
           <button
             type="button"
             className={[
-              "inline-flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full transition active:scale-[0.97] disabled:opacity-35",
+              "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition active:scale-[0.97] disabled:opacity-35",
               playing ? "bg-[var(--brand-logo-background,#f5d547)] text-[var(--bc-read-book,#3d2e24)]" : "bg-[var(--bc-read-book,#3d2e24)] text-white",
             ].join(" ")}
             disabled={playLocked}

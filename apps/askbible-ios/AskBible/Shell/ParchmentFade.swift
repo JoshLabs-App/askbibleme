@@ -7,25 +7,40 @@ import SwiftUI
 enum ParchmentFadePreset {
     case tabbar, chapter
 
-    var edgeFadeTop: CGFloat { 70 }
-    /// 对齐安卓 `ParchmentFade.kt`：`TABBAR(70, 120, 80, 30, 0.03)`，`CHAPTER(70, 0, 0, 30, 0.03)`。
-    var edgeFadeBottom: CGFloat { self == .tabbar ? 120 : 0 }
-    var tabNear: CGFloat { self == .tabbar ? 80 : 0 }
-    var topTabNear: CGFloat { 30 }
+    /// 仅章页顶部有悬浮胶囊栏时做顶部渐隐；主 Tab 页无顶部浮栏，保持首屏页眉 100% 清晰锐利。
+    var edgeFadeTop: CGFloat { self == .chapter ? 58 : 0 }
+    /// 底部**不再渐隐**（章页 0，Tab 页只留 60 的软边）。
+    ///
+    /// Josh 2026-09-16：「我感觉我们的图不是原生的，是一个底色，而不是玻璃。」
+    /// 根因不在材质（真机 iOS 26.6.2，走的就是 `glassEffect`），而在**玻璃背后没东西可折射**：
+    /// 之前在坞上方就把经文淡掉了，玻璃底下只剩一片平整的纸 —— 真玻璃盖在平色上，看起来就是一块底色。
+    /// 效果图里文字是穿到玻璃后面去的，那层弯折与模糊才是「玻璃感」的来源。
+    /// 所以让内容照常滚到玻璃后面（滚动长度仍由 safeAreaInset 保证，最后一行能完整滚出来）。
+    var edgeFadeBottom: CGFloat { self == .tabbar ? 60 : 0 }
+    var tabNear: CGFloat { self == .tabbar ? 30 : 0 }
+    var topTabNear: CGFloat { self == .chapter ? 16 : 0 }
     var tabMaskOpacity: Double { 0.03 }
 
     /// RN maskStops：按视口高度算出的渐变停靠点（0 = 顶）
     func stops(viewportHeight h0: CGFloat) -> [Gradient.Stop] {
         let h = max(h0, 1)
-        let topTab = min(0.4, topTabNear / h)
-        let topEnd = min(0.48, max(topTab + 0.02, edgeFadeTop / h))
-        let topBlend = topTab + (topEnd - topTab) * 0.45
-        let top: [Gradient.Stop] = [
-            .init(color: .black.opacity(0), location: 0),
-            .init(color: .black.opacity(tabMaskOpacity), location: topTab),
-            .init(color: .black.opacity(0.42), location: topBlend),
-            .init(color: .black, location: topEnd),
-        ]
+        let topEnd: CGFloat
+        let top: [Gradient.Stop]
+        if edgeFadeTop <= 0 {
+            topEnd = 0
+            top = [.init(color: .black, location: 0)]
+        } else {
+            let topTab = min(0.4, topTabNear / h)
+            let te = min(0.48, max(topTab + 0.02, edgeFadeTop / h))
+            let topBlend = topTab + (te - topTab) * 0.45
+            topEnd = te
+            top = [
+                .init(color: .black.opacity(0), location: 0),
+                .init(color: .black.opacity(tabMaskOpacity), location: topTab),
+                .init(color: .black.opacity(0.42), location: topBlend),
+                .init(color: .black, location: te),
+            ]
+        }
         if edgeFadeBottom <= 0 { return top + [.init(color: .black, location: 1)] }
         let fadeStart = max(topEnd + 0.02, 1 - edgeFadeBottom / h)
         let tabNearLoc = min(0.999, max(fadeStart + 0.02, 1 - tabNear / h))

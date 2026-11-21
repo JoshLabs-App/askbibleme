@@ -201,6 +201,7 @@ final class HomeVerseController: ObservableObject {
         let ud = UserDefaults(suiteName: "group.me.askbible.native")
         ud?.set(v.text, forKey: "widget-verse-v1-text")
         ud?.set(v.reference, forKey: "widget-verse-v1-ref")
+        ud?.set(verseKey, forKey: "widget-verse-v1-key")
         WidgetCenter.shared.reloadAllTimelines()
     }
 

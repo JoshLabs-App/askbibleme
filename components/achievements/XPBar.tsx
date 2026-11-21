@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
+import { MedalIcon } from "@/components/achievements/MedalIcon";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { MedalLevels } from "@/lib/achievements/medal-catalog";
+import { useReadingHabitStats } from "@/hooks/useReadingHabitStats";
+import { MedalLevels, sealKeyForBookNumber } from "@/lib/achievements/medal-catalog";
 import {
   getAchievementSnapshot,
   refreshAchievements,
   subscribeAchievements,
   type AchievementSnapshot,
 } from "@/lib/achievements/achievement-store-web";
+import { scriptureBooks } from "@/lib/bible/scripture-books";
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 
 const EMPTY_SNAPSHOT: AchievementSnapshot = {
@@ -23,7 +26,8 @@ const EMPTY_SNAPSHOT: AchievementSnapshot = {
   seals: {},
 };
 
-/** 订阅成就快照；挂载时评估一次，把云端同步进来还没算的补上。 */
+const PREVIEW_BOOK_IDS = ["GEN", "EXO", "PSA", "ISA", "JHN"];
+
 export function useAchievementSnapshot(): AchievementSnapshot {
   const snap = useSyncExternalStore(
     subscribeAchievements,
@@ -42,65 +46,73 @@ export function levelTitleText(level: number, locale: string): string {
   return locale === "zh-TW" ? toZhTwText(t.zh) : t.zh;
 }
 
+function pickCopy(zh: string, en: string, locale: string): string {
+  if (locale === "en") return en;
+  return locale === "zh-TW" ? toZhTwText(zh) : zh;
+}
+
 /**
- * 常驻等级条（对齐 iOS `XPBar`）：称号 + 等级 + 会动的 XP 进度 + 连续天数倍率。
- * 倍率 > 1 时挂一颗火苗角标；进度条是暖色渐变加一层辉光。
+ * 去游戏化「手抄本藏书票」（对齐 iOS / Android XPBar）：
+ * 移除 Lv.X、XP 进度条与火焰连击倍率，展示「安静相伴(天) | 已读章节 | 书卷火漆印 X/66」及 5 枚浮雕印鉴。
  */
 export function XPBar({ compact = false }: { compact?: boolean }) {
   const { locale } = useLocale();
   const snap = useAchievementSnapshot();
-  const pct = Math.max(0, Math.min(1, snap.levelProgress));
+  const { snapshot: habit } = useReadingHabitStats();
+  const calmDays = Math.max(habit.readDays ?? 0, habit.streakDays ?? 0);
+  const sealCount = Object.keys(snap.seals).length;
 
   return (
-    <div className="flex flex-col" style={{ gap: compact ? 4 : 6 }}>
-      <div className="flex items-center gap-2">
-        <span
-          className="font-extrabold tabular-nums"
-          style={{ fontSize: compact ? 12 : 14, color: "#FFB101" }}
-        >
-          Lv.{snap.level}
-        </span>
-        <span className="font-semibold" style={{ fontSize: compact ? 12 : 14, color: "#5C4030" }}>
-          {levelTitleText(snap.level, locale)}
-        </span>
-        <span className="flex-1" />
-        {snap.streakMultiplier > 1.001 ? (
-          <span
-            className="inline-flex items-center gap-[2px] rounded-full px-1.5 py-[2px] font-bold tabular-nums"
-            style={{ color: "#E06C2A", backgroundColor: "rgba(224,108,42,0.12)", fontSize: 11 }}
-          >
-            <FlameIcon />×{snap.streakMultiplier.toFixed(2)}
+    <div className="flex flex-col" style={{ gap: compact ? 10 : 14 }}>
+      <div className="flex items-center">
+        <div className="flex flex-1 flex-col items-center gap-0.5">
+          <span className="text-[22px] font-bold tabular-nums text-[#4F7A54]">{calmDays}</span>
+          <span className="text-[11.5px] text-[#75614B] dark:text-[#A99A84]">
+            {pickCopy("安静相伴 (天)", "Quiet Days", locale)}
           </span>
-        ) : null}
-        <span
-          className="font-medium tabular-nums"
-          style={{ fontSize: compact ? 11 : 12, color: "#7A633A" }}
-        >
-          {snap.xpInLevel} / {snap.xpForLevel}
-        </span>
+        </div>
+        <span className="h-8 w-[1px] bg-[#DFD0B8] dark:bg-[#3E3328]" aria-hidden />
+        <div className="flex flex-1 flex-col items-center gap-0.5">
+          <span className="text-[22px] font-bold tabular-nums text-[#231A12] dark:text-[#EDE2CF]">
+            {snap.chaptersReadCount}
+          </span>
+          <span className="text-[11.5px] text-[#75614B] dark:text-[#A99A84]">
+            {pickCopy("已读章节", "Chapters Read", locale)}
+          </span>
+        </div>
+        <span className="h-8 w-[1px] bg-[#DFD0B8] dark:bg-[#3E3328]" aria-hidden />
+        <div className="flex flex-1 flex-col items-center gap-0.5">
+          <span className="tabular-nums">
+            <strong className="text-[22px] font-bold text-[#C1660B]">{sealCount}</strong>
+            <span className="text-[12.5px] font-bold text-[#75614B] dark:text-[#A99A84]"> /66</span>
+          </span>
+          <span className="text-[11.5px] text-[#75614B] dark:text-[#A99A84]">
+            {pickCopy("书卷火漆印", "Book Seals", locale)}
+          </span>
+        </div>
       </div>
-      <div
-        className="w-full overflow-hidden rounded-full"
-        style={{ height: compact ? 6 : 8, backgroundColor: "#F2E4CF" }}
-      >
-        <div
-          className="h-full rounded-full"
-          style={{
-            width: `max(6px, ${pct * 100}%)`,
-            background: "linear-gradient(90deg, #FFC94D 0%, #FFB101 100%)",
-            boxShadow: "0 0 4px rgba(255,177,1,0.5)",
-            transition: "width 450ms cubic-bezier(0.22, 1, 0.36, 1)",
-          }}
-        />
-      </div>
-    </div>
-  );
-}
 
-function FlameIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor" aria-hidden>
-      <path d="M12 2c.5 3.5-1.8 4.6-3 6.3C7.4 10.5 7 12 7 13.5 7 17 9.5 19 12 19s5-2 5-5.5c0-2.4-1.3-4-2.6-5.4C13 6.6 12.3 4.7 12 2Z" />
-    </svg>
+      {!compact ? (
+        <>
+          <div className="h-[0.5px] w-full bg-[#DFD0B8] dark:bg-[#3E3328]" />
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              {PREVIEW_BOOK_IDS.map((bid) => {
+                const meta = scriptureBooks.find((b) => b.bookId === bid);
+                const key = meta ? sealKeyForBookNumber(meta.bookNumber) : null;
+                const lit = snap.seals[bid] != null;
+                return key ? (
+                  <MedalIcon key={bid} imageKey={key} tier={lit ? 1 : 0} size={38} />
+                ) : null;
+              })}
+            </div>
+            <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#231A12] dark:text-[#EDE2CF]">
+              <span>{pickCopy("印鉴墙", "Seals", locale)}</span>
+              <span aria-hidden>›</span>
+            </span>
+          </div>
+        </>
+      ) : null}
+    </div>
   );
 }

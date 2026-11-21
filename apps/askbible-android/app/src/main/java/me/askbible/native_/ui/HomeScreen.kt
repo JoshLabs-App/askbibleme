@@ -44,6 +44,8 @@ fun HomeScreen(
     onToggleVoice: () -> Unit, onPressAlbum: (String) -> Unit,
     onChooseAlbum: (String) -> Unit, onOpenMusic: () -> Unit, onOpenMenu: () -> Unit,
     onNextMusic: () -> Unit,
+    onOpenVerseContext: () -> Unit = {},
+    onBookmarkVerse: () -> Unit = {},
     chromeHidden: Boolean = false, onChromeHidden: (Boolean) -> Unit = {},
 ) {
     var toolsOpen by remember { mutableStateOf(false) }
@@ -71,7 +73,6 @@ fun HomeScreen(
         val poster = rememberAssetImage(if (liveVideo) NatureScenes.posterAsset(sceneId) else NatureScenes.softPosterAsset(sceneId))
         if (poster != null) Image(poster, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         if (liveVideo) HomeSceneVideo(sceneId, Modifier.fillMaxSize())
-        // 手势只放在背景层，面板滚动、图标点击不触发换景。
         Box(Modifier.fillMaxSize()
             .semantics { contentDescription = t("风景", "Scenery"); customActions = listOf(
                 CustomAccessibilityAction(t("调整", "Adjust")) { openTools(); true },
@@ -94,51 +95,155 @@ fun HomeScreen(
                 }) { change, amount -> change.consume(); movement += amount }
             })
         val vScale = if (wide) textScale * 0.6f else textScale
-        Column(Modifier.fillMaxWidth().statusBarsPadding().padding(top = if (wide) 24.dp else 99.dp)
-            .heightIn(max = (LocalConfiguration.current.screenHeightDp * 0.55f).dp)
-            .then(if (wide) Modifier.verticalScroll(rememberScrollState()) else Modifier)
-            .padding(horizontal = if (wide) 120.dp else 22.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            Modifier.fillMaxWidth().statusBarsPadding().padding(top = if (wide) 24.dp else 108.dp)
+                .heightIn(max = (LocalConfiguration.current.screenHeightDp * 0.55f).dp)
+                .then(if (wide) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+                .padding(horizontal = if (wide) 120.dp else 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
             val shadow = Shadow(Color(0x8C000000), Offset(0f, 2f), 8f)
-            Text(verse.text, style = TextStyle(color = Color.White, fontSize = HomeVerseTypography.bodySize(vScale).sp,
-                lineHeight = HomeVerseTypography.bodyLineHeight(vScale).sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, shadow = shadow))
-            Spacer(Modifier.height(HomeVerseTypography.refTopGap(vScale).dp))
-            Text(verse.reference, style = TextStyle(color = Color.White, fontSize = HomeVerseTypography.refSize(vScale).sp,
-                lineHeight = HomeVerseTypography.refLineHeight(vScale).sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, shadow = shadow))
+            Text(
+                verse.text,
+                modifier = Modifier.pointerInput(verse.text) {
+                    detectTapGestures(
+                        onDoubleTap = { touch(); onBookmarkVerse() },
+                        onTap = {
+                            if (albumsOpen) { albumsOpen = false; touch() }
+                            else { idleEpoch++; onChromeHidden(!hidden) }
+                        },
+                    )
+                },
+                style = TextStyle(
+                    color = Color.White,
+                    fontSize = HomeVerseTypography.bodySize(vScale).sp,
+                    lineHeight = HomeVerseTypography.bodyLineHeight(vScale).sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    shadow = shadow,
+                ),
+            )
+            Spacer(Modifier.height(14.dp))
+            Row(
+                Modifier
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(Color.Black.copy(alpha = 0.36f))
+                    .border(0.75.dp, Color.White.copy(alpha = 0.24f), RoundedCornerShape(999.dp))
+                    .clickableNoRipple { touch(); onOpenVerseContext() }
+                    .padding(horizontal = 14.dp, vertical = 7.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(
+                    verse.reference,
+                    color = Color.White.copy(alpha = 0.96f),
+                    fontSize = maxOf(13f, HomeVerseTypography.refSize(vScale) * 0.78f).sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text("·", color = Color.White.copy(alpha = 0.48f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    t("读上下文", "Read context"),
+                    color = Color(0xFFFFE3A3),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                MaterialIcon(MI.CHEVRON_RIGHT, 14f, Color(0xFFFFE3A3))
+            }
         }
-        Column(Modifier.align(Alignment.BottomCenter).padding(bottom = shellTabBarBottomInset() + (ShellMetrics.tabRowHeight + 90).dp)
-            .padding(horizontal = 22.dp).alpha(if (chromeHidden && !albumsOpen) 0.55f else 1f), horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            if (albumsOpen) Column(Modifier.widthIn(max = 340.dp).clip(RoundedCornerShape(22.dp)).background(paper).padding(14.dp)) {
-                HomeAlbumOptions(selectedAlbum, ink) { onChooseAlbum(it); albumsOpen = false; touch() }
+        Column(
+            Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = shellTabBarBottomInset() + (ShellMetrics.tabRowHeight + 38).dp)
+                .padding(horizontal = 22.dp)
+                .alpha(if (chromeHidden && !albumsOpen) 0.52f else 1f),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            if (albumsOpen) {
+                Column(
+                    Modifier.widthIn(max = 340.dp).clip(RoundedCornerShape(22.dp)).background(paper).padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text(t("切换陪伴心境", "Choose mood"), color = ink.copy(alpha = 0.68f), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        Row(
+                            Modifier.clickableNoRipple { albumsOpen = false; touch(); onOpenMusic() },
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        ) {
+                            Text(t("完整曲库", "All tracks"), color = Color(0xFFD97707), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            MaterialIcon(MI.CHEVRON_RIGHT, 14f, Color(0xFFD97707))
+                        }
+                    }
+                    HomeAlbumOptions(selectedAlbum, ink) { onChooseAlbum(it); albumsOpen = false; touch() }
+                }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+            // 单排对称三触点：音乐(含当前心境) · 朗读 · 境况
+            Row(horizontalArrangement = Arrangement.spacedBy(34.dp), verticalAlignment = Alignment.CenterVertically) {
                 val glyph = MusicAlbumGlyph.glyph(selectedAlbum)
-                Column(Modifier.size(72.dp).combinedClickable(
-                    onClick = { touch(); onPressAlbum(selectedAlbum) },
-                    onLongClickLabel = t("选择专辑", "Choose album"), onLongClick = { touch(); albumsOpen = true })
-                    .semantics(mergeDescendants = true) { contentDescription = t("音乐", "Music"); stateDescription = selectedAlbum + if (playingAlbum != null) " On" else " Off" },
-                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    MaterialIcon(glyph.first, 28f, if (playingAlbum != null) Brand.logo.toColor() else Color.White, community = glyph.second, shadow = true)
-                    Text(t("音乐", "Music"), color = Color.White, fontSize = 12.sp)
+                val musicActive = playingAlbum != null
+                Column(
+                    Modifier.widthIn(min = 72.dp).semantics(mergeDescendants = true) {
+                        contentDescription = t("音乐", "Music")
+                        stateDescription = selectedAlbum + if (musicActive) " On" else " Off"
+                    },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(7.dp),
+                ) {
+                    Box(
+                        Modifier
+                            .size(52.dp)
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(if (musicActive) Brand.logo.toColor() else Color.Black.copy(alpha = 0.28f))
+                            .border(0.75.dp, Color.White.copy(alpha = if (musicActive) 0f else 0.22f), RoundedCornerShape(999.dp))
+                            .combinedClickable(
+                                onClick = { touch(); onPressAlbum(selectedAlbum) },
+                                onLongClickLabel = t("选择专辑", "Choose album"),
+                                onLongClick = { touch(); albumsOpen = true },
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        MaterialIcon(glyph.first, 22f, if (musicActive) Color(0xFF1C1410) else Color.White, community = glyph.second)
+                    }
+                    Row(
+                        Modifier.clickableNoRipple { touch(); albumsOpen = !albumsOpen }.padding(horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        Text(
+                            t(selectedAlbum, when (selectedAlbum) {
+                                "安静" -> "Quiet"; "下午茶" -> "Afternoon tea"; "赞美诗" -> "Hymns"
+                                "钢琴" -> "Piano"; "睡眠" -> "Sleep"; else -> "Focus"
+                            }),
+                            color = Color.White.copy(alpha = 0.92f),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+                        MaterialIcon(MI.EXPAND_MORE, 13f, Color.White.copy(alpha = 0.8f))
+                    }
                 }
-                Column(Modifier.size(72.dp).alpha(if (voiceAvailable) 1f else 0.35f).clickable(enabled = voiceAvailable) { touch(); onToggleVoice() }
-                    .semantics(mergeDescendants = true) { contentDescription = t("朗读", "Read aloud"); stateDescription = if (voiceOn) "On" else "Off" },
-                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    MaterialIcon(MI.VOLUME_UP, 28f, if (voiceOn) Brand.logo.toColor() else Color.White, shadow = true)
-                    Text(t("朗读", "Read aloud"), color = Color.White, fontSize = 12.sp)
-                }
+
+                HomeCircleControl(
+                    glyph = MI.VOLUME_UP,
+                    title = t("朗读", "Read aloud"),
+                    active = voiceOn,
+                    enabled = voiceAvailable,
+                ) { touch(); onToggleVoice() }
+
+                HomeCircleControl(
+                    glyph = MI.SPA,
+                    title = t("境况", "Ambience"),
+                    active = ambientSlotId != null || sleepTimerMinutes > 0,
+                    enabled = true,
+                ) { openTools() }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                TextButton(onClick = { touch(); onNextMusic() }) {
-                    MaterialIcon(MI.SKIP_NEXT, 20f, Color.White, shadow = true)
-                    Spacer(Modifier.width(6.dp))
-                    Text(t("下一首", "Next track"), color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
-                }
-                TextButton(onClick = { touch(); onOpenMusic() }) {
-                    MaterialIcon(MI.MUSIC_NOTE, 20f, Color.White, shadow = true)
-                    Spacer(Modifier.width(6.dp))
-                    Text(t("选音乐", "Choose music"), color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
-                }
+
+            // 底部微光呼吸条
+            Box(
+                Modifier.clickableNoRipple { openTools() }.padding(horizontal = 20.dp, vertical = 6.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(Modifier.size(34.dp, 4.dp).clip(RoundedCornerShape(999.dp)).background(Color.White.copy(alpha = 0.46f)))
             }
         }
     }
@@ -187,9 +292,42 @@ fun HomeScreen(
                 Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = onCycleSleepTimer), verticalAlignment = Alignment.CenterVertically) {
                     Text(t("睡眠定时", "Sleep timer"), Modifier.weight(1f)); Text(if (sleepTimerMinutes == 0) t("关闭", "Off") else "$sleepTimerMinutes " + t("分钟", "min"))
                 }
-                TextButton(onClick = { toolsOpen = false; onOpenMenu() }, modifier = Modifier.fillMaxWidth()) { Text(t("更多设置", "More settings"), color = ink) }
             }
         }
+    }
+}
+
+@Composable
+private fun HomeCircleControl(
+    glyph: String,
+    title: String,
+    active: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    Column(
+        Modifier
+            .widthIn(min = 72.dp)
+            .alpha(if (enabled) 1f else 0.38f)
+            .clickableNoRipple { if (enabled) onClick() }
+            .semantics(mergeDescendants = true) {
+                contentDescription = title
+                stateDescription = if (active) "On" else "Off"
+            },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(7.dp),
+    ) {
+        Box(
+            Modifier
+                .size(52.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .background(if (active) Brand.logo.toColor() else Color.Black.copy(alpha = 0.28f))
+                .border(0.75.dp, Color.White.copy(alpha = if (active) 0f else 0.22f), RoundedCornerShape(999.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            MaterialIcon(glyph, 21f, if (active) Color(0xFF1C1410) else Color.White)
+        }
+        Text(title, color = Color.White.copy(alpha = 0.92f), fontSize = 12.sp, fontWeight = FontWeight.Medium)
     }
 }
 

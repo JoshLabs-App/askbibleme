@@ -1,22 +1,16 @@
-import { AppShellPlaceholder } from "@/components/shell/AppShellPlaceholder";
-import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
+import { ExploreParchmentChrome } from "@/components/explore/ExploreParchmentChrome";
+import { BiblePanoramaClient } from "@/components/panorama/BiblePanoramaClient";
 import { sitePageTitle } from "@/lib/site-metadata-defaults";
 
 export const metadata = {
-  title: sitePageTitle("旅程"),
-  description: "你若喜欢安静地同行，走着走着会遇见更多；首页的自然与经文也一直在这儿。",
+  title: sitePageTitle("救赎全景"),
+  description: "在完整的救赎故事中安静灵修，看见今天所读经文的位置。",
 };
 
-export default function JourneyPlaceholderPage() {
+export default function JourneyPanoramaPage() {
   return (
-    <ShellTemplateChromeLayout contentClassName="gap-0">
-      <AppShellPlaceholder
-        embedded
-        hideBackHomeCta
-        titleKey="pages.journey.title"
-        leadKey="pages.journey.lead"
-        bodyKey="pages.journey.body"
-      />
-    </ShellTemplateChromeLayout>
+    <ExploreParchmentChrome>
+      <BiblePanoramaClient />
+    </ExploreParchmentChrome>
   );
 }

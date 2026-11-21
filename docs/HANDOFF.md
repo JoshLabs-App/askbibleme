@@ -45,8 +45,8 @@
 | 层 | 定位 | 路径 |
 |----|------|------|
 | **Studio** | 产品大脑（策展/编辑部）：理清意图、防失忆、写回 `docs/`；**不是** CMS / 运营后台 | Web：`/studio`（本机） |
-| **Mobile App** | 已上架、持续维护的用户端（Expo）；当前商店约 **1.0.38**（build 119） | `apps/askbible-mobile` |
-| **Web 站点** | Next.js；读经章页是静态壳（D-43），迁 Cloudflare 进行中；生产在 **Vercel**（2026-10-01 实测 `askbible.me` 响应头 `server: Vercel`；Render 已停用，`www` 只剩一条 301 回根域） | `app/`、`components/`、`lib/` |
+| **Mobile App** | 已上架、持续维护的用户端（原生 iOS / Android） | `apps/askbible-ios`、`apps/askbible-android` |
+| **Web 站点** | Next.js（`vinext`）；生产在 **Cloudflare Workers**（Worker `askbible-web`，主域 `askbible.me`，备用域 `bible.joshlabs.app`；Render 与 Vercel 均已退役） | `app/`、`components/`、`lib/` |
 
 `AGENTS.md` 写「不要先做 Journey/CMS」= **不要新开产品线堆功能**；不是禁止修现有 App bug / 发版 / 对齐 iOS。
 
@@ -58,14 +58,14 @@
 
 1. **不擅自扩功能**；与边界冲突先短质疑 + 更紧方案，等确认（或 `DD`）。
 2. **移动端禁止 EAS 云端构建**；iOS 本机 Xcode，Android 本机 Gradle。见 `docs/mobile-release-checklist.md`、`.cursor/rules/mobile-local-build-only.mdc`。
-3. **媒体**：播放默认本地；大体积增量 **禁止** 走主站（Vercel）/ `askbible.me`。  
+3. **媒体**：播放默认本地；大体积增量 **禁止** 走主站 `askbible.me`（统一走 Cloudflare R2）。  
    - 音乐：安装包每专辑**第一首**；其余 TEMPORARY = **Cloudflare R2** + 本机缓存。  
    - 金句语音：TEMPORARY = **R2 直链**（勿回落 askbible.me）。  
    - **禁止**为上架开 `MOBILE_ANDROID_MUSIC_PAD=1`（会打出约 650MB AAB；正常约 160MB）。  
    真源：`.cursor/rules/mobile-local-media-playback-first.mdc`、`docs/mobile-golden-verse-audio.md`。
 4. **外站拉取音频等**：禁止压缩/转码/降码率；原样直存。`.cursor/rules/no-compression-on-remote-fetch.mdc`。
 5. **OAuth**：从 App 发起的登录默认回调回 App；勿盲目改成网页 HTTPS 回调。验收：`.cursor/skills/验收-OAuth/SKILL.md`。
-6. **改完且验证通过，由 Agent 自行提交、推送并直接发布正式站，不再确认，也不交回 Josh 操作**（2026-10-31 明确授权）。网页只使用 `scripts/deploy-direct.sh` 从已推送的干净提交本机构建并部署 Vercel；发布后核对 `/app-build.json` 和实际页面，保留上一部署用于回滚。不得夹带其它会话改动。新增费用、生产迁移、真实用户数据改写与不可逆删除不在此授权内。
+6. **改完且验证通过，由 Agent 自行提交、推送并直接发布正式站，不再确认，也不交回 Josh 操作**（2026-10-31 明确授权，2026-11-17 切至 Cloudflare Workers）。网页只使用 `scripts/deploy-direct.sh` 从已推送的干净提交本机构建并直发 Cloudflare Worker `askbible-web`；发布后核对 `/app-build.json` 和实际页面，保留上一版本用于回滚。不得夹带其它会话改动。新增费用、破坏性迁移、真实用户数据改写与不可逆删除不在此授权内。
 7. **禁止无门禁直推 main**；合入走 PR + `auto-merge` 标签。见 `docs/mobile-maestro-auto-merge.md`。
 8. UI：安静羊皮卷气质；不擅自加装饰/动画/工业风系统默认壳。
 
@@ -109,9 +109,9 @@
 | 层 | 选型 |
 |----|------|
 | Web / Studio | Next.js App Router + TypeScript + Tailwind |
-| Mobile | Expo / React Native（`apps/askbible-mobile`） |
-| 数据 | 本地优先：`data/` + sqlite；`DATA_ROOT` 持久盘是 Render 时代的做法，Vercel 上没有持久盘，以代码为准 |
-| 部署 | Vercel（推 `main` 自动部署）。Render Web Service + Persistent Disk 是旧方案，已停用 |
+| Mobile | 原生 iOS（`apps/askbible-ios`）/ Android（`apps/askbible-android`） |
+| 数据 | 本地静态/打包数据（`data/`、`public/data/` + `env.ASSETS`）+ Cloudflare Worker `askbible-sync`（D1） |
+| 部署 | Cloudflare Workers（本机构建，`scripts/deploy-direct.sh` 预构建产物直发 `askbible-web`）。Render 与 Vercel 均已退役 |
 | 媒体增量 | Cloudflare R2（金句语音、非首曲音乐） |
 
 ### 常用命令
@@ -774,7 +774,7 @@ manifest `start_url=/web`；手机截图和金句字体文件都取得到。本�
 - 旧电视内核不认 `dvh`，布局高度要带 `vh` 回退。
 - 电视浏览器判断集中在 `lib/dom/is-tv-browser.ts`，别在别处另写一份。
 
-**网页只在本机构建（2026-10-31 用户明确要求）**：Agent 在本机完成生产构建，只上传 `.vercel/output` 产物（`vercel deploy --prebuilt --prod`）。禁止 Vercel 云端构建、`--remote` 回退和通过 Git 自动构建发布；`vercel.json` 关闭 Git 自动部署。缺失本地构建配置时先补齐，不得改用云端构建。服务端运行时配置继续由 Vercel 正式环境提供。
+**网页只在本机构建并直发 Cloudflare Workers（2026-11-17 用户确认）**：Agent 在本机完成生产构建（`scripts/deploy-direct.sh`），直发 Cloudflare Worker `askbible-web`。禁止云端自动构建、`--remote` 回退和通过 Git 自动构建发布。服务端运行时密钥由 Cloudflare Worker Secrets 提供。
 
 ---
 

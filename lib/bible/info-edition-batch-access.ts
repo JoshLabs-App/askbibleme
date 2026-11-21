@@ -21,7 +21,7 @@ export function isInfoEditionBatchOnProductionDisk(cwd: string): boolean {
 
 export function infoEditionOnlineBatchBlockedReason(cwd: string): string | null {
   if (!isSelahOnlineEditorSurfaceAllowed()) {
-    return "当前部署未开放管理 API（Vercel Production 需 SELAH_ALLOW_ADMIN_IN_PRODUCTION=1）。";
+    return "当前部署未开放管理 API（生产环境需设置 SELAH_ALLOW_ADMIN_IN_PRODUCTION=1）。";
   }
   if (!isInfoEditionOnlineBatchEnabled()) {
     return "未启用线上批量：请在环境变量设置 INFO_EDITION_BATCH_ONLINE=1，跑完后改回 0 并重新部署。";

@@ -20,11 +20,11 @@ describe("resolvePublicAuthOrigin", () => {
 
   it("备用入口上的登录回跳留在备用入口", () => {
     const request = new Request("https://0.0.0.0:10000/auth/callback", {
-      headers: { "x-forwarded-host": "askbible.joshlabs.app" },
+      headers: { "x-forwarded-host": "bible.joshlabs.app" },
     });
 
-    expect(resolvePublicAuthOrigin(request)).toBe("https://askbible.joshlabs.app");
-    expect(isBackupEntryHost("askbible.joshlabs.app:443")).toBe(true);
+    expect(resolvePublicAuthOrigin(request)).toBe("https://bible.joshlabs.app");
+    expect(isBackupEntryHost("bible.joshlabs.app:443")).toBe(true);
     expect(isBackupEntryHost("askbible.me")).toBe(false);
   });
 

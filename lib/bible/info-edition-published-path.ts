@@ -80,12 +80,7 @@ export function isInfoEditionProductionDiskConfigured(): boolean {
   return Boolean(infoEditionExternalDataRoot());
 }
 
-/** Vercel 等无持久盘；勿把 DATA_ROOT 当可写目录 */
-export function isVercelDeployment(): boolean {
-  return process.env.VERCEL === "1" || Boolean(process.env.VERCEL);
-}
-
-/** askbible.me 等自托管（Render Web Service） */
+/** askbible.me 等旧自托管（Render Web Service） */
 export function isRenderDeployment(): boolean {
   return process.env.RENDER === "true" || Boolean(process.env.RENDER_SERVICE_ID);
 }
@@ -97,7 +92,7 @@ export function formatInfoEditionDiskWriteError(baseMessage: string): string {
   return `${baseMessage} ${hint}`;
 }
 
-/** 已开 INFO_EDITION_DISK_SAVE 但生产环境未挂 DATA_ROOT（Vercel 等无盘时常误配） */
+/** 已开 INFO_EDITION_DISK_SAVE 但生产环境未挂 DATA_ROOT（边缘/无盘环境误配） */
 export function isInfoEditionDiskSaveMisconfiguredInProduction(): boolean {
   return (
     isInfoEditionDiskSaveEnabled() &&

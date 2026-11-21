@@ -1,8 +1,8 @@
 /**
- * 网页备用入口（防封换线，docs/anti-block-endpoints.md、DECISIONS D-20）：`askbible.me` 打不开时用户手输的第二个地址。
- * 同一个 Vercel 项目，内容完全一样；两个入口的登录状态不互通（cookie 按域名存）。
+ * 网页备用入口（防封换线，docs/anti-block-endpoints.md、DECISIONS D-20）：`askbible.me` 打不开时用户可访问的第二个地址。
+ * 同一个 Cloudflare Worker（`askbible-web`），内容完全一样；两个入口的登录状态不互通（cookie 按域名存）。
  */
-export const BACKUP_ENTRY_HOSTNAMES: readonly string[] = ["askbible.joshlabs.app"];
+export const BACKUP_ENTRY_HOSTNAMES: readonly string[] = ["bible.joshlabs.app"];
 
 const PUBLIC_AUTH_HOSTNAMES = new Set([
   "askbible.me",

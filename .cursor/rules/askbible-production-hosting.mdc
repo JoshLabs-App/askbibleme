@@ -1,23 +1,13 @@
 ---
-description: AskBible.me 线上生产环境（Render + 持久磁盘）
+description: AskBible.me 线上生产环境（Cloudflare Workers + D1 + R2）
 alwaysApply: true
 ---
 
-# 生产环境（默认假设）
+# 生产环境（现行真源）
 
-**AskBible.me 线上生产**部署在 **Render Web Service + Persistent Disk**，不是 Vercel。
+**AskBible.me 线上生产**部署在 **Cloudflare Workers**（Web 主站 Worker：`askbible-web`，同步与会员 Worker：`askbible-sync` + D1，媒体与静态包：Cloudflare R2 `askbible-media`）。Render 与 Vercel 均已全面退役停用。
 
-涉及导读/引导版、信息版缓存、`info-edition-v1-published.json`、`DATA_ROOT`、`INFO_EDITION_DISK_SAVE`、后台磁盘写入权限时，默认按 Render + 磁盘方案排查与给建议：
-
-- 持久数据写在 `DATA_ROOT`（或 `INFO_EDITION_DATA_DIR`）挂载路径下，例如 `<DATA_ROOT>/info-edition-v1-published.json`
-- 本机 `npm run dev` 仍写仓库 `data/bible/`；与线上磁盘数据分离
-- 引导版/导读版线上缓存清理：删磁盘上对应 `chapter_key`（如 `GEN:34:role_356f0ffb`），或 Render 挂载盘中的 published 文件条目
-
-本地开发、Studio、后台 API 密钥仍以本机 Git + `data/admin/` 为准。
-
-## 部署与 push（Agent 默认）
-
-- **默认只本地部署/同步**，不要自动 `git commit` 或 `git push`，除非用户明确说 **上线 / 发布 / push / ship**。
-- 每次 push 到 `main` 会触发 **Render 完整 build**（`scripts/render-build.sh`）和 **GitHub CI**，消耗 Build Pipeline 分钟；与 push 体积无关，与 **部署次数** 有关。
-- 讲道集 `/jd` 源项目在 `03CHURCH`：先 `SKIP_UPDATE=1 npm run deploy:jd` 同步到 `public/jd/`，本机 `npm run dev` 验证；用户确认上线后再单独 commit/push 相关文件。
-- 推送时只 add 本次相关路径，不要用 `git add -A` 带入无关工作区改动。
+- **主站与备用域**：`https://askbible.me`（主域）、`https://bible.joshlabs.app`（备用域），配置见 `cloudflare.config.ts`。
+- **无服务端持久磁盘**：线上生产环境不挂载本地磁盘，`/admin`、`/studio`、`/api/admin`、`/api/studio`、`/api/ai` 在生产环境默认返回 `404`。产品文字、导读生成与管理配置均在本机 `npm run dev` 完成并随仓库构建发布。
+- **发布方式**：遵循 `AGENTS.md`，仅在本机构建并通过 `scripts/deploy-direct.sh`（`npx cf build` + `npx cf deploy --prebuilt`）直发 Cloudflare Workers，禁止云端自动构建。服务端运行时密钥通过 `wrangler secret` 管理。
+- **推送与合入纪律**：只提交本任务涉及的文件，保护其它会话的未提交改动；主干合入走 PR + CI 门禁。

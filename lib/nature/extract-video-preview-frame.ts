@@ -60,7 +60,7 @@ export async function extractVideoFirstFrameJpeg(
         resolve({
           ok: false,
           message:
-            "未找到 ffmpeg。请安装 ffmpeg（如 macOS: brew install ffmpeg）；Vercel 等无 ffmpeg 时预览帧将跳过。",
+            "未找到 ffmpeg。请安装 ffmpeg（如 macOS: brew install ffmpeg）；边缘环境无 ffmpeg 时预览帧将跳过。",
         });
         return;
       }

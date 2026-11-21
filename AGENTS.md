@@ -263,11 +263,11 @@ play scripture …/GEN-2.mp3 q=0 -> audible=[SCRIPTURE]
 | 层级 | 选型 |
 |------|------|
 | **Frontend（前台 + Studio）** | Next.js **App Router**（`vinext` 构建）+ **TypeScript** + **Tailwind CSS** |
-| **Backend（后端）** | 本地静态/打包数据（`public/data/` + `env.ASSETS`）+ Supabase |
-| **Deploy（部署）** | **Cloudflare Workers**（Worker：`askbible-web`，主域 `askbible.me`，测试域 `bible.joshlabs.app`） |
+| **Backend（后端）** | 本地静态/打包数据（`public/data/` + `env.ASSETS`）+ Cloudflare Worker `askbible-sync`（D1） |
+| **Deploy（部署）** | **Cloudflare Workers**（Worker：`askbible-web`，主域 `askbible.me`，备用域 `bible.joshlabs.app`） |
 | **Mobile App** | 原生 iOS：`apps/askbible-ios`；原生 Android：`apps/askbible-android` |
 
-说明：Studio 仅在本地 `npm run dev` 下使用；线上生产环境已迁移至 Cloudflare Workers，不再使用 Vercel 作为常规构建与发布目标。
+说明：Studio 仅在本地 `npm run dev` 下使用；线上生产环境运行在 Cloudflare Workers。
 
 ### 内容与发布（本机优先）
 
@@ -293,4 +293,4 @@ play scripture …/GEN-2.mp3 q=0 -> audible=[SCRIPTURE]
 - 本文件供人类与 AI Agent 阅读；Agent 改动代码前应核对上述边界。
 - 若用户明确要求“快一点、少解释”，优先遵守本节的执行节奏，但不得突破产品边界与高风险确认要求。
 
-**网页只在本机构建并直发 Cloudflare Workers（2026-11-17 用户确认）**：Agent 在本机完成生产构建（`scripts/deploy-direct.sh`，内部使用 `cf build` 与 `cf deploy --prebuilt`），直发 Cloudflare Worker `askbible-web`。禁止云端自动构建、`--remote` 回退和通过 Git 自动构建发布。服务端运行时密钥通过 Cloudflare Worker Secrets（`wrangler secret`）管理，不再依赖 Vercel 环境变量。
+**网页只在本机构建并直发 Cloudflare Workers（2026-11-17 用户确认）**：Agent 在本机完成生产构建（`scripts/deploy-direct.sh`，内部使用 `cf build` 与 `cf deploy --prebuilt`），直发 Cloudflare Worker `askbible-web`。禁止云端自动构建、`--remote` 回退和通过 Git 自动构建发布。服务端运行时密钥通过 Cloudflare Worker Secrets（`wrangler secret`）管理。

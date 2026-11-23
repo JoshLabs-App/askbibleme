@@ -22,15 +22,19 @@ function firstMatch(
 export function pickTranslationIdForLocale(index: BibleTranslationsIndex, locale: AppLocale): string | null {
   if (locale === "zh-TW") {
     return (
-      firstMatch(index, (id, lang) => id === "cuv-trad" || lang === "zh-hant") ??
-      firstMatch(index, (id, lang) => id === "cuv-simp" || lang === "zh-hans") ??
+      firstMatch(index, (id) => id === "cuv-trad") ??
+      firstMatch(index, (_id, lang) => lang === "zh-hant") ??
+      firstMatch(index, (id) => id === "cuv-simp") ??
+      firstMatch(index, (_id, lang) => lang === "zh-hans") ??
       index.defaultTranslationId
     );
   }
   if (locale === "zh-CN") {
     return (
-      firstMatch(index, (id, lang) => id === "cuv-simp" || lang === "zh-hans") ??
-      firstMatch(index, (id, lang) => id === "cuv-trad" || lang === "zh-hant") ??
+      firstMatch(index, (id) => id === "cuv-simp") ??
+      firstMatch(index, (_id, lang) => lang === "zh-hans") ??
+      firstMatch(index, (id) => id === "cuv-trad") ??
+      firstMatch(index, (_id, lang) => lang === "zh-hant") ??
       index.defaultTranslationId
     );
   }

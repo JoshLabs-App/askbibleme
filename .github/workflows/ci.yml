@@ -8,19 +8,29 @@ on:
 
 jobs:
   build:
+    name: 代码地图对齐 + 类型检查 + 测试
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 装 Node 22
+        uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
           cache: npm
-      - run: npm ci
-      - run: npm test
-      - name: Build the Cloudflare Worker locally
+
+      - name: 装依赖
+        run: npm ci
+
+      - name: 校验代码地图同步
+        run: node scripts/gen-code-map.mjs --check
+
+      - name: 类型检查
         run: |
-          npm run prebuild
+          node scripts/write-app-build-meta.mjs
           npx --no-install tsc --noEmit
-          npx --no-install cf build
-        env:
-          NODE_ENV: production
+
+      - name: 单元测试
+        run: npm test

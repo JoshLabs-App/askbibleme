@@ -11,229 +11,53 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { flushSync } from "react-dom";
-import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
-import { devotionalAvailable, loadDevotional, loadDevotionalDays, readDevotionalAuto, devotionalPlanIsToday, shouldHandoffDevotional, devotionalAudioUrl, isDevotionalAudio } from "@/lib/devotional/solid-joys";
 import { usePathname, useRouter } from "next/navigation";
-import type { MusicCompanionStore } from "@/lib/music-companion/types";
-import { isIosLikeUserAgent } from "@/lib/dom/ios";
+import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
+import { useCuvChapterAudioVoice } from "@/components/bible/CuvChapterAudioVoiceContext";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { useTodayPlanScriptureResumePersistence } from "@/hooks/useTodayPlanScriptureResumePersistence";
+import { isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
+import { devotionalAvailable, loadDevotionalDays } from "@/lib/devotional/solid-joys";
+import type { MusicAlbumRepeatMode } from "@/lib/music/album-playback";
+import { clearDevicePlaybackPersisted } from "@/lib/music/device-playback-storage";
+import { getShellDefaultAudioSrc } from "@/lib/music-companion/shell-default-audio-src";
 import {
-  defaultRepeatModeForAlbum,
-  inferTrackAlbumFromCompanionTrack,
-  pickRandomNextTrackIndexInAlbum,
-  type MusicAlbumRepeatMode,
-} from "@/lib/music/album-playback";
-import { prefetchMusicTrackBundle } from "@/lib/music/prefetch-music-track";
-import {
-  resolveShellMusicEndedAction,
-  pickRandomShellAudioTrackSrcInAlbum,
-} from "@/lib/music/shell-music-advance";
-import { getShellDefaultAudioSrc, pickRandomShellAudioTrackSrc } from "@/lib/music-companion/shell-default-audio-src";
+  clearShellPlaybackPersisted,
+  readScriptureAudioRepeatModePersisted,
+  shellPlaybackUrlsEqual,
+  writeScriptureAudioRepeatModePersisted,
+} from "@/lib/music-companion/shell-playback-storage";
 import {
   musicCompanionStoreHasPlayableTracks,
   shippedPublicMusicCompanionStore,
 } from "@/lib/music-companion/shipped-store";
-import {
-  clearShellPlaybackPersisted,
-  readScriptureAudioRepeatModePersisted,
-  readShellPlaybackPersisted,
-  shouldRestoreShellPlaybackSrc,
-  shellPlaybackUrlsEqual,
-  writeScriptureAudioRepeatModePersisted,
-  writeShellPlaybackPersisted,
-} from "@/lib/music-companion/shell-playback-storage";
-import { getDeviceTrackBlob } from "@/lib/music/device-library-db";
-import {
-  clearDevicePlaybackPersisted,
-  readDevicePlaybackPersisted,
-  writeDevicePlaybackPersisted,
-} from "@/lib/music/device-playback-storage";
-import { useCuvChapterAudioVoice } from "@/components/bible/CuvChapterAudioVoiceContext";
-import { useLocale } from "@/components/i18n/LocaleProvider";
-import {
-  resolveChapterAudioPlayableSrc,
-  translationSupportsChapterAudio,
-} from "@/lib/bible/read-chapter-audio";
-import { translationUsesWebChapterAudio } from "@/lib/bible/web-chapter-audio";
-import { voiceSupportsBook } from "@/lib/bible/cuv-chapter-audio-voices";
-import {
-  getNextScriptureChapter,
-  getNextScriptureChapterInBook,
-} from "@/lib/bible/next-scripture-chapter";
-import { tryParseCuvChapterAudioEffectiveSrc, isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
-import type { ParsedCuvChapterAudioSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
-import { scriptureBooks } from "@/lib/bible/scripture-books";
-import { indexInReadingPlanQueue } from "@/lib/read/reading-plan-chapter-queue";
-import {
-  readReadingPlanAudioSession,
-  writeReadingPlanAudioSession,
-} from "@/lib/read/reading-plan-audio-session";
-import { prepareReadingPlanAudioSessionForChapter } from "@/lib/read/prepare-reading-plan-audio-session";
-import { readPlanFlowActive, setPlanFlowActive } from "@/lib/read/plan-flow-session";
-import { isReadBibleHomePath } from "@/lib/read/read-bible-home-route";
-import { prepareTodayReadingAudioSessionFromStart } from "@/lib/read/today-reading-audio-start";
-import { flushTodayPlanScriptureResume } from "@/lib/read/flush-today-plan-scripture-resume";
-import { prefetchUpcomingPlanFlowChapterAudioWeb } from "@/lib/read/prefetch-plan-flow-chapter-audio-web";
-import { resolveTodayPlanLoopNextTarget } from "@/lib/read/resolve-today-plan-loop-next-target";
+import type { MusicCompanionStore } from "@/lib/music-companion/types";
 import {
   readScripturePlaybackRatePersisted,
   writeScripturePlaybackRatePersisted,
 } from "@/lib/read/scripture-playback-rate-web";
-import { addScriptureListenSecondsWeb } from "@/lib/read/scripture-listen-totals-web";
-import { noteListenTick } from "@/lib/achievements/achievement-store-web";
-import { MEDAL_XP } from "@/lib/achievements/medal-catalog";
-import { ASKBIBLE_PRODUCT_NAME } from "@/lib/askbible-product-name";
-import { resolveLocalized } from "@/lib/i18n/localized-text";
-import {
-  clearShellMediaSessionWeb,
-  setShellMediaSessionWebBridge,
-  syncShellMediaSessionWeb,
-  teardownShellMediaSessionWeb,
-} from "@/lib/music/shell-media-session-web";
-import { useTodayPlanScriptureResumePersistence } from "@/hooks/useTodayPlanScriptureResumePersistence";
 import { isWebAppHomePath } from "@/lib/web-app-home-path";
+import {
+  audioUrlEquals,
+  type DeviceLibraryPlaybackInfo,
+  type DevicePlaybackCell,
+  type MusicShellPlaybackValue,
+  type MusicShellSleepTimerMinutes,
+  type ScriptureAudioRepeatMode,
+  type ScriptureListenTarget,
+  type ShellPlaybackRestorePlan,
+} from "./music-shell-playback-types";
+import { useMusicShellAudioEvents } from "./use-music-shell-audio-events";
+import { useMusicShellMediaSession } from "./use-music-shell-media-session";
+import { useMusicShellPersistence } from "./use-music-shell-persistence";
+import { useMusicShellScriptureAndEnded } from "./use-music-shell-scripture-and-ended";
+import { useMusicShellSleepAndPlayHooks } from "./use-music-shell-sleep-and-hooks";
 
-function audioUrlEquals(el: HTMLAudioElement, candidate: string): boolean {
-  const c = candidate.trim();
-  if (!c) return false;
-  if (typeof window === "undefined") return (el.currentSrc || el.src) === c;
-  try {
-    const next = new URL(c, window.location.href).href;
-    const curSrc = (el.currentSrc || "").trim();
-    if (curSrc) {
-      const cur = new URL(curSrc, window.location.href).href;
-      if (cur === next) return true;
-    }
-    const prop = (el.src || "").trim();
-    if (prop) {
-      const curp = new URL(prop, window.location.href).href;
-      if (curp === next) return true;
-    }
-    return false;
-  } catch {
-    return (el.currentSrc || el.src) === c;
-  }
-}
-
-function isMusicShellPath(p: string): boolean {
-  return p === "/music" || p.startsWith("/music/");
-}
-
-const READ_CHAPTER_PATH = /^\/read\/([A-Za-z0-9]{2,8})\/(\d+)$/;
-
-function parseReadChapterPath(p: string): { bookId: string; chapter: number } | null {
-  const m = p.match(READ_CHAPTER_PATH);
-  if (!m) return null;
-  const bookId = m[1].toUpperCase();
-  const chapter = Number(m[2]);
-  if (!Number.isInteger(chapter) || chapter < 1) return null;
-  const meta = scriptureBooks.find((b) => b.bookId === bookId);
-  if (!meta || chapter > meta.chapters) return null;
-  return { bookId, chapter };
-}
-
-let defaultTranslationCatalogPromise: Promise<string | null> | null = null;
-
-async function fetchDefaultTranslationIdCached(): Promise<string | null> {
-  if (!defaultTranslationCatalogPromise) {
-    defaultTranslationCatalogPromise = (async () => {
-      try {
-        const res = await fetch("/api/home/bible-translations-catalog", { cache: "default" });
-        if (!res.ok) return null;
-        const j = (await res.json()) as { defaultTranslationId?: unknown };
-        const raw = j.defaultTranslationId;
-        return typeof raw === "string" && raw.trim() ? raw.trim() : null;
-      } catch {
-        return null;
-      }
-    })();
-  }
-  return defaultTranslationCatalogPromise;
-}
-
-/** 和合本整章经朗读结束后的行为（仅对 CUV 章节 MP3 生效） */
-export type ScriptureAudioRepeatMode = "off" | "chapter" | "book";
-
-/** 全局定时停止：0 为关闭；墙钟到时暂停壳层音乐（不关屏、不锁机），并调用已注册的额外暂停（历史：自然混音等） */
-export type MusicShellSleepTimerMinutes = 0 | 15 | 30 | 60 | 120;
-
-export type DeviceLibraryPlaybackInfo = {
-  trackId: string;
-  /** 导入曲库可跨页恢复；仅本次打开的本地文件不写入恢复存储 */
-  persistResume: boolean;
-};
-
-export type MusicShellPlaybackValue = {
-  /** 壳层曲库是否有可播音乐（与是否正在播经文无关） */
-  canPlayMusic: boolean;
-  canPlay: boolean;
-  playing: boolean;
-  loading: boolean;
-  /** 读经章快捷栏：整章朗读 */
-  togglePlayScripture: () => void;
-  /** 章页 / 计划坞：按书卷章开播 */
-  playScriptureChapter: (target: {
-    bookId: string;
-    chapter: number;
-    bookName?: string;
-    translationId?: string;
-    startAtSec?: number;
-  }) => Promise<void>;
-  /** 下一章（经朗读） */
-  skipScriptureNext: () => Promise<void>;
-  /** 暂停经朗读（保留会话，便于续播） */
-  pauseScripturePlayback: () => void;
-  /** 经朗读倍速 */
-  scripturePlaybackRate: number;
-  setScripturePlaybackRate: (rate: number) => void;
-  /** 底栏播放钮 / 首页：仅背景音乐 */
-  togglePlayMusic: () => void;
-  pausePlayback: () => void;
-  /** 非空时表示正在播放本机导入/打开的音频（不入站方服务器） */
-  deviceLibraryPlayback: DeviceLibraryPlaybackInfo | null;
-  /** 用本地 Blob 接管壳层 `<audio>`；会撤销上一段本机播放的 object URL */
-  attachDeviceLibraryFromBlob: (trackId: string, blob: Blob, opts: { persistResume: boolean }) => void;
-  /** 停止本机播放并释放 object URL；不影响曲库默认源 */
-  clearDeviceLibraryPlayback: () => void;
-  /** 桌面 Chromium：可选文件夹批量导入 */
-  canPickLocalAudioFolder: boolean;
-  /** 当前实际播放地址（全屏页 override 或默认池内随机曲） */
-  effectiveSrc: string;
-  /** 壳层默认播放 URL（多曲时在池内随机；单曲为唯一一条） */
-  shellDefaultSrc: string;
-  /** 非空时覆盖默认播放源（全屏选曲或持久化恢复） */
-  shellOverrideSrc: string | null;
-  /** 全屏音乐页切曲时设置；与当前默认场景曲相同时传 null 清除 override */
-  setPlaybackSrc: (src: string | null, opts?: { autoPlay?: boolean }) => void;
-  /** 再次请求 `/api/music/companion` 并更新壳层曲库 */
-  refetchCompanionStore: () => Promise<{ ok: true } | { ok: false; status?: number; message?: string }>;
-  currentSec: number;
-  durationSec: number;
-  seekRatio: (ratio: number) => void;
-  /** 壳层曲库（曲目元数据等） */
-  musicStore: MusicCompanionStore | null;
-  /** 壳层唯一 `<audio>`，供音乐驱动视觉等扩展 */
-  getAudioElement: () => HTMLAudioElement | null;
-  sleepTimerMinutes: MusicShellSleepTimerMinutes;
-  sleepTimerDeadlineAt: number | null;
-  setSleepTimerMinutes: (minutes: MusicShellSleepTimerMinutes) => void;
-  /** 定时到时在 `pausePlayback` 之后调用；用于自然页混音等其它 `<audio>` */
-  registerSleepPauseHandler: (handler: () => void) => () => void;
-  /** 壳层 `play()` 之前调用（电视：先短暂暂停背景视频） */
-  registerBeforeShellPlayHandler: (handler: () => void | Promise<void>) => () => void;
-  /** 壳层 `play()` 尝试之后调用（电视：恢复静音背景视频） */
-  registerAfterShellPlayHandler: (handler: () => void | Promise<void>) => () => void;
-  /** 壳层 `<audio>` 静音（首页顶栏铃铛）；不改变播放/暂停状态 */
-  shellAudioMuted: boolean;
-  setShellAudioMuted: (muted: boolean) => void;
-  /** 整章经朗读：重复本章 / 重复本卷（离开该音源时自动复位为 off） */
-  scriptureAudioRepeatMode: ScriptureAudioRepeatMode;
-  setScriptureAudioRepeatMode: (mode: ScriptureAudioRepeatMode) => void;
-  /** 音乐页覆盖壳层「曲末 / 下一首」循环策略；null 表示按专辑默认 */
-  setMusicAlbumRepeatModeOverride: (mode: MusicAlbumRepeatMode | null) => void;
-  /** 读经首页：今日读经是否可壳层播放 */
-  readHomeScripturePlaybackReady: boolean;
-  setReadHomeScripturePlaybackReady: (ready: boolean) => void;
+export type {
+  DeviceLibraryPlaybackInfo,
+  MusicShellPlaybackValue,
+  MusicShellSleepTimerMinutes,
+  ScriptureAudioRepeatMode,
 };
 
 const MusicShellPlaybackContext = createContext<MusicShellPlaybackValue | null>(null);
@@ -253,52 +77,37 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   const { isAdmin } = useAskbibleUser();
   const devotionalAccessRef = useRef({ locale, isAdmin });
   devotionalAccessRef.current = { locale, isAdmin };
-  useEffect(() => { if (devotionalAvailable(locale, isAdmin)) void loadDevotionalDays(locale).catch(() => {}); }, [locale, isAdmin]);
-  const { voiceId: chapterAudioVoiceId, effectiveVoiceId } = useCuvChapterAudioVoice();
-  const chapterAudioVoiceRef = useRef(chapterAudioVoiceId);
   useEffect(() => {
-    chapterAudioVoiceRef.current = chapterAudioVoiceId;
-  }, [chapterAudioVoiceId]);
+    if (devotionalAvailable(locale, isAdmin)) void loadDevotionalDays(locale).catch(() => {});
+  }, [locale, isAdmin]);
+
+  const { effectiveVoiceId } = useCuvChapterAudioVoice();
   const [store, setStore] = useState<MusicCompanionStore | null>(() => shippedPublicMusicCompanionStore);
   /** 首屏已有随包曲库；网络刷新不阻塞播放。 */
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   /**
    * 自然首页 `/`、`/nature`：勿在曲库就绪后立刻把默认曲目绑进隐藏 `<audio>`（会 `load` 缓冲、吃内存），
    * 易与主屏 Web 上全屏视频争资源导致整页被系统回收。离开首页、恢复持久化播放、或用户点壳层播放后再绑。
    */
   const [shellAudioHomePrimed, setShellAudioHomePrimed] = useState(false);
   const [playbackOverride, setPlaybackOverride] = useState<string | null>(null);
-  type DevicePlaybackCell = { trackId: string; objectUrl: string; persistResume: boolean };
   const [devicePlayback, setDevicePlaybackState] = useState<DevicePlaybackCell | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   /** 当前在播的经文章（听读计时用）：src 对不上就说明换成别的音频了，不再计时 */
-  const scriptureListenTargetRef = useRef<{ bookId: string; chapter: number; src: string } | null>(null);
+  const scriptureListenTargetRef = useRef<ScriptureListenTarget | null>(null);
   const [playing, setPlaying] = useState(false);
   const [currentSec, setCurrentSec] = useState(0);
   const [durationSec, setDurationSec] = useState(0);
-  const [sleepTimerMinutes, setSleepTimerMinutesState] = useState<MusicShellSleepTimerMinutes>(0); // 默认关闭
-  const [sleepTimerDeadlineAt, setSleepTimerDeadlineAt] = useState<number | null>(null);
   const [shellAudioMuted, setShellAudioMutedState] = useState(false);
   const [scriptureAudioRepeatMode, setScriptureAudioRepeatModeState] = useState<ScriptureAudioRepeatMode>("off");
   const [scripturePlaybackRate, setScripturePlaybackRateState] = useState(() =>
     typeof window === "undefined" ? 1 : readScripturePlaybackRatePersisted(),
   );
-  const sleepTimerDeadlineRef = useRef<number | null>(null);
-  const shellPlaybackHydratedRef = useRef(false);
   /** 避免 `currentSrc` 尚未就绪时反复 `load()` 触发 setState 风暴 */
   const lastBoundEffectiveSrcRef = useRef("");
-  const lastUnavailableKjvSrcRef = useRef("");
-  const shellPlaybackRestoreRef = useRef<{
-    targetSrc: string;
-    timeSec: number;
-    tryPlay: boolean;
-  } | null>(null);
-  /** 减轻「回前台就拉曲库」：全平台最短间隔（毫秒） */
-  const companionFetchMinIntervalMs = 45_000;
-  const companionLastFetchAtRef = useRef(0);
+  const shellPlaybackRestoreRef = useRef<ShellPlaybackRestorePlan | null>(null);
   /** 恢复完成前不写 localStorage，避免用 0 秒覆盖上次进度 */
   const shellPlaybackPersistEnabledRef = useRef(false);
-  const shellPlaybackLastPersistAtRef = useRef(0);
   /** 曲目自然结束后切到下一首并自动播放（避免 `ended` 时 `paused` 导致仅绑 src 不 play） */
   const playAfterNextBindRef = useRef(false);
   const [playRequestEpoch, setPlayRequestEpoch] = useState(0);
@@ -307,9 +116,6 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   const [readHomeScripturePlaybackReady, setReadHomeScripturePlaybackReadyState] = useState(false);
   const scriptureAudioRepeatRef = useRef<ScriptureAudioRepeatMode>("off");
   scriptureAudioRepeatRef.current = scriptureAudioRepeatMode;
-  const sleepPauseHandlersRef = useRef(new Set<() => void>());
-  const beforeShellPlayHandlersRef = useRef(new Set<() => void | Promise<void>>());
-  const afterShellPlayHandlersRef = useRef(new Set<() => void | Promise<void>>());
   const playbackOverrideRef = useRef<string | null>(null);
   playbackOverrideRef.current = playbackOverride;
   const devicePlaybackRef = useRef<DevicePlaybackCell | null>(null);
@@ -367,8 +173,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
         return;
       }
       const next = src.trim();
-      const def = defaultSrc;
-      if (def && shellPlaybackUrlsEqual(next, def)) setPlaybackOverride(null);
+      if (defaultSrc && shellPlaybackUrlsEqual(next, defaultSrc)) setPlaybackOverride(null);
       else setPlaybackOverride(next);
     },
     [defaultSrc],
@@ -384,110 +189,21 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     return { trackId: devicePlayback.trackId, persistResume: devicePlayback.persistResume };
   }, [devicePlayback]);
 
-  const refetchCompanionStore = useCallback(async () => {
-    try {
-      const res = await fetch("/api/music/companion", { cache: "default" });
-      if (!res.ok) return { ok: false as const, status: res.status };
-      const next = (await res.json()) as MusicCompanionStore | { error?: string };
-      if ("error" in next && next.error) return { ok: false as const, message: String(next.error) };
-      companionLastFetchAtRef.current = Date.now();
-      setStore(next as MusicCompanionStore);
-      return { ok: true as const };
-    } catch (e) {
-      return { ok: false as const, message: e instanceof Error ? e.message : "fetch failed" };
-    }
-  }, []);
-
   const pausePlayback = useCallback(() => {
     const a = audioRef.current;
     if (a && !a.paused) a.pause();
     setPlaying(false);
   }, []);
 
-  const setSleepTimerMinutes = useCallback((minutes: MusicShellSleepTimerMinutes) => {
-    setSleepTimerMinutesState(minutes);
-    if (minutes === 0) {
-      sleepTimerDeadlineRef.current = null;
-      setSleepTimerDeadlineAt(null);
-      return;
-    }
-    const until = Date.now() + minutes * 60 * 1000;
-    sleepTimerDeadlineRef.current = until;
-    setSleepTimerDeadlineAt(until);
-  }, []);
-
-  const registerSleepPauseHandler = useCallback((handler: () => void) => {
-    sleepPauseHandlersRef.current.add(handler);
-    return () => {
-      sleepPauseHandlersRef.current.delete(handler);
-    };
-  }, []);
-
-  const registerBeforeShellPlayHandler = useCallback((handler: () => void | Promise<void>) => {
-    beforeShellPlayHandlersRef.current.add(handler);
-    return () => {
-      beforeShellPlayHandlersRef.current.delete(handler);
-    };
-  }, []);
-
-  const registerAfterShellPlayHandler = useCallback((handler: () => void | Promise<void>) => {
-    afterShellPlayHandlersRef.current.add(handler);
-    return () => {
-      afterShellPlayHandlersRef.current.delete(handler);
-    };
-  }, []);
-
-  const runBeforeShellPlayHandlers = useCallback(async () => {
-    for (const fn of beforeShellPlayHandlersRef.current) {
-      try {
-        await fn();
-      } catch {
-        /* ignore */
-      }
-    }
-  }, []);
-
-  const runAfterShellPlayHandlers = useCallback(async () => {
-    for (const fn of afterShellPlayHandlersRef.current) {
-      try {
-        await fn();
-      } catch {
-        /* ignore */
-      }
-    }
-  }, []);
-
-  const attemptShellPlay = useCallback(
-    (a: HTMLAudioElement) => {
-      const playNow = () => {
-        let playPromise: Promise<void> | undefined;
-        try {
-          playPromise = a.play();
-        } catch (err) {
-          setPlaying(false);
-          void runAfterShellPlayHandlers();
-          return;
-        }
-        void Promise.resolve(playPromise)
-          .then(() => {
-            setPlaying(true);
-          })
-          .catch((err) => {
-            setPlaying(false);
-          })
-          .finally(() => {
-            void runAfterShellPlayHandlers();
-          });
-      };
-
-      if (beforeShellPlayHandlersRef.current.size > 0) {
-        void runBeforeShellPlayHandlers().then(playNow, playNow);
-        return;
-      }
-      playNow();
-    },
-    [runBeforeShellPlayHandlers, runAfterShellPlayHandlers, setPlaying],
-  );
+  const {
+    sleepTimerMinutes,
+    sleepTimerDeadlineAt,
+    setSleepTimerMinutes,
+    registerSleepPauseHandler,
+    registerBeforeShellPlayHandler,
+    registerAfterShellPlayHandler,
+    attemptShellPlay,
+  } = useMusicShellSleepAndPlayHooks({ pausePlayback, setPlaying });
 
   const setShellAudioMuted = useCallback((muted: boolean) => {
     setShellAudioMutedState(muted);
@@ -520,14 +236,12 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   }, []);
 
   useEffect(() => {
-    const persisted = readScriptureAudioRepeatModePersisted();
-    setScriptureAudioRepeatModeState(persisted);
+    setScriptureAudioRepeatModeState(readScriptureAudioRepeatModePersisted());
   }, []);
 
   useEffect(() => {
     const a = audioRef.current;
-    if (!a) return;
-    a.playbackRate = scripturePlaybackRate;
+    if (a) a.playbackRate = scripturePlaybackRate;
   }, [scripturePlaybackRate]);
 
   useEffect(() => {
@@ -540,176 +254,42 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
 
   useLayoutEffect(() => {
     const a = audioRef.current;
-    if (!a) return;
-    a.muted = shellAudioMuted;
+    if (a) a.muted = shellAudioMuted;
   }, [shellAudioMuted]);
 
   useEffect(() => {
-    const id = window.setInterval(() => {
-      const d = sleepTimerDeadlineRef.current;
-      if (d == null || Date.now() < d) return;
-      sleepTimerDeadlineRef.current = null;
-      setSleepTimerMinutesState(0);
-      setSleepTimerDeadlineAt(null);
-      pausePlayback();
-      sleepPauseHandlersRef.current.forEach((fn) => {
-        try {
-          fn();
-        } catch {
-          /* ignore */
-        }
-      });
-    }, 1000);
-    return () => window.clearInterval(id);
-  }, [pausePlayback]);
-
-  useEffect(() => {
-    const p = pathname;
-    if (p !== "/" && !isWebAppHomePath(p) && p !== "/nature") {
+    if (pathname !== "/" && !isWebAppHomePath(pathname) && pathname !== "/nature") {
       setShellAudioHomePrimed(true);
     }
   }, [pathname]);
 
-  useEffect(() => {
-    let cancelled = false;
-    let lastHiddenAt = 0;
-
-    const load = async (reason: "initial" | "visible") => {
-      if (reason === "visible") {
-        const t = companionLastFetchAtRef.current;
-        if (t > 0 && Date.now() - t < companionFetchMinIntervalMs) return;
-        if (isIosLikeUserAgent() && lastHiddenAt > 0 && Date.now() - lastHiddenAt < 30_000) {
-          return;
-        }
-      }
-      try {
-        const res = await fetch("/api/music/companion", { cache: "default" });
-        if (!res.ok || cancelled) return;
-        const next = (await res.json()) as MusicCompanionStore | { error?: string };
-        if ("error" in next && next.error) return;
-        if (!cancelled) {
-          companionLastFetchAtRef.current = Date.now();
-          setStore(next as MusicCompanionStore);
-        }
-      } catch {
-        /* 保留 bootstrap 曲库 */
-      }
-    };
-
-    void load("initial");
-
-    const onVis = () => {
-      if (document.visibilityState === "hidden") {
-        lastHiddenAt = Date.now();
-        return;
-      }
-      if (document.visibilityState === "visible") {
-        void load("visible");
-      }
-    };
-    document.addEventListener("visibilitychange", onVis);
-    return () => {
-      cancelled = true;
-      document.removeEventListener("visibilitychange", onVis);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!playbackOverride) return;
-    if (!defaultSrc) return;
-    if (shellPlaybackUrlsEqual(playbackOverride, defaultSrc)) {
-      setPlaybackOverride(null);
-    }
-  }, [defaultSrc, playbackOverride]);
-
-  /** Restore once on every route, including /music. Navigation must never reset a listening session. */
-  useEffect(() => {
-    if (loading || shellPlaybackHydratedRef.current) return;
-    if (!store && typeof navigator !== "undefined" && navigator.onLine) return;
-
-    let cancelled = false;
-
-    void (async () => {
-      try {
-        const dp = readDevicePlaybackPersisted();
-        if (dp && dp.trackId && !dp.trackId.startsWith("session:")) {
-          const blob = await getDeviceTrackBlob(dp.trackId);
-          if (cancelled) return;
-          if (blob) {
-            const objectUrl = URL.createObjectURL(blob);
-            setDevicePlaybackState((prev) => {
-              if (prev?.objectUrl) URL.revokeObjectURL(prev.objectUrl);
-              return { trackId: dp.trackId, objectUrl, persistResume: true };
-            });
-            setShellAudioHomePrimed(true);
-            shellPlaybackRestoreRef.current = {
-              targetSrc: objectUrl,
-              timeSec: dp.timeSec,
-              tryPlay: dp.wasPlaying,
-            };
-            shellPlaybackPersistEnabledRef.current = false;
-            shellPlaybackHydratedRef.current = true;
-            return;
-          }
-          clearDevicePlaybackPersisted();
-        }
-      } catch {
-        if (!cancelled) clearDevicePlaybackPersisted();
-      }
-
-      if (cancelled) return;
-
-      const persisted = readShellPlaybackPersisted();
-      if (!persisted) {
-        shellPlaybackPersistEnabledRef.current = true;
-        shellPlaybackHydratedRef.current = true;
-        return;
-      }
-      if (!shouldRestoreShellPlaybackSrc(store, persisted.src)) {
-        clearShellPlaybackPersisted();
-        shellPlaybackPersistEnabledRef.current = true;
-        shellPlaybackHydratedRef.current = true;
-        return;
-      }
-
-      setShellAudioHomePrimed(true);
-      shellPlaybackPersistEnabledRef.current = false;
-      shellPlaybackRestoreRef.current = {
-        targetSrc: persisted.src.trim(),
-        timeSec: persisted.timeSec,
-        tryPlay: persisted.wasPlaying,
-      };
-      setPlaybackOverride(persisted.src.trim());
-      shellPlaybackHydratedRef.current = true;
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [store, loading, pathname]);
-
-  /** 曲库加载失败等：无 store 时仍允许写入进度，避免持久化被永久关闭 */
-  useEffect(() => {
-    if (loading || store) return;
-    shellPlaybackPersistEnabledRef.current = true;
-  }, [loading, store]);
-
-  /** 无可用音源时放弃恢复，避免持久化永远锁定 */
-  useEffect(() => {
-    if (!shellPlaybackRestoreRef.current || loading) return;
-    if (!effectiveSrc.trim()) {
-      shellPlaybackRestoreRef.current = null;
-      shellPlaybackPersistEnabledRef.current = true;
-    }
-  }, [effectiveSrc, loading]);
+  const { refetchCompanionStore } = useMusicShellPersistence({
+    audioRef,
+    store,
+    setStore,
+    storeRef,
+    loading,
+    pathname,
+    defaultSrc,
+    playbackOverride,
+    setPlaybackOverride,
+    devicePlaybackRef,
+    setDevicePlaybackState,
+    setShellAudioHomePrimed,
+    effectiveSrc,
+    setCurrentSec,
+    setDurationSec,
+    attemptShellPlay,
+    shellPlaybackRestoreRef,
+    shellPlaybackPersistEnabledRef,
+  });
 
   useLayoutEffect(() => {
     const a = audioRef.current;
     if (!a) return;
     a.preload = shellPlaybackRestoreRef.current ? "metadata" : "none";
     const isHomeNature = pathname === "/" || isWebAppHomePath(pathname) || pathname === "/nature";
-    const bindSrc =
-      !effectiveSrc.trim() || !isHomeNature || shellAudioHomePrimed ? effectiveSrc.trim() : "";
+    const bindSrc = !effectiveSrc.trim() || !isHomeNature || shellAudioHomePrimed ? effectiveSrc.trim() : "";
 
     if (!bindSrc) {
       lastBoundEffectiveSrcRef.current = "";
@@ -745,378 +325,53 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       playAfterNextBindRef.current = false;
       void attemptShellPlay(a);
     }
-    /** 未在播时不要 `setPlaying(false)`：会制造无意义重渲染，曾与首页对齐 `effectiveSrc` 的 effect 形成更新风暴。 */
   }, [effectiveSrc, pathname, shellAudioHomePrimed, shellAudioMuted, attemptShellPlay, playRequestEpoch]);
 
-  /** 在对应 src 的 metadata 就绪后 seek，并可选自动续播 */
-  useEffect(() => {
-    const a = audioRef.current;
-    const plan = shellPlaybackRestoreRef.current;
-    if (loading || !a || !effectiveSrc.trim() || !plan) return;
-    if (!shellPlaybackUrlsEqual(plan.targetSrc, effectiveSrc)) return;
+  useMusicShellAudioEvents({
+    audioRef,
+    scriptureListenTargetRef,
+    setCurrentSec,
+    setDurationSec,
+    setPlaying,
+    t,
+    playing,
+    store,
+    effectiveSrc,
+    musicAlbumRepeatModeOverrideRef,
+  });
 
-    let cancelled = false;
-    const applySeek = () => {
-      if (cancelled || !shellPlaybackRestoreRef.current) return;
-      if (!audioUrlEquals(a, effectiveSrc)) return;
-
-      const dur = a.duration;
-      let t = shellPlaybackRestoreRef.current.timeSec;
-      if (Number.isFinite(dur) && dur > 0) {
-        t = Math.min(Math.max(0, t), Math.max(0, dur - 0.25));
-      } else {
-        t = Math.max(0, t);
-      }
-      a.currentTime = t;
-      setCurrentSec(t);
-      setDurationSec(Number.isFinite(dur) ? dur : 0);
-      const tryPlay = shellPlaybackRestoreRef.current.tryPlay;
-      shellPlaybackRestoreRef.current = null;
-      shellPlaybackPersistEnabledRef.current = true;
-      if (tryPlay) {
-        void attemptShellPlay(a);
-      }
-    };
-
-    if (audioUrlEquals(a, effectiveSrc) && a.readyState >= HTMLMediaElement.HAVE_METADATA) {
-      applySeek();
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    const onMeta = () => {
-      if (cancelled || !audioUrlEquals(a, effectiveSrc)) return;
-      applySeek();
-    };
-    a.addEventListener("loadedmetadata", onMeta);
-    return () => {
-      cancelled = true;
-      a.removeEventListener("loadedmetadata", onMeta);
-    };
-  }, [effectiveSrc, loading, attemptShellPlay]);
-
-  const persistShellPlayback = useCallback(() => {
-    if (!shellPlaybackPersistEnabledRef.current || loading) return;
-    const a = audioRef.current;
-    if (!a) return;
-    const dev = devicePlaybackRef.current;
-    if (dev?.persistResume) {
-      writeDevicePlaybackPersisted({
-        v: 1,
-        trackId: dev.trackId,
-        timeSec: a.currentTime,
-        wasPlaying: !a.paused,
-      });
-      shellPlaybackLastPersistAtRef.current = Date.now();
-      return;
-    }
-    const src = effectiveSrc.trim();
-    if (!src || src.startsWith("blob:") || !storeRef.current?.audioTracks.some((track) => shellPlaybackUrlsEqual(track.src ?? "", src))) return;
-    if (!audioUrlEquals(a, src)) return;
-    writeShellPlaybackPersisted({
-      v: 1,
-      src,
-      timeSec: a.currentTime,
-      wasPlaying: !a.paused,
-    });
-    shellPlaybackLastPersistAtRef.current = Date.now();
-  }, [effectiveSrc, loading]);
-
-  useEffect(() => {
-    const a = audioRef.current;
-    if (!a) return;
-    const THROTTLE_MS = 2500;
-    const maybePersist = () => {
-      if (!shellPlaybackPersistEnabledRef.current) return;
-      if (Date.now() - shellPlaybackLastPersistAtRef.current < THROTTLE_MS) return;
-      persistShellPlayback();
-    };
-    const flushPersist = () => {
-      if (!shellPlaybackPersistEnabledRef.current) return;
-      persistShellPlayback();
-    };
-    a.addEventListener("timeupdate", maybePersist);
-    a.addEventListener("pause", flushPersist);
-    a.addEventListener("ended", flushPersist);
-    const onVis = () => {
-      if (document.visibilityState === "hidden") flushPersist();
-    };
-    window.addEventListener("pagehide", flushPersist);
-    document.addEventListener("visibilitychange", onVis);
-    return () => {
-      a.removeEventListener("timeupdate", maybePersist);
-      a.removeEventListener("pause", flushPersist);
-      a.removeEventListener("ended", flushPersist);
-      window.removeEventListener("pagehide", flushPersist);
-      document.removeEventListener("visibilitychange", onVis);
-    };
-  }, [persistShellPlayback]);
-
-  /**
-   * 听读计时：每满 MEDAL_XP.listenTickSeconds（15 秒）记一片，同时喂
-   * 「累计听读时长」和成就 XP。三重约束和原生一致：页面在前台、确实在播、
-   * 且同一章的片数上限由 AchievementStore 自己卡（防挂机刷分）。
-   * 用媒体时间的增量而不是墙钟：暂停 / 拖动 / 后台节流都不会虚增。
-   */
-  useEffect(() => {
-    const a = audioRef.current;
-    if (!a) return;
-    const TICK_SEC = MEDAL_XP.listenTickSeconds;
-    let lastTime = 0;
-    let carry = 0;
-    const onTime = () => {
-      const target = scriptureListenTargetRef.current;
-      const el = audioRef.current;
-      if (!el || !target || el.paused) {
-        lastTime = el?.currentTime ?? 0;
-        return;
-      }
-      if (!audioUrlEquals(el, target.src)) {
-        scriptureListenTargetRef.current = null;
-        return;
-      }
-      if (document.visibilityState !== "visible") {
-        lastTime = el.currentTime;
-        return;
-      }
-      const delta = el.currentTime - lastTime;
-      lastTime = el.currentTime;
-      // 拖动进度条会产生大跳，只认正常推进的那一段
-      if (!(delta > 0 && delta < 2)) return;
-      carry += delta;
-      while (carry >= TICK_SEC) {
-        carry -= TICK_SEC;
-        addScriptureListenSecondsWeb(TICK_SEC);
-        noteListenTick(target.bookId, target.chapter);
-      }
-    };
-    const onSeekOrPlay = () => {
-      lastTime = audioRef.current?.currentTime ?? 0;
-    };
-    a.addEventListener("timeupdate", onTime);
-    a.addEventListener("play", onSeekOrPlay);
-    a.addEventListener("seeked", onSeekOrPlay);
-    return () => {
-      a.removeEventListener("timeupdate", onTime);
-      a.removeEventListener("play", onSeekOrPlay);
-      a.removeEventListener("seeked", onSeekOrPlay);
-    };
-  }, []);
-
-  useEffect(() => {
-    const a = audioRef.current;
-    if (!a) return;
-    let rafId = 0;
-    const onTime = () => {
-      if (rafId !== 0) return;
-      rafId = requestAnimationFrame(() => {
-        rafId = 0;
-        const el = audioRef.current;
-        if (el) setCurrentSec(el.currentTime);
-      });
-    };
-    const onMeta = () => setDurationSec(Number.isFinite(a.duration) ? a.duration : 0);
-    const onEnded = () => setPlaying(false);
-    const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
-    const onError = () => {
-      setPlaying(false);
-      const src = (a.currentSrc || a.src || "").trim();
-      if (
-        src.toLowerCase().includes("audiotreasure.com/content/kjv_at/") &&
-        lastUnavailableKjvSrcRef.current !== src
-      ) {
-        lastUnavailableKjvSrcRef.current = src;
-        window.alert(t("pages.read.chapterAudioUnavailable"));
-      }
-    };
-    a.addEventListener("timeupdate", onTime);
-    a.addEventListener("loadedmetadata", onMeta);
-    a.addEventListener("ended", onEnded);
-    a.addEventListener("play", onPlay);
-    a.addEventListener("pause", onPause);
-    a.addEventListener("error", onError);
-    return () => {
-      if (rafId !== 0) cancelAnimationFrame(rafId);
-      a.removeEventListener("timeupdate", onTime);
-      a.removeEventListener("loadedmetadata", onMeta);
-      a.removeEventListener("ended", onEnded);
-      a.removeEventListener("play", onPlay);
-      a.removeEventListener("pause", onPause);
-      a.removeEventListener("error", onError);
-    };
-  }, [t]);
-
-  /** 自动下一首 / 单轨循环（与曲库 `audioTracks` 顺序一致，末首后回到第一首） */
-  useEffect(() => {
-    const a = audioRef.current;
-    if (!a || loading) return;
-
-    const advanceScriptureChapter = async (
-      parsed: ParsedCuvChapterAudioSrc,
-      target: { bookId: string; chapter: number } | null,
-      opts?: { planFlow?: boolean },
-    ) => {
-      if (!target) {
-        setPlaying(false);
-        return;
-      }
-      if (
-        !parsed.webAudio &&
-        parsed.voiceId === "teochew-nt" &&
-        !voiceSupportsBook("teochew-nt", target.bookId)
-      ) {
-        setPlaying(false);
-        return;
-      }
-      const meta = scriptureBooks.find((b) => b.bookId === target.bookId);
-      if (!meta) {
-        setPlaying(false);
-        return;
-      }
-      const tid = await fetchDefaultTranslationIdCached();
-      if (!tid || !translationSupportsChapterAudio(tid)) {
-        setPlaying(false);
-        return;
-      }
-      const audioTranslationId =
-        parsed.audioTranslationId ??
-        (parsed.webAudio && !translationUsesWebChapterAudio(tid) ? "web-en" : tid);
-      const resolved = await resolveChapterAudioPlayableSrc({
-        translationId: audioTranslationId,
-        bookName: meta.bookName,
-        bookId: target.bookId,
-        chapter: target.chapter,
-        voiceId: parsed.voiceId,
-      });
-      if (!resolved.ok) {
-        setPlaying(false);
-        return;
-      }
-      const planQuery = opts?.planFlow || readPlanFlowActive() ? "?planFlow=1" : "";
-      router.push(`/read/${target.bookId}/${target.chapter}${planQuery}`);
-      playAfterNextBindRef.current = true;
-      setPlaybackSrc(resolved.src.trim());
-      if (opts?.planFlow || readPlanFlowActive()) {
-        const planSession = readReadingPlanAudioSession();
-        if (planSession?.queue.length) {
-          prefetchUpcomingPlanFlowChapterAudioWeb(
-            planSession.queue,
-            { bookId: target.bookId, chapter: target.chapter },
-            {
-              translationId: audioTranslationId,
-              voiceId: parsed.voiceId,
-              ahead: 3,
-            },
-          );
-        }
-      }
-    };
-
-    const onEndedAdvance = () => {
-      if (devicePlaybackRef.current) {
-        a.currentTime = 0;
-        void attemptShellPlay(a);
-        return;
-      }
-      const cur = effectiveSrcRef.current.trim();
-      if (isDevotionalAudio(cur)) { setPlaying(false); return; }
-      const parsedEarly = cur ? tryParseCuvChapterAudioEffectiveSrc(cur) : null;
-      if (parsedEarly && readPlanFlowActive()) {
-        void (async () => {
-          const access = devotionalAccessRef.current;
-          const session = readReadingPlanAudioSession();
-          if (readDevotionalAuto() && devotionalPlanIsToday() && devotionalAvailable(access.locale, access.isAdmin) && session && shouldHandoffDevotional(session.queue, parsedEarly)) {
-            try {
-              const day = await loadDevotional(access.locale);
-              const src = day && devotionalAudioUrl(day);
-              const currentAccess = devotionalAccessRef.current;
-              if (src && effectiveSrcRef.current.trim() === cur && readDevotionalAuto() && devotionalPlanIsToday() && devotionalAvailable(currentAccess.locale, currentAccess.isAdmin)) {
-                setPlanFlowActive(false); writeReadingPlanAudioSession(null);
-                setPlaybackSrc(src, { autoPlay: true }); return;
-              }
-            } catch { /* Keep existing plan playback available if devotional cannot load. */ }
-          }
-          if (effectiveSrcRef.current.trim() !== cur) return;
-          const next = await resolveTodayPlanLoopNextTarget(parsedEarly.bookId, parsedEarly.chapter);
-          if (next) {
-            await advanceScriptureChapter(parsedEarly, next, { planFlow: true });
-            return;
-          }
-          setPlaying(false);
-        })();
-        return;
-      }
-      const planSession = readReadingPlanAudioSession();
-      const planParsed = planSession && cur ? tryParseCuvChapterAudioEffectiveSrc(cur) : null;
-      if (planSession && planParsed) {
-        const idx = indexInReadingPlanQueue(planSession.queue, planParsed.bookId, planParsed.chapter);
-        if (idx >= 0) {
-          const nextIdx = idx + 1;
-          if (nextIdx < planSession.queue.length) {
-            const next = planSession.queue[nextIdx]!;
-            void advanceScriptureChapter(planParsed, {
-              bookId: next.bookId,
-              chapter: next.chapter,
-            });
-            return;
-          }
-          writeReadingPlanAudioSession(null);
-          setPlaying(false);
-          return;
-        }
-      }
-      const mode = scriptureAudioRepeatRef.current;
-      const parsed = parsedEarly ?? tryParseCuvChapterAudioEffectiveSrc(cur);
-      if (parsed) {
-        if (mode === "chapter") {
-          a.currentTime = 0;
-          void attemptShellPlay(a);
-          return;
-        }
-        const nextRef =
-          mode === "book"
-            ? getNextScriptureChapterInBook(parsed.bookId, parsed.chapter)
-            : getNextScriptureChapter(parsed.bookId, parsed.chapter);
-        void advanceScriptureChapter(parsed, nextRef);
-        return;
-      }
-      const st = storeRef.current;
-      if (st && cur && !shouldRestoreShellPlaybackSrc(st, cur)) {
-        setPlaying(false);
-        return;
-      }
-      if (!st && cur && typeof navigator !== "undefined" && navigator.onLine) {
-        setPlaying(false);
-        return;
-      }
-      if (!st) return;
-
-      const ended = resolveShellMusicEndedAction({
-        store: st,
-        currentSrc: cur,
-        repeatModeOverride: musicAlbumRepeatModeOverrideRef.current,
-      });
-      if (ended.kind === "stop") {
-        setPlaying(false);
-        return;
-      }
-      if (ended.kind === "loop_same") {
-        a.currentTime = 0;
-        void attemptShellPlay(a);
-        return;
-      }
-      playAfterNextBindRef.current = true;
-      setPlaybackSrc(ended.src);
-    };
-
-    a.addEventListener("ended", onEndedAdvance);
-    return () => a.removeEventListener("ended", onEndedAdvance);
-  }, [loading, setPlaybackSrc, router, attemptShellPlay]);
+  const {
+    pauseScripturePlayback,
+    playScriptureChapter,
+    skipScriptureNext,
+    togglePlayScripture,
+    togglePlayMusic,
+  } = useMusicShellScriptureAndEnded({
+    audioRef,
+    loading,
+    pathname,
+    router,
+    playing,
+    setPlaying,
+    setPlaybackSrc,
+    attemptShellPlay,
+    effectiveVoiceId,
+    setShellAudioHomePrimed,
+    setScriptureAudioRepeatMode,
+    scriptureAudioRepeatRef,
+    musicAlbumRepeatModeOverrideRef,
+    storeRef,
+    effectiveSrcRef,
+    playbackOverrideRef,
+    devicePlaybackRef,
+    playAfterNextBindRef,
+    shellPlaybackRestoreRef,
+    shellPlaybackPersistEnabledRef,
+    scriptureListenTargetRef,
+    devotionalAccessRef,
+  });
 
   const canPlay = Boolean(effectiveSrc) && !loading;
-
   const canPlayMusic = useMemo(() => musicCompanionStoreHasPlayableTracks(store), [store]);
 
   const seekRatio = useCallback((ratio: number) => {
@@ -1129,402 +384,17 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
 
   const getAudioElement = useCallback((): HTMLAudioElement | null => audioRef.current, []);
 
-  const pauseScripturePlayback = useCallback(() => {
-    const a = audioRef.current;
-    if (!a || a.paused) return;
-    if (readPlanFlowActive() && isCuvChapterAudioEffectiveSrc(effectiveSrcRef.current)) {
-      const parsed = tryParseCuvChapterAudioEffectiveSrc(effectiveSrcRef.current.trim());
-      if (parsed) {
-        flushTodayPlanScriptureResume({
-          bookId: parsed.bookId,
-          chapter: parsed.chapter,
-          positionSec: a.currentTime,
-          durationSec: Number.isFinite(a.duration) ? a.duration : undefined,
-        });
-      }
-    }
-    a.pause();
-    setPlaying(false);
-  }, []);
-
-  const playScriptureChapter = useCallback(
-    async (target: {
-      bookId: string;
-      chapter: number;
-      bookName?: string;
-      translationId?: string;
-      startAtSec?: number;
-    }) => {
-      flushSync(() => {
-        setShellAudioHomePrimed(true);
-      });
-      const a = audioRef.current;
-      if (!a || loading) return;
-
-      const bookId = target.bookId.trim().toUpperCase();
-      const chapter = target.chapter;
-      if (!bookId || !Number.isInteger(chapter) || chapter < 1) return;
-
-      const meta = scriptureBooks.find((b) => b.bookId === bookId);
-      if (!meta) return;
-
-      const tid = target.translationId?.trim() || (await fetchDefaultTranslationIdCached());
-      if (!tid || !translationSupportsChapterAudio(tid)) return;
-
-      const planSession = await prepareReadingPlanAudioSessionForChapter(bookId, chapter);
-      if (planSession || readPlanFlowActive()) {
-        setScriptureAudioRepeatMode("off", { persist: false });
-      }
-
-      const playVoice = effectiveVoiceId(bookId);
-      const resolved = await resolveChapterAudioPlayableSrc({
-        translationId: tid,
-        bookName: target.bookName?.trim() || meta.bookName,
-        bookId,
-        chapter,
-        voiceId: playVoice,
-      });
-      if (!resolved.ok) return;
-
-      const want = resolved.src.trim();
-      scriptureListenTargetRef.current = { bookId, chapter, src: want };
-      const prefetchPlanQueueAfterChapter = () => {
-        if (!readPlanFlowActive()) return;
-        const session = readReadingPlanAudioSession();
-        if (!session?.queue.length) return;
-        prefetchUpcomingPlanFlowChapterAudioWeb(
-          session.queue,
-          { bookId, chapter },
-          { translationId: tid, voiceId: playVoice, ahead: 3 },
-        );
-      };
-      const route = parseReadChapterPath(pathname);
-      if (!route || route.bookId !== bookId || route.chapter !== chapter) {
-        const planQuery = readPlanFlowActive() ? "?planFlow=1" : "";
-        router.push(`/read/${bookId}/${chapter}${planQuery}`);
-      }
-
-      const ov = playbackOverrideRef.current?.trim() ?? "";
-      const already = audioUrlEquals(a, want) || (Boolean(ov) && shellPlaybackUrlsEqual(ov, want));
-      const startAtSec =
-        typeof target.startAtSec === "number" && target.startAtSec > 0 ? target.startAtSec : 0;
-      if (!already) {
-        if (startAtSec > 0) {
-          shellPlaybackRestoreRef.current = {
-            targetSrc: want,
-            timeSec: startAtSec,
-            tryPlay: true,
-          };
-          shellPlaybackPersistEnabledRef.current = false;
-        } else {
-          playAfterNextBindRef.current = true;
-        }
-        setPlaybackSrc(want);
-        prefetchPlanQueueAfterChapter();
-        return;
-      }
-      if (!a.paused) return;
-      if (startAtSec > 0) {
-        shellPlaybackRestoreRef.current = {
-          targetSrc: want,
-          timeSec: startAtSec,
-          tryPlay: true,
-        };
-        shellPlaybackPersistEnabledRef.current = false;
-        prefetchPlanQueueAfterChapter();
-        return;
-      }
-      await attemptShellPlay(a);
-      prefetchPlanQueueAfterChapter();
-    },
-    [
-      attemptShellPlay,
-      effectiveVoiceId,
-      loading,
-      pathname,
-      router,
-      setPlaybackSrc,
-      setScriptureAudioRepeatMode,
-    ],
-  );
-
-  const skipScriptureNext = useCallback(async () => {
-    const cur = effectiveSrcRef.current.trim();
-    const parsed = cur ? tryParseCuvChapterAudioEffectiveSrc(cur) : null;
-    const route = parseReadChapterPath(pathname);
-    const bookId = parsed?.bookId ?? route?.bookId;
-    const chapter = parsed?.chapter ?? route?.chapter;
-    if (!bookId || !chapter) return;
-    const next = getNextScriptureChapter(bookId, chapter);
-    if (!next) return;
-    await playScriptureChapter({ bookId: next.bookId, chapter: next.chapter });
-  }, [pathname, playScriptureChapter]);
-
-  const togglePlayScripture = useCallback(async () => {
-    flushSync(() => {
-      setShellAudioHomePrimed(true);
-    });
-    const a = audioRef.current;
-    if (!a || loading) return;
-
-    let readCh = parseReadChapterPath(pathname);
-    if (!readCh && isReadBibleHomePath(pathname)) {
-      const eff = effectiveSrcRef.current.trim();
-      if (playing && eff && isCuvChapterAudioEffectiveSrc(eff)) {
-        a.pause();
-        setPlaying(false);
-        return;
-      }
-      const start = await prepareTodayReadingAudioSessionFromStart();
-      if (!start) return;
-      const tid = await fetchDefaultTranslationIdCached();
-      if (!tid || !translationSupportsChapterAudio(tid)) return;
-      setPlanFlowActive(true);
-      setScriptureAudioRepeatMode("off", { persist: false });
-      readCh = start.first;
-      router.push(`/read/${readCh.bookId}/${readCh.chapter}?planFlow=1`);
-    }
-    if (!readCh) return;
-
-    const tid = await fetchDefaultTranslationIdCached();
-    if (!tid || !translationSupportsChapterAudio(tid)) return;
-
-    const bookMeta = scriptureBooks.find((b) => b.bookId === readCh!.bookId);
-    if (!bookMeta) return;
-
-    const planSession = await prepareReadingPlanAudioSessionForChapter(readCh.bookId, readCh.chapter);
-    if (planSession || readPlanFlowActive()) {
-      setScriptureAudioRepeatMode("off", { persist: false });
-    }
-    const playVoice = effectiveVoiceId(readCh.bookId);
-    const resolved = await resolveChapterAudioPlayableSrc({
-      translationId: tid,
-      bookName: bookMeta.bookName,
-      bookId: readCh.bookId,
-      chapter: readCh.chapter,
-      voiceId: playVoice,
-    });
-    if (!resolved.ok) return;
-
-    const want = resolved.src.trim();
-    const ov = playbackOverrideRef.current?.trim() ?? "";
-    const already = audioUrlEquals(a, want) || (Boolean(ov) && shellPlaybackUrlsEqual(ov, want));
-    if (!already) {
-      playAfterNextBindRef.current = true;
-      setPlaybackSrc(want);
-      return;
-    }
-    if (!a.paused) {
-      a.pause();
-      setPlaying(false);
-      return;
-    }
-    await attemptShellPlay(a);
-  }, [loading, pathname, router, setPlaybackSrc, attemptShellPlay, effectiveVoiceId, setScriptureAudioRepeatMode, playing]);
-
-  const togglePlayMusic = useCallback(() => {
-    const a = audioRef.current;
-    if (!a || loading) return;
-    if (!isMusicShellPath(pathname)) {
-      flushSync(() => {
-        setShellAudioHomePrimed(true);
-      });
-    }
-
-    const st = storeRef.current;
-    const eff = effectiveSrcRef.current.trim();
-
-    if (eff && isCuvChapterAudioEffectiveSrc(eff)) {
-      if (!a.paused) {
-        a.pause();
-        setPlaying(false);
-      }
-      setScriptureAudioRepeatMode("off", { persist: false });
-      if (st) {
-        const avoid = eff;
-        const pick =
-          pickRandomShellAudioTrackSrc(st, avoid)?.trim() || getShellDefaultAudioSrc(st)?.trim() || "";
-        if (pick) {
-          playAfterNextBindRef.current = true;
-          const def = getShellDefaultAudioSrc(st)?.trim() ?? "";
-          if (def && shellPlaybackUrlsEqual(pick, def)) setPlaybackSrc(null);
-          else setPlaybackSrc(pick);
-        }
-      }
-      return;
-    }
-
-    if (!eff) {
-      if (st) {
-        const boot = getShellDefaultAudioSrc(st)?.trim() ?? "";
-        if (boot) {
-          playAfterNextBindRef.current = true;
-          setPlaybackSrc(boot);
-        }
-      }
-      return;
-    }
-
-    if (!a.paused) {
-      a.pause();
-      setPlaying(false);
-      return;
-    }
-
-    void attemptShellPlay(a);
-  }, [loading, setPlaybackSrc, attemptShellPlay, setScriptureAudioRepeatMode]);
-
-  useEffect(() => {
-    if (!playing || !store || !effectiveSrc.trim() || isCuvChapterAudioEffectiveSrc(effectiveSrc)) {
-      return;
-    }
-    const tracks = store.audioTracks.filter((t) => Boolean(t.src?.trim()));
-    const idx = tracks.findIndex((t) => shellPlaybackUrlsEqual((t.src ?? "").trim(), effectiveSrc.trim()));
-    if (idx < 0) return;
-    const album = inferTrackAlbumFromCompanionTrack(tracks[idx]!);
-    const repeatMode =
-      musicAlbumRepeatModeOverrideRef.current ?? defaultRepeatModeForAlbum(album) ?? "all";
-    if (repeatMode !== "all") return;
-    const nextIdx = pickRandomNextTrackIndexInAlbum(tracks, idx, album);
-    const next = tracks[nextIdx];
-    if (!next || next.id === tracks[idx]!.id) return;
-    prefetchMusicTrackBundle({ src: next.src, analysisSrc: next.analysisSrc });
-  }, [playing, store, effectiveSrc]);
-
-  const mediaSessionBridgeRef = useRef({
+  useMusicShellMediaSession({
+    audioRef,
     attemptShellPlay,
     pausePlayback,
     skipScriptureNext,
     setPlaybackSrc,
     seekRatio,
-  });
-  mediaSessionBridgeRef.current = {
-    attemptShellPlay,
-    pausePlayback,
-    skipScriptureNext,
-    setPlaybackSrc,
-    seekRatio,
-  };
-
-  useEffect(() => {
-    setShellMediaSessionWebBridge({
-      onPlay: () => {
-        const a = audioRef.current;
-        if (a?.paused) void mediaSessionBridgeRef.current.attemptShellPlay(a);
-      },
-      onPause: () => {
-        mediaSessionBridgeRef.current.pausePlayback();
-      },
-      onNext: () => {
-        const cur = effectiveSrcRef.current.trim();
-        if (cur && isCuvChapterAudioEffectiveSrc(cur)) {
-          void mediaSessionBridgeRef.current.skipScriptureNext();
-          return;
-        }
-        const st = storeRef.current;
-        if (!st || !cur) return;
-        const ended = resolveShellMusicEndedAction({
-          store: st,
-          currentSrc: cur,
-          repeatModeOverride: musicAlbumRepeatModeOverrideRef.current,
-        });
-        if (ended.kind === "advance") {
-          playAfterNextBindRef.current = true;
-          mediaSessionBridgeRef.current.setPlaybackSrc(ended.src);
-          return;
-        }
-        if (ended.kind === "loop_same") {
-          const a = audioRef.current;
-          if (a) {
-            a.currentTime = 0;
-            void mediaSessionBridgeRef.current.attemptShellPlay(a);
-          }
-        }
-      },
-      onPrevious: () => {
-        const a = audioRef.current;
-        if (!a) return;
-        const cur = effectiveSrcRef.current.trim();
-        if (a.currentTime > 3) {
-          a.currentTime = 0;
-          return;
-        }
-        if (cur && isCuvChapterAudioEffectiveSrc(cur)) {
-          a.currentTime = 0;
-          return;
-        }
-        const st = storeRef.current;
-        if (!st || !cur) {
-          a.currentTime = 0;
-          return;
-        }
-        const prev = pickRandomShellAudioTrackSrcInAlbum(st, cur);
-        if (prev && !shellPlaybackUrlsEqual(prev, cur)) {
-          playAfterNextBindRef.current = true;
-          const def = getShellDefaultAudioSrc(st)?.trim() ?? "";
-          if (def && shellPlaybackUrlsEqual(prev, def)) {
-            mediaSessionBridgeRef.current.setPlaybackSrc(null);
-          } else {
-            mediaSessionBridgeRef.current.setPlaybackSrc(prev);
-          }
-          return;
-        }
-        a.currentTime = 0;
-      },
-    });
-    return () => {
-      teardownShellMediaSessionWeb();
-    };
-  }, []);
-
-  useEffect(() => {
-    const src = effectiveSrc.trim();
-    if (!src) {
-      clearShellMediaSessionWeb();
-      return;
-    }
-
-    const parsed = tryParseCuvChapterAudioEffectiveSrc(src);
-    let title: string = ASKBIBLE_PRODUCT_NAME;
-    let artist: string = ASKBIBLE_PRODUCT_NAME;
-    let album: string | undefined;
-    let kind: "music" | "scripture" = "music";
-    let playbackRate = 1;
-
-    if (parsed) {
-      kind = "scripture";
-      playbackRate = scripturePlaybackRate;
-      const meta = scriptureBooks.find((b) => b.bookId === parsed.bookId);
-      title = meta ? `${meta.bookName} ${parsed.chapter}` : `${parsed.bookId} ${parsed.chapter}`;
-      album = parsed.audioTranslationId ?? undefined;
-    } else if (store) {
-      const tracks = store.audioTracks.filter((track) => Boolean(track.src?.trim()));
-      const idx = tracks.findIndex((track) =>
-        shellPlaybackUrlsEqual((track.src ?? "").trim(), src),
-      );
-      const track = idx >= 0 ? tracks[idx] : null;
-      if (track) {
-        title = resolveLocalized(track.title, locale) || title;
-        const trackArtist = resolveLocalized(track.artist, locale);
-        if (trackArtist) artist = trackArtist;
-        const remark = resolveLocalized(track.remark, locale);
-        if (remark) album = remark;
-      }
-    } else if (devicePlayback) {
-      title = devicePlayback.trackId;
-    }
-
-    syncShellMediaSessionWeb({
-      title,
-      artist,
-      album,
-      playing,
-      positionSec: currentSec,
-      durationSec,
-      playbackRate,
-      kind,
-    });
-  }, [
+    effectiveSrcRef,
+    storeRef,
+    musicAlbumRepeatModeOverrideRef,
+    playAfterNextBindRef,
     currentSec,
     devicePlayback,
     durationSec,
@@ -1533,7 +403,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     playing,
     scripturePlaybackRate,
     store,
-  ]);
+  });
 
   useTodayPlanScriptureResumePersistence({
     playing,

@@ -12,6 +12,7 @@ SHA="$(git rev-parse "origin/$REF")"
 if [ ! -d node_modules ] || ! git show "$SHA:package-lock.json" | cmp -s - package-lock.json; then
   echo '本地依赖与发布提交不一致；请先补齐依赖。不会回退云端构建。' >&2; exit 1
 fi
+REAL_NM="$(cd "$ROOT/node_modules" && pwd -P)"
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/askbible-cf-deploy.XXXXXX")"
 cleanup() {
   local status=$?
@@ -25,9 +26,9 @@ if [ -f "$ROOT/.env.web-build.local" ]; then
 fi
 cd "$TMP"
 if [ "$(uname -s)" = Darwin ]; then
-  cp -cR "$ROOT/node_modules" node_modules
+  cp -cR "$REAL_NM" node_modules
 else
-  cp -a "$ROOT/node_modules" node_modules
+  cp -a "$REAL_NM" node_modules
 fi
 export NEXT_PUBLIC_APP_BUILD_ID="$SHA"
 export NODE_ENV=production

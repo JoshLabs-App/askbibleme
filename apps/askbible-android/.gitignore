@@ -1,7 +1,7 @@
-# 本机专属，不进版本控制
+# 本机专属，不进版本控制（无尾斜杠以兼容外置符号链接）
 local.properties
-.gradle/
-build/
+.gradle
+build
 */build/
 .idea/
 *.iml

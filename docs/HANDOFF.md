@@ -1,8 +1,8 @@
 # AskBible.me — AI 交接开发文档
 
 **用途**：AI / Agent 接手本仓库时的**唯一启动地图**。先读本文，再按需下钻；不要通读全库。  
-**基线更新**：2026-11-21（对齐 D-44 极轻同源架构、D-45 安卓羊皮卷无玻璃统一版面、D-46 双层自动升级）  
-**仓库**：`/Users/joshua/Desktop/APP/01AskBible`  
+**基线更新**：2026-11-23（对齐 D-44 极轻同源架构、D-45 安卓羊皮卷无玻璃统一版面、D-46 双层自动升级、`CODE_MAP.md` 自动对齐与 `AskBible-TEMP` 外置）  
+**仓库**：`/Users/joshua/Desktop/APP/圣经项目/01AskBible`（重缓存软链外置至 `/Users/joshua/Desktop/APP/TEMP/AskBible-TEMP/`）  
 **对外名称**：**AskBible.me**（域名 `askbible.me`）。内部名 `selah-*`、包名 `me.askbible` **不得**出现在用户界面。
 
 ---
@@ -13,7 +13,7 @@
 |----|------|------|
 | 1 | `/Users/joshua/Desktop/APP/skills/joshlabs-dev/SKILL.md` 与 `references/core-dev-principles.md` | 通用完整交付流程与极轻架构准则 |
 | 2 | `AGENTS.md` 与 `docs/DECISIONS.md`（重点看末尾 D-44 ~ D-46） | 产品边界、架构总纲与发布授权真源 |
-| 3 | 本文 `docs/HANDOFF.md` | 现行仓库地图、构建验证与部署命令 |
+| 3 | 本文 `docs/HANDOFF.md` + `docs/CODE_MAP.md` + `docs/ARCHITECTURE.md` | 现行仓库地图、精确行号导航与拆巨石接口契约 |
 | 4 | `.cursor/rules/*.mdc` 与 `docs/09-dangerous-directions.md` | 领域硬约束与产品防跑偏红线 |
 
 用户说 **`DD`** = 在已授权范围内继续推进到验收与发布完成；正常任务无需等 `DD`。
@@ -50,8 +50,8 @@
 ├── app/ components/ lib/     # Web 端与共享数据/工具逻辑
 ├── data/                     # 本地真源数据（译本、计划、人物、勋章/藏书票、endpoints.json）
 ├── public/                   # 静态资源与构建生成的 v2/catalog.json
-├── scripts/ tools/           # 构建预生成、Cloudflare 直发 (deploy-direct.sh) 与跨端数据校验
-├── docs/                     # 产品原则 (01–11)、DECISIONS.md、OPEN-ITEMS.md
+├── scripts/ tools/           # 构建预生成、代码地图 (gen-code-map.mjs)、缓存清理 (clean-temp.mjs)、直发与数据校验
+├── docs/                     # CODE_MAP.md、ARCHITECTURE.md、产品原则 (01–11)、DECISIONS.md、OPEN-ITEMS.md
 └── AA/                       # 本机签名凭证软链目录（严禁提交进 Git）
 ```
 
@@ -62,8 +62,10 @@
 ## 3. 常用开发、验证与发布命令
 
 ```bash
-# 本地开发
+# 本地开发与代码导航
 npm run dev                  # http://localhost:3450
+npm run map                  # 秒级扫描刷新 docs/CODE_MAP.md（pre-commit 自动执行）
+npm run clean:temp           # 清理 >7d 非活跃 worktrees、日志与临时文件（保留增量缓存）
 
 # 代码与跨端数据验证
 npm run check                # 生成构建元信息 + tsc --noEmit + vitest 单测

@@ -1,5 +1,14 @@
-# dependencies
-/node_modules
+# 临时文件与重型缓存统一外置到 /Users/joshua/Desktop/APP/TEMP/AskBible-TEMP/（通过相对符号链接挂回项目）
+# 注意：外置软链条目严禁带尾部 "/"，确保 Git 同时忽略真实目录与符号链接
+node_modules
+.next
+.wrangler
+.cache
+.worktrees
+.cloudflare
+.vinext
+coverage
+dist
 /.pnp
 .pnp.*
 .yarn/*
@@ -8,12 +17,8 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
+# next.js / static out
+/out
 
 # 构建时由 scripts/write-app-build-meta.mjs 生成（与 data-app-build 对齐）
 /public/app-build.json
@@ -42,6 +47,9 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log
+*.tmp
+tmp-*
 
 # 译本 JSON 仅本机导入（体积大）；线上/CI 使用已入库的 data/bible/sqlite/*.sqlite
 # 本机改 JSON 后：npm run build:bible-sqlite
@@ -120,7 +128,8 @@ tools/.reading-plans.json
 
 # 原生 App 的读后两版内容库：与 RN assets/content/info-edition.sqlite 同一份（26MB 产物，不入库），
 # 由 npm run gen:info-edition 从 RN 资源复制过来
-/apps/askbible-ios/build/
+apps/askbible-ios/build
+apps/askbible-android/.gradle
 /apps/askbible-ios/AskBible/Resources/info-edition.sqlite
 /apps/askbible-android/app/src/main/assets/info-edition.sqlite
 
@@ -141,13 +150,9 @@ tools/.reading-plans.json
 # 本地备份与临时凭据副本，绝不入库
 *.bak
 *.bak-*
-.wrangler/
 
 # Cloudflare / vinext 构建期按书卷/按包拆出的静态数据（prebuild 自动生成）
 /public/data/chapter-segments/
 /public/data/bible-reading-plans/
 /public/data/static-bundles/
 /public/data/resource-packs/
-.cloudflare/
-.vinext/
-/dist/

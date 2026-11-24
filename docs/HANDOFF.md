@@ -1,7 +1,7 @@
 # AskBible.me — AI 交接开发文档
 
 **用途**：AI / Agent 接手本仓库时的**唯一启动地图**。先读本文，再按需下钻；不要通读全库。  
-**基线更新**：2026-11-23（对齐 D-44 极轻同源架构、D-45 安卓羊皮卷无玻璃统一版面、D-46 双层自动升级、`CODE_MAP.md` 自动对齐与 `AskBible-TEMP` 外置）  
+**基线更新**：2026-11-24（对齐 D-44~D-46；一期治理标配 `1823761c`/`44f14bd8` 落地 `AskBible-TEMP` 外置、`CODE_MAP.md` 自动门禁、单一色彩总表与底栏版本/探针/手机模型；二期 `5bbc3aad` 完成首批超千行巨石拆分与野色收编并已上线 `askbible-web`）  
 **仓库**：`/Users/joshua/Desktop/APP/圣经项目/01AskBible`（重缓存软链外置至 `/Users/joshua/Desktop/APP/TEMP/AskBible-TEMP/`）  
 **对外名称**：**AskBible.me**（域名 `askbible.me`）。内部名 `selah-*`、包名 `me.askbible` **不得**出现在用户界面。
 
@@ -67,8 +67,10 @@ npm run dev                  # http://localhost:3450
 npm run map                  # 秒级扫描刷新 docs/CODE_MAP.md（pre-commit 自动执行）
 npm run clean:temp           # 清理 >7d 非活跃 worktrees、日志与临时文件（保留增量缓存）
 
-# 代码与跨端数据验证
-npm run check                # 生成构建元信息 + tsc --noEmit + vitest 单测
+# 代码、色彩门禁与跨端数据验证
+npm run sync:theme           # 从 lib/theme-palette.ts 同步单一色彩总表至 app/tokens.css
+npm run check:colors         # 校验 app/tokens.css 与总表一致性及业务层零野生色值门禁
+npm run check                # check:colors + 构建元信息 + tsc --noEmit + vitest 单测
 npm run check:native         # endpoints / 藏书票 / 语言序 / 书卷目录 / 经文 / 音频 / 时间戳 / 计划全套校验
 
 # 原生端编译与单测
@@ -88,3 +90,13 @@ npm run ship:sync            # 部署 workers/askbible-sync
 2. **媒体不走主站 Worker**：大体积音频/视频/扩展包一律走 R2 + `Endpoints` 选线，禁止压到 `askbible-web`。
 3. **打包产物用完即删**：本地 APK / IPA / AAB 及 `build/`、`DerivedData` 验收后及时清理，不污染工作区；切勿误删 `node_modules` 或 `AA/`。
 4. **合入与提交纪律**：只提交本任务文件；合入 `main` 遵守 CI 门禁。
+
+---
+
+## 5. 附：2026-11-24 一期治理标配与二期首批超千行巨石拆分交接
+
+- **当前状态**（代码与线上基线 `5bbc3aad`，`askbible-web` Worker Version `3713f957-9c2e-41cb-b00c-123a51e0b896`，`/api/app-build` 与 `/read/JHN/10` 浅/深色探活通过）：
+  - **一期治理标配已上线（`1823761c`、`44f14bd8`）**：`AskBible-TEMP` 外置软链与 `clean-temp.mjs`、`docs/CODE_MAP.md` 自动钩子门禁、单一色彩总表 `lib/theme-palette.ts` → `app/tokens.css` 与 `check-hardcoded-colors.mjs`、底栏版本戳 + 静默热更（`AskBibleBottomUtilityBar.tsx`）、`Alt+Shift+C` 定位探针（`AskBibleCodeProbe.tsx`）、桌面 ⇄ 390×844 手机模型（`MobileModelStage.tsx`），以及 `MusicShellPlaybackContext.tsx`（1643 → 513 行）拆解。
+  - **二期首批超千行巨石拆分与野色清零已审查 PASS 并上线（`5bbc3aad`）**：`read-chapter-surfaces.css`（3817 → 17 行 + `surfaces/01..09*.css` 13 个 ≤427 行模块，清零 498 处野生色值）、`studio-ai-discussion-panel.tsx`（1363 → 87 行 + 4 个 ≤378 行模块，清零野色）、`studio-workspace.tsx`（1285 → 270 行 + 5 个 ≤402 行模块）；`check:colors` 业务层存量冻结降至 109 文件 / 2261 处；`tsc --noEmit` 与 27 文件 / 140 项单测全绿（`npm run build` 已于发布前验证通过）。
+- **下一步**：
+  - 按 `docs/ARCHITECTURE.md` 排期继续拆解下一批超千行与 >800 行源码/样式模块：`ReadChapterVersesClient.tsx`（1172 行）、`NatureVideoExperience.tsx`（1197 行）、原生壳层 `MainActivity.kt`（1435 行）与 `AskBibleApp.swift`（1236 行），以及 `bible-catalog.css`（1226 行）、`music-home.css`（1188 行）等。

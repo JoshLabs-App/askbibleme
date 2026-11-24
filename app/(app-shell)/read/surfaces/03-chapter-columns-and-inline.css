@@ -1,0 +1,427 @@
+/* 读经章：大屏双栏（左经文 / 右讲解+发现），仅 `.read-bible-parchment-column--read-chapter` 页 */
+.read-chapter-spread {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.read-chapter-open-book {
+  display: contents;
+}
+
+.read-chapter-open-book-spine {
+  display: none;
+}
+
+.read-chapter-spread-scripture {
+  min-width: 0;
+}
+
+.read-chapter-spread-editions {
+  min-width: 0;
+}
+
+.read-chapter-spread-after {
+  min-width: 0;
+}
+
+@media (max-width: 767px) {
+  .read-bible-parchment-column--read-chapter {
+    --read-parchment-column-max: none;
+    max-width: none;
+  }
+
+  .read-chapter-header {
+    padding: 0.25rem 0 1.15rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .read-chapter-title {
+    font-size: clamp(1.3rem, 6vw, 1.5rem);
+  }
+
+  .read-chapter-post-reading-editions {
+    --post-reading-board-width: 100%;
+    position: static;
+    left: auto;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 1.5rem;
+    margin-inline: 0;
+    transform: none;
+    text-align: start;
+  }
+
+  .read-chapter-post-reading-editions-board-wrap,
+  .read-chapter-post-reading-editions-book,
+  .read-chapter-post-reading-editions-board {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .read-chapter-post-reading-editions-spread-parts {
+    gap: 0.85rem;
+  }
+
+  .read-chapter-end-nav {
+    margin-top: 3.25rem;
+    margin-bottom: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .read-bible-parchment-scroll:has(.read-chapter-header) {
+    --read-parchment-edge-fade-top: 0px;
+    --read-parchment-edge-fade-bottom: 0px;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .read-bible-parchment-column--read-chapter {
+    --read-parchment-column-max: min(96rem, 96vw);
+    max-width: min(96rem, 96vw);
+  }
+
+  .read-chapter-header {
+    padding: 70px 0 50px;
+    margin-bottom: 0.75rem;
+  }
+
+  /* 摊开的书：左页经文、中缝书脊、右页讲解 */
+  .read-chapter-open-book {
+    --read-open-book-radius: clamp(0.65rem, 1.25vw, 1rem);
+    --read-open-book-page-pad-left: clamp(3rem, 5.5vw, 4.25rem);
+    --read-open-book-spine-x: 33.3333%;
+    /* 书页纸色：略暖但不偏黄，与背后羊皮底区分开 */
+    --read-open-book-page-bg: color-mix(in srgb, var(--read-parchment-bg-canvas, var(--ab-bg)) 14%, var(--ab-read-paper-bright));
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    position: relative;
+    align-items: stretch;
+    margin-top: 0.35rem;
+    border-radius: var(--read-open-book-radius);
+    background: var(--read-open-book-page-bg);
+    box-shadow:
+      0 1px 0 color-mix(in srgb, var(--ab-read-white) 48%, transparent) inset,
+      0 18px 48px -12px color-mix(in srgb, var(--ab-read-espresso) 22%, transparent),
+      0 4px 14px color-mix(in srgb, var(--ab-read-espresso) 10%, transparent);
+    overflow: visible;
+  }
+
+  .dark .read-chapter-open-book {
+    --read-open-book-page-bg: color-mix(in srgb, var(--read-parchment-bg-canvas, var(--ab-bg)) 48%, var(--ab-read-dark-canvas));
+    background: var(--read-open-book-page-bg);
+    box-shadow:
+      0 1px 0 color-mix(in srgb, var(--ab-read-white) 6%, transparent) inset,
+      0 20px 52px -14px color-mix(in srgb, var(--ab-read-black) 55%, transparent),
+      0 4px 16px color-mix(in srgb, var(--ab-read-black) 28%, transparent);
+  }
+
+  /* 中缝不铺色带，只靠左右页极淡内阴影暗示装订沟 */
+  .read-chapter-open-book-spine {
+    display: block;
+    position: absolute;
+    left: var(--read-open-book-spine-x);
+    top: 0;
+    bottom: 0;
+    z-index: 2;
+    width: min(0.95rem, 4%);
+    transform: translateX(-50%);
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--ab-read-espresso) 2%, transparent) 18%,
+      color-mix(in srgb, var(--ab-read-espresso) 16%, transparent) 50%,
+      color-mix(in srgb, var(--ab-read-espresso) 2%, transparent) 82%,
+      transparent 100%
+    );
+    box-shadow:
+      -10px 0 16px -14px color-mix(in srgb, var(--ab-read-espresso) 20%, transparent),
+      10px 0 16px -14px color-mix(in srgb, var(--ab-read-espresso) 16%, transparent);
+  }
+
+  .dark .read-chapter-open-book-spine {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--ab-read-black) 4%, transparent) 18%,
+      color-mix(in srgb, var(--ab-read-black) 24%, transparent) 50%,
+      color-mix(in srgb, var(--ab-read-black) 4%, transparent) 82%,
+      transparent 100%
+    );
+    box-shadow:
+      -10px 0 16px -14px color-mix(in srgb, var(--ab-read-black) 24%, transparent),
+      10px 0 16px -14px color-mix(in srgb, var(--ab-read-black) 20%, transparent);
+  }
+
+  .read-chapter-open-book-page--left {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+    padding: clamp(1.1rem, 2.2vw, 1.55rem) clamp(2.7rem, 5.6vw, 4rem) clamp(1.15rem, 2.2vw, 1.6rem)
+      var(--read-open-book-page-pad-left);
+    border-radius: var(--read-open-book-radius) 0 0 var(--read-open-book-radius);
+    background-color: var(--ab-read-open-book-paper);
+    background-image: image-set(
+      url("/read/parchment-scroll-bg.webp") type("image/webp"),
+      url("/read/parchment-scroll-bg.jpg") type("image/jpeg")
+    );
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: 100% 100%;
+    box-shadow: inset -10px 0 16px -18px color-mix(in srgb, var(--ab-read-espresso) 7%, transparent);
+  }
+
+  .read-chapter-open-book-page--left::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(2.5rem, 12%);
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--ab-read-espresso) 4%, transparent)
+    );
+  }
+
+  .dark .read-chapter-open-book-page--left {
+    background-color: var(--ab-read-open-book-paper);
+    background-image: linear-gradient(180deg, color-mix(in srgb, var(--ab-read-espresso) 44%, transparent), color-mix(in srgb, var(--ab-read-obsidian) 78%, transparent)),
+      image-set(
+        url("/read/parchment-scroll-bg.webp") type("image/webp"),
+        url("/read/parchment-scroll-bg.jpg") type("image/jpeg")
+      );
+    background-blend-mode: multiply, normal;
+    box-shadow: inset -10px 0 16px -18px color-mix(in srgb, var(--ab-read-black) 10%, transparent);
+  }
+
+  .dark .read-chapter-open-book-page--left::after {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--ab-read-black) 6%, transparent)
+    );
+  }
+
+  .read-chapter-open-book-page--right {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+    padding: clamp(2.2rem, 4.4vw, 3.1rem) clamp(1rem, 2vw, 1.45rem) clamp(1.15rem, 2.2vw, 1.6rem)
+      var(--read-open-book-page-pad-left);
+    border-radius: 0 var(--read-open-book-radius) var(--read-open-book-radius) 0;
+    box-shadow: inset 10px 0 16px -18px color-mix(in srgb, var(--ab-read-espresso) 7%, transparent);
+  }
+
+  .read-chapter-open-book-page--right::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(2.5rem, 12%);
+    pointer-events: none;
+    background: linear-gradient(
+      270deg,
+      transparent,
+      color-mix(in srgb, var(--ab-read-espresso) 4%, transparent)
+    );
+  }
+
+  .dark .read-chapter-open-book-page--right {
+    box-shadow: inset 10px 0 16px -18px color-mix(in srgb, var(--ab-read-black) 10%, transparent);
+  }
+
+  .dark .read-chapter-open-book-page--right::after {
+    background: linear-gradient(
+      270deg,
+      transparent,
+      color-mix(in srgb, var(--ab-read-black) 6%, transparent)
+    );
+  }
+
+  /* 左右页随内容撑开，由外层羊皮滚动区统一滚动（不在栏内再套滚动） */
+  .read-chapter-spread-scripture,
+  .read-chapter-spread-editions {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .read-chapter-spread-editions {
+    position: relative;
+    align-self: stretch;
+  }
+
+  .read-chapter-post-reading-editions--spread .read-chapter-info-edition-panel,
+  .read-chapter-post-reading-editions--spread .read-chapter-info-edition-panel--error,
+  .read-chapter-post-reading-editions--spread .read-chapter-info-edition--discover .read-chapter-info-edition-panel,
+  .read-chapter-post-reading-editions--spread .read-chapter-info-edition--consult .read-chapter-info-edition-panel {
+    max-height: none;
+    overflow: visible;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .read-chapter-post-reading-editions--spread .read-chapter-info-edition-panel-skeleton {
+    background: color-mix(in srgb, var(--ab-read-sepia) 5%, transparent);
+  }
+
+  .dark .read-chapter-post-reading-editions--spread .read-chapter-info-edition-panel,
+  .dark .read-chapter-post-reading-editions--spread .read-chapter-info-edition-panel--error,
+  .dark .read-chapter-post-reading-editions--spread .read-chapter-info-edition--discover .read-chapter-info-edition-panel,
+  .dark .read-chapter-post-reading-editions--spread .read-chapter-info-edition--consult .read-chapter-info-edition-panel {
+    border: none;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .read-chapter-spread-after {
+    margin-top: clamp(1.5rem, 3vw, 2rem);
+  }
+}
+
+.read-chapter-verse {
+  margin: 0 0 0.9rem;
+  font-size: var(--read-bible-verse-font-size, 1.1875rem);
+  font-weight: 500;
+  /* 经节内换行行距（非节与节间距） */
+  line-height: 1.5;
+  letter-spacing: 0.012em;
+  /* 朗读跟读 scrollIntoView：避开 fixed 顶栏与卷首渐隐 */
+  scroll-margin-top: var(--read-chapter-verse-scroll-margin-top, 5.5rem);
+  scroll-margin-bottom: 2.5rem;
+}
+
+.read-chapter-paragraph-break {
+  height: 0.8rem;
+}
+
+.read-chapter-paragraph-break--rule {
+  display: flex;
+  align-items: center;
+  height: 1.1rem;
+}
+
+.read-chapter-paragraph-break--rule::before {
+  content: "";
+  display: block;
+  width: 2.5rem;
+  height: 1px;
+  margin-left: 0.15rem;
+  background: color-mix(in srgb, var(--ab-read-mahogany) 28%, transparent);
+}
+
+.dark .read-chapter-paragraph-break--rule::before {
+  background: color-mix(in srgb, var(--ab-read-sand-light) 28%, transparent);
+}
+
+.read-chapter-verse-paragraph-flow {
+  margin: 0 0 0.65rem;
+  font-size: var(--read-bible-verse-font-size, 1.1875rem);
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.012em;
+  text-wrap: pretty;
+}
+
+.read-chapter-verse-inline-chunk {
+  white-space: normal;
+  scroll-margin-top: var(--read-chapter-verse-scroll-margin-top, 5.5rem);
+  scroll-margin-bottom: 2.5rem;
+  /* 经文正文允许原生划选/复制，覆盖 body 的默认 user-select: none */
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.read-chapter-verse-inline-chunk--search-focus {
+  border-radius: 0.4rem;
+  background-color: color-mix(in srgb, var(--ab-read-ochre) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ab-read-sepia) 14%, transparent);
+}
+
+.dark .read-chapter-verse-inline-chunk--search-focus {
+  background-color: color-mix(in srgb, var(--ab-read-vellum) 7%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ab-read-vellum) 10%, transparent);
+}
+
+/* 连排模式下跟读中的那一节：整节不再铺 LOGO 黄，底色只铺当前这一句
+   （.read-chapter-verse-audio-follow）。这里只留节号变色，标出「读到这一节了」。 */
+.read-chapter-verse-inline-chunk--audio-active {
+  border-radius: 0.4rem;
+}
+
+.read-chapter-verse-inline-num {
+  margin-right: 0.2em;
+  font-size: 0.72em;
+  font-weight: 650;
+  vertical-align: baseline;
+  color: color-mix(in srgb, var(--ab-read-mahogany) 72%, transparent);
+}
+
+.read-chapter-verse-inline-chunk--search-focus .read-chapter-verse-inline-num,
+.read-chapter-verse-inline-chunk--audio-active .read-chapter-verse-inline-num {
+  color: color-mix(in srgb, var(--ab-read-mahogany) 92%, transparent);
+}
+
+.dark .read-chapter-verse-inline-chunk--audio-active .read-chapter-verse-inline-num {
+  color: var(--ab-read-mahogany);
+}
+
+.dark .read-chapter-verse-inline-num {
+  color: color-mix(in srgb, var(--ab-read-sand-light) 72%, transparent);
+}
+
+.read-chapter-segment-heading {
+  margin: 1.35rem 0 0.75rem;
+  font-size: clamp(0.95rem, 2vw, 1.05rem);
+  font-weight: 650;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--ab-read-mahogany) 86%, transparent);
+}
+
+.dark .read-chapter-segment-heading {
+  color: color-mix(in srgb, var(--ab-read-sand-light) 86%, transparent);
+}
+
+.read-chapter-verse:last-child {
+  margin-bottom: 0;
+}
+
+.read-chapter-verse-primary {
+  display: inline;
+  /* 经文正文允许原生划选/复制，覆盖 body 的默认 user-select: none */
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.read-chapter-verse-contrast {
+  display: block;
+  margin-top: 0.42rem;
+  margin-left: 0.2rem;
+  padding-left: 0.72rem;
+  border-left: 2px solid color-mix(in srgb, var(--ab-read-ot-accent) 52%, transparent);
+  font-size: var(--read-bible-contrast-verse-font-size, 0.98rem);
+  font-weight: 450;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  color: color-mix(in srgb, var(--ab-read-bronze) 76%, transparent);
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.dark .read-chapter-verse-contrast {
+  border-left-color: color-mix(in srgb, var(--ab-read-amber-warm) 48%, transparent);
+  color: color-mix(in srgb, var(--ab-read-taupe-light) 82%, transparent);
+}
+
+/* 经文正文区（与章标题、下方信息版分区） */
+.read-chapter-scripture {
+  padding-bottom: 0.25rem;
+}

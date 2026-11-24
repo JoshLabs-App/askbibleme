@@ -1,0 +1,309 @@
+/* 经文交叉引用：节号即入口 */
+button.read-chapter-verse-num {
+  display: inline;
+  margin: 0;
+  margin-right: 0.5ch;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.84em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--ab-read-mahogany) 72%, transparent);
+  cursor: pointer;
+}
+
+button.read-chapter-verse-num--xref:hover {
+  color: color-mix(in srgb, var(--ab-read-sepia) 98%, currentColor);
+}
+
+.dark button.read-chapter-verse-num--xref:hover {
+  color: color-mix(in srgb, var(--ab-read-sand-gold) 96%, currentColor);
+}
+
+.dark button.read-chapter-verse-num {
+  color: color-mix(in srgb, var(--ab-read-sand-light) 72%, transparent);
+}
+
+/* 有交叉引用的节号：琥珀色强调（弱于金句/书签） */
+.read-chapter-verse-num--xref,
+button.read-chapter-verse-num--xref {
+  color: color-mix(in srgb, var(--ab-read-sepia) 90%, currentColor);
+}
+
+.dark .read-chapter-verse-num--xref,
+.dark button.read-chapter-verse-num--xref {
+  color: color-mix(in srgb, var(--ab-read-sand-gold) 92%, currentColor);
+}
+
+.read-chapter-xref-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: color-mix(in srgb, var(--ab-read-espresso) 28%, transparent);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.read-chapter-xref-sheet-backdrop--open {
+  opacity: 1;
+}
+
+.read-chapter-xref-sheet {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 28rem);
+  max-height: min(78vh, 28rem);
+  overflow: hidden;
+  margin: 0 0 max(0.75rem, env(safe-area-inset-bottom));
+  padding: 1rem 1.1rem 0;
+  border-radius: 1rem 1rem 0.65rem 0.65rem;
+  border: 1px solid var(--parchment-control-border, var(--ab-read-control-border));
+  color: var(--ab-read-espresso);
+  box-shadow: 0 -8px 32px color-mix(in srgb, var(--ab-read-espresso) 18%, transparent);
+  transform: translateY(12px);
+  transition: transform 0.22s ease;
+}
+
+.dark .read-chapter-xref-sheet {
+  border-color: var(--parchment-control-border, var(--ab-read-control-border));
+  color: var(--ab-read-cream);
+}
+
+.read-chapter-xref-sheet--open {
+  transform: translateY(0);
+}
+
+.read-chapter-xref-sheet-header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.read-chapter-xref-sheet-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 1.1rem;
+  margin-right: -0.15rem;
+  padding-right: 0.15rem;
+}
+
+.read-chapter-xref-sheet-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.read-chapter-xref-sheet-close {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: color-mix(in srgb, currentColor 62%, transparent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.15rem 0.25rem;
+}
+
+.read-chapter-xref-sheet-section + .read-chapter-xref-sheet-section {
+  margin-top: 0.85rem;
+}
+
+.read-chapter-xref-sheet-section-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, currentColor 52%, transparent);
+  margin-bottom: 0.4rem;
+}
+
+.read-chapter-xref-sheet-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.read-chapter-xref-sheet-list li + li {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid color-mix(in srgb, var(--ab-read-olive-bark) 12%, transparent);
+}
+
+.read-chapter-xref-sheet-snippet {
+  margin: 0.35rem 0 0;
+  font-size: 0.88rem;
+  font-weight: 450;
+  line-height: 1.48;
+  color: color-mix(in srgb, currentColor 72%, transparent);
+}
+
+.read-chapter-xref-sheet-snippet--loading {
+  color: color-mix(in srgb, currentColor 45%, transparent);
+}
+
+.read-chapter-xref-sheet-link {
+  font-size: 0.92rem;
+  text-decoration: none;
+  color: color-mix(in srgb, var(--ab-read-sepia) 92%, currentColor);
+}
+
+.read-chapter-xref-sheet-link:hover,
+.read-chapter-xref-sheet-link:focus-visible {
+  text-decoration: none;
+}
+
+.dark .read-chapter-xref-sheet-link {
+  color: color-mix(in srgb, var(--ab-read-sand-gold) 88%, currentColor);
+}
+
+.read-chapter-xref-sheet-empty {
+  font-size: 0.88rem;
+  color: color-mix(in srgb, currentColor 58%, transparent);
+}
+
+/* 圣经首页：轮播经文与羊皮卷主色对齐（覆盖 Rotator 内 text-ink） */
+.read-bible-read-home-verse blockquote p,
+.read-bible-read-home-verse blockquote footer {
+  color: color-mix(in srgb, var(--ab-read-espresso) 94%, transparent);
+}
+
+.dark .read-bible-read-home-verse blockquote p,
+.dark .read-bible-read-home-verse blockquote footer {
+  color: color-mix(in srgb, var(--ab-read-paper-bright) 90%, transparent);
+}
+
+/* ── 祷告 /prayer：与读经共用羊皮卷与版式变量 ── */
+.prayer-on-parchment {
+  --prayer-line: color-mix(in srgb, currentColor 15%, transparent);
+  --prayer-line-emphasis: color-mix(in srgb, currentColor 24%, transparent);
+  color: color-mix(in srgb, var(--ab-read-espresso) 94%, transparent);
+}
+
+.dark .prayer-on-parchment {
+  color: color-mix(in srgb, var(--ab-read-cream) 94%, transparent);
+  --prayer-line: color-mix(in srgb, var(--ab-read-cream) 14%, transparent);
+  --prayer-line-emphasis: color-mix(in srgb, var(--ab-read-cream) 22%, transparent);
+}
+
+.dark .prayer-on-parchment .prayer-eyebrow {
+  color: color-mix(in srgb, currentColor 54%, transparent);
+}
+
+.dark .prayer-on-parchment .prayer-muted {
+  color: color-mix(in srgb, currentColor 66%, transparent);
+}
+
+.dark .prayer-on-parchment .prayer-lead,
+.dark .prayer-on-parchment .prayer-body {
+  color: color-mix(in srgb, currentColor 90%, transparent);
+}
+
+/* 横线：兄弟分隔、顶/底边 */
+.prayer-on-parchment .prayer-divide-y > * + * {
+  border-top: 1px solid var(--prayer-line);
+}
+
+.prayer-on-parchment .prayer-rule-t {
+  border-top: 1px solid var(--prayer-line);
+}
+
+.prayer-on-parchment .prayer-rule-b {
+  border-bottom: 1px solid var(--prayer-line);
+}
+
+/* 竖线：引用、提示 */
+.prayer-on-parchment .prayer-accent-l {
+  border-left: 2px solid var(--prayer-line-emphasis);
+  padding-left: 1rem;
+}
+
+@media (min-width: 640px) {
+  .prayer-on-parchment .prayer-accent-l {
+    padding-left: 1.25rem;
+  }
+}
+
+.prayer-on-parchment .prayer-icon-ring {
+  box-shadow: inset 0 0 0 1px var(--prayer-line);
+}
+
+.prayer-on-parchment .prayer-eyebrow {
+  font-size: 0.69em;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, currentColor 58%, transparent);
+}
+
+.prayer-on-parchment .prayer-heading {
+  font-size: var(--read-bible-chapter-title-font-size, 1.6rem);
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  color: inherit;
+}
+
+.prayer-on-parchment .prayer-heading-sm {
+  font-size: calc(var(--read-bible-verse-font-size, 1.1875rem) * 0.92);
+  font-weight: 600;
+  line-height: 1.4;
+  color: inherit;
+}
+
+.prayer-on-parchment .prayer-lead,
+.prayer-on-parchment .prayer-body {
+  font-size: var(--read-bible-verse-font-size, 1.1875rem);
+  font-weight: 500;
+  line-height: 2;
+  letter-spacing: 0.015em;
+  color: color-mix(in srgb, currentColor 92%, transparent);
+}
+
+.prayer-on-parchment .prayer-muted {
+  color: color-mix(in srgb, currentColor 62%, transparent);
+}
+
+.prayer-on-parchment .prayer-link {
+  color: color-mix(in srgb, currentColor 82%, transparent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--prayer-line-emphasis);
+  text-underline-offset: 0.22em;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+
+.prayer-on-parchment .prayer-link:hover {
+  color: inherit;
+  text-decoration-color: color-mix(in srgb, currentColor 42%, transparent);
+}
+
+.prayer-on-parchment .prayer-link--quiet {
+  text-decoration-color: transparent;
+}
+
+.prayer-on-parchment .prayer-link--quiet:hover {
+  text-decoration-color: var(--prayer-line-emphasis);
+}
+
+.prayer-on-parchment .prayer-verse-passage blockquote {
+  margin: 0;
+  border: 0;
+}
+
+.prayer-on-parchment .prayer-verse-passage--full {
+  margin-top: 2.25rem;
+}
+
+.prayer-on-parchment .prayer-verse-passage--full:first-child {
+  margin-top: 0;
+}

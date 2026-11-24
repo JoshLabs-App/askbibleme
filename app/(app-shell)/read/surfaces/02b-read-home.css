@@ -1,0 +1,107 @@
+/* /read 首页：对齐 iOS ReadCatalogScreen */
+.read-bible-home-root {
+  position: relative;
+  color: var(--ab-read-espresso);
+}
+
+.read-bible-home-top-action {
+  filter: drop-shadow(0 1px 6px color-mix(in srgb, var(--ab-read-black) 55%, transparent)) drop-shadow(0 0 1px color-mix(in srgb, var(--ab-read-black) 80%, transparent));
+}
+
+.read-bible-home-hero {
+  padding-top: 0.125rem;
+  padding-bottom: 0;
+}
+
+.read-bible-home-title-zh {
+  font-size: clamp(1.875rem, 6.2vw, 2.4375rem);
+  line-height: 1.1;
+  font-weight: 600;
+  color: var(--ab-read-espresso);
+}
+
+.read-bible-home-top-stack {
+  width: 100%;
+}
+
+.read-bible-today-readings {
+  margin-top: 0.375rem;
+  padding-top: 0.125rem;
+}
+
+.read-bible-today-readings-heading {
+  width: 100%;
+  margin-top: 0.375rem;
+  margin-bottom: 0.125rem;
+  padding-left: 30px;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  text-align: left;
+  color: var(--ab-read-espresso);
+}
+
+.dark .read-bible-today-readings-heading {
+  color: var(--ab-read-cream);
+}
+
+.read-bible-today-stats {
+  margin-top: 0.625rem;
+  margin-bottom: 0.5rem;
+}
+
+.read-bible-today-stat-value {
+  font-size: clamp(2rem, 9.5vw, 2.375rem);
+  line-height: 1.15;
+}
+
+.read-bible-year-timeline-track {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--ab-read-amber-bark) 28%, transparent) 16%,
+    color-mix(in srgb, var(--ab-read-amber-bark) 28%, transparent) 84%,
+    transparent 100%
+  );
+}
+
+.read-bible-read-home-catalog {
+  border-top: none;
+  padding-top: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.read-bible-read-home-catalog-scroll {
+  padding-bottom: 0.25rem;
+}
+
+.read-bible-today-plan-footer--home {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+}
+
+.read-bible-read-home-verse {
+  position: relative;
+}
+
+.dark .read-bible-home-title-zh,
+.dark .read-bible-home-root {
+  color: var(--ab-read-cream);
+}
+
+.dark .read-bible-year-timeline-track {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--ab-read-cream) 22%, transparent) 16%,
+    color-mix(in srgb, var(--ab-read-cream) 22%, transparent) 84%,
+    transparent 100%
+  );
+}
+
+.read-chapter-article {
+  margin-top: 0;
+  color: inherit;
+  text-align: start;
+}

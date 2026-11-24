@@ -1,0 +1,318 @@
+/* 章末书卷/章跳转：与目录选章浮层同系暖褐，暗黑下对齐羊皮卷 */
+.dark .read-chapter-jump-backdrop {
+  background: color-mix(in srgb, var(--ab-read-black) 52%, transparent);
+}
+
+.dark .read-chapter-jump-panel {
+  border-color: var(--parchment-control-border, var(--ab-read-control-border));
+  box-shadow:
+    0 -14px 44px color-mix(in srgb, var(--ab-read-black) 48%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--ab-read-cream) 11%, transparent);
+}
+
+.dark .read-chapter-jump-title {
+  color: color-mix(in srgb, var(--ab-read-cream) 92%, transparent);
+}
+
+.dark .read-chapter-jump-close {
+  background: color-mix(in srgb, var(--ab-read-cream) 10%, transparent);
+  color: color-mix(in srgb, var(--ab-read-cream) 72%, transparent);
+}
+
+.dark .read-chapter-jump-books {
+  border-bottom-color: color-mix(in srgb, var(--ab-read-cream) 12%, transparent);
+}
+
+.dark .read-chapter-jump-testament-label--old {
+  color: color-mix(in srgb, var(--ab-read-ot-peach) 68%, var(--ab-read-cream) 32%);
+}
+
+.dark .read-chapter-jump-testament-label--new {
+  color: color-mix(in srgb, var(--ab-read-nt-ice) 62%, var(--ab-read-cream) 38%);
+}
+
+.dark .read-chapter-jump-book {
+  border-color: var(--parchment-control-border, var(--ab-read-control-border));
+  background: var(--parchment-control-fill, var(--ab-read-control-fill));
+}
+
+.dark .read-chapter-jump-book--old {
+  border-color: color-mix(in srgb, var(--ab-read-ot-gold) 28%, var(--ab-read-cream) 72%);
+  background: color-mix(in srgb, var(--ab-read-stone-dark) 64%, var(--ab-read-amber-bark) 36%);
+}
+
+.dark .read-chapter-jump-book--new {
+  border-color: color-mix(in srgb, var(--ab-read-nt-sky) 24%, var(--ab-read-cream) 76%);
+  background: color-mix(in srgb, var(--ab-read-stone-dark) 64%, var(--ab-read-nt-navy) 36%);
+}
+
+.dark .read-chapter-jump-book--old.read-chapter-jump-book--selected {
+  border-color: color-mix(in srgb, var(--ab-read-ot-amber) 44%, transparent);
+  background: color-mix(in srgb, var(--ab-read-stone-mid) 58%, var(--ab-read-amber-bark) 42%);
+}
+
+.dark .read-chapter-jump-book--new.read-chapter-jump-book--selected {
+  border-color: color-mix(in srgb, var(--ab-read-nt-sky) 42%, transparent);
+  background: color-mix(in srgb, var(--ab-read-stone-mid) 58%, var(--ab-read-nt-royal) 42%);
+}
+
+.dark .read-chapter-jump-book-num {
+  color: color-mix(in srgb, var(--ab-read-taupe-light) 72%, transparent);
+}
+
+.dark .read-chapter-jump-book-name {
+  color: color-mix(in srgb, var(--ab-read-cream) 90%, transparent);
+}
+
+.dark .read-chapter-jump-chapters-label {
+  color: color-mix(in srgb, var(--ab-read-taupe-light) 78%, transparent);
+}
+
+.dark .read-chapter-jump-chapters-wrap--old .read-chapter-jump-chapters-label {
+  color: color-mix(in srgb, var(--ab-read-ot-peach) 62%, var(--ab-read-taupe-light) 38%);
+}
+
+.dark .read-chapter-jump-chapters-wrap--new .read-chapter-jump-chapters-label {
+  color: color-mix(in srgb, var(--ab-read-nt-ice) 58%, var(--ab-read-taupe-light) 42%);
+}
+
+.dark .read-chapter-jump-chapter {
+  border-color: color-mix(in srgb, var(--ab-read-cream) 16%, transparent);
+  background: color-mix(in srgb, var(--ab-read-stone-dark) 58%, var(--ab-read-stone-mid) 42%);
+  color: color-mix(in srgb, var(--ab-read-cream) 88%, transparent);
+}
+
+.dark .read-chapter-jump-chapter--current {
+  border-color: color-mix(in srgb, var(--ab-read-cream) 38%, transparent);
+  background: color-mix(in srgb, var(--ab-read-stone-mid) 62%, var(--ab-read-stone-soft) 38%);
+}
+
+.dark .read-chapter-jump-chapters-wrap--old .read-chapter-jump-chapter {
+  border-color: color-mix(in srgb, var(--ab-read-ot-gold) 22%, var(--ab-read-cream) 78%);
+}
+
+.dark .read-chapter-jump-chapters-wrap--old .read-chapter-jump-chapter--current {
+  border-color: color-mix(in srgb, var(--ab-read-ot-amber) 44%, transparent);
+  background: color-mix(in srgb, var(--ab-read-stone-mid) 56%, var(--ab-read-amber-bark) 44%);
+}
+
+.dark .read-chapter-jump-chapters-wrap--new .read-chapter-jump-chapter {
+  border-color: color-mix(in srgb, var(--ab-read-nt-sky) 20%, var(--ab-read-cream) 80%);
+}
+
+.dark .read-chapter-jump-chapters-wrap--new .read-chapter-jump-chapter--current {
+  border-color: color-mix(in srgb, var(--ab-read-nt-sky) 40%, transparent);
+  background: color-mix(in srgb, var(--ab-read-stone-mid) 56%, var(--ab-read-nt-royal) 44%);
+}
+
+.read-chapter-jump-panel--catalog {
+  max-height: min(88dvh, 720px);
+}
+
+.read-chapter-jump-panel--catalog .read-chapter-jump-title {
+  flex: 1;
+  min-width: 0;
+  font-size: clamp(1.35rem, 4.8vw, 1.5rem);
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.read-chapter-jump-header--catalog {
+  display: grid;
+  grid-template-columns: 2rem 1fr 2rem;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.15rem;
+}
+
+.read-chapter-jump-back {
+  display: inline-flex;
+  height: 2rem;
+  width: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--parchment-control-border, var(--ab-read-control-border));
+  background: color-mix(in srgb, var(--ab-read-paper-bright) 72%, transparent);
+  color: color-mix(in srgb, var(--ab-read-umber) 88%, transparent);
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+}
+
+.read-chapter-jump-back:hover {
+  background: color-mix(in srgb, var(--ab-read-olive-bark) 12%, transparent);
+}
+
+.read-chapter-jump-header-spacer {
+  width: 2rem;
+  height: 2rem;
+}
+
+.read-chapter-jump-catalog-scroll {
+  flex: 1;
+  min-height: 0;
+  max-height: min(460px, 52dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 0.15rem 0.35rem;
+}
+
+.read-jump-chapter-picker-grid {
+  padding-top: 0.35rem;
+}
+
+.read-jump-chapter-picker-grid .bible-catalog-chapter-cell--current {
+  border-color: color-mix(in srgb, var(--ab-read-brass) 48%, transparent);
+  background: var(--parchment-control-fill-strong, var(--ab-read-control-fill-strong));
+  font-weight: 700;
+}
+
+.read-chapter-jump-footer-close {
+  margin-top: 0.35rem;
+  align-self: center;
+  border: 0;
+  background: transparent;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.875rem;
+  color: color-mix(in srgb, var(--ab-read-muted-ink) 78%, transparent);
+  cursor: pointer;
+}
+
+.bc-jump-testament-headers {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin-bottom: 0.15rem;
+}
+
+.bc-jump-testament-header {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0 0.15rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.bc-jump-testament-header--old {
+  color: var(--ab-read-ot-speech);
+}
+
+.bc-jump-testament-header--new {
+  color: var(--ab-read-ot-gold);
+}
+
+.bible-catalog-read-outline--jump-columns {
+  /* 正典目录的通用规则在后面会写回 block；跳转层必须始终保持 iOS 的旧约/新约双栏。 */
+  display: flex !important;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.bible-catalog-read-outline--jump-columns .bc-jump-testament {
+  flex: 1;
+  min-width: 0;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.bible-catalog-read-outline--jump-columns .bible-catalog-read-testament-body::before {
+  display: none;
+}
+
+.bc-jump-section-block {
+  margin-bottom: 0.35rem;
+  border-left: 2px solid var(--bc-jump-accent, color-mix(in srgb, var(--ab-read-amber-bark) 45%, transparent));
+  padding-left: 0.35rem;
+}
+
+.bc-jump-section-title {
+  margin: 0 0 0.15rem;
+  padding: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+}
+
+.bc-jump-books {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.bc-jump-book-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.2rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  padding: 0.12rem 0.1rem;
+  text-align: left;
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+}
+
+.bc-jump-book-row--compact:hover {
+  background: color-mix(in srgb, var(--ab-read-olive-bark) 10%, transparent);
+}
+
+.bc-jump-book-row--compact.bc-jump-book-row--active {
+  background: color-mix(in srgb, var(--ab-read-olive-bark) 8%, transparent);
+}
+
+.bc-jump-book-num {
+  flex-shrink: 0;
+  width: 1.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+.bc-jump-book-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.98rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--ab-read-espresso);
+}
+
+.dark .bc-jump-book-name {
+  color: var(--ab-read-cream);
+}
+
+.dark .bc-jump-testament-header--old {
+  color: color-mix(in srgb, var(--ab-read-nt-ice) 62%, var(--ab-read-cream) 38%);
+}
+
+.dark .bc-jump-testament-header--new {
+  color: color-mix(in srgb, var(--ab-read-ot-peach) 68%, var(--ab-read-cream) 32%);
+}
+
+.dark .read-chapter-jump-back {
+  border-color: var(--parchment-control-border, var(--ab-read-control-border));
+  background: color-mix(in srgb, var(--ab-read-stone-dark) 72%, transparent);
+  color: color-mix(in srgb, var(--ab-read-cream) 72%, transparent);
+}
+
+.bc-sheet-root--jump-catalog {
+  z-index: 10160;
+}
+
+.bc-sheet-root--jump-catalog .bc-sheet-panel {
+  box-shadow: 0 16px 48px color-mix(in srgb, var(--ab-read-obsidian) 22%, transparent);
+}

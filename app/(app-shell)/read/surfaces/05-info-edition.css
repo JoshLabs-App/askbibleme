@@ -1,0 +1,418 @@
+/* 信息版入口：默认不加载正文 */
+.read-chapter-info-edition-invite {
+  margin-top: clamp(2rem, 6vw, 2.75rem);
+  text-align: center;
+}
+
+.read-chapter-info-edition-invite-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.read-chapter-info-edition-trigger {
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ab-read-sepia) 28%, transparent);
+  background: color-mix(in srgb, var(--ab-read-paper-bright) 55%, transparent);
+  padding: 0.45rem 1.1rem;
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--ab-read-mahogany) 90%, transparent);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.read-chapter-info-edition-trigger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ab-read-paper-bright) 82%, transparent);
+  border-color: color-mix(in srgb, var(--ab-read-sepia) 38%, transparent);
+}
+
+.read-chapter-info-edition-trigger:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.read-chapter-info-edition-trigger--generating {
+  max-width: 18rem;
+  border-radius: 1rem;
+  padding: 0.65rem 1.15rem;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.read-chapter-info-edition-trigger--collapse,
+.read-chapter-info-edition-trigger--reopen {
+  display: block;
+  margin: 0.35rem auto 0;
+}
+
+.read-chapter-info-edition-trigger--collapse {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.dark .read-chapter-info-edition-trigger {
+  border-color: color-mix(in srgb, var(--ab-read-vellum) 18%, transparent);
+  background: color-mix(in srgb, var(--ab-read-dark-canvas) 45%, transparent);
+  color: color-mix(in srgb, var(--ab-read-cream) 85%, transparent);
+}
+
+.read-chapter-info-edition-invite-hint {
+  margin: 0;
+  max-width: min(16rem, 100%);
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif;
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--ab-read-sepia) 48%, transparent);
+}
+
+.dark .read-chapter-info-edition-invite-hint {
+  color: color-mix(in srgb, var(--ab-read-vellum) 38%, transparent);
+}
+
+.read-chapter-info-edition-loading-text {
+  margin: 0.75rem auto 0;
+  max-width: 18rem;
+  text-align: center;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  white-space: pre-line;
+  color: color-mix(in srgb, var(--ab-read-sepia) 55%, transparent);
+}
+
+.read-chapter-info-edition-panel--error {
+  text-align: center;
+}
+
+.read-chapter-info-edition-error-text {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--ab-read-consult-terracotta) 85%, transparent);
+}
+
+.read-chapter-info-edition-retry {
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ab-read-sepia) 25%, transparent);
+  background: transparent;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--ab-read-mahogany) 88%, transparent);
+}
+
+/* V1 信息版（基础版）：与经文明确分为第二块内容 */
+.read-chapter-info-edition {
+  margin-top: clamp(1.25rem, 4vw, 1.75rem);
+  text-align: start;
+}
+
+.read-chapter-info-edition-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.15rem;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--ab-read-sepia) 14%, transparent);
+  text-align: center;
+}
+
+.read-chapter-info-edition--discover .read-chapter-info-edition-header {
+  border-bottom-color: color-mix(in srgb, var(--post-reading-discover) 18%, transparent);
+}
+
+.read-chapter-info-edition--consult .read-chapter-info-edition-header {
+  border-bottom-color: color-mix(in srgb, var(--post-reading-consult) 18%, transparent);
+}
+
+.dark .read-chapter-info-edition-header {
+  border-bottom-color: color-mix(in srgb, var(--ab-read-vellum) 12%, transparent);
+}
+
+.read-chapter-info-edition-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0;
+  text-align: center;
+}
+
+.read-chapter-info-edition-hero-art {
+  position: relative;
+  width: min(72%, 12.5rem);
+  aspect-ratio: 1 / 1;
+}
+
+.read-chapter-info-edition-hero-art-img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  opacity: 0.92;
+}
+
+.read-chapter-info-edition-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding: 0.38rem 0.95rem;
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--ab-read-paper-bright);
+}
+
+.read-chapter-info-edition-hero-badge svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.read-chapter-info-edition-hero--discover .read-chapter-info-edition-hero-badge {
+  background: var(--post-reading-discover);
+}
+
+.read-chapter-info-edition-hero--consult .read-chapter-info-edition-hero-badge {
+  background: var(--post-reading-consult);
+}
+
+.read-chapter-info-edition-hero-badge--switch {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
+}
+
+.read-chapter-info-edition-hero-badge--switch:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--ab-read-espresso) 14%, transparent);
+}
+
+.read-chapter-info-edition-hero-badge--switch:active {
+  transform: scale(0.97);
+}
+
+.read-chapter-info-edition-hero-badge--switch:focus-visible {
+  outline: 2px solid color-mix(in srgb, currentColor 35%, transparent);
+  outline-offset: 3px;
+}
+
+.read-chapter-info-edition-hero-title {
+  margin: 0;
+  max-width: 18rem;
+  font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", ui-serif, Georgia, serif;
+  font-size: clamp(1.25rem, 4.8vw, 1.45rem);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.3;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.read-chapter-info-edition-hero--discover .read-chapter-info-edition-hero-title {
+  color: var(--post-reading-discover);
+}
+
+.read-chapter-info-edition-hero--consult .read-chapter-info-edition-hero-title {
+  color: var(--post-reading-consult);
+}
+
+.read-chapter-info-edition-hero-title-rule {
+  display: block;
+  width: 2.75rem;
+  height: 1px;
+  margin: 0.05rem 0 0.1rem;
+}
+
+.read-chapter-info-edition-hero--discover .read-chapter-info-edition-hero-title-rule {
+  background: color-mix(in srgb, var(--post-reading-discover) 35%, transparent);
+}
+
+.read-chapter-info-edition-hero--consult .read-chapter-info-edition-hero-title-rule {
+  background: color-mix(in srgb, var(--post-reading-consult) 35%, transparent);
+}
+
+.read-chapter-post-reading-editions-panel-title--choice {
+  color: color-mix(in srgb, var(--ab-read-stone-dark) 88%, transparent);
+}
+
+.dark .read-chapter-post-reading-editions-panel-title--choice {
+  color: color-mix(in srgb, var(--ab-read-vellum) 88%, transparent);
+}
+
+.read-chapter-info-edition-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.read-chapter-info-edition-divider-line {
+  flex: 1;
+  height: 1px;
+  background: color-mix(in srgb, var(--ab-read-sepia) 22%, transparent);
+}
+
+.dark .read-chapter-info-edition-divider-line {
+  background: color-mix(in srgb, var(--ab-read-vellum) 16%, transparent);
+}
+
+.read-chapter-info-edition-divider-label {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  text-align: center;
+}
+
+.read-chapter-info-edition-kicker {
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--ab-read-sepia) 55%, transparent);
+}
+
+.read-chapter-info-edition--discover .read-chapter-info-edition-kicker {
+  color: color-mix(in srgb, var(--post-reading-discover) 72%, transparent);
+}
+
+.read-chapter-info-edition--consult .read-chapter-info-edition-kicker {
+  color: color-mix(in srgb, var(--post-reading-consult) 72%, transparent);
+}
+
+.dark .read-chapter-info-edition-kicker {
+  color: color-mix(in srgb, var(--ab-read-vellum) 45%, transparent);
+}
+
+.read-chapter-info-edition-role {
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--ab-read-mahogany) 88%, transparent);
+}
+
+.dark .read-chapter-info-edition-role {
+  color: color-mix(in srgb, var(--ab-read-cream) 82%, transparent);
+}
+
+.read-chapter-info-edition-disclaimer {
+  margin: 0.75rem 0 0;
+  max-width: 22rem;
+  text-align: center;
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  font-size: 0.6875rem;
+  line-height: 1.55;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--ab-read-sepia) 52%, transparent);
+}
+
+.dark .read-chapter-info-edition-disclaimer {
+  color: color-mix(in srgb, var(--ab-read-vellum) 42%, transparent);
+}
+
+.read-chapter-content-correction-link {
+  display: block;
+  width: 100%;
+  margin-top: 0.65rem;
+  padding: 0.2rem 0.5rem;
+  border: 0;
+  background: transparent;
+  text-align: center;
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--ab-read-sepia) 48%, transparent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.read-chapter-content-correction-link:hover {
+  color: color-mix(in srgb, var(--ab-read-sepia) 68%, transparent);
+}
+
+.dark .read-chapter-content-correction-link {
+  color: color-mix(in srgb, var(--ab-read-vellum) 42%, transparent);
+}
+
+.read-chapter-info-edition-panel {
+  position: relative;
+  border-radius: 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--ab-read-sepia) 18%, transparent);
+  border-left-width: 1px;
+  border-left-color: color-mix(in srgb, var(--ab-read-sepia) 18%, transparent);
+  background: color-mix(in srgb, var(--ab-read-paper-bright) 96%, transparent);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--ab-read-white) 65%, transparent) inset,
+    0 8px 28px -18px color-mix(in srgb, var(--ab-read-mahogany) 35%, transparent);
+  padding: 1.35rem 1.25rem 1.5rem;
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  overflow: hidden;
+}
+
+.read-chapter-info-edition-back {
+  display: block;
+  margin: 0.95rem auto 0;
+  padding: 0.35rem 0.5rem;
+  border: 0;
+  background: transparent;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--ab-read-ochre) 92%, transparent);
+  cursor: pointer;
+}
+
+.read-chapter-info-edition--discover .read-chapter-info-edition-panel {
+  border-color: var(--post-reading-discover-border);
+  border-left-color: var(--post-reading-discover-border);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--ab-read-white) 65%, transparent) inset,
+    0 8px 28px -18px color-mix(in srgb, var(--post-reading-discover) 18%, transparent);
+}
+
+.read-chapter-info-edition--consult .read-chapter-info-edition-panel {
+  border-color: var(--post-reading-consult-border);
+  border-left-color: var(--post-reading-consult-border);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--ab-read-white) 65%, transparent) inset,
+    0 8px 28px -18px color-mix(in srgb, var(--post-reading-consult) 18%, transparent);
+}
+
+.dark .read-chapter-info-edition-panel {
+  border-color: color-mix(in srgb, var(--ab-read-vellum) 14%, transparent);
+  border-left-color: color-mix(in srgb, var(--ab-read-vellum) 14%, transparent);
+  background: color-mix(in srgb, var(--ab-read-stone-dark) 92%, transparent);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--ab-read-white) 6%, transparent) inset,
+    0 10px 32px -20px color-mix(in srgb, var(--ab-read-black) 45%, transparent);
+}
+
+.dark .read-chapter-info-edition--discover .read-chapter-info-edition-panel {
+  border-color: color-mix(in srgb, var(--post-reading-discover) 32%, transparent);
+}
+
+.dark .read-chapter-info-edition--consult .read-chapter-info-edition-panel {
+  border-color: color-mix(in srgb, var(--post-reading-consult) 32%, transparent);
+  border-left-color: color-mix(in srgb, var(--post-reading-consult) 32%, transparent);
+}
+
+.read-chapter-info-edition-panel-skeleton {
+  min-height: 5rem;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--ab-read-sepia) 6%, transparent);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+.dark .read-chapter-info-edition-panel-skeleton {
+  background: color-mix(in srgb, var(--ab-read-vellum) 6%, transparent);
+}

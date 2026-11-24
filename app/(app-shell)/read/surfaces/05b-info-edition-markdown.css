@@ -1,0 +1,105 @@
+
+.read-chapter-info-edition-md {
+  font-size: 0.9375rem;
+  line-height: 1.75;
+}
+
+.read-chapter-info-edition-md :first-child {
+  margin-top: 0;
+}
+
+.read-chapter-info-edition-md .read-info-edition-h1 {
+  margin: 0 0 1.15rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 0;
+  font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", ui-serif, Georgia, serif;
+  font-size: clamp(1.05rem, 4.2vw, 1.125rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.45;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.read-chapter-info-edition-md .read-info-edition-h2 {
+  margin: 1.85rem 0 0.65rem;
+  padding-bottom: 0.2rem;
+  border-bottom: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.read-chapter-info-edition-md .read-info-edition-h1 + .read-info-edition-h2 {
+  margin-top: 0.85rem;
+}
+
+.read-chapter-info-edition-md .read-info-edition-h3 {
+  margin: 1.35rem 0 0.45rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.read-chapter-info-edition-md .read-info-edition-p {
+  margin: 0 0 0.9rem;
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: color-mix(in srgb, var(--ab-read-espresso) 82%, transparent);
+}
+
+.read-chapter-info-edition-md .read-info-edition-p:last-child {
+  margin-bottom: 0;
+}
+
+.dark .read-chapter-info-edition-md .read-info-edition-p {
+  color: color-mix(in srgb, var(--ab-read-vellum) 82%, transparent);
+}
+
+.read-chapter-info-edition-md :is(.read-info-edition-h1, .read-info-edition-h2, .read-info-edition-h3) {
+  color: color-mix(in srgb, var(--ab-read-discover-gold) 68%, var(--ab-read-umber));
+}
+
+.read-chapter-info-edition-md strong {
+  color: color-mix(in srgb, var(--ab-read-discover-gold) 72%, var(--ab-read-umber));
+}
+
+.read-chapter-info-edition--consult .read-chapter-info-edition-md :is(.read-info-edition-h1, .read-info-edition-h2, .read-info-edition-h3),
+.read-chapter-info-edition--consult .read-chapter-info-edition-md strong {
+  color: color-mix(in srgb, var(--ab-read-consult-terracotta) 82%, var(--ab-read-umber));
+}
+
+.dark .read-chapter-info-edition-md :is(.read-info-edition-h1, .read-info-edition-h2, .read-info-edition-h3) {
+  color: color-mix(in srgb, var(--ab-read-discover-gold) 78%, var(--ab-read-cream));
+}
+
+.dark .read-chapter-info-edition-md strong {
+  color: color-mix(in srgb, var(--ab-read-discover-gold) 82%, var(--ab-read-cream));
+}
+
+.dark .read-chapter-info-edition--consult .read-chapter-info-edition-md :is(.read-info-edition-h1, .read-info-edition-h2, .read-info-edition-h3),
+.dark .read-chapter-info-edition--consult .read-chapter-info-edition-md strong {
+  color: color-mix(in srgb, var(--ab-read-consult-rose) 80%, var(--ab-read-cream));
+}
+
+.read-chapter-info-edition-md ul,
+.read-chapter-info-edition-md ol {
+  margin: 0.35rem 0 1rem;
+  padding-left: 1.25rem;
+}
+
+.read-chapter-info-edition-md li {
+  margin-bottom: 0.35rem;
+}
+
+.read-chapter-info-edition-md hr {
+  display: none;
+}
+
+/* 正文里 `---` 分隔线统一隐藏，改由纸面横线承载节奏 */
+.read-chapter-info-edition--consult .read-chapter-info-edition-md hr {
+  display: none;
+}

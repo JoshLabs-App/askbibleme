@@ -1,0 +1,202 @@
+/* 宽屏跳转目录：旧约 | 新约 | 章次 三栏 */
+@media (min-width: 768px) {
+  .read-chapter-jump-root--catalog-wide .read-chapter-jump-panel--catalog-wide {
+    top: 50%;
+    bottom: auto;
+    width: min(56rem, calc(100% - 2rem));
+    max-height: min(85dvh, 680px);
+    transform: translate(-50%, calc(-50% + 105%));
+  }
+
+  .read-chapter-jump-root--catalog-wide.read-chapter-jump-root--open .read-chapter-jump-panel--catalog-wide {
+    transform: translate(-50%, -50%);
+  }
+
+  .read-chapter-jump-catalog-scroll--wide {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    max-height: min(520px, 58dvh);
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .read-jump-catalog-wide-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(10.5rem, 12.5rem);
+    gap: 0.65rem;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .read-jump-catalog-wide-grid > * {
+    min-height: 0;
+  }
+
+  .read-jump-catalog-testament-column {
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    flex-direction: column;
+    border-radius: 0.65rem;
+    border: 1px solid var(--parchment-control-border, var(--ab-read-control-border));
+    background: var(--parchment-control-fill-muted, var(--ab-read-control-fill-muted));
+    padding: 0.35rem 0.4rem 0.45rem;
+  }
+
+  .read-jump-catalog-testament-column .bc-jump-testament-header {
+    /* 覆盖 .bc-jump-testament-header { flex: 1 }（双列顶栏用）；单列内不可 grow，否则会占满栏高把书卷挤出可视区 */
+    flex: 0 0 auto;
+    margin-bottom: 0.25rem;
+  }
+
+  .read-jump-catalog-testament-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .read-jump-catalog-chapters-column {
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 0.65rem;
+    border: 1px solid var(--parchment-control-border, var(--ab-read-control-border));
+    background: var(--parchment-control-fill-muted, var(--ab-read-control-fill-muted));
+    padding: 0.35rem 0.45rem 0.45rem;
+  }
+
+  .read-jump-catalog-chapters-heading {
+    flex-shrink: 0;
+    margin: 0 0 0.35rem;
+    padding: 0 0.15rem;
+    font-size: 0.9375rem;
+    font-weight: 650;
+    line-height: 1.3;
+    text-align: center;
+    color: color-mix(in srgb, var(--ab-read-umber) 88%, transparent);
+  }
+
+  .read-jump-catalog-chapters-column .read-jump-chapter-picker-grid {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
+    align-content: start;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-top: 0.15rem;
+    padding-right: 0.1rem;
+  }
+
+  .read-jump-catalog-chapters-column .read-jump-chapter-picker-grid.bc-sheet-chapters--centered {
+    flex-wrap: unset;
+    justify-content: stretch;
+  }
+
+  .read-jump-catalog-chapters-column .bible-catalog-chapter-cell {
+    width: auto;
+    min-width: 0;
+    min-height: 2.35rem;
+    padding: 0.35rem 0.15rem;
+    font-size: 0.8125rem;
+    border-radius: 8px;
+  }
+
+  .bible-catalog-read-outline--jump-columns {
+    gap: 0.55rem;
+  }
+
+  .bc-jump-testament-headers {
+    gap: 0.55rem;
+  }
+}
+
+.dark .read-jump-catalog-chapters-heading {
+  color: color-mix(in srgb, var(--ab-read-cream) 88%, transparent);
+}
+
+.dark .read-jump-catalog-testament-column,
+.dark .read-jump-catalog-chapters-column {
+  background: var(--parchment-control-fill-muted, var(--ab-read-control-fill-muted));
+  border-color: var(--parchment-control-border, var(--ab-read-control-border));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .read-chapter-jump-backdrop,
+  .read-chapter-jump-panel {
+    transition: none;
+  }
+}
+
+/* 读经弹出层：共用羊皮卷底图（对齐 App ReadParchmentBackgroundImage） */
+.read-chapter-catalog-popover,
+.read-chapter-jump-panel,
+.read-chapter-verse-action-sheet,
+.read-chapter-xref-sheet,
+.read-chapter-selection-bar,
+.read-chapter-highlight-bar {
+  background-color: var(--read-parchment-bg-canvas, var(--ab-bg));
+  background-image: var(--read-parchment-bg-image);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.dark .read-chapter-catalog-popover,
+.dark .read-chapter-jump-panel,
+.dark .read-chapter-verse-action-sheet,
+.dark .read-chapter-xref-sheet,
+.dark .read-chapter-selection-bar,
+.dark .read-chapter-highlight-bar {
+  background-color: var(--read-parchment-bg-canvas, var(--ab-bg));
+}
+
+/* 主译本缺本章（如 UST 未发布书卷）回退到常用译本时的提示 */
+.read-chapter-fallback-notice {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  text-align: center;
+  color: color-mix(in srgb, var(--ab-read-muted-ink) 82%, transparent);
+}
+
+.dark .read-chapter-fallback-notice {
+  color: color-mix(in srgb, var(--ab-read-taupe-light) 82%, transparent);
+}
+
+
+/* 「读完一章」的专属动效：标题短暂亮成金色再落回静止。
+   刻意不弹 Toast —— 这是读经页最核心的完成时刻，语气要克制（Josh 2026-09-20 定）。
+   和 iOS ChapterView / 安卓 ChapterScreen 的 chapterDoneGlow 是同一套动作。 */
+/* 柔和档（Josh 2026-09-23「观感需要柔和一些」）：不用满金 #ffb101，
+   落到 55% 那一档的 #b98b2e，进退场都拉长 —— 是「被光照到」而不是「闪一下」 */
+@keyframes ab-chapter-done-glow {
+  0% { color: inherit; }
+  22% { color: var(--ab-read-done-glow); }
+  40% { color: var(--ab-read-done-glow); }
+  100% { color: inherit; }
+}
+
+html.ab-chapter-done .read-chapter-title,
+html.ab-chapter-done .read-chapter-title-chapter,
+/* 章末的书名也一起亮：完成是「滚到章末」触发的，那一刻页首标题早滚出视口了，
+   只亮标题用户根本看不见（2026-09-23 安卓模拟器实测发现，三端同改） */
+html.ab-chapter-done .read-chapter-end-nav-center {
+  animation: ab-chapter-done-glow 2.25s ease-in-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.ab-chapter-done .read-chapter-title,
+  html.ab-chapter-done .read-chapter-title-chapter,
+  html.ab-chapter-done .read-chapter-end-nav-center {
+    animation: none;
+  }
+}

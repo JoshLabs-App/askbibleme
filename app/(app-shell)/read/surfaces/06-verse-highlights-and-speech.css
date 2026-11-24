@@ -1,0 +1,426 @@
+/* 和合本整章朗读：按进度估算的当前节（纯 LOGO 黄，与 App 一致） */
+/* 跟读中的那一节：整节不再铺底（那就是「按行高亮」），底色只铺当前这一句，
+   见 .read-chapter-verse-audio-follow。这里只留一点排版占位，避免切换时跳动。 */
+.read-chapter-verse.read-chapter-verse--audio-active {
+  margin-inline: -0.35rem;
+  padding: 0.15rem 0.35rem 0.35rem;
+  border-radius: 0.4rem;
+}
+
+/* 经文搜索跳入：高亮并 scrollIntoView(center) */
+.read-chapter-verse.read-chapter-verse--search-focus {
+  margin-inline: -0.35rem;
+  padding: 0.25rem 0.35rem 0.4rem;
+  border-radius: 0.4rem;
+  background-color: color-mix(in srgb, var(--ab-read-ochre) 20%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ab-read-mahogany) 28%, transparent);
+}
+
+.dark .read-chapter-verse.read-chapter-verse--search-focus {
+  background-color: color-mix(in srgb, var(--ab-read-vellum) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ab-read-vellum) 18%, transparent);
+}
+
+.read-chapter-verse-search-keyword {
+  color: color-mix(in srgb, var(--ab-read-ochre) 96%, var(--ab-read-mahogany));
+  font-weight: 700;
+  /* 整节框去掉后只剩关键词这一处标记，和 App 同一种 LOGO 黄，淡了看不出来 */
+  background: color-mix(in srgb, var(--ab-logo-gold) 45%, transparent);
+  border-radius: 0.25em;
+  padding: 0 0.08em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.dark .read-chapter-verse-search-keyword {
+  color: color-mix(in srgb, var(--ab-read-gold-soft) 88%, var(--ab-read-vellum));
+}
+
+/* 金句：字下色带（按行断开），非整节块底 */
+.read-chapter-golden-marker {
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 0 0.05em;
+  background-image: linear-gradient(
+    180deg,
+    transparent 0.4em,
+    color-mix(in srgb, var(--ab-read-gold-soft) 16%, transparent) 0.4em,
+    color-mix(in srgb, var(--ab-read-gold-soft) 16%, transparent) calc(100% - 0.1em),
+    transparent calc(100% - 0.1em)
+  );
+}
+
+.dark .read-chapter-golden-marker {
+  background-image: linear-gradient(
+    180deg,
+    transparent 0.4em,
+    color-mix(in srgb, var(--ab-read-peach-glow) 12%, transparent) 0.4em,
+    color-mix(in srgb, var(--ab-read-peach-glow) 12%, transparent) calc(100% - 0.1em),
+    transparent calc(100% - 0.1em)
+  );
+}
+
+/* 双击收藏：#FFAF00 字下高亮（半透明色带） */
+.read-chapter-bookmark-marker {
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 0 0.05em;
+  background-image: linear-gradient(
+    180deg,
+    transparent 0.4em,
+    color-mix(in srgb, var(--ab-read-bookmark-gold) 32%, transparent) 0.4em,
+    color-mix(in srgb, var(--ab-read-bookmark-gold) 32%, transparent) calc(100% - 0.1em),
+    transparent calc(100% - 0.1em)
+  );
+}
+
+.dark .read-chapter-bookmark-marker {
+  background-image: linear-gradient(
+    180deg,
+    transparent 0.4em,
+    color-mix(in srgb, var(--ab-read-bookmark-gold) 26%, transparent) 0.4em,
+    color-mix(in srgb, var(--ab-read-bookmark-gold) 26%, transparent) calc(100% - 0.1em),
+    transparent calc(100% - 0.1em)
+  );
+}
+
+.read-chapter-verses-root--highlight-mode {
+  padding-bottom: 5.5rem;
+}
+
+.read-chapter-verse--highlight-mode {
+  user-select: none;
+}
+
+/* 高亮编辑模式下拖拽是"涂色"手势，需重新关闭正文的原生划选（覆盖上方按 verse-primary/inline-chunk 单独打开的 text） */
+.read-chapter-verse--highlight-mode .read-chapter-verse-primary,
+.read-chapter-verse--highlight-mode .read-chapter-verse-contrast,
+.read-chapter-verses-root--highlight-mode .read-chapter-verse-inline-chunk {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 跟读高亮：贴着当前这一句的字铺，不再整节铺底（Josh 2026-09-19「可以改为句吗」）。
+   LOGO 黄叠透明度，比划重点的灯油黄 .45 重一点，让「机器读到这里」和「我自己划的」分得开。 */
+.read-chapter-verse-audio-follow {
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  border-radius: 2px;
+  padding: 0 0.04em;
+  background-color: color-mix(in srgb, var(--ab-logo-gold) 55%, transparent);
+}
+
+.dark .read-chapter-verse-audio-follow {
+  background-color: color-mix(in srgb, var(--ab-logo-gold) 34%, transparent);
+}
+
+/* 划重点：颜料半透明铺在羊皮底上（`verseTextHighlightStyle` 注入 --vh-rgb / --vh-a / --vh-a-dark） */
+.read-chapter-verse-text-highlight {
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  border-radius: 2px;
+  padding: 0 0.04em;
+  background-color: rgb(var(--vh-rgb, 255 177 3) / var(--vh-a, 0.45));
+}
+
+.dark .read-chapter-verse-text-highlight {
+  background-color: rgb(var(--vh-rgb, 255 177 3) / var(--vh-a-dark, 0.28));
+}
+
+.read-chapter-verse-text-unit {
+  display: inline;
+  margin: 0;
+  padding: 0 0.02em;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border-bottom: 1px dashed color-mix(in srgb, var(--ab-read-mahogany) 28%, transparent);
+  border-radius: 2px;
+}
+
+.read-chapter-verse-text-unit--selected {
+  border-bottom-color: transparent;
+}
+
+.read-chapter-verse--selected,
+.read-chapter-verse-inline-chunk--selected {
+  background: color-mix(in srgb, var(--ab-read-sepia) 10%, transparent);
+  border-radius: 0.35rem;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.read-chapter-verse-num--selected {
+  color: color-mix(in srgb, var(--ab-read-sepia) 88%, currentColor);
+}
+
+.read-chapter-highlight-bar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+  z-index: 55;
+  display: flex;
+  width: min(22rem, calc(100vw - 1.5rem));
+  transform: translateX(-50%);
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 1rem;
+  border: 1px solid var(--parchment-control-border, var(--ab-read-control-border));
+  box-shadow: 0 8px 28px color-mix(in srgb, var(--ab-read-espresso) 14%, transparent);
+}
+
+.dark .read-chapter-highlight-bar {
+  border-color: var(--parchment-control-border, var(--ab-read-control-border));
+}
+
+.read-chapter-highlight-bar-title {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ab-read-mahogany);
+}
+
+.dark .read-chapter-highlight-bar-title {
+  color: var(--ab-read-vellum);
+}
+
+.read-chapter-highlight-colors {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+/* 色板按钮所见即所得：和正文里铺出来的是同一个合成色，不是纯颜料色 */
+.read-chapter-highlight-color-chip {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  background-color: rgb(var(--vh-rgb, 255 177 3) / var(--vh-a, 0.45));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ab-read-espresso) 14%, transparent);
+}
+
+.dark .read-chapter-highlight-color-chip {
+  background-color: rgb(var(--vh-rgb, 255 177 3) / var(--vh-a-dark, 0.28));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ab-read-cream) 18%, transparent);
+}
+
+.read-chapter-highlight-color-chip--active {
+  border-color: color-mix(in srgb, var(--ab-read-espresso) 72%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ab-read-paper-bright) 90%, transparent);
+}
+
+.read-chapter-highlight-done {
+  flex-shrink: 0;
+  min-height: 2rem;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  border: 0;
+  background: var(--ab-read-mahogany);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ab-read-paper-bright);
+  cursor: pointer;
+}
+
+.read-chapter-verse-action-root {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+.read-chapter-verse-action-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: color-mix(in srgb, var(--ab-read-espresso) 38%, transparent);
+  cursor: pointer;
+}
+
+.read-chapter-verse-action-sheet {
+  position: relative;
+  z-index: 1;
+  width: min(22rem, 100%);
+  padding: 0.85rem 0.75rem 0.65rem;
+  border-radius: 1rem;
+  border: 1px solid var(--parchment-control-border, var(--ab-read-control-border));
+  box-shadow: 0 12px 40px color-mix(in srgb, var(--ab-read-espresso) 18%, transparent);
+}
+
+.dark .read-chapter-verse-action-sheet {
+  border-color: var(--parchment-control-border, var(--ab-read-control-border));
+}
+
+.read-chapter-verse-action-title {
+  margin: 0 0 0.65rem;
+  padding: 0 0.35rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ab-read-mahogany);
+}
+
+.dark .read-chapter-verse-action-title {
+  color: var(--ab-read-vellum);
+}
+
+.read-chapter-verse-action-btn {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.72rem 0.85rem;
+  border: 1px solid var(--parchment-control-border, var(--ab-read-control-border));
+  border-radius: 0.75rem;
+  background: var(--parchment-control-fill, var(--ab-read-control-fill));
+  text-align: left;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--ab-read-umber);
+  cursor: pointer;
+}
+
+.read-chapter-verse-action-btn--muted {
+  color: color-mix(in srgb, var(--ab-read-mahogany) 62%, transparent);
+  background: transparent;
+}
+
+.read-chapter-selection-bar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+  z-index: 56;
+  display: flex;
+  width: min(22rem, calc(100vw - 1.5rem));
+  transform: translateX(-50%);
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.65rem 0.75rem 0.75rem;
+  border-radius: 1rem;
+  border: 1px solid var(--parchment-control-border, var(--ab-read-control-border));
+  box-shadow: 0 8px 28px color-mix(in srgb, var(--ab-read-espresso) 14%, transparent);
+}
+
+.dark .read-chapter-selection-bar {
+  border-color: var(--parchment-control-border, var(--ab-read-control-border));
+}
+
+.read-chapter-selection-bar-title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+  color: color-mix(in srgb, var(--ab-read-mahogany) 86%, transparent);
+}
+
+.dark .read-chapter-selection-bar-title {
+  color: color-mix(in srgb, var(--ab-read-taupe-light) 86%, transparent);
+}
+
+.read-chapter-selection-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.read-chapter-selection-btn {
+  flex: 1;
+  border: 1px solid var(--parchment-control-border, var(--ab-read-control-border));
+  border-radius: 0.75rem;
+  background: var(--parchment-control-fill-muted, var(--ab-read-control-fill-muted));
+  padding: 0.68rem 0.7rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ab-read-umber);
+  cursor: pointer;
+}
+
+.read-chapter-selection-btn--primary {
+  background: var(--parchment-control-fill-strong, var(--ab-read-control-fill-strong));
+}
+
+.dark .read-chapter-selection-btn {
+  color: var(--ab-read-vellum);
+}
+
+.dark .read-chapter-selection-btn--primary {
+  background: var(--parchment-control-fill-strong, var(--ab-read-control-fill-strong));
+}
+
+.dark .read-chapter-verse-action-btn {
+  color: var(--ab-read-vellum);
+  background: color-mix(in srgb, var(--ab-read-vellum) 8%, transparent);
+}
+
+.read-verse-bookmark-feedback {
+  position: fixed;
+  left: 50%;
+  bottom: calc(6.75rem + env(safe-area-inset-bottom, 0px));
+  z-index: 60;
+  max-width: min(20rem, calc(100vw - 2rem));
+  transform: translateX(-50%);
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: center;
+  color: var(--ab-read-paper-warm);
+  background: color-mix(in srgb, var(--ab-read-espresso) 88%, transparent);
+  pointer-events: none;
+  animation: read-verse-bookmark-feedback-in 0.16s ease-out;
+}
+
+@keyframes read-verse-bookmark-feedback-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.read-chapter-verse-num {
+  display: inline;
+  margin-right: 0.5ch;
+  font-size: 0.84em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--ab-read-mahogany) 72%, transparent);
+}
+
+/* 试点：推断的「神谕引语」略强调，避免与正文对比过强 */
+.read-chapter-divine-speech {
+  font-weight: 700;
+  color: color-mix(in srgb, var(--ab-read-oracle-speech) 95%, currentColor);
+}
+
+.dark .read-chapter-divine-speech {
+  color: color-mix(in srgb, var(--ab-read-oracle-speech) 88%, currentColor);
+}
+
+/* 引号内其他人说话（神言区间优先，不重复上色） */
+.read-chapter-human-speech {
+  font-weight: 700;
+  color: var(--ab-read-ot-speech);
+}
+
+/* #38486c 是旧约强调色，浅色下照用；深色原样照抄会压在 #1a1512 上几乎看不见，
+   改成同色相提亮版，与 iOS Parchment.dark 的 0x9DB2DE 对齐（2026-09-19 修） */
+.dark .read-chapter-human-speech {
+  color: var(--ab-read-ot-speech);
+}
+
+.dark .read-chapter-verse-num {
+  color: color-mix(in srgb, var(--ab-read-sand-light) 72%, transparent);
+}

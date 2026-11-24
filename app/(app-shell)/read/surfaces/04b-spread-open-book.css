@@ -1,0 +1,294 @@
+/* 摊开的书：左右页共一张羊皮底，中间书脊 */
+.read-chapter-post-reading-editions-book {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+  column-gap: 0;
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--ab-read-walnut) 16%, transparent);
+  border-radius: 0.75rem;
+  background-color: var(--post-reading-panel-bg-canvas);
+  background-image: var(--post-reading-panel-bg);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--ab-read-paper-bright) 35%, transparent) inset,
+    0 6px 20px color-mix(in srgb, var(--ab-read-espresso) 10%, transparent);
+  overflow: hidden;
+}
+
+.read-chapter-post-reading-editions-book::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  z-index: 2;
+  width: min(0.65rem, 3.2%);
+  transform: translateX(-50%);
+  background: linear-gradient(
+    to right,
+    transparent,
+    color-mix(in srgb, var(--ab-read-walnut) 10%, transparent) 46%,
+    color-mix(in srgb, var(--ab-read-walnut) 18%, transparent) 50%,
+    color-mix(in srgb, var(--ab-read-walnut) 10%, transparent) 54%,
+    transparent
+  );
+  box-shadow:
+    -6px 0 14px color-mix(in srgb, var(--ab-read-espresso) 12%, transparent),
+    4px 0 10px color-mix(in srgb, var(--ab-read-paper-bright) 7%, transparent);
+  pointer-events: none;
+}
+
+.read-chapter-post-reading-editions-book::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  z-index: 3;
+  width: 1px;
+  transform: translateX(-50%);
+  background: color-mix(in srgb, var(--ab-read-walnut) 32%, transparent);
+  pointer-events: none;
+}
+
+.dark .read-chapter-post-reading-editions-book {
+  border-color: color-mix(in srgb, var(--ab-read-vellum) 14%, transparent);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--ab-read-paper-bright) 8%, transparent) inset,
+    0 8px 24px color-mix(in srgb, var(--ab-read-black) 22%, transparent);
+}
+
+.dark .read-chapter-post-reading-editions-book::before {
+  background: linear-gradient(
+    to right,
+    transparent,
+    color-mix(in srgb, var(--ab-read-black) 14%, transparent) 46%,
+    color-mix(in srgb, var(--ab-read-black) 24%, transparent) 50%,
+    color-mix(in srgb, var(--ab-read-black) 14%, transparent) 54%,
+    transparent
+  );
+  box-shadow:
+    -6px 0 16px color-mix(in srgb, var(--ab-read-black) 22%, transparent),
+    4px 0 10px color-mix(in srgb, var(--ab-read-paper-bright) 4%, transparent);
+}
+
+.dark .read-chapter-post-reading-editions-book::after {
+  background: color-mix(in srgb, var(--ab-read-vellum) 22%, transparent);
+}
+
+.read-chapter-post-reading-editions-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+  column-gap: 0;
+  width: 100%;
+}
+
+.read-chapter-post-reading-editions-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: hidden;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.read-chapter-post-reading-editions-panel--discover {
+  box-shadow: inset -14px 0 18px -14px color-mix(in srgb, var(--ab-read-walnut) 14%, transparent);
+}
+
+.read-chapter-post-reading-editions-panel--consult {
+  box-shadow: inset 14px 0 18px -14px color-mix(in srgb, var(--ab-read-walnut) 14%, transparent);
+}
+
+.dark .read-chapter-post-reading-editions-panel--discover {
+  box-shadow: inset -14px 0 18px -14px color-mix(in srgb, var(--ab-read-black) 20%, transparent);
+}
+
+.dark .read-chapter-post-reading-editions-panel--consult {
+  box-shadow: inset 14px 0 18px -14px color-mix(in srgb, var(--ab-read-black) 20%, transparent);
+}
+
+.read-chapter-post-reading-editions-book .read-chapter-post-reading-editions-panel:hover {
+  transform: none;
+}
+
+.read-chapter-post-reading-editions-panel--active.read-chapter-post-reading-editions-panel--discover {
+  background: color-mix(in srgb, var(--post-reading-discover) 7%, transparent);
+  box-shadow:
+    inset -14px 0 18px -14px color-mix(in srgb, var(--ab-read-walnut) 14%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--post-reading-discover) 18%, transparent);
+}
+
+.read-chapter-post-reading-editions-panel--active.read-chapter-post-reading-editions-panel--consult {
+  background: color-mix(in srgb, var(--post-reading-consult) 7%, transparent);
+  box-shadow:
+    inset 14px 0 18px -14px color-mix(in srgb, var(--ab-read-walnut) 14%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--post-reading-consult) 18%, transparent);
+}
+
+.read-chapter-post-reading-editions-panel-art {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  flex-shrink: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background: transparent;
+}
+
+.read-chapter-post-reading-editions-panel-art-img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  object-position: center center;
+  opacity: 0.8;
+}
+
+.read-chapter-post-reading-editions-panel-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.75rem 0.85rem;
+}
+
+.read-chapter-post-reading-editions-panel-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  border-radius: 999px;
+  padding: 0.22rem 0.6rem;
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--ab-read-paper-bright);
+}
+
+.read-chapter-post-reading-editions-panel--discover .read-chapter-post-reading-editions-panel-badge {
+  background: var(--post-reading-discover);
+}
+
+.read-chapter-post-reading-editions-panel--consult .read-chapter-post-reading-editions-panel-badge {
+  background: var(--post-reading-consult);
+}
+
+.read-chapter-post-reading-editions-panel-title {
+  font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", ui-serif, Georgia, serif;
+  font-size: clamp(1.15rem, 4.2vw, 1.35rem);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+}
+
+.read-chapter-post-reading-editions-panel--discover .read-chapter-post-reading-editions-panel-title {
+  color: var(--post-reading-discover);
+}
+
+.read-chapter-post-reading-editions-panel--consult .read-chapter-post-reading-editions-panel-title {
+  color: var(--post-reading-consult);
+}
+
+.read-chapter-post-reading-editions-panel-title-rule {
+  display: block;
+  width: 2.75rem;
+  height: 1px;
+  margin: 0.1rem 0 0.15rem;
+  background: color-mix(in srgb, var(--ab-read-walnut) 22%, transparent);
+}
+
+.read-chapter-post-reading-editions-panel--discover .read-chapter-post-reading-editions-panel-title-rule {
+  background: color-mix(in srgb, var(--post-reading-discover) 35%, transparent);
+}
+
+.read-chapter-post-reading-editions-panel--consult .read-chapter-post-reading-editions-panel-title-rule {
+  background: color-mix(in srgb, var(--post-reading-consult) 35%, transparent);
+}
+
+.read-chapter-post-reading-editions-panel-blurb {
+  margin: 0;
+  max-width: 10.5rem;
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif;
+  font-size: clamp(0.6875rem, 3vw, 0.75rem);
+  line-height: 1.55;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--ab-read-stone-dark) 78%, transparent);
+}
+
+.dark .read-chapter-post-reading-editions-panel {
+  border: none;
+}
+
+.dark .read-chapter-post-reading-editions-panel--discover {
+  border-right-color: color-mix(in srgb, var(--post-reading-discover) 22%, transparent);
+}
+
+.dark .read-chapter-post-reading-editions-panel-blurb {
+  color: color-mix(in srgb, var(--ab-read-cream) 70%, transparent);
+}
+
+.read-chapter-post-reading-editions-panels .read-chapter-info-edition-invite {
+  margin-top: 1.25rem;
+}
+
+.read-chapter-post-reading-bottom-actions {
+  margin-top: 50px;
+  margin-bottom: 50px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+  gap: 0.5rem;
+}
+
+.read-chapter-post-reading-bottom-actions-side {
+  min-width: 0;
+}
+
+.read-chapter-post-reading-bottom-actions-side--right {
+  justify-self: end;
+}
+
+.read-chapter-post-reading-bottom-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.08rem;
+  padding: 0.35rem 0.45rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--ab-read-ochre) 90%, transparent);
+  text-decoration: none;
+}
+
+.read-chapter-post-reading-back-top {
+  margin: 0;
+  padding: 0.35rem 0.5rem;
+  border: 0;
+  background: transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--ab-read-ochre) 84%, transparent);
+  cursor: pointer;
+}

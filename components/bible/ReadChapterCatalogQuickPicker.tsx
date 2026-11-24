@@ -9,6 +9,11 @@ import { JumpCatalogWideGrid } from "@/components/bible/JumpCatalogWideGrid";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { getScriptureCanonCatalogSectionsClient } from "@/lib/bible/scripture-canon-catalog-client";
 import type { ScriptureCanonCatalogBook } from "@/lib/bible/read-scripture-canon-catalog";
+import {
+  getAppShellPortalRoot,
+  isMobileModelActive,
+  subscribeMobileModelChange,
+} from "@/lib/shell/app-shell-portal-root";
 
 type Props = {
   bookId: string;
@@ -40,10 +45,14 @@ function useJumpCatalogWideLayout(): boolean {
   const [wide, setWide] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia(JUMP_CATALOG_WIDE_MEDIA);
-    const sync = () => setWide(mq.matches);
+    const sync = () => setWide(!isMobileModelActive() && mq.matches);
     sync();
     mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
+    const unsub = subscribeMobileModelChange(sync);
+    return () => {
+      mq.removeEventListener("change", sync);
+      unsub();
+    };
   }, []);
   return wide;
 }
@@ -185,7 +194,8 @@ export function ReadChapterCatalogQuickPicker({
     />
   ) : null;
 
-  if (!portalReady || !visible) return null;
+  const portalTarget = portalReady ? getAppShellPortalRoot() ?? document.body : null;
+  if (!portalTarget || !visible) return null;
 
   return createPortal(
     <div
@@ -291,6 +301,6 @@ export function ReadChapterCatalogQuickPicker({
         </button>
       </div>
     </div>,
-    document.body,
+    portalTarget,
   );
 }

@@ -17,6 +17,12 @@ import {
   subscribeReadChapterCompletion,
 } from "@/lib/read/read-chapter-completion";
 import { canonSectionTheme } from "@/lib/read/canon-section-theme";
+import {
+  getAppShellPortalRoot,
+  getEffectiveShellViewportSize,
+  isMobileModelActive,
+  subscribeMobileModelChange,
+} from "@/lib/shell/app-shell-portal-root";
 
 type Props = {
   sections: ScriptureCanonCatalogSection[];
@@ -58,8 +64,7 @@ function readerChapterHref(bookId: string, chapter: number): string {
 }
 
 function computeJumpCatalogPanelLayout(): PanelLayout {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+  const { width: vw, height: vh } = getEffectiveShellViewportSize();
   const pad = 16;
   const panelW = Math.min(360, vw - pad * 2);
   const left = Math.max(pad, (vw - panelW) / 2);
@@ -70,8 +75,7 @@ function computeJumpCatalogPanelLayout(): PanelLayout {
 
 /** 首页 / 独立目录选章：居中 Modal（对齐 iOS `BibleCatalogOutline`） */
 function computeCenteredChapterSheetLayout(): PanelLayout {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+  const { width: vw, height: vh } = getEffectiveShellViewportSize();
   const pad = 20;
   const panelW = Math.min(360, vw - pad * 2);
   const left = Math.max(pad, (vw - panelW) / 2);
@@ -81,8 +85,7 @@ function computeCenteredChapterSheetLayout(): PanelLayout {
 }
 
 function computePanelLayout(s: SheetModel): PanelLayout {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+  const { width: vw, height: vh } = getEffectiveShellViewportSize();
   const pad = 12;
   const panelW = Math.min(344, vw - pad * 2);
   const idealLeft = s.anchorLeft + s.anchorWidth / 2 - panelW / 2;
@@ -219,9 +222,11 @@ export function BibleCatalogReadOutline({
     const bump = () => setLayoutTick((n) => n + 1);
     window.addEventListener("resize", bump);
     window.addEventListener("orientationchange", bump);
+    const unsub = subscribeMobileModelChange(bump);
     return () => {
       window.removeEventListener("resize", bump);
       window.removeEventListener("orientationchange", bump);
+      unsub();
     };
   }, [sheet]);
 
@@ -243,14 +248,31 @@ export function BibleCatalogReadOutline({
     const n = chaptersByBookId.get(book.bookId);
     if (typeof n !== "number" || n < 1) return;
     const r = el.getBoundingClientRect();
+    let anchorTop = r.top;
+    let anchorBottom = r.bottom;
+    let anchorLeft = r.left;
+    let anchorWidth = r.width;
+    if (isMobileModelActive()) {
+      const root = getAppShellPortalRoot();
+      if (root && root !== document.body) {
+        const rootRect = root.getBoundingClientRect();
+        const { width: logicalW, height: logicalH } = getEffectiveShellViewportSize();
+        const scaleX = rootRect.width > 0 ? rootRect.width / logicalW : 1;
+        const scaleY = rootRect.height > 0 ? rootRect.height / logicalH : 1;
+        anchorTop = (r.top - rootRect.top) / scaleY;
+        anchorBottom = (r.bottom - rootRect.top) / scaleY;
+        anchorLeft = (r.left - rootRect.left) / scaleX;
+        anchorWidth = r.width / scaleX;
+      }
+    }
     setSheet({
       bookId: book.bookId,
       bookName: book.bookName,
       chapters: n,
-      anchorTop: r.top,
-      anchorBottom: r.bottom,
-      anchorLeft: r.left,
-      anchorWidth: r.width,
+      anchorTop,
+      anchorBottom,
+      anchorLeft,
+      anchorWidth,
     });
   }, [onJumpBookPress, jumpCatalog]);
 
@@ -262,8 +284,10 @@ export function BibleCatalogReadOutline({
     [onChapterNavigate],
   );
 
+  const portalTarget = portalReady ? getAppShellPortalRoot() ?? document.body : null;
+
   const sheetNode =
-    portalReady &&
+    portalTarget &&
     sheet &&
     panelLayout &&
     !onJumpBookPress &&
@@ -337,7 +361,7 @@ export function BibleCatalogReadOutline({
           </div>
         </div>
       </div>,
-      document.body,
+      portalTarget,
     );
 
   return (

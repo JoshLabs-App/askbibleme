@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { AskBibleBottomUtilityBar } from "@/components/app-shell/AskBibleBottomUtilityBar";
 import { ReadChapterActionChrome } from "@/components/bible/ReadChapterActionChrome";
 import { ReadChapterCatalogQuickPicker } from "@/components/bible/ReadChapterCatalogQuickPicker";
 import { ReadScriptureAudioDockStrip } from "@/components/bible/ReadScriptureAudioDockStrip";
 import { ScriptureAudioDockStrip } from "@/components/bible/ScriptureAudioDockStrip";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
-import { ShellMaterialCommunityIcon } from "@/components/shell/ShellMaterialCommunityIcon";
 import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
 import { isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
 import { isReadPlanPlayPath, readPlanPlayHref } from "@/lib/read/read-plan-play-route";
@@ -19,9 +19,6 @@ import { parseReadChapterPathname } from "@/lib/read/resolve-chapter-page-script
 import { shouldShowReadScriptureAudioDock } from "@/lib/read/read-scripture-dock-visibility";
 import { useReadChapterPageAudioAvailable } from "@/hooks/useReadChapterPageAudioAvailable";
 import {
-  SHELL_TAB_BAR_ICON,
-  SHELL_PLAY_ICON_SIZE_PX,
-  SHELL_TAB_ICON_SIZE_PX,
   shellTabMaterialIcon,
   type ShellTabMaterialIconName,
 } from "@/lib/shell/shell-chrome-icons";
@@ -190,8 +187,8 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
 
   const outer =
     placement === "fixedShell"
-      ? "home-bottom-nav pointer-events-none fixed inset-x-0 bottom-0 z-30 flex flex-col items-center justify-end gap-1.5 px-4 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-0"
-      : "pointer-events-none absolute inset-x-0 bottom-0 z-[18] flex flex-col items-center justify-end gap-1.5 px-4 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-0";
+      ? "home-bottom-nav pointer-events-none fixed inset-x-0 bottom-0 z-30 flex flex-col items-center justify-end gap-1 px-4 pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] pt-0"
+      : "pointer-events-none absolute inset-x-0 bottom-0 z-[18] flex flex-col items-center justify-end gap-1 px-4 pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] pt-0";
 
   const itemLabel = (item: NavItemDef) =>
     locale === "en" ? item.enLabel : item.zhLabel;
@@ -328,6 +325,9 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
       >
         {navItems.map(renderIconLink)}
       </nav>
+      {shellRoot !== "/tv" ? (
+        <AskBibleBottomUtilityBar variant={isVideoStage ? "scenery" : "parchment"} />
+      ) : null}
       {readCatalogSheet}
     </div>
   );

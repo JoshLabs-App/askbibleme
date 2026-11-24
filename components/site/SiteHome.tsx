@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { ABOUT_PAGE_COPY } from "@/components/about/about-page-copy";
+import { AskBibleBottomUtilityBar } from "@/components/app-shell/AskBibleBottomUtilityBar";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { SITE_HOME_COPY, type SiteHomeVersionCopy } from "@/components/site/site-home-copy";
 import { SiteLogoMark } from "@/components/site/SiteLogoMark";
@@ -38,10 +39,6 @@ const ANDROID_APK_PAGE_PATH = "/app";
 
 const APP_SCREEN_IMAGE_SRC = "/site/app-screen-home.webp";
 
-/**
- * 各版本入口前面的图标（Josh 2026-10-01：「有图标的都把图标上」，DECISIONS D-16）：
- * 网页版用 AskBible 自己的图标，其余是 App 里同一套 MDI 图标字体里的苹果 / Google Play / 安卓标。
- */
 type EntryIconKind = "web" | "ios" | "play" | "apk" | "youtube";
 
 const ENTRY_MDI_ICON: Record<Exclude<EntryIconKind, "web">, string> = {
@@ -51,20 +48,12 @@ const ENTRY_MDI_ICON: Record<Exclude<EntryIconKind, "web">, string> = {
   youtube: "youtube",
 };
 
-/**
- * 首屏可以切换的几个软件（Josh 2026-10-01：「一开始就展示几个不同的软件……点不同的，里面的手机就切换不同的内容」，DECISIONS D-22）。
- * AskBible 是默认选中的那个，它的首屏内容还是原来那一套；另外三个各有自己的标题、入口和手机画面。
- */
 type SiteAppId = "askbible" | "tingdao" | "chadao" | "tovcore";
 
-/** 查到 2026-10-06 下架（D-37），2026-10-07 JOSHUA「在 askbible.me 首页也上架这个」放回（D-37 作废） */
-/** 2026-10-21 小小圣经换成诗歌（TovCore），和 App 内「更多 App」同一批（D-42） */
 const SITE_APP_ORDER: SiteAppId[] = ["askbible", "tingdao", "chadao", "tovcore"];
 
-/** 首屏几个软件自动轮着展示，每个停这么久（Josh 2026-10-02：「首页 4 个，做成自动切换的」，DECISIONS D-25） */
 const APP_AUTO_ROTATE_MS = 6500;
 
-/** 切换条上放的是各软件的 App 图标；AskBible 用带黄底的那张（`app-icon.png` 是透明底白标，浅色底上看不见） */
 const SITE_APP_ICON: Record<SiteAppId, string> = {
   askbible: "/branding/icon-512.png",
   tingdao: "/site/sibling-tingdao.png",
@@ -79,7 +68,6 @@ const TOVCORE_SCREENS = screens("tovcore");
 
 type SiblingEntry = { href: string; icon: EntryIconKind | { src: string } };
 
-/** 各软件的入口按钮，顺序和文案里的 `entries` 一一对应；第一个是深色的主入口 */
 const SIBLING_ENTRIES: Record<Exclude<SiteAppId, "askbible">, SiblingEntry[]> = {
   tingdao: [
     { href: SIBLING_TINGDAO_IOS_URL, icon: "ios" },
@@ -97,7 +85,6 @@ const SIBLING_ENTRIES: Record<Exclude<SiteAppId, "askbible">, SiblingEntry[]> = 
 };
 
 function EntryIcon({ kind, size }: { kind: EntryIconKind | { src: string }; size: number }) {
-  /* 网页版入口：AskBible 的标志，和旁边的苹果 / 安卓标一样是单色、跟文字色 */
   if (kind === "web") return <SiteLogoMark className="site-home__entry-icon" size={size} />;
   if (typeof kind !== "string") {
     return (
@@ -127,7 +114,6 @@ function VersionEntry({
 }: {
   copy: SiteHomeVersionCopy;
   href: string;
-  /** 自家几个版本用图标种类；同系列的别的 App 直接给它自己的图标图片 */
   icon: EntryIconKind | { src: string };
   external?: boolean;
 }) {
@@ -157,21 +143,15 @@ function VersionEntry({
   );
 }
 
-/**
- * 官网 `askbible.me/`：一句话理念 + 各版本入口（D-10）。
- * 首屏：一排可切换的软件（D-22）+ 一句话 + 入口排成一组（主入口深色，其余同样大小），Josh 2026-10-01 定。
- */
 export function SiteHome() {
   const { locale, setLocale } = useLocale();
   const router = useRouter();
   const isEn = locale === "en";
   const [app, setApp] = useState<SiteAppId>("askbible");
-  /** 自动轮播：自己点过切换条就不再自动换；鼠标停在首屏上、焦点在首屏里、首屏滑出视野、系统要求减少动效时先停着 */
   const [autoRotate, setAutoRotate] = useState(true);
   const [heroHeld, setHeroHeld] = useState(false);
   const [heroInView, setHeroInView] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(true);
-  /** 轮到过的软件，手机画面留着不拆，下一轮直接淡入 */
   const [shown, setShown] = useState<Record<SiteAppId, boolean>>({
     askbible: true,
     tingdao: false,
@@ -225,7 +205,6 @@ export function SiteHome() {
     return () => window.clearInterval(id);
   }, [rotating]);
 
-  /** 别的软件的第一张画面先悄悄取回来，点切换时不用等 */
   useEffect(() => {
     const id = window.setTimeout(() => {
       for (const src of [TINGDAO_SCREENS[0], CHADAO_SCREENS[0], TOVCORE_SCREENS[0]]) {
@@ -235,15 +214,10 @@ export function SiteHome() {
     return () => window.clearTimeout(id);
   }, []);
 
-  /** 已装到主屏的旧 PWA 仍从 `/` 启动：它要的是网页版，不是官网 */
   useEffect(() => {
     if (isDisplayStandalone()) router.replace(WEB_APP_HOME_PATH);
   }, [router]);
 
-  /**
-   * 根节点底色和浏览器顶栏色是全站按品牌画布色设的（浅羊皮）；官网深色时要跟着换，
-   * 否则回弹露出的边和状态栏是浅的。离开时还原，不影响网页版。
-   */
   useEffect(() => {
     const html = document.documentElement;
     const metas = Array.from(document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]'));
@@ -251,9 +225,12 @@ export function SiteHome() {
     const prevMetas = metas.map((m) => m.getAttribute("content"));
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const apply = () => {
-      const bg = mq.matches ? "#1a1512" : "#fbf6ec";
-      html.style.backgroundColor = bg;
-      metas.forEach((m) => m.setAttribute("content", bg));
+      const rootStyles = getComputedStyle(html);
+      const bg = rootStyles.getPropertyValue("--ab-bg-site").trim();
+      if (bg) {
+        html.style.backgroundColor = bg;
+        metas.forEach((m) => m.setAttribute("content", bg));
+      }
     };
     apply();
     mq.addEventListener("change", apply);
@@ -272,7 +249,6 @@ export function SiteHome() {
       <div className="site-home__wrap">
         <header className="site-home__top">
           <span className="site-home__brand">
-            {/* 顶栏用带黄底的 App 图标，和下面切换条里的那个一致（Josh 2026-10-02：「APP 图是金黄的，但最上面的标是黑的？」） */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={SITE_APP_ICON.askbible} alt="" width={30} height={30} />
             {ASKBIBLE_PRODUCT_NAME}
@@ -332,7 +308,6 @@ export function SiteHome() {
                 ))}
               </div>
               <div className="site-home__rule" aria-hidden />
-              {/* key 跟着选中的软件换：标题、介绍、入口整块重新淡入 */}
               <h1 key={`title-${app}`} className="site-home__title font-serif">
                 {sibling ? sibling.title : copy.heroTitle}
               </h1>
@@ -360,10 +335,6 @@ export function SiteHome() {
                   </div>
                 </div>
               ) : (
-                /*
-                  Josh 2026-10-01：各版本要在首屏直接看得到；「进入网页版」和几个 App 版本
-                  同一排、同样大小对齐，只用深色底标出它是主入口。
-                */
                 <div key="stores-askbible" className="site-home__stores-block">
                   <div className="site-home__stores">
                     <Link className="site-home__store site-home__store--primary" href={WEB_APP_HOME_PATH}>
@@ -399,13 +370,7 @@ export function SiteHome() {
                 </div>
               )}
             </div>
-            {/*
-              手机模型（Josh 2026-10-01）：AskBible 放的是真的网页版首页，不是一张图（DECISIONS D-15），
-              垫底的截图是 `public/site/app-screen-home.webp`，网页版没加载出来时才看得到。
-              切到别的软件时换成它的截图轮播 / 封面（D-22）。
-            */}
             <div className="site-home__phone">
-              {/* 几个软件的画面叠在一起，轮到谁谁淡入；AskBible 的网页版一直留着，免得每轮都重新加载 */}
               <div className="site-home__phone-stack">
                 <div className="site-home__phone-layer" data-on={app === "askbible" ? "1" : "0"}>
                   <SitePhoneLiveScreen posterSrc={APP_SCREEN_IMAGE_SRC} alt={copy.phoneAlt} />
@@ -508,7 +473,6 @@ export function SiteHome() {
             <p className="site-home__closing">{about.closing}</p>
           </section>
 
-          {/* 同系列工具（Josh 2026-10-01，DECISIONS D-21）：官网还是 AskBible 的，这一节只是把另外几样带一下 */}
           <section className="site-home__section" aria-labelledby="site-home-siblings">
             <h2 id="site-home-siblings" className="site-home__heading font-serif">
               {copy.siblingsHeading}
@@ -529,6 +493,7 @@ export function SiteHome() {
             <Link href="/privacy">{about.footerPrivacy}</Link>
           </nav>
           <span>© {ASKBIBLE_PRODUCT_NAME}</span>
+          <AskBibleBottomUtilityBar variant="inline" />
         </footer>
       </div>
     </div>

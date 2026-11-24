@@ -6,11 +6,34 @@ import {
 
 export const ASKBIBLE_MANUAL_CHECK_EVENT = "askbible:manual-check-updates";
 export const ASKBIBLE_UPDATE_APPLIED_EVENT = "askbible:trigger-update-reload";
+export const ASKBIBLE_UPDATE_STAGED_EVENT = "askbible:update-staged";
 
 export type RemoteBuildMeta = {
   id: string;
   builtAt?: string;
 };
+
+let stagedBuildMeta: RemoteBuildMeta | null = null;
+
+export function getStagedBuildMeta(): RemoteBuildMeta | null {
+  return stagedBuildMeta;
+}
+
+export function stageRemoteBuildMeta(meta: RemoteBuildMeta): void {
+  stagedBuildMeta = meta;
+  void purgeOfflineCachesForBuildUpdate();
+  void skipWaitingServiceWorker();
+  void refreshServiceWorkerRegistration();
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(ASKBIBLE_UPDATE_STAGED_EVENT, { detail: meta }));
+  }
+}
+
+export function subscribeStagedBuildMeta(onChange: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener(ASKBIBLE_UPDATE_STAGED_EVENT, onChange);
+  return () => window.removeEventListener(ASKBIBLE_UPDATE_STAGED_EVENT, onChange);
+}
 
 /** 本地开发或未写入构建 id 时跳过强制刷新，避免误报 */
 export function shouldSkipBuildId(id: string | null | undefined): boolean {
@@ -23,6 +46,13 @@ export function formatShortBuildId(raw: string | null | undefined): string {
   if (!id || id === "development" || id === "unknown") return "Web · dev";
   if (id.length <= 10) return `Web · ${id}`;
   return `Web · ${id.slice(0, 8)}`;
+}
+
+/** 底栏常驻轻量版本号文案（如 `v2.0 · 1823761c` 或 `v2.0 · dev`） */
+export function formatCompactBottomVersion(raw: string | null | undefined): string {
+  const id = (raw ?? "").trim();
+  if (!id || id === "development" || id === "unknown") return "v2.0 · dev";
+  return `v2.0 · ${id.length <= 8 ? id : id.slice(0, 8)}`;
 }
 
 export function formatLocalDateTime(input?: string | Date | null): string {
@@ -115,6 +145,24 @@ export async function checkWebBuildUpdate(options?: {
     buildId: remote.id || loaded || "development",
     builtAt: remote.builtAt || getLoadedBuiltAt() || undefined,
   };
+}
+
+/**
+ * 判断当前是否可无感静默切换新版：
+ * - 无正在发声的 <audio>（不掐断音乐/读经/金句播放）
+ * - 无正在输入焦点的表单控件
+ * - 无打开的模态抽屉/对话框，且未处于管理员定位探针模式
+ */
+export function isPageSafeForSilentReload(doc: Document | undefined = typeof document !== "undefined" ? document : undefined): boolean {
+  if (!doc) return false;
+  if (doc.documentElement.dataset.abCodeProbe === "1") return false;
+  const active = doc.activeElement;
+  if (active && /^(INPUT|TEXTAREA|SELECT)$/i.test(active.tagName)) return false;
+  if (active?.getAttribute("contenteditable") === "true") return false;
+  if (doc.querySelector('[role="dialog"][aria-modal="true"]')) return false;
+  const audios = Array.from(doc.querySelectorAll("audio"));
+  if (audios.some((a) => !a.paused && !a.ended)) return false;
+  return true;
 }
 
 export function triggerWebBuildReload(delayMs = 900): void {

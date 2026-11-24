@@ -34,7 +34,25 @@ if (existsSync(resolve(rootDir, 'docs/CODE_MAP.md'))) {
   execFileSync('git', ['add', '--', 'docs/CODE_MAP.md'], { cwd: rootDir });
 }
 
-// 2. 暂存 TS/TSX/JS/MJS 秒级语法速检（esbuild transformSync + node --check）
+// 2. 单一系统色彩总表与业务层零硬编码色值门禁（~60ms）
+const tokenSyncRes = spawnSync(
+  process.execPath,
+  [resolve(rootDir, 'node_modules/tsx/dist/cli.mjs'), resolve(rootDir, 'scripts/sync-theme-tokens.mjs'), '--check'],
+  { cwd: rootDir, stdio: 'inherit' },
+);
+if ((tokenSyncRes.status ?? 1) !== 0) {
+  process.exit(tokenSyncRes.status ?? 1);
+}
+
+const colorRes = spawnSync(process.execPath, [resolve(rootDir, 'scripts/check-hardcoded-colors.mjs')], {
+  cwd: rootDir,
+  stdio: 'inherit',
+});
+if ((colorRes.status ?? 1) !== 0) {
+  process.exit(colorRes.status ?? 1);
+}
+
+// 3. 暂存 TS/TSX/JS/MJS 秒级语法速检（esbuild transformSync + node --check）
 const tsFiles = stagedFiles.filter(
   (rel) => /\.(ts|tsx|mts)$/.test(rel) && !rel.endsWith('.d.ts') && existsSync(resolve(rootDir, rel)),
 );
@@ -87,5 +105,5 @@ if (syntaxErrors.length > 0) {
 
 const elapsedMs = Math.round(performance.now() - t0);
 console.log(
-  `✅ [pre-commit] 代码地图对齐与语法校验通过 (暂存 ${stagedFiles.length} 个文件，TS/JS ${tsFiles.length + jsFiles.length} 个，耗时 ${elapsedMs}ms)`,
+  `✅ [pre-commit] 代码地图、零硬编码色彩门禁与语法校验通过 (暂存 ${stagedFiles.length} 个文件，TS/JS ${tsFiles.length + jsFiles.length} 个，耗时 ${elapsedMs}ms)`,
 );

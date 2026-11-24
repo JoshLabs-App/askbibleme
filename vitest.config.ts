@@ -3,6 +3,9 @@ import { defineConfig } from "vitest/config";
 
 // 仓库根目录与 apps/askbible-mobile 共用同一套 vitest；`@/` 指向仓库根（与两边 tsconfig 的 paths 一致）。
 export default defineConfig({
+  esbuild: {
+    jsx: "automatic",
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname),

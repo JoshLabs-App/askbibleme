@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: 代码地图对齐 + 类型检查 + 测试
+    name: 代码地图对齐 + 色彩门禁 + 类型检查 + 测试
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -26,6 +26,9 @@ jobs:
 
       - name: 校验代码地图同步
         run: node scripts/gen-code-map.mjs --check
+
+      - name: 校验单一系统色彩总表与零野生色值门禁
+        run: npm run check:colors
 
       - name: 类型检查
         run: |

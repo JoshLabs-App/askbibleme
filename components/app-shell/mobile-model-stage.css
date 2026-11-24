@@ -1,0 +1,314 @@
+.ab-mobile-model-stage {
+  display: contents;
+}
+
+.ab-mobile-model-body {
+  display: contents;
+}
+
+.ab-phone-shell {
+  display: contents;
+}
+
+.ab-shell-viewport {
+  display: contents;
+}
+
+/* 桌面端快捷切入手机模型胶囊（≤768px 或内嵌预览时隐藏） */
+.ab-desktop-model-fab {
+  position: fixed;
+  right: 14px;
+  bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  z-index: 44;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 11px;
+  border: 1px solid var(--ab-border);
+  border-radius: 999px;
+  background: var(--ab-utility-bar-bg);
+  color: var(--ab-ink-secondary);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition: opacity 150ms ease, transform 120ms ease, border-color 150ms ease;
+}
+
+.ab-desktop-model-fab:hover {
+  border-color: var(--ab-border-strong);
+  color: var(--ab-ink);
+}
+
+.ab-desktop-model-fab:active {
+  transform: scale(0.97);
+}
+
+.ab-desktop-model-fab svg {
+  width: 13px;
+  height: 13px;
+  flex: none;
+}
+
+@media (max-width: 768px) {
+  .ab-desktop-model-fab,
+  .ab-utility-phone-toggle {
+    display: none !important;
+  }
+}
+
+/* ── 激活 1:1 手机模型态（390 × 844） ─────────────────────────── */
+html[data-ab-mobile-model="1"] {
+  overflow: hidden;
+  background: var(--ab-stage-bg) !important;
+}
+
+html[data-ab-mobile-model="1"] body {
+  overflow: hidden;
+  background: var(--ab-stage-bg) !important;
+}
+
+html[data-ab-mobile-model="1"][data-app-shell-safe-fill="parchment"] {
+  --read-parchment-column-max: 28rem !important;
+  --read-parchment-catalog-column-max: 31rem !important;
+}
+
+html[data-ab-mobile-model="1"][data-app-shell-safe-fill="parchment"]::before {
+  display: none !important;
+}
+
+html[data-ab-mobile-model="1"] .ab-mobile-model-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px 16px 12px;
+  box-sizing: border-box;
+  background: var(--ab-stage-bg);
+  overflow: hidden;
+}
+
+.ab-mobile-model-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: min(680px, 100%);
+  min-height: 38px;
+  padding: 4px 8px;
+  box-sizing: border-box;
+  border: 1px solid var(--ab-stage-bar-border);
+  border-radius: 999px;
+  background: var(--ab-stage-bar-bg);
+  color: var(--ab-stage-bar-ink);
+}
+
+.ab-mobile-model-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--ab-surface-scrim);
+}
+
+.ab-mobile-model-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ab-stage-bar-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ab-mobile-model-tab:hover {
+  color: var(--ab-stage-bar-ink);
+}
+
+.ab-mobile-model-tab[aria-selected="true"] {
+  background: var(--ab-stage-pill-active-bg);
+  color: var(--ab-stage-pill-active-ink);
+  font-weight: 600;
+}
+
+.ab-mobile-model-exit {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--ab-stage-bar-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ab-stage-bar-ink);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ab-mobile-model-exit:hover {
+  background: var(--ab-surface-scrim);
+}
+
+.ab-mobile-model-exit svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+html[data-ab-mobile-model="1"] .ab-mobile-model-body {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 8px;
+  box-sizing: border-box;
+}
+
+html[data-ab-mobile-model="1"] .ab-phone-shell {
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 414px;
+  height: 896px;
+  padding: 12px 12px 14px;
+  box-sizing: border-box;
+  border: 1px solid var(--ab-phone-bezel-border);
+  border-radius: 46px;
+  background: var(--ab-phone-bezel-bg);
+  box-shadow: var(--ab-phone-shadow);
+  transform-origin: center center;
+}
+
+.ab-phone-earpiece {
+  flex: none;
+  width: 78px;
+  height: 5px;
+  margin: 1px auto 9px;
+  border-radius: 999px;
+  background: var(--ab-phone-notch-bg);
+}
+
+.ab-phone-homebar {
+  flex: none;
+  width: 124px;
+  height: 4px;
+  margin: 8px auto 0;
+  border-radius: 999px;
+  background: var(--ab-phone-notch-bg);
+}
+
+html[data-ab-mobile-model="1"] .ab-shell-viewport {
+  position: relative;
+  display: block;
+  width: 390px;
+  height: 844px;
+  flex: none;
+  border-radius: 34px;
+  background: var(--ab-bg);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transform: translateZ(0);
+}
+
+html[data-ab-mobile-model="1"][data-app-shell-safe-fill="parchment"] .ab-shell-viewport {
+  background-color: var(--read-parchment-bg-canvas);
+  background-image: var(--read-parchment-bg-image);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-position: center center;
+  overflow: hidden;
+}
+
+html[data-ab-mobile-model="1"] .ab-shell-viewport .app-shell-fixed-chrome-outer {
+  min-height: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+}
+
+html[data-ab-mobile-model="1"] .ab-shell-viewport .shell-nav-drawer-panel {
+  width: min(21rem, calc(100% - 1rem)) !important;
+}
+
+/* 手机壳内隐藏外层桌面切换入口，由顶栏「切回电脑端（Esc）」接管 */
+html[data-ab-mobile-model="1"] .ab-utility-phone-toggle,
+html[data-ab-mobile-model="1"] .ab-desktop-model-fab {
+  display: none !important;
+}
+
+/* 官网 `/` 在 390×844 手机模型内对齐单列移动端排版 */
+html[data-ab-mobile-model="1"] .site-home {
+  min-height: 100%;
+}
+
+html[data-ab-mobile-model="1"] .site-home__wrap {
+  padding: 0 20px;
+}
+
+html[data-ab-mobile-model="1"] .site-home__hero {
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  min-height: 0;
+  padding-bottom: 52px;
+  text-align: center;
+}
+
+html[data-ab-mobile-model="1"] .site-home__hero-text {
+  align-items: center;
+  width: 100%;
+  padding: 20px 0 0;
+}
+
+html[data-ab-mobile-model="1"] .site-home__rule {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+html[data-ab-mobile-model="1"] .site-home__apps {
+  justify-content: center;
+}
+
+html[data-ab-mobile-model="1"] .site-home__title {
+  font-size: 2.25rem;
+}
+
+html[data-ab-mobile-model="1"] .site-home__sub {
+  font-size: 1rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+html[data-ab-mobile-model="1"] .site-home__principles,
+html[data-ab-mobile-model="1"] .site-home__highlights,
+html[data-ab-mobile-model="1"] .site-home__versions {
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+html[data-ab-mobile-model="1"] .site-home__section,
+html[data-ab-mobile-model="1"] .site-home__quote {
+  padding: 64px 0;
+}

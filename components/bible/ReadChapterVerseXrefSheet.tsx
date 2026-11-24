@@ -8,6 +8,7 @@ import type { AppLocale } from "@/lib/i18n/config";
 import { formatScriptureXrefLabel } from "@/lib/bible/format-scripture-xref-label";
 import { scriptureXrefSnippetKey } from "@/lib/bible/join-verse-range-text";
 import type { ScriptureVerseXrefs, ScriptureXrefTarget } from "@/lib/bible/scripture-xref-types";
+import { getAppShellPortalRoot } from "@/lib/shell/app-shell-portal-root";
 
 const EMPTY_XREF_TARGETS: ScriptureXrefTarget[] = [];
 
@@ -163,7 +164,8 @@ export function ReadChapterVerseXrefSheet({
     };
   }, [open, translationId, locale, refsFetchKey, allRefs]);
 
-  if (!portalReady || !visible) return null;
+  const portalTarget = portalReady ? getAppShellPortalRoot() ?? document.body : null;
+  if (!portalTarget || !visible) return null;
 
   const body = (
     <div
@@ -226,5 +228,5 @@ export function ReadChapterVerseXrefSheet({
     </div>
   );
 
-  return createPortal(body, document.body);
+  return createPortal(body, portalTarget);
 }

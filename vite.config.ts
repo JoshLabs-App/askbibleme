@@ -4,9 +4,11 @@ import { cloudflare } from "@cloudflare/vite-plugin";
 import { createHash } from "node:crypto";
 import { patchCssModules } from "vite-css-modules";
 import path from "node:path";
+import { askbibleJsxSourcePlugin } from "./tools/askbible-jsx-source-plugin.mjs";
 
 export default defineConfig({
   plugins: [
+    askbibleJsxSourcePlugin(import.meta.dirname),
     patchCssModules({ exportMode: "default" }),
     vinext(),
     cloudflare({

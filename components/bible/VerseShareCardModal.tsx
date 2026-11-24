@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import { VERSE_TEXT_HIGHLIGHT_PALETTE } from "@/lib/read/read-verse-text-highlights";
+import { getAppShellPortalRoot } from "@/lib/shell/app-shell-portal-root";
 
 export type VerseShareCardPayload = {
   reference: string;
@@ -114,7 +115,8 @@ export function VerseShareCardModal({
   const { locale } = useLocale();
   const [darkCard, setDarkCard] = useState(false);
 
-  if (!payload || typeof document === "undefined") return null;
+  const portalTarget = typeof document !== "undefined" ? getAppShellPortalRoot() ?? document.body : null;
+  if (!payload || !portalTarget) return null;
 
   const shareImage = async () => {
     const blob = await renderShareCardBlob(payload, darkCard);
@@ -145,6 +147,8 @@ export function VerseShareCardModal({
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
         className="w-full max-w-[390px] rounded-[24px] border border-[#D8C6AA] bg-[#FAF5EC] p-5 shadow-2xl dark:border-[#3E3328] dark:bg-[#241E18]"
         onClick={(e) => e.stopPropagation()}
       >
@@ -212,7 +216,7 @@ export function VerseShareCardModal({
         </button>
       </div>
     </div>,
-    document.body,
+    portalTarget,
   );
 }
 
@@ -246,7 +250,8 @@ export function InstantVerseHighlightPopover({
   onClose: () => void;
 }) {
   const { locale } = useLocale();
-  if (!open || typeof document === "undefined") return null;
+  const portalTarget = typeof document !== "undefined" ? getAppShellPortalRoot() ?? document.body : null;
+  if (!open || !portalTarget) return null;
 
   return createPortal(
     <div
@@ -254,6 +259,8 @@ export function InstantVerseHighlightPopover({
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
         className="w-full max-w-[360px] rounded-[22px] border border-[#D8C6AA] bg-[#FAF5EC] px-4 py-3.5 shadow-xl dark:border-[#3E3328] dark:bg-[#262019]"
         onClick={(e) => e.stopPropagation()}
       >
@@ -321,6 +328,6 @@ export function InstantVerseHighlightPopover({
         </div>
       </div>
     </div>,
-    document.body,
+    portalTarget,
   );
 }

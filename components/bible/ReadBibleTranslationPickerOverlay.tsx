@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { getAppShellPortalRoot } from "@/lib/shell/app-shell-portal-root";
 
 type Option = { id: string; label: string; language?: string };
 
@@ -125,7 +126,8 @@ export function ReadBibleTranslationPickerOverlay({
     setBodyPortalReady(true);
   }, []);
 
-  if (!open || !bodyPortalReady) return null;
+  const portalTarget = bodyPortalReady ? getAppShellPortalRoot() ?? document.body : null;
+  if (!open || !portalTarget) return null;
 
   const toggleContrast = (id: string) => {
     setDraft((current) =>
@@ -140,7 +142,7 @@ export function ReadBibleTranslationPickerOverlay({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="read-parchment-modal-surface relative z-10 flex h-[min(42rem,90dvh)] w-[min(22.5rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-xl border border-[rgba(120,53,15,0.42)] bg-[#FAF5EC] text-[#1c1410] shadow-[0_8px_30px_rgba(28,20,16,0.2)] dark:border-[#3E3328] dark:bg-[#221C16] dark:text-[#F4EBE1] dark:shadow-[0_12px_36px_rgba(0,0,0,0.55)]"
+        className="read-parchment-modal-surface relative z-10 flex h-[min(42rem,90%)] w-[min(22.5rem,calc(100%-1.5rem))] flex-col overflow-hidden rounded-xl border border-[rgba(120,53,15,0.42)] bg-[#FAF5EC] text-[#1c1410] shadow-[0_8px_30px_rgba(28,20,16,0.2)] dark:border-[#3E3328] dark:bg-[#221C16] dark:text-[#F4EBE1] dark:shadow-[0_12px_36px_rgba(0,0,0,0.55)]"
       >
         <header className="flex min-h-[68px] items-start border-b border-[rgba(120,53,15,0.2)] px-2 py-2 dark:border-[#3A3025]">
           <button
@@ -288,6 +290,6 @@ export function ReadBibleTranslationPickerOverlay({
         ) : null}
       </section>
     </div>,
-    document.body,
+    portalTarget,
   );
 }

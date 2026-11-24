@@ -12,6 +12,7 @@ import { isNatureHomeShellPath } from "@/components/home/HomeDockChromeContext";
 import { useShellInsetClockEnvironment } from "@/hooks/useShellInsetClockEnvironment";
 import { isReadBibleHomePath } from "@/lib/read/read-bible-home-route";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
+import { getAppShellPortalRoot } from "@/lib/shell/app-shell-portal-root";
 import {
   SHELL_CHROME_HIT_PX,
   SHELL_ICON,
@@ -77,14 +78,9 @@ function TopShellInsetTime({
 
   const onLight = tone === "onLight";
 
-  /** 自然首页横屏沉浸：底栏隐藏，时间居中靠下（与放松页横屏同量级留白） */
   const landscapeNatureTime =
     "landscape:bottom-[max(1rem,calc(env(safe-area-inset-bottom,0px)+0.5rem))] landscape:top-auto landscape:text-[clamp(0.9375rem,3.4vmin,1.125rem)] landscape:tracking-[0.05em] landscape:sm:text-[clamp(1rem,3.2vmin,1.1875rem)]";
 
-  /**
-   * 横屏且时间落在底部时：抬高到 **底栏浮条之上**（与 `NatureVideoExperience` 底区 hint 的留白同量级），
-   * 避免与 `HomeShellFloatingRouteNav`（播放钮约 44–48px + safe-area）叠住。
-   */
   const landscapeTimeAboveBottomNav =
     "landscape:bottom-[max(4.75rem,calc(env(safe-area-inset-bottom,0px)+4.25rem))] landscape:top-auto";
 
@@ -165,33 +161,16 @@ const EDGE_SWIPE_START_MAX_X = 28;
 export type AppShellTopBarTone = "onDark" | "onLight";
 
 type Props = {
-  /** 深色底用 `onDark`，浅色底用 `onLight`（角标图标 hover 等） */
   tone?: AppShellTopBarTone;
-  /** 右上槽（如自然页静音）；不传则仅显示菜单 */
   rightAccessory?: ReactNode;
-  /**
-   * 手机横屏沉浸：角标淡出且不可点；左缘窄条仍可滑开菜单（见同文件 edge strip）。
-   */
   landscapeImmersive?: boolean;
-  /**
-   * 与 `landscapeImmersive` 无关：在状态栏附近显示壳层时间（如自然页横屏有主视频时）。
-   */
   showTopInsetTime?: boolean;
-  /**
-   * 为 true 时不渲染壳层时间（覆盖 PWA 全屏等 `useShellInsetClockEnvironment`、以及 `showTopInsetTime` / `landscapeImmersive`）。
-   * 用于 `/scenes` 等不希望出现大号叠层时钟的页面。
-   */
   hideTopShellInsetTime?: boolean;
-  /** 仅隐藏左上菜单按钮；用于自然首页等更接近 iPhone 首页的全屏舞台。 */
   hideMenuButton?: boolean;
 };
 
-/** 抽屉挂 `body`：须高于底栏 `z-20`，且低于 `AppShellModal`（`z-index: 100`）以便语言弹层在上 */
 const NAV_DRAWER_PORTAL_Z = 80;
 
-/**
- * 应用壳角标式浮动控制：左上打开 **Notion 式左侧全高抽屉**（用户菜单：译本、主题、账号、语言等）；抽屉经 Portal 叠在底栏之上。无整行顶栏。
- */
 export function AppShellTopBar({
   tone = "onDark",
   rightAccessory = null,
@@ -206,7 +185,6 @@ export function AppShellTopBar({
   const goldenVerseShell = pathname === "/verse" || pathname.startsWith("/verse/");
   const insetClockEnv = useShellInsetClockEnvironment();
   const { immersive, setImmersive } = useAppImmersive();
-  /** 自然首页和安卓一样右上只有齿轮，不常驻沉浸键；已经在沉浸里时仍给一个退出口 */
   const showImmersiveToggle = (natureHomeShell && immersive) || readHomeShell || goldenVerseShell;
   const showTopShellTime =
     !immersive && !hideTopShellInsetTime && (insetClockEnv || landscapeImmersive || showTopInsetTime);
@@ -328,7 +306,6 @@ export function AppShellTopBar({
     toggleNavMenu();
   };
 
-  /** 角标区下缘大致位置，左缘窄条从此向下延伸（safe-area + ~44px 菜单行 + 少量空隙） */
   const edgeStripTopClass = "top-[calc(env(safe-area-inset-top,0px)+3.75rem)]";
   const topChromePadClass = natureHomeShell
     ? "pt-[calc(env(safe-area-inset-top,0px)+6px)] pl-[max(0.5rem,env(safe-area-inset-left,0px))] pr-[max(0.625rem,env(safe-area-inset-right,0px))]"
@@ -474,7 +451,7 @@ export function AppShellTopBar({
                     type="button"
                     onClick={closeNavMenu}
                     aria-label={t("chrome.closeNavMenu")}
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[#37352f]/82 transition hover:bg-black/[0.06] active:bg-black/[0.08]"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-adminFg/82 transition hover:bg-black/[0.06] active:bg-black/[0.08]"
                   >
                     <IconClose className="h-5 w-5" />
                   </button>
@@ -485,7 +462,7 @@ export function AppShellTopBar({
                 <ShellNavDrawerVersionFooter />
               </aside>
             </div>,
-            document.body,
+            getAppShellPortalRoot(),
           )
         : null}
     </>

@@ -9,6 +9,11 @@ if (!existsSync(resolve(rootDir, '.git'))) {
   process.exit(0);
 }
 
+const githookPath = resolve(rootDir, '.githooks/pre-commit');
+if (existsSync(githookPath)) {
+  chmodSync(githookPath, 0o755);
+}
+
 const hookRel = execFileSync('git', ['rev-parse', '--git-path', 'hooks/pre-commit'], {
   cwd: rootDir,
   encoding: 'utf8',
@@ -16,7 +21,7 @@ const hookRel = execFileSync('git', ['rev-parse', '--git-path', 'hooks/pre-commi
 const hookPath = resolve(rootDir, hookRel);
 
 mkdirSync(dirname(hookPath), { recursive: true });
-writeFileSync(hookPath, '#!/bin/sh\nexec node scripts/pre-commit-fast.mjs\n', 'utf8');
+writeFileSync(hookPath, '#!/bin/sh\nexec sh .githooks/pre-commit\n', 'utf8');
 chmodSync(hookPath, 0o755);
 
-console.log(`✅ Git pre-commit hook 已安装: ${hookPath}`);
+console.log(`✅ Git pre-commit hook 已安装: ${hookPath} -> .githooks/pre-commit`);

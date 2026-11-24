@@ -6,10 +6,13 @@ import { SYNC_HTML_DARK_CLASS_BOOT_SCRIPT } from "@/lib/read/sync-html-dark-clas
 // 图标字体自托管（原来从 fonts.googleapis.com / cdn.jsdelivr.net 引，国内不稳且阻塞渲染）
 import "material-icons/iconfont/filled.css";
 import "@mdi/font/css/materialdesignicons.min.css";
+import "./tokens.css";
 import "./globals.css";
 import "./(app-shell)/read/read-parchment-background.css";
 import "./(app-shell)/read/read-parchment-shell-chrome.css";
 import { AppUpdateNotifier } from "@/components/app-shell/AppUpdateNotifier";
+import { CodeProbeProvider } from "@/components/app-shell/AskBibleCodeProbe";
+import { MobileModelStage } from "@/components/app-shell/MobileModelStage";
 import { TvAutoMode } from "@/components/app-shell/TvAutoMode";
 import { EndpointsBoot } from "@/components/shell/EndpointsBoot";
 import { AppImmersiveProvider } from "@/components/app-shell/AppImmersiveProvider";
@@ -91,16 +94,6 @@ export default async function RootLayout({
 }>) {
   const colors = await getResolvedBrandColors();
   const logoBackground = await getResolvedLogoBackground();
-  /**
-   * 这里曾用 cookies()/headers() 判定语言、羊皮卷外壳与三星机型。只要读了请求，整站
-   * 所有页面都会被迫动态渲染——那是迁到静态托管（Cloudflare Pages 免费额度）的最大障碍，
-   * 而这三件事客户端都做得了：
-   * - 语言：LocaleProvider 于客户端按 localStorage → cookie → navigator 判定，
-   *   并在 useLayoutEffect 里同步 <html lang>；
-   * - 羊皮卷外壳与三星机型：PARCHMENT_SHELL_BOOT_SCRIPT 以 beforeInteractive 在水合前
-   *   读 location.pathname 与 navigator.userAgent 设好同名 dataset，它本就写成
-   *   「服务端没设才设」的补位逻辑，去掉服务端这半边它会自然接管。
-   */
   const appBuildId = getAppBuildId();
   const appBuiltAt = getAppBuiltAt();
 
@@ -135,8 +128,12 @@ export default async function RootLayout({
               <CuvChapterAudioVoiceProvider>
                 <MusicShellPlaybackProvider>
                   <MediaPlaybackCoordinatorProvider>
-                    <ParchmentShellRouteEffect />
-                    {children}
+                    <CodeProbeProvider>
+                      <MobileModelStage>
+                        <ParchmentShellRouteEffect />
+                        {children}
+                      </MobileModelStage>
+                    </CodeProbeProvider>
                     <PwaServiceWorkerRegistration />
                     <EndpointsBoot />
                     <AppUpdateNotifier />

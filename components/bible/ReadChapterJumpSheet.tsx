@@ -10,6 +10,7 @@ import {
   testamentForBookNumber,
   type ScriptureTestament,
 } from "@/lib/bible/scripture-books";
+import { getAppShellPortalRoot } from "@/lib/shell/app-shell-portal-root";
 
 const jumpBookGroups: { testament: ScriptureTestament; books: typeof scriptureBooks }[] = [
   {
@@ -111,7 +112,8 @@ export function ReadChapterJumpSheet({
     [entered, onClose],
   );
 
-  if (!portalReady || !visible || !draftBook) return null;
+  const portalTarget = portalReady ? getAppShellPortalRoot() ?? document.body : null;
+  if (!portalTarget || !visible || !draftBook) return null;
 
   return createPortal(
     <div
@@ -207,6 +209,6 @@ export function ReadChapterJumpSheet({
         </section>
       </div>
     </div>,
-    document.body,
+    portalTarget,
   );
 }

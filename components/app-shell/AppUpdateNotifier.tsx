@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useLocale } from "@/components/i18n/LocaleProvider";
-import { useAppImmersive } from "@/components/app-shell/AppImmersiveProvider";
+import { useCallback, useEffect, useRef } from "react";
 import {
   ASKBIBLE_UPDATE_APPLIED_EVENT,
-  fetchRemoteBuildId,
+  fetchRemoteBuildMeta,
   getLoadedBuildId,
+  getStagedBuildMeta,
+  isPageSafeForSilentReload,
   shouldSkipBuildId,
+  stageRemoteBuildMeta,
 } from "@/lib/pwa/check-app-update";
 import {
   purgeOfflineCachesForBuildUpdate,
@@ -16,49 +17,59 @@ import {
 } from "@/lib/pwa/sw-client";
 
 const POLL_MS = 5 * 60 * 1000;
-const FIRST_CHECK_MS = 45_000;
+const FIRST_CHECK_MS = 30_000;
 const FOREGROUND_THROTTLE_MS = 30_000;
-const RELOAD_DELAY_MS = 1200;
+const IDLE_BLUR_APPLY_DELAY_MS = 2_400;
 
 /**
- * 部署新版本后：已打开的标签或主屏幕 PWA 可能仍是旧 HTML/旧 chunk。
- * 自动轮询 + 标签回到前台（`visibilitychange`）+ 网络恢复（`online`）拉取 `/app-build.json`；
- * 发现不一致则清理缓存、切换新 Service Worker 并在短延迟后无感刷新。
+ * 静默无感自动更新守护（严禁打断式大弹窗或强行掐断阅读/音频状态）：
+ * 1. 后台定时轮询 + 网络恢复 + 回到前台比对 `/app-build.json`；
+ * 2. 检测到新版时先后台静默清理旧缓存并预热新 Service Worker（写入 staged 状态，底栏版本号轻量同步）；
+ * 3. 仅当标签页切入后台隐藏（`document.hidden`）或窗口失焦闲置（`!document.hasFocus()`）且无音频播放/表单输入/弹窗时，自动静默切换就绪；
+ * 4. 用户在底栏或抽屉主动点击手动更新时（`ASKBIBLE_UPDATE_APPLIED_EVENT`），按指定短延迟立即切换。
  */
 export function AppUpdateNotifier() {
-  const { t } = useLocale();
-  const { immersive } = useAppImmersive();
-  const [visible, setVisible] = useState(false);
   const loadedRef = useRef<string | null>(null);
   const lastCheckAtRef = useRef(0);
-  const reloadScheduledRef = useRef(false);
-  const reloadTimerRef = useRef<number | null>(null);
+  const reloadingRef = useRef(false);
+  const blurTimerRef = useRef<number | null>(null);
 
-  const scheduleReload = useCallback((delayMs: number) => {
-    if (reloadScheduledRef.current) return;
+  const performReloadNow = useCallback((delayMs = 0) => {
+    if (reloadingRef.current) return;
+    reloadingRef.current = true;
     void purgeOfflineCachesForBuildUpdate();
     void skipWaitingServiceWorker();
     void refreshServiceWorkerRegistration();
-    reloadScheduledRef.current = true;
-    setVisible(true);
-    if (reloadTimerRef.current != null) window.clearTimeout(reloadTimerRef.current);
-    reloadTimerRef.current = window.setTimeout(() => {
-      reloadTimerRef.current = null;
+    if (delayMs <= 0) {
+      window.location.reload();
+      return;
+    }
+    window.setTimeout(() => {
       window.location.reload();
     }, delayMs);
   }, []);
 
+  const tryApplyStagedSilently = useCallback(() => {
+    if (reloadingRef.current) return;
+    if (!getStagedBuildMeta()) return;
+    const isHiddenOrUnfocused = document.hidden || !document.hasFocus();
+    if (!isHiddenOrUnfocused) return;
+    if (!isPageSafeForSilentReload()) return;
+    performReloadNow(0);
+  }, [performReloadNow]);
+
   const check = useCallback(async () => {
-    if (reloadScheduledRef.current) return;
+    if (reloadingRef.current) return;
     lastCheckAtRef.current = Date.now();
     const loaded = loadedRef.current ?? getLoadedBuildId();
     if (shouldSkipBuildId(loaded)) return;
     loadedRef.current = loaded;
-    const remote = await fetchRemoteBuildId();
-    if (shouldSkipBuildId(remote)) return;
-    if (remote === loaded) return;
-    scheduleReload(RELOAD_DELAY_MS);
-  }, [scheduleReload]);
+    const remote = await fetchRemoteBuildMeta();
+    if (!remote || shouldSkipBuildId(remote.id)) return;
+    if (remote.id === loaded) return;
+    stageRemoteBuildMeta(remote);
+    tryApplyStagedSilently();
+  }, [tryApplyStagedSilently]);
 
   useEffect(() => {
     loadedRef.current = getLoadedBuildId() || null;
@@ -66,9 +77,26 @@ export function AppUpdateNotifier() {
     const loop = window.setInterval(() => void check(), POLL_MS);
 
     const onVisibility = () => {
-      if (document.visibilityState !== "visible") return;
+      if (document.hidden) {
+        tryApplyStagedSilently();
+        return;
+      }
       if (Date.now() - lastCheckAtRef.current < FOREGROUND_THROTTLE_MS) return;
       void check();
+    };
+    const onBlur = () => {
+      if (!getStagedBuildMeta()) return;
+      if (blurTimerRef.current != null) window.clearTimeout(blurTimerRef.current);
+      blurTimerRef.current = window.setTimeout(() => {
+        blurTimerRef.current = null;
+        tryApplyStagedSilently();
+      }, IDLE_BLUR_APPLY_DELAY_MS);
+    };
+    const onFocus = () => {
+      if (blurTimerRef.current != null) {
+        window.clearTimeout(blurTimerRef.current);
+        blurTimerRef.current = null;
+      }
     };
     const onOnline = () => {
       void check();
@@ -76,38 +104,26 @@ export function AppUpdateNotifier() {
     const onManualReload = (event: Event) => {
       event.preventDefault();
       const custom = event as CustomEvent<{ delayMs?: number }>;
-      scheduleReload(custom.detail?.delayMs ?? 900);
+      performReloadNow(custom.detail?.delayMs ?? 600);
     };
 
     document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("blur", onBlur);
+    window.addEventListener("focus", onFocus);
     window.addEventListener("online", onOnline);
     window.addEventListener(ASKBIBLE_UPDATE_APPLIED_EVENT, onManualReload);
 
     return () => {
       window.clearTimeout(first);
       window.clearInterval(loop);
+      if (blurTimerRef.current != null) window.clearTimeout(blurTimerRef.current);
       document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("blur", onBlur);
+      window.removeEventListener("focus", onFocus);
       window.removeEventListener("online", onOnline);
       window.removeEventListener(ASKBIBLE_UPDATE_APPLIED_EVENT, onManualReload);
-      if (reloadTimerRef.current != null) window.clearTimeout(reloadTimerRef.current);
     };
-  }, [check, scheduleReload]);
+  }, [check, performReloadNow, tryApplyStagedSilently]);
 
-  // 沉浸模式（首页全屏、电视常开）只是不弹提示条，已排定的刷新照样执行；
-  // 以前这里会取消刷新定时器，而 reloadScheduledRef 又不复位，结果这个标签再也不会自动更新
-  if (immersive) return null;
-  if (!visible) return null;
-
-  return (
-    <div
-      role="status"
-      aria-live="assertive"
-      className="app-update-notifier pointer-events-auto fixed left-3 right-3 z-[90] max-w-lg rounded-2xl border border-border/65 bg-canvas px-4 py-3 text-left text-ink shadow-[0_8px_32px_-8px_rgba(15,40,60,0.22)] sm:left-1/2 sm:right-auto sm:-translate-x-1/2"
-      style={{
-        bottom: "max(5.75rem, calc(4.85rem + env(safe-area-inset-bottom, 0px)))",
-      }}
-    >
-      <p className="text-[13px] leading-snug text-ink/90">{t("chrome.updateForced")}</p>
-    </div>
-  );
+  return null;
 }

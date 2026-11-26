@@ -18,56 +18,57 @@
 | **Studio 产品大脑（仅本机 `npm run dev`，线上 404）** | 工作台：`app/studio/studio-workspace.tsx`<br>AI 讨论区：`app/studio/studio-ai-discussion-panel.tsx` | 反思生成：`app/studio/generate-ai-reflection.ts`<br>上下文组装：`lib/studio-ai-context.ts`<br>生产门禁：`middleware.ts` · `lib/selah-online-editor-surface.ts` | `npm test` |
 | **双端极薄原生壳 & 离线包热更（D-44 / D-46）** | Android：`apps/askbible-android/app/src/main/java/me/askbible/native_/MainActivity.kt`<br>iOS：`apps/askbible-ios/AskBible/AskBibleApp.swift` | 离线包构建：`tools/build-web-pack.mjs`<br>多域名选线：`tools/endpoints-sync.mjs`（`data/endpoints.json`）<br>CF 直发：`scripts/deploy-direct.sh` | `npm run check:native`<br>`npm run check:web-pack` |
 
-- **`components/*` 模块分布**：`components/about/`(2) · `components/achievements/`(6) · `components/app-shell/`(14) · `components/auth/`(5) · `components/bible/`(62) · `components/calm/`(1) · `components/content-correction/`(1) · `components/explore/`(28) · `components/feedback/`(1) · `components/figures/`(0) · `components/home/`(16) · `components/i18n/`(3) · `components/install/`(2) · `components/legacy/`(3) · `components/media/`(1) · `components/member/`(2) · `components/music/`(18) · `components/nature/`(17) · `components/onboarding/`(2) · `components/panorama/`(2) · `components/pwa/`(3) · `components/relax/`(1) · `components/scripture/`(2) · `components/shell/`(18) · `components/site/`(5) · `components/tv/`(0) · `components/tvscreen/`(2) · `components/ui/`(3) · `components/verse/`(7)
+- **`components/*` 模块分布**：`components/about/`(2) · `components/achievements/`(6) · `components/app-shell/`(14) · `components/auth/`(5) · `components/bible/`(62) · `components/calm/`(1) · `components/content-correction/`(1) · `components/explore/`(28) · `components/feedback/`(1) · `components/figures/`(0) · `components/home/`(16) · `components/i18n/`(3) · `components/install/`(2) · `components/legacy/`(3) · `components/media/`(1) · `components/member/`(2) · `components/music/`(18) · `components/nature/`(17) · `components/onboarding/`(2) · `components/panorama/`(2) · `components/pwa/`(3) · `components/relax/`(1) · `components/scripture/`(2) · `components/shell/`(18) · `components/site/`(5) · `components/tvscreen/`(2) · `components/ui/`(3) · `components/verse/`(7)
 - **`lib/*` 模块分布**：`lib/__tests__/`(1) · `lib/achievements/`(4) · `lib/admin/`(6) · `lib/ai/`(15) · `lib/auth/`(5) · `lib/bible/`(165) · `lib/content-corrections/`(2) · `lib/daily-verse/`(2) · `lib/devotional/`(2) · `lib/dom/`(3) · `lib/endpoints/`(3) · `lib/explore/`(93) · `lib/feedback/`(1) · `lib/figures/`(5) · `lib/generated/`(0) · `lib/golden-verses/`(2) · `lib/home/`(14) · `lib/home-listening/`(3) · `lib/home-prayer-pools/`(18) · `lib/http/`(1) · `lib/i18n/`(9) · `lib/media/`(1) · `lib/member-reading-sync/`(15) · `lib/music/`(14) · `lib/music-companion/`(11) · `lib/nature/`(25) · `lib/notifications/`(3) · `lib/onboarding/`(4) · `lib/prayer/`(1) · `lib/pwa/`(8) · `lib/read/`(76) · `lib/relax/`(3) · `lib/scripture/`(13) · `lib/shell/`(13) · `lib/studio/`(1) · `lib/ui/`(2) · `lib/verse/`(3) · `lib/widget/`(2)
 
 ---
 
 ## 2. >800 行源码文件精确行号目录（严禁整读，按 `L<N>` 直达）
 
-### `apps/askbible-android/app/src/main/java/me/askbible/native_/MainActivity.kt`（共 1435 行）
+### `apps/askbible-android/app/src/main/java/me/askbible/native_/MainActivity.kt`（共 1468 行）
 - `L142` — `object VerseDeepLinkBus`
 - `L144` — `fun deliver`
 - `L152` — `class MainActivity`
 - `L153` — `fun onCreate`
 - `L177` — `fun onStart`
 - `L185` — `fun onNewIntent`
-- `L204` — `fun RootScreen`
-- `L411` — `fun loadChapterAudioNow`
-- `L433` — `fun openPlanChapter`
-- `L443` — `fun listenPlanChapter`
-- `L690` — `fun markPlanListened`
-- `L696` — `fun planPlay`
-- `L707` — `fun planRead`
-- `L718` — `fun planTogglePlay`
-- `L723` — `fun planNext`
-- `L1432` — `fun copyText`
+- `L192` — `fun hostActivity`
+- `L213` — `fun RootScreen`
+- `L420` — `fun loadChapterAudioNow`
+- `L442` — `fun openPlanChapter`
+- `L452` — `fun listenPlanChapter`
+- `L722` — `fun markPlanListened`
+- `L728` — `fun planPlay`
+- `L739` — `fun planRead`
+- `L750` — `fun planTogglePlay`
+- `L755` — `fun planNext`
+- `L1465` — `fun copyText`
 
-### `apps/askbible-ios/AskBible/AskBibleApp.swift`（共 1236 行）
+### `apps/askbible-ios/AskBible/AskBibleApp.swift`（共 1251 行）
 - `L4` — `struct AskBibleApp`
-- `L15` — `struct RootView`
-- `L66` — `func openSupportMail`
-- `L71` — `func applyLocaleChoice`
-- `L181` — `func loadChapterAudioNow`
-- `L207` — `func skipToNextChapter`
-- `L248` — `func setSleepTimerAll`
-- `L259` — `func toggleBookmark`
-- `L267` — `func copyVerse`
-- `L273` — `func chapterHighlights`
-- `L282` — `func shareVerse`
-- `L291` — `func openVerseByKey`
-- `L310` — `func showToast`
-- `L321` — `func openToday`
-- `L326` — `func openPlanChapter`
-- `L336` — `func listenPlanChapter`
-- `L381` — `func markPlanListened`
-- `L388` — `func planPlay`
-- `L400` — `func planRead`
-- `L412` — `func planTogglePlay`
-- `L418` — `func planNext`
-- `L423` — `func startPlanFlow`
-- `L579` — `func bookLabel`
-- `L863` — `func checkUpdatesManually`
+- `L17` — `struct RootView`
+- `L68` — `func openSupportMail`
+- `L73` — `func applyLocaleChoice`
+- `L185` — `func loadChapterAudioNow`
+- `L211` — `func skipToNextChapter`
+- `L252` — `func setSleepTimerAll`
+- `L263` — `func toggleBookmark`
+- `L271` — `func copyVerse`
+- `L277` — `func chapterHighlights`
+- `L286` — `func shareVerse`
+- `L295` — `func openVerseByKey`
+- `L314` — `func showToast`
+- `L325` — `func openToday`
+- `L330` — `func openPlanChapter`
+- `L340` — `func listenPlanChapter`
+- `L385` — `func markPlanListened`
+- `L392` — `func planPlay`
+- `L404` — `func planRead`
+- `L416` — `func planTogglePlay`
+- `L422` — `func planNext`
+- `L427` — `func startPlanFlow`
+- `L593` — `func bookLabel`
+- `L877` — `func checkUpdatesManually`
 
 ### `components/nature/NatureVideoExperience.tsx`（共 1197 行）
 - `L72` — `const NATURE_SCENE_DWELL_MS`

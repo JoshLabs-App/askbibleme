@@ -6,8 +6,8 @@
 ## 待决
 
 ### 迁出 joshlabs.app，全部换到 askbible.me（2026-11-26）
-- **现状**：`askbible-media.joshlabs.app`、`askbible-site.joshlabs.app` 已 NXDOMAIN；`media.askbible.me` 已挂在 R2 桶上可用；`askbible-sync.joshlabs.app` 仍通。线上 `version.json` 的 `apkUrl` 还指向已死的 joshlabs 域，**站外安卓 App 内更新下载现在是坏的**。代码已全部改成 `media.askbible.me` / `sync.askbible.me`（分支 `claude/project-thread-j5cdxp`）。
-- **还要做（需 Cloudflare 写操作）**：① sync Worker 加自定义域 `sync.askbible.me` 并部署；② `npm run endpoints:push` 推新候选表；③ 重写 R2 上的 `version.json` 与 `sibling-apps/apps.json`；④ 部署网页（`/api/sync` 兜底上游）。
+- **现状**：`askbible-media.joshlabs.app`、`askbible-site.joshlabs.app` 已 NXDOMAIN；`media.askbible.me` 已挂在 R2 桶上可用；`askbible-sync.joshlabs.app` 仍通。线上 `version.json` 的 `apkUrl` 还指向已死的 joshlabs 域，**站外安卓 App 内更新下载现在是坏的**。代码已全部改成 `media.askbible.me` / `sync.askbible.me`。
+- **已上线 2026-11-26**：sync Worker 加了 `sync.askbible.me`（旧域并存）；新候选表已推；R2 的 `version.json`（apkUrl→media.askbible.me，downloadUrl→askbible.me/app）、`download.html`、`sibling-apps/apps.json` 已重写；网页已部署（app-build eaee1667）。
 - **影响**：原生 App 内置表要等下次发版才换；之前已装旧版先连旧 sync 域，拉到新候选表后自动换线。
 - **需要 Josh 决定**：旧 `askbible-sync.joshlabs.app` 路由什么时候摘（推荐：留到 iOS/安卓下一版普及后再摘）；`site-proxy` Worker（绑的已死域）是否删（推荐删）。
 

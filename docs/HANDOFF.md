@@ -28,7 +28,7 @@
 - **云端单栈（零 Vercel / 零 Supabase / 零 Render）**：
   - **Web 主站 Worker**：`askbible-web`（`vinext` + Cloudflare Workers，配置见 `cloudflare.config.ts`，通过 Service Binding 内网直连 `ASKBIBLE_SYNC`）。
   - **认证与同步 Worker**：`workers/askbible-sync`（纯 JS + Cloudflare D1；6 位邮箱 OTP + Apple/Google 原生 ID Token JWKS 公钥直验；服务端单点执行同步合并）。
-  - **媒体与离线包**：Cloudflare R2 `askbible-media`（自定义域 `askbible-media.joshlabs.app` + 永久兼容旧公开域 `pub-f30fb48025d841f09c37bb9b52df5354.r2.dev`）。
+  - **媒体与离线包**：Cloudflare R2 `askbible-media`（自定义域 `media.askbible.me` + 永久兼容旧公开域 `pub-f30fb48025d841f09c37bb9b52df5354.r2.dev`）。
   - **离线包热更与自动升级（D-46）**：`PackStore` 校验 `v2/catalog.json` 的 `SHA-256` 与 SQLite 100 字节页头静默原子热更；侧边抽屉内置「检查更新」与客户端版本自检。
 - **Studio**：本机产品大脑（`/studio`，仅 `npm run dev` 本地使用，线上生产环境默认 `404`）。
 

@@ -1,0 +1,3 @@
+• Watch the Home screen in full-screen landscape: rotate your phone and only the scenery and verse remain
+• Tap the screen in landscape to show music, read-aloud and ambience controls on the right; they fade after 3 seconds
+• Other screens stay in portrait

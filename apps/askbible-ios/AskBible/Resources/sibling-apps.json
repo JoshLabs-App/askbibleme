@@ -35,7 +35,7 @@
   "apps": [
     {
       "id": "askbible",
-      "icon": "https://askbible-media.joshlabs.app/sibling-apps/askbible.png",
+      "icon": "https://media.askbible.me/sibling-apps/askbible.png",
       "name": {
         "zh-CN": "AskBible",
         "zh-TW": "AskBible",
@@ -52,7 +52,7 @@
     },
     {
       "id": "tingdao",
-      "icon": "https://askbible-media.joshlabs.app/sibling-apps/tingdao.png",
+      "icon": "https://media.askbible.me/sibling-apps/tingdao.png",
       "name": {
         "zh-CN": "听到",
         "zh-TW": "聽到",
@@ -69,7 +69,7 @@
     },
     {
       "id": "chadao",
-      "icon": "https://askbible-media.joshlabs.app/sibling-apps/chadao.png",
+      "icon": "https://media.askbible.me/sibling-apps/chadao.png",
       "name": {
         "zh-CN": "查到",
         "zh-TW": "查到",
@@ -85,7 +85,7 @@
     },
     {
       "id": "tovcore",
-      "icon": "https://askbible-media.joshlabs.app/sibling-apps/tovcore.png",
+      "icon": "https://media.askbible.me/sibling-apps/tovcore.png",
       "name": {
         "zh-CN": "诗歌",
         "zh-TW": "詩歌",

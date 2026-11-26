@@ -22,7 +22,7 @@ struct SiblingAppsCatalog: Decodable {
     let apps: [SiblingApp]
 
     static let selfId = "askbible"
-    static let remoteURL = URL(string: "https://askbible-media.joshlabs.app/sibling-apps/apps.json")!
+    static let remoteURL = URL(string: "https://media.askbible.me/sibling-apps/apps.json")!
     private static var cacheURL: URL {
         FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent("sibling-apps.json")
     }

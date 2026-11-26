@@ -458,7 +458,7 @@ describe("askbible-sync server-side authoritative merger (D-44)", () => {
     // Repeated sendOtp calls do not require Resend or hit 45s cooldown
     for (let i = 0; i < 3; i++) {
       const sendRes = await worker.fetch(
-        new Request("https://askbible-sync.joshlabs.app/v1/auth/otp/send", {
+        new Request("https://sync.askbible.me/v1/auth/otp/send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: "  PLAY-REVIEW-DEMO@askbible.me ", locale: "en" }),
@@ -474,7 +474,7 @@ describe("askbible-sync server-side authoritative merger (D-44)", () => {
     // Wrong codes return 401 without locking out the demo account after 5 attempts
     for (let i = 0; i < 6; i++) {
       const badRes = await worker.fetch(
-        new Request("https://askbible-sync.joshlabs.app/v1/auth/otp/verify", {
+        new Request("https://sync.askbible.me/v1/auth/otp/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: "play-review-demo@askbible.me", code: "000000", locale: "en" }),
@@ -487,7 +487,7 @@ describe("askbible-sync server-side authoritative merger (D-44)", () => {
     // Correct code remains reusable across multiple reviewer sessions
     for (let i = 0; i < 2; i++) {
       const okRes = await worker.fetch(
-        new Request("https://askbible-sync.joshlabs.app/v1/auth/otp/verify", {
+        new Request("https://sync.askbible.me/v1/auth/otp/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

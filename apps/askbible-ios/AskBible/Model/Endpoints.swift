@@ -23,9 +23,9 @@ enum Endpoints {
         /// 线上列表排在这些前面，但内置的永远垫在末尾兜底——线上表写坏了也不至于把客户端锁死。
         var builtin: [String] {
             switch self {
-            case .media: return ["https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/", "https://askbible-media.joshlabs.app/"]
-            case .site:  return ["https://askbible.me/", "https://askbible-site.joshlabs.app/"]
-            case .api:   return ["https://askbible-sync.joshlabs.app/", "https://askbible.me/api/sync/"]
+            case .media: return ["https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/", "https://media.askbible.me/"]
+            case .site:  return ["https://askbible.me/"]
+            case .api:   return ["https://sync.askbible.me/", "https://askbible.me/api/sync/"]
             }
         }
     }

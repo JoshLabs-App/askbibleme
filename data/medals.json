@@ -1,5 +1,5 @@
 {
-  "_note": "成就系统真源（DECISIONS「成就系统：复用 MY CLASS 勋章图」）。跑 npm run gen:medals 生成 Swift / Kotlin / TS 三份表，不要手改生成物。图在 https://askbible-media.joshlabs.app/medals/<key>.webp，按需下载缓存。繁体由运行时转，这里只写简体 + 英文。",
+  "_note": "成就系统真源（DECISIONS「成就系统：复用 MY CLASS 勋章图」）。跑 npm run gen:medals 生成 Swift / Kotlin / TS 三份表，不要手改生成物。图在 https://media.askbible.me/medals/<key>.webp，按需下载缓存。繁体由运行时转，这里只写简体 + 英文。",
   "version": 1,
   "imageBase": "medals/",
   "levels": {

@@ -37,12 +37,12 @@ class PackCatalogRulesTest {
         assertEquals("scripture-xrefs", PackCatalogRules.localPackKey(packs[1]))
         assertEquals(
             listOf(
-                "https://askbible-media.joshlabs.app/v2/packs/cuv-simp.sqlite",
+                "https://media.askbible.me/v2/packs/cuv-simp.sqlite",
                 "https://askbible.me/v2/packs/cuv-simp.sqlite",
             ),
             PackCatalogRules.candidateDownloadUrls(
                 packs[0].path,
-                "https://askbible-media.joshlabs.app",
+                "https://media.askbible.me",
                 "https://askbible.me",
             ),
         )

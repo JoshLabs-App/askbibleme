@@ -9,7 +9,7 @@ import { ASKBIBLE_PRODUCT_NAME } from "@/lib/askbible-product-name";
  * 下载页：`askbible.me/app`。
  *
  * **为什么放在自己站上**（Josh 2026-09-23）：成就分享图、口头传播都要带这个地址，
- * `askbible-media.joshlabs.app/download.html` 又长又不像自家的。
+ * `media.askbible.me/download.html` 又长又不像自家的。
  * APK 本体仍然放 R2（几十兆，不走 Render），页面归我们。
  *
  * 版本号从 R2 的 `version.json` 现取（`deploy_android.py` 每次发版都会写），

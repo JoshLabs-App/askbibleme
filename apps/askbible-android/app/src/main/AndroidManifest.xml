@@ -22,7 +22,10 @@
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"
             android:screenOrientation="portrait">
+            <!-- 默认竖屏；只有手机首页由 RootScreen 临时放开横屏观影。
+                 configChanges：旋转不重建 Activity，否则 Compose 状态、首页影片与播放全部重来。 -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

@@ -16,6 +16,8 @@ struct HomeView: View {
     var onOpenVerseContext: () -> Void = {}
     var onBookmarkVerse: () -> Void = {}
     var onChromeHidden: (Bool) -> Void = { _ in }
+    /// iPhone 横着看：观影模式（外层据此收底栏、状态栏、Home 条）
+    var onLandscape: (Bool) -> Void = { _ in }
 
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.colorScheme) private var colorScheme
@@ -24,23 +26,27 @@ struct HomeView: View {
     @State private var idleEpoch = 0
     @State private var chromeVisible = true
     @State private var lockedBottomInset: CGFloat = 0
+    @State private var landscapeMode = false
     private var ink: Color { colorScheme == .dark ? Color(rgb: 0xeee3d1) : Color(rgb: 0x493b2c) }
     private func copy(_ zh: String, _ en: String) -> String { AppLocale.pick(zh, en) }
 
     var body: some View {
         GeometryReader { geo in
             let fullHeight = geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom
+            // 横屏时刘海 / 灵动岛在左右：宽度也要把两侧安全区算回来，画面才铺满整屏
+            let fullWidth = geo.size.width + geo.safeAreaInsets.leading + geo.safeAreaInsets.trailing
+            let landscape = UIDevice.current.userInterfaceIdiom == .phone && fullWidth > fullHeight
             ZStack(alignment: .top) {
                 Color(rgb: 0x1a1512)
                 if let poster = NatureScenes.posterImage(id: prefs.sceneId, soft: !prefs.liveVideo) {
                     Image(uiImage: poster).resizable().scaledToFill()
-                        .frame(width: geo.size.width, height: fullHeight, alignment: geo.size.width > fullHeight ? .center : .leading)
+                        .frame(width: fullWidth, height: fullHeight, alignment: fullWidth > fullHeight ? .center : .leading)
                         .environment(\.layoutDirection, .leftToRight)
                         .clipped().allowsHitTesting(false)
                 }
                 if prefs.liveVideo {
                     HomeSceneVideo(sceneId: prefs.sceneId, paused: scenePhase != .active)
-                        .frame(width: geo.size.width, height: fullHeight).allowsHitTesting(false)
+                        .frame(width: fullWidth, height: fullHeight).allowsHitTesting(false)
                 }
                 // 只有背景接收换景与显隐手势，上层按钮不会冒泡到这里。
                 Color.clear.contentShape(Rectangle())
@@ -70,63 +76,49 @@ struct HomeView: View {
                             touch(); onOpenMusic()
                         }
                     })
-                verseBlock
-                    .padding(.horizontal, 24)
-                    .padding(.top, geo.safeAreaInsets.top + 112)
-                if !toolsOpen {
+                if landscape {
+                    // 观影模式：经文居中，左右留白避开刘海，长经文自动缩字不截断
+                    verseBlock(landscape: true)
+                        .frame(maxWidth: min(fullWidth * 0.7, 720))
+                        .frame(maxHeight: fullHeight - 64)
+                        .frame(width: fullWidth, height: fullHeight)
+                } else {
+                    verseBlock(landscape: false)
+                        .padding(.horizontal, 24)
+                        .padding(.top, geo.safeAreaInsets.top + 112)
+                }
+                if !toolsOpen && landscape && chromeVisible {
+                    // 横屏控件竖排在右侧，不压经文；闲置 3 秒整组隐去，轻点画面再叫回
+                    HStack(spacing: 16) {
+                        Spacer(minLength: 0)
+                        if albumsOpen {
+                            albumPanel
+                                .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .trailing)))
+                        }
+                        VStack(spacing: 18) {
+                            musicControl
+                            voiceControl
+                            ambienceControl
+                        }
+                    }
+                    .padding(.trailing, max(geo.safeAreaInsets.trailing, 20) + 8)
+                    .frame(width: fullWidth, height: fullHeight)
+                    .transition(.opacity)
+                }
+                if !toolsOpen && !landscape {
                     VStack(spacing: 0) {
                         Spacer(minLength: 0)
                         VStack(spacing: 14) {
                             if albumsOpen {
-                                VStack(spacing: 10) {
-                                    HStack {
-                                        Text(copy("切换陪伴心境", "Choose mood"))
-                                            .askFont(size: 12, weight: .semibold)
-                                            .foregroundStyle(ink.opacity(0.68))
-                                        Spacer()
-                                        Button {
-                                            closeAlbums(); onOpenMusic()
-                                        } label: {
-                                            HStack(spacing: 3) {
-                                                Text(copy("完整曲库", "All tracks"))
-                                                Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold))
-                                            }
-                                            .askFont(size: 12, weight: .semibold)
-                                            .foregroundStyle(Color(rgb: 0xD97707))
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                    albumOptions { album in music.selectAlbum(album); closeAlbums() }
-                                }
-                                .padding(14).frame(maxWidth: 340)
-                                .foregroundStyle(ink)
-                                .background(colorScheme == .dark ? Color(rgb: 0x28251f) : Color(rgb: 0xf7f0e4), in: RoundedRectangle(cornerRadius: 22))
-                                .shadow(color: .black.opacity(0.22), radius: 16, y: 6)
-                                .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .bottom)))
+                                albumPanel
+                                    .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .bottom)))
                             }
 
                             // 单排对称三触点：音乐(含当前心境) · 朗读 · 境况
                             HStack(spacing: 34) {
                                 musicControl
-                                circleControl(
-                                    symbol: "speaker.wave.2.fill",
-                                    title: copy("朗读", "Read aloud"),
-                                    active: home.voiceOn,
-                                    id: "home.voice"
-                                ) {
-                                    touch(); home.toggleVoice()
-                                }
-                                .disabled(!home.voiceAvailable)
-                                .opacity(home.voiceAvailable ? 1 : 0.38)
-
-                                circleControl(
-                                    symbol: "slider.horizontal.3",
-                                    title: copy("境况", "Ambience"),
-                                    active: ambient.isOn || sleepTimerMinutes > 0,
-                                    id: "home.ambience"
-                                ) {
-                                    setTools(true)
-                                }
+                                voiceControl
+                                ambienceControl
                             }
 
                             // 底部微光呼吸条：提示可上拉或轻点调环境音与画面
@@ -151,7 +143,8 @@ struct HomeView: View {
                 if toolsOpen {
                     VStack(spacing: 0) {
                         Spacer(minLength: 0)
-                        adjustmentPanel(maxHeight: fullHeight * 0.64)
+                        adjustmentPanel(maxHeight: fullHeight * (landscape ? 0.9 : 0.64))
+                            .frame(maxWidth: landscape ? 560 : .infinity)
                     }
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
@@ -161,15 +154,25 @@ struct HomeView: View {
             .onChange(of: geo.safeAreaInsets.bottom) { _, value in
                 lockedBottomInset = max(lockedBottomInset, value)
             }
+            .onChange(of: landscape, initial: true) { _, isLandscape in
+                landscapeMode = isLandscape
+                onLandscape(isLandscape)
+                // 一转横屏就只留画面与经文
+                if isLandscape && !toolsOpen && !albumsOpen {
+                    withAnimation(.easeInOut(duration: 0.3)) { chromeVisible = false }
+                    onChromeHidden(true)
+                }
+                idleEpoch += 1
+            }
         }
         .task(id: idleEpoch) {
             guard !toolsOpen, !albumsOpen else { return }
-            try? await Task.sleep(nanoseconds: 7_000_000_000)
+            try? await Task.sleep(nanoseconds: landscapeMode ? 3_000_000_000 : 7_000_000_000)
             guard !Task.isCancelled, !toolsOpen, !albumsOpen else { return }
             withAnimation(.easeInOut(duration: 0.6)) { chromeVisible = false }
             onChromeHidden(true)
         }
-        .onDisappear { onChromeHidden(false) }
+        .onDisappear { onChromeHidden(false); onLandscape(false) }
     }
 
     private func setTools(_ open: Bool) {
@@ -188,13 +191,14 @@ struct HomeView: View {
         onSelectScene(scenes[(index + step + scenes.count) % scenes.count].id)
         idleEpoch += 1
     }
-    private var verseBlock: some View {
+    private func verseBlock(landscape: Bool) -> some View {
         VStack(spacing: 14) {
             Text(home.verse.text)
                 .askFont(size: HomeVerseTypography.bodySize(scale: prefs.textScale), weight: .bold)
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
                 .lineSpacing(HomeVerseTypography.bodyLineHeight(scale: prefs.textScale) - HomeVerseTypography.bodySize(scale: prefs.textScale))
+                .minimumScaleFactor(landscape ? 0.55 : 1)
                 .verseTextShadow()
                 .onTapGesture(count: 2) {
                     touch()
@@ -218,6 +222,54 @@ struct HomeView: View {
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("home.verse.context")
+        }
+    }
+    private var albumPanel: some View {
+        VStack(spacing: 10) {
+            HStack {
+                Text(copy("切换陪伴心境", "Choose mood"))
+                    .askFont(size: 12, weight: .semibold)
+                    .foregroundStyle(ink.opacity(0.68))
+                Spacer()
+                Button {
+                    closeAlbums(); onOpenMusic()
+                } label: {
+                    HStack(spacing: 3) {
+                        Text(copy("完整曲库", "All tracks"))
+                        Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold))
+                    }
+                    .askFont(size: 12, weight: .semibold)
+                    .foregroundStyle(Color(rgb: 0xD97707))
+                }
+                .buttonStyle(.plain)
+            }
+            albumOptions { album in music.selectAlbum(album); closeAlbums() }
+        }
+        .padding(14).frame(maxWidth: 340)
+        .foregroundStyle(ink)
+        .background(colorScheme == .dark ? Color(rgb: 0x28251f) : Color(rgb: 0xf7f0e4), in: RoundedRectangle(cornerRadius: 22))
+        .shadow(color: .black.opacity(0.22), radius: 16, y: 6)
+    }
+    private var voiceControl: some View {
+        circleControl(
+            symbol: "speaker.wave.2.fill",
+            title: copy("朗读", "Read aloud"),
+            active: home.voiceOn,
+            id: "home.voice"
+        ) {
+            touch(); home.toggleVoice()
+        }
+        .disabled(!home.voiceAvailable)
+        .opacity(home.voiceAvailable ? 1 : 0.38)
+    }
+    private var ambienceControl: some View {
+        circleControl(
+            symbol: "slider.horizontal.3",
+            title: copy("境况", "Ambience"),
+            active: ambient.isOn || sleepTimerMinutes > 0,
+            id: "home.ambience"
+        ) {
+            setTools(true)
         }
     }
     private func closeAlbums() {

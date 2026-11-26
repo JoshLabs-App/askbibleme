@@ -16,8 +16,8 @@ android {
         minSdk = 26
         targetSdk = 36
         // 必须大于 Play 上 RN 版已用过的 versionCode（RN android/app/build.gradle = 238）
-        versionCode = 256
-        versionName = "1.0.59"
+        versionCode = 257
+        versionName = "1.0.60"
         buildConfigField("long", "BUILD_EPOCH_MS", "${System.currentTimeMillis()}L")
     }
 

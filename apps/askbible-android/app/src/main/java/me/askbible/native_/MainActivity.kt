@@ -189,6 +189,15 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+private fun hostActivity(context: android.content.Context): android.app.Activity? {
+    var c: android.content.Context? = context
+    while (c is android.content.ContextWrapper) {
+        if (c is android.app.Activity) return c
+        c = c.baseContext
+    }
+    return null
+}
+
 private data class ChapterData(
     val verses: List<LoadedVerse> = emptyList(),
     val xrefs: Set<Int> = emptySet(),
@@ -507,6 +516,29 @@ private fun RootScreen() {
     LaunchedEffect(translation.id) { home.setSource(translation) }
     // 首页静默：停在首页时 +XP 这类飘字不进队列（Josh 2026-10-02「保持首页不打扰」）
     LaunchedEffect(tab) { achievements.quiet = tab == ShellTab.HOME; if (tab != ShellTab.HOME) homeChromeHidden = false }
+    // 横屏观影（仅手机首页）：首页本身露在最上面时才放开转向；离开首页、开菜单 / 登录 / 引导等立刻锁回竖屏。
+    // 平板不动（系统在大屏上本来就不按竖屏锁）。
+    val isPhone = configuration.smallestScreenWidthDp < 600
+    val homeLandscapeAllowed = isPhone && tab == ShellTab.HOME && !showMenu && authRoute == null && !showWelcome &&
+        !showTranslationPanel && shareCardPayload == null && !showSleepSheet
+    val homeLandscape = homeLandscapeAllowed && configuration.screenWidthDp > configuration.screenHeightDp
+    LaunchedEffect(homeLandscapeAllowed, isPhone) {
+        if (!isPhone) return@LaunchedEffect
+        hostActivity(context)?.requestedOrientation =
+            if (homeLandscapeAllowed) android.content.pm.ActivityInfo.SCREEN_ORIENTATION_FULL_USER
+            else android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+    }
+    // 横着看时收起状态栏与导航栏；从边缘轻扫可临时叫出
+    LaunchedEffect(homeLandscape) {
+        val window = hostActivity(context)?.window ?: return@LaunchedEffect
+        val bars = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
+        if (homeLandscape) {
+            bars.systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            bars.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+        } else {
+            bars.show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+        }
+    }
     // 每日灵修数据：第一次进计划页才下载（中文界面才有）
     LaunchedEffect(tab, appLocale, auth.isAdmin) {
         if (tab == ShellTab.PLAN && me.askbible.native_.data.SolidJoys.availableFor(appLocale, auth.isAdmin)) me.askbible.native_.data.SolidJoys.ensureLoaded(context, appLocale)
@@ -805,6 +837,7 @@ private fun RootScreen() {
                 },
                 chromeHidden = homeChromeHidden,
                 onChromeHidden = { homeChromeHidden = it },
+                immersiveLandscape = homeLandscape,
             )
             ShellTab.MUSIC -> MusicScreen(player = music, onChromeHidden = { musicChromeHidden = it },
                 onBackHome = { musicChromeHidden = false; tab = ShellTab.HOME },
@@ -1039,7 +1072,7 @@ private fun RootScreen() {
         // 其余羊皮页底栏透明，正文靠 parchmentFade 在底栏前渐隐 —— 之前整块铺一层会在坞顶露出一条硬边
         // 读经计划目录 / 详情 / 今日读经是独立子页，不放底栏（Josh「独立页下面无需放图标」，靠左上返回键回来；章页打开后照常）
         // 计划目录 / 详情是独立子页，不放底栏；播放页是主页级页面，底栏照常
-        val standalonePage = (onPlanTab && planRoute != "play" && !showSearch) || authRoute != null || (tab == ShellTab.MUSIC && musicChromeHidden)
+        val standalonePage = (onPlanTab && planRoute != "play" && !showSearch) || authRoute != null || (tab == ShellTab.MUSIC && musicChromeHidden) || homeLandscape
         val anyDock = showDock || showPlanDock
         if (!standalonePage) Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
         if (anyDock) ParchmentPinnedBottom(Modifier.matchParentSize())

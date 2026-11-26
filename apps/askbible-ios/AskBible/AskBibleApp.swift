@@ -2,6 +2,8 @@ import SwiftUI
 
 @main
 struct AskBibleApp: App {
+    /// 方向闸：默认竖屏，只有首页放开横屏观影（见 OrientationGate）
+    @UIApplicationDelegateAdaptor(OrientationAppDelegate.self) private var orientationDelegate
     var body: some Scene {
         WindowGroup {
             // 不再锁浅色（2026-09-16 起支持深色模式）：主题跟随系统，由 ParchmentSchemeInjector 注入
@@ -127,6 +129,8 @@ struct RootView: View {
     @State private var musicChromeHidden = false
     /// 首页闲置后连底栏一起淡出（Josh 2026-09-18：首页要全景，不要底色和文字压着）
     @State private var homeChromeHidden = false
+    /// iPhone 首页正横着：观影模式，底栏、状态栏、Home 条都收起
+    @State private var homeLandscape = false
     @State private var readSize: ReadSize = .default
     @State private var openedBook: BookRef?
     @State private var pickerStartInBooks = false
@@ -428,8 +432,18 @@ struct RootView: View {
         openPlanChapter(queue[index], autoPlay: true)
     }
 
+    /// 只有首页本身露在最上面时才放开横屏；菜单、登录、引导、音乐页等一律竖屏
+    private var homeLandscapeAllowed: Bool {
+        tab == .home && !showHomeMusic && !showMenu && authRoute == nil && !showWelcome
+            && !showTranslationPanel && shareCardPayload == nil
+    }
+    private var homeLandscapeActive: Bool { homeLandscapeAllowed && homeLandscape }
+
     var body: some View {
         content
+            .statusBarHidden(homeLandscapeActive)
+            .persistentSystemOverlays(homeLandscapeActive ? .hidden : .automatic)
+            .onChange(of: homeLandscapeAllowed, initial: true) { _, allow in OrientationGate.allowLandscape(allow) }
             .environmentObject(store)
             .environmentObject(achievements)
             .onOpenURL { url in
@@ -590,7 +604,7 @@ struct RootView: View {
                 selection: $tab,
                 locale: appLocale,
                 dockActive: readDockActive || planDockActive || devotionalDockActive,
-                showTabBar: !(tab == .plan && planRoute != .play && !showSearch) && authRoute == nil && !(tab == .music && musicChromeHidden),
+                showTabBar: !(tab == .plan && planRoute != .play && !showSearch) && authRoute == nil && !(tab == .music && musicChromeHidden) && !homeLandscapeActive,
                 homeBarHidden: tab == .home && homeChromeHidden,
                 onWakeHomeChrome: { withAnimation(.easeInOut(duration: 0.3)) { homeChromeHidden = false } },
                 onEnterPlan: openToday,
@@ -981,7 +995,8 @@ struct RootView: View {
                         showToast(SiteCopy.t(added ? "pages.read.verseBookmarkSaved" : "pages.read.verseBookmarkRemoved", appLocale))
                     }
                 },
-                onChromeHidden: { hidden in withAnimation(.easeInOut(duration: 0.3)) { homeChromeHidden = hidden } }
+                onChromeHidden: { hidden in withAnimation(.easeInOut(duration: 0.3)) { homeChromeHidden = hidden } },
+                onLandscape: { homeLandscape = $0 }
             )
             }
         case .music:

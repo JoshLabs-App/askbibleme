@@ -1,6 +1,9 @@
 package me.askbible.native_.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -47,6 +50,8 @@ fun HomeScreen(
     onOpenVerseContext: () -> Unit = {},
     onBookmarkVerse: () -> Unit = {},
     chromeHidden: Boolean = false, onChromeHidden: (Boolean) -> Unit = {},
+    /** 手机横着看：观影模式（外层已收起底栏与系统栏） */
+    immersiveLandscape: Boolean = false,
 ) {
     var toolsOpen by remember { mutableStateOf(false) }
     var albumsOpen by remember { mutableStateOf(false) }
@@ -58,9 +63,13 @@ fun HomeScreen(
     fun t(zh: String, en: String) = AppLocale.pick(zh, en)
     fun touch() { idleEpoch++; onChromeHidden(false) }
     fun openTools() { albumsOpen = false; toolsOpen = true; touch() }
-    LaunchedEffect(toolsOpen, albumsOpen, idleEpoch) {
+    LaunchedEffect(toolsOpen, albumsOpen, idleEpoch, immersiveLandscape) {
         if (toolsOpen || albumsOpen) return@LaunchedEffect
-        delay(7000); onChromeHidden(true)
+        delay(if (immersiveLandscape) 3000 else 7000); onChromeHidden(true)
+    }
+    // 一转横屏就只留画面与经文，轻点画面再叫回控件
+    LaunchedEffect(immersiveLandscape) {
+        if (immersiveLandscape && !toolsOpen && !albumsOpen) onChromeHidden(true)
     }
     BackHandler(albumsOpen) { albumsOpen = false; touch() }
     val density = LocalDensity.current
@@ -102,13 +111,24 @@ fun HomeScreen(
                     }
                 }) { change, amount -> change.consume(); movement += amount }
             })
-        val vScale = if (wide) textScale * 0.6f else textScale
+        val vScale = if (wide && !immersiveLandscape) textScale * 0.6f else textScale
+        val screenHeightDp = LocalConfiguration.current.screenHeightDp
         Column(
-            Modifier.fillMaxWidth().statusBarsPadding().padding(top = if (wide) 24.dp else 108.dp)
-                .heightIn(max = (LocalConfiguration.current.screenHeightDp * 0.55f).dp)
-                .then(if (wide) Modifier.verticalScroll(rememberScrollState()) else Modifier)
-                .padding(horizontal = if (wide) 120.dp else 24.dp),
+            if (immersiveLandscape) {
+                // 观影模式：经文居中，宽度留七成、避开刘海；太长时可在框内上下滑
+                Modifier.align(Alignment.Center)
+                    .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))
+                    .fillMaxWidth(0.7f)
+                    .heightIn(max = (screenHeightDp * 0.85f).dp)
+                    .verticalScroll(rememberScrollState())
+            } else {
+                Modifier.fillMaxWidth().statusBarsPadding().padding(top = if (wide) 24.dp else 108.dp)
+                    .heightIn(max = (screenHeightDp * 0.55f).dp)
+                    .then(if (wide) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+                    .padding(horizontal = if (wide) 120.dp else 24.dp)
+            },
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
         ) {
             val shadow = Shadow(Color(0x8C000000), Offset(0f, 2f), 8f)
             Text(
@@ -145,36 +165,8 @@ fun HomeScreen(
                 ),
             )
         }
-        Column(
-            Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = shellTabBarBottomInset() + (ShellMetrics.tabRowHeight + 38).dp)
-                .padding(horizontal = 22.dp)
-                .alpha(if (chromeHidden && !albumsOpen) 0.52f else 1f),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            if (albumsOpen) {
-                Column(
-                    Modifier.widthIn(max = 340.dp).clip(RoundedCornerShape(22.dp)).background(paper).padding(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Text(t("切换陪伴心境", "Choose mood"), color = ink.copy(alpha = 0.68f), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                        Row(
-                            Modifier.clickableNoRipple { albumsOpen = false; touch(); onOpenMusic() },
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(2.dp),
-                        ) {
-                            Text(t("完整曲库", "All tracks"), color = Color(0xFFD97707), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                            MaterialIcon(MI.CHEVRON_RIGHT, 14f, Color(0xFFD97707))
-                        }
-                    }
-                    HomeAlbumOptions(selectedAlbum, ink) { onChooseAlbum(it); albumsOpen = false; touch() }
-                }
-            }
-            // 单排对称三触点：音乐(含当前心境) · 朗读 · 境况
-            Row(horizontalArrangement = Arrangement.spacedBy(34.dp), verticalAlignment = Alignment.CenterVertically) {
+        // 三个触点（音乐含当前心境 · 朗读 · 境况）：竖屏横排在底栏上方，横屏竖排在右侧
+        val controlItems: @Composable () -> Unit = {
                 val glyph = MusicAlbumGlyph.glyph(selectedAlbum)
                 val musicActive = playingAlbum != null
                 Column(
@@ -231,6 +223,54 @@ fun HomeScreen(
                     active = ambientSlotId != null || sleepTimerMinutes > 0,
                     enabled = true,
                 ) { openTools() }
+        }
+        val albumPanel: @Composable () -> Unit = {
+                Column(
+                    Modifier.widthIn(max = 340.dp).clip(RoundedCornerShape(22.dp)).background(paper).padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text(t("切换陪伴心境", "Choose mood"), color = ink.copy(alpha = 0.68f), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        Row(
+                            Modifier.clickableNoRipple { albumsOpen = false; touch(); onOpenMusic() },
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        ) {
+                            Text(t("完整曲库", "All tracks"), color = Color(0xFFD97707), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            MaterialIcon(MI.CHEVRON_RIGHT, 14f, Color(0xFFD97707))
+                        }
+                    }
+                    HomeAlbumOptions(selectedAlbum, ink) { onChooseAlbum(it); albumsOpen = false; touch() }
+                }
+        }
+        if (immersiveLandscape) {
+            AnimatedVisibility(
+                visible = !chromeHidden || albumsOpen,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier.align(Alignment.CenterEnd)
+                    .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.End))
+                    .padding(end = 24.dp),
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    if (albumsOpen) albumPanel()
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                        controlItems()
+                    }
+                }
+            }
+        } else Column(
+            Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = shellTabBarBottomInset() + (ShellMetrics.tabRowHeight + 38).dp)
+                .padding(horizontal = 22.dp)
+                .alpha(if (chromeHidden && !albumsOpen) 0.52f else 1f),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            if (albumsOpen) albumPanel()
+            Row(horizontalArrangement = Arrangement.spacedBy(34.dp), verticalAlignment = Alignment.CenterVertically) {
+                controlItems()
             }
 
             // 底部微光呼吸条
@@ -245,7 +285,7 @@ fun HomeScreen(
     if (toolsOpen) {
         ModalBottomSheet(onDismissRequest = { toolsOpen = false; touch() }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
             containerColor = paper, contentColor = ink) {
-            Column(Modifier.fillMaxWidth().heightIn(max = (LocalConfiguration.current.screenHeightDp * 0.66f).dp)
+            Column(Modifier.fillMaxWidth().heightIn(max = (LocalConfiguration.current.screenHeightDp * (if (immersiveLandscape) 0.9f else 0.66f)).dp)
                 .verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).navigationBarsPadding().padding(bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Text(t("调整", "Adjust"), Modifier.align(Alignment.CenterHorizontally), fontSize = 18.sp, fontWeight = FontWeight.SemiBold)

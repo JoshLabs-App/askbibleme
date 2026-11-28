@@ -226,22 +226,22 @@
 ## 3. Cloudflare Workers & D1 数据库全图
 
 ### A. `workers/askbible-sync` 认证与读经同步路由（自动扫描 `workers/askbible-sync/src/index.js`）
-- `GET /healthz.txt` → `workers/askbible-sync/src/index.js`(L245)
-- `GET /health` → `workers/askbible-sync/src/index.js`(L245)
-- `GET /` → `workers/askbible-sync/src/index.js`(L245)
-- `POST /v1/auth/otp/send` → `workers/askbible-sync/src/index.js`(L253)
-- `POST /v1/auth/otp/verify` → `workers/askbible-sync/src/index.js`(L299)
-- `POST /v1/auth/oauth/apple` → `workers/askbible-sync/src/index.js`(L357)
-- `POST /v1/auth/oauth/google` → `workers/askbible-sync/src/index.js`(L357)
-- `GET /v1/auth/session` → `workers/askbible-sync/src/index.js`(L383)
-- `PATCH /v1/auth/profile` → `workers/askbible-sync/src/index.js`(L390)
-- `POST /v1/auth/logout` → `workers/askbible-sync/src/index.js`(L415)
-- `DELETE /v1/auth/account` → `workers/askbible-sync/src/index.js`(L424)
-- `ANY /v1/sync/reading` → `workers/askbible-sync/src/index.js`(L441)
-- `POST /v1/feedback` → `workers/askbible-sync/src/index.js`(L511)
-- `POST /v1/corrections` → `workers/askbible-sync/src/index.js`(L511)
-- `GET /v1/mcp/summary` → `workers/askbible-sync/src/index.js`(L532)
-- `ANY /v1/mcp/proposals` → `workers/askbible-sync/src/index.js`(L580)
+- `GET /healthz.txt` → `workers/askbible-sync/src/index.js`(L269)
+- `GET /health` → `workers/askbible-sync/src/index.js`(L269)
+- `GET /` → `workers/askbible-sync/src/index.js`(L269)
+- `POST /v1/auth/otp/send` → `workers/askbible-sync/src/index.js`(L277)
+- `POST /v1/auth/otp/verify` → `workers/askbible-sync/src/index.js`(L323)
+- `POST /v1/auth/oauth/apple` → `workers/askbible-sync/src/index.js`(L381)
+- `POST /v1/auth/oauth/google` → `workers/askbible-sync/src/index.js`(L381)
+- `GET /v1/auth/session` → `workers/askbible-sync/src/index.js`(L407)
+- `PATCH /v1/auth/profile` → `workers/askbible-sync/src/index.js`(L414)
+- `POST /v1/auth/logout` → `workers/askbible-sync/src/index.js`(L439)
+- `DELETE /v1/auth/account` → `workers/askbible-sync/src/index.js`(L448)
+- `ANY /v1/sync/reading` → `workers/askbible-sync/src/index.js`(L465)
+- `POST /v1/feedback` → `workers/askbible-sync/src/index.js`(L535)
+- `POST /v1/corrections` → `workers/askbible-sync/src/index.js`(L535)
+- `GET /v1/mcp/summary` → `workers/askbible-sync/src/index.js`(L556)
+- `ANY /v1/mcp/proposals` → `workers/askbible-sync/src/index.js`(L605)
 - 边缘代理 Worker：`workers/site-proxy/worker.js`（白名单路径透传上游 + `/healthz.txt` 探针）
 - Web 主站 Worker 配置：`cloudflare.config.ts`（Worker 名 `askbible-web`，Service Binding `ASKBIBLE_SYNC`）
 

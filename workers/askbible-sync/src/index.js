@@ -15,6 +15,30 @@ const MAX_OTP_ATTEMPTS = 5;
 const SESSION_TTL_MS = 365 * 24 * 60 * 60 * 1000;
 const DISPLAY_NAME_MAX_LEN = 24;
 
+let mcpProposalsTableReady = false;
+async function ensureMcpProposalsTable(env) {
+  if (mcpProposalsTableReady) return;
+  await env.DB.batch([
+    env.DB.prepare(
+      `CREATE TABLE IF NOT EXISTS mcp_proposals (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        action TEXT NOT NULL,
+        payload_json TEXT NOT NULL,
+        summary TEXT NOT NULL,
+        source_agent TEXT NOT NULL DEFAULT 'External AI',
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_at INTEGER NOT NULL,
+        resolved_at INTEGER
+      )`
+    ),
+    env.DB.prepare(
+      `CREATE INDEX IF NOT EXISTS idx_mcp_proposals_user_status ON mcp_proposals(user_id, status, created_at DESC)`
+    ),
+  ]);
+  mcpProposalsTableReady = true;
+}
+
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
@@ -532,6 +556,7 @@ export default {
       if (request.method === "GET" && path === "/v1/mcp/summary") {
         const auth = await authenticate(request, env);
         if (!auth) return json({ ok: false, code: "unauthorized", error: "未登录。" }, 401);
+        await ensureMcpProposalsTable(env);
         const uid = auth.userRow.id;
         const docRow = await env.DB.prepare(
           "SELECT revision, blobs_json, updated_at FROM reading_sync_docs WHERE user_id = ?"
@@ -580,6 +605,7 @@ export default {
       if (path === "/v1/mcp/proposals") {
         const auth = await authenticate(request, env);
         if (!auth) return json({ ok: false, code: "unauthorized", error: "未登录。" }, 401);
+        await ensureMcpProposalsTable(env);
         const uid = auth.userRow.id;
 
         if (request.method === "GET") {
@@ -648,6 +674,7 @@ export default {
       if (request.method === "POST" && proposalActionMatch) {
         const auth = await authenticate(request, env);
         if (!auth) return json({ ok: false, code: "unauthorized", error: "未登录。" }, 401);
+        await ensureMcpProposalsTable(env);
         const uid = auth.userRow.id;
         const [, proposalId, decision] = proposalActionMatch;
 

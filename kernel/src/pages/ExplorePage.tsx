@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { platformBridge } from "../bridge/platform-adapter";
+import { SfIcon } from "../components/SfIcons";
 import { SimpleMarkdown } from "../components/SimpleMarkdown";
 import {
   loadExploreData,
@@ -67,8 +68,14 @@ export default function ExplorePage({
     return (
       <div className="ab-stack">
         <div className="ab-row-between">
-          <button type="button" className="ab-btn" onClick={backToExplore}>
-            ← 返回书房
+          <button
+            type="button"
+            className="ab-btn"
+            style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
+            onClick={backToExplore}
+          >
+            <SfIcon name="chevron-left" size={16} />
+            <span>返回书房</span>
           </button>
           <div className="ab-row">
             <span className="ab-pill">{currentArticle.category}</span>

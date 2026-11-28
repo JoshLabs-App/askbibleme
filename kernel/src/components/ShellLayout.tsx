@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { AudioStateSnapshot, ShellTabId } from "../bridge/contracts";
+import { SfIcon, type SfIconName } from "./SfIcons";
 
 export interface ShellLayoutProps {
   activeTab: ShellTabId;
@@ -11,12 +12,12 @@ export interface ShellLayoutProps {
   children: ReactNode;
 }
 
-const TABS: Array<{ id: ShellTabId; label: string; glyph: string }> = [
-  { id: "home", label: "首页", glyph: "⌂" },
-  { id: "panorama", label: "全景", glyph: "☷" },
-  { id: "plan", label: "今日", glyph: "◷" },
-  { id: "read", label: "圣经", glyph: "☰" },
-  { id: "explore", label: "书房", glyph: "✦" },
+const TABS: Array<{ id: ShellTabId; label: string; icon: SfIconName }> = [
+  { id: "home", label: "首页", icon: "home" },
+  { id: "panorama", label: "全景", icon: "compass" },
+  { id: "plan", label: "今日", icon: "clock" },
+  { id: "read", label: "圣经", icon: "book-open" },
+  { id: "explore", label: "书房", icon: "sparkles" },
 ];
 
 export function ShellLayout({
@@ -98,7 +99,7 @@ export function ShellLayout({
                   aria-current={active ? "page" : undefined}
                   onClick={() => onSelectTab(t.id)}
                 >
-                  <span aria-hidden="true" style={{ fontSize: 15 }}>{t.glyph}</span>
+                  <SfIcon name={t.icon} size={20} />
                   <span>{t.label}</span>
                 </button>
               );

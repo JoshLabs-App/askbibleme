@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import me.askbible.native_.data.AppLocale
+import me.askbible.native_.data.AppPackStore
 import me.askbible.native_.data.PackStore
 import me.askbible.native_.data.Parchment
 import me.askbible.native_.data.ShellMetrics
@@ -39,10 +40,9 @@ import org.json.JSONObject
 import kotlin.math.roundToInt
 
 /**
- * 救赎全景（D-44 同源离线胶囊宿主，与 iOS `BiblePanoramaView.swift` 对称）：
- * - 底层铺 `ParchmentBackground` 羊皮纸真材实底；
- * - 上层挂载 [NativeMediaBridge] + [PackStore] 驱动的单文件本地离线胶囊（`https://pack.askbible.local/index.html`），
- *   0ms 秒开，支持 SHA-256 热更与 3 秒看门狗自动回退；
+ * 救赎全景（D-47 / D-44 同源离线胶囊宿主，与 iOS `BiblePanoramaView.swift` 对称）：
+ * - 优先检测 [AppPackStore.hasAvailablePack]：有 D-47 同源内核包则直接通过 [AppPackWebView] 以 `initialRoute = "/panorama"` 渲染；
+ * - 无 D-47 内核包时无缝回退至现有 [PackStore] `web-pack.json` 路径；
  * - 极简兜底：若本地 WebView 组件异常或胶囊缺失，自动呈现羊皮纸入口按钮，永不崩溃。
  */
 @Composable
@@ -56,8 +56,35 @@ fun BiblePanoramaScreen(
     musicPlaying: Boolean = false,
     onToggleMusic: () -> Unit = {},
     theme: Parchment = LocalParchment.current,
+    onSelectTab: ((String) -> Unit)? = null,
 ) {
     val context = LocalContext.current
+    var appPackFailed by remember { mutableStateOf(false) }
+    val hasAppPack = remember(context) { AppPackStore.hasAvailablePack(context) }
+
+    if (hasAppPack && !appPackFailed) {
+        AppPackWebView(
+            initialRoute = "/panorama",
+            locale = locale,
+            theme = theme,
+            currentBook = currentBook,
+            currentChapter = currentChapter,
+            locateRequest = locateRequest,
+            handleSystemBack = false,
+            onOpenChapter = onRead,
+            onSelectTab = { tab ->
+                if (onSelectTab != null) {
+                    onSelectTab(tab)
+                } else if (tab == "read" || tab == "home") {
+                    onReturnReading()
+                }
+            },
+            onBack = onReturnReading,
+            onLoadFailed = { appPackFailed = true },
+        )
+        return
+    }
+
     val latestOnReturn by rememberUpdatedState(onReturnReading)
     val latestOnRead by rememberUpdatedState(onRead)
 

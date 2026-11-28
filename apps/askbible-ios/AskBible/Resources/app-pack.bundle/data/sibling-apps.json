@@ -1,0 +1,34 @@
+{
+  "apps": [
+    {
+      "id": "tingdao",
+      "name": "听到",
+      "nameEn": "听到 · Sermons",
+      "tagline": "世界各地的查经与主日讲道，用中文听；按圣经书卷编排，可边听边读。",
+      "taglineEn": "Bible studies and Sunday sermons from around the world, in Chinese. Arranged by book, with text to read along.",
+      "url": "https://td.askbible.me/",
+      "iosUrl": "https://apps.apple.com/app/id6812104595",
+      "androidUrl": "https://my-class-media.joshlabs.app/download.html"
+    },
+    {
+      "id": "chadao",
+      "name": "查到",
+      "nameEn": "查到 · Group Bible Study",
+      "tagline": "给小组长用的归纳法查经工具：读经、备课、带组、排期，一套做完。",
+      "taglineEn": "An inductive Bible study tool for small-group leaders: read, prepare, lead and schedule in one place.",
+      "url": "https://cd.askbible.me/",
+      "iosUrl": "https://apps.apple.com/app/id6815240486",
+      "androidUrl": "https://cd.askbible.me/"
+    },
+    {
+      "id": "tovcore",
+      "name": "诗歌",
+      "nameEn": "TovCore",
+      "tagline": "像电影评级一样，看一首诗歌的神学。",
+      "taglineEn": "Worship songs rated like films — for their theology.",
+      "url": "https://tovcore.com/",
+      "iosUrl": "",
+      "androidUrl": "https://tovcore.com/install/"
+    }
+  ]
+}

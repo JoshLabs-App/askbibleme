@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import type { AudioStateSnapshot, ShellTabId } from "./bridge/contracts";
 import { isNativeShell, platformBridge } from "./bridge/platform-adapter";
 import { ShellLayout } from "./components/ShellLayout";
@@ -21,7 +21,7 @@ type RouteState =
   | { page: "panorama" }
   | { page: "plan" }
   | { page: "read"; bookId: string; chapter: number }
-  | { page: "explore" }
+  | { page: "explore"; slug?: string }
   | { page: "figures" }
   | { page: "ex-libris" }
   | { page: "settings" };
@@ -34,15 +34,49 @@ const TAB_TO_PATH: Record<ShellTabId, string> = {
   explore: "/explore",
 };
 
+function normalizeRoutePath(raw: string): string {
+  let clean = raw.trim();
+  if (!clean) return "/";
+  if (clean.startsWith("#")) clean = clean.slice(1);
+  const qIdx = clean.indexOf("?");
+  if (qIdx >= 0) {
+    const queryPart = clean.slice(qIdx + 1);
+    const params = new URLSearchParams(queryPart);
+    const nested = params.get("route");
+    if (nested) return normalizeRoutePath(nested);
+    clean = clean.slice(0, qIdx);
+  }
+  if (!clean.startsWith("/")) clean = `/${clean}`;
+  clean = clean.replace(/\/+$/, "") || "/";
+  return clean;
+}
+
+function resolveRouteFromLocation(): string {
+  if (typeof window === "undefined") return "/";
+  const params = new URLSearchParams(window.location.search);
+  const queryRoute = params.get("route");
+  if (queryRoute) return normalizeRoutePath(queryRoute);
+
+  if (window.location.hash && window.location.hash.length > 1) {
+    return normalizeRoutePath(window.location.hash);
+  }
+
+  return normalizeRoutePath(window.location.pathname || "/");
+}
+
 function parseRoute(pathname: string, fallbackRead: { bookId: string; chapter: number }): RouteState {
-  const clean = pathname.replace(/\/+$/, "") || "/";
+  const clean = normalizeRoutePath(pathname);
   if (clean === "/") return { page: "home" };
   if (clean === "/panorama") return { page: "panorama" };
   if (clean === "/plan") return { page: "plan" };
-  if (clean === "/explore") return { page: "explore" };
   if (clean === "/figures") return { page: "figures" };
   if (clean === "/ex-libris") return { page: "ex-libris" };
   if (clean === "/settings") return { page: "settings" };
+  if (clean === "/explore") return { page: "explore" };
+  if (clean.startsWith("/explore/")) {
+    const slug = decodeURIComponent(clean.slice("/explore/".length)).trim();
+    return slug ? { page: "explore", slug } : { page: "explore" };
+  }
   if (clean.startsWith("/read")) {
     const parts = clean.split("/").filter(Boolean);
     const bookId = (parts[1] || fallbackRead.bookId).toUpperCase();
@@ -77,35 +111,67 @@ export function App() {
   const [routePath, setRoutePath] = useState(() => {
     const restored = consumeRestoredViewState();
     if (restored?.route) {
-      window.history.replaceState(null, "", restored.route);
+      const normalized = normalizeRoutePath(restored.route);
+      try {
+        window.history.replaceState(null, "", normalized);
+      } catch {
+        // Ignore non-HTTP origin restrictions
+      }
       if (restored.scrollY > 0) {
         window.requestAnimationFrame(() => window.scrollTo(0, restored.scrollY));
       }
-      return restored.route;
+      return normalized;
     }
-    return window.location.pathname || "/";
+    return resolveRouteFromLocation();
   });
   const [audioState, setAudioState] = useState<AudioStateSnapshot | null>(null);
+  const historyStackRef = useRef<string[]>([routePath]);
+  const routePathRef = useRef<string>(routePath);
+  routePathRef.current = routePath;
 
   const route = parseRoute(routePath, lastRead);
   const activeTab = tabForRoute(route);
 
-  const navigate = useCallback((path: string) => {
-    if (window.location.pathname !== path) {
-      window.history.pushState(null, "", path);
+  const commitRoute = useCallback((rawPath: string, pushHistory = true) => {
+    const path = normalizeRoutePath(rawPath);
+    if (pushHistory) {
+      const stack = historyStackRef.current;
+      if (stack[stack.length - 1] !== path) {
+        stack.push(path);
+        if (stack.length > 30) stack.shift();
+      }
+      try {
+        if (window.location.pathname !== path || window.location.search || window.location.hash) {
+          window.history.pushState(null, "", path);
+        }
+      } catch {
+        // Ignore restricted WebView origin pushState errors
+      }
     }
     setRoutePath(path);
     window.scrollTo(0, 0);
   }, []);
+
+  const navigate = useCallback(
+    (path: string) => {
+      commitRoute(path, true);
+    },
+    [commitRoute],
+  );
 
   const openReader = useCallback(
     (bookId: string, chapter: number, nextTranslation?: string) => {
       const t = nextTranslation || translationId;
       if (nextTranslation) setTranslationId(nextTranslation);
       setLastRead({ bookId, chapter, translationId: t });
-      navigate(`/read/${bookId}/${chapter}`);
+      const targetPath = `/read/${bookId}/${chapter}`;
+      void platformBridge.call("shell.haptic", { style: "light" });
+      if (nativeShell) {
+        void platformBridge.call("shell.setTab", { tab: "read", route: targetPath });
+      }
+      commitRoute(targetPath, true);
     },
-    [navigate, translationId],
+    [commitRoute, nativeShell, translationId],
   );
 
   const selectTab = useCallback(
@@ -116,9 +182,9 @@ export function App() {
       if (nativeShell) {
         void platformBridge.call("shell.setTab", { tab, route: targetPath });
       }
-      navigate(targetPath);
+      commitRoute(targetPath, true);
     },
-    [lastRead.bookId, lastRead.chapter, nativeShell, navigate],
+    [commitRoute, lastRead.bookId, lastRead.chapter, nativeShell],
   );
 
   useEffect(() => {
@@ -131,22 +197,41 @@ export function App() {
   }, [routePath, route, lastRead.bookId, lastRead.chapter, translationId]);
 
   useEffect(() => {
-    const onPop = () => setRoutePath(window.location.pathname || "/");
-    window.addEventListener("popstate", onPop);
+    const syncFromBrowser = () => {
+      const next = resolveRouteFromLocation();
+      historyStackRef.current.push(next);
+      setRoutePath(next);
+    };
+    window.addEventListener("popstate", syncFromBrowser);
+    window.addEventListener("hashchange", syncFromBrowser);
 
     const offTab = platformBridge.on("shell.tabSelected", ({ tab, route: nextRoute }) => {
-      const dest = nextRoute || (tab === "read" ? `/read/${lastRead.bookId}/${lastRead.chapter}` : TAB_TO_PATH[tab]);
-      if (dest && window.location.pathname !== dest) {
-        window.history.pushState(null, "", dest);
-        setRoutePath(dest);
-      }
+      const dest = normalizeRoutePath(
+        nextRoute || (tab === "read" ? `/read/${lastRead.bookId}/${lastRead.chapter}` : TAB_TO_PATH[tab]),
+      );
+      commitRoute(dest, true);
     });
 
     const offBack = platformBridge.on("shell.backPressed", () => {
-      if (window.history.length > 1) {
-        window.history.back();
-      } else {
-        navigate("/");
+      const stack = historyStackRef.current;
+      if (stack.length > 1) {
+        stack.pop();
+        const prev = stack[stack.length - 1] || "/";
+        commitRoute(prev, false);
+        try {
+          window.history.replaceState(null, "", prev);
+        } catch {
+          // Ignore
+        }
+        return;
+      }
+      const cur = routePathRef.current;
+      if (cur.startsWith("/explore/")) {
+        commitRoute("/explore", false);
+      } else if (cur === "/figures" || cur === "/ex-libris" || cur === "/settings") {
+        commitRoute("/explore", false);
+      } else if (cur !== "/") {
+        commitRoute("/", false);
       }
     });
 
@@ -155,12 +240,13 @@ export function App() {
     });
 
     return () => {
-      window.removeEventListener("popstate", onPop);
+      window.removeEventListener("popstate", syncFromBrowser);
+      window.removeEventListener("hashchange", syncFromBrowser);
       offTab();
       offBack();
       offAudio();
     };
-  }, [lastRead.bookId, lastRead.chapter, navigate]);
+  }, [commitRoute, lastRead.bookId, lastRead.chapter]);
 
   async function toggleAudioPause(stream: "music" | "scripture" | "verse") {
     await platformBridge.call("audio.intent", {
@@ -204,6 +290,7 @@ export function App() {
         )}
         {route.page === "explore" && (
           <ExplorePage
+            selectedSlug={route.slug}
             onNavigate={navigate}
             onOpenReader={(b, c) => openReader(b, c)}
           />

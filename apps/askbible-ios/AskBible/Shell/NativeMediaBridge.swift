@@ -196,6 +196,9 @@ final class NativeMediaBridge: NSObject, WKScriptMessageHandler {
     var onSetTheme: ((String) -> Void)? {
         didSet { dispatcher.onSetTheme = onSetTheme }
     }
+    var onBack: (() -> Void)? {
+        didSet { dispatcher.onBack = onBack }
+    }
     var onOpenAuth: (() -> Void)? {
         didSet { dispatcher.onOpenAuth = onOpenAuth }
     }
@@ -318,14 +321,21 @@ final class NativeMediaBridge: NSObject, WKScriptMessageHandler {
     }
 
     /// 加载 D-47 同源静态内核入口（`askbible-pack://app/<entry>`）
-    func loadAppPack(in webView: WKWebView, route: String? = nil) {
+    func loadAppPack(in webView: WKWebView, route: String? = nil, queryItems extraQueryItems: [URLQueryItem] = []) {
         attach(to: webView)
         let entry = AppPackStore.shared.activeEntryPath()
         let base = "\(LocalPackURLSchemeHandler.baseOrigin)/\(entry)"
         var url = URL(string: base)!
-        if let route, !route.isEmpty, var comps = URLComponents(url: url, resolvingAgainstBaseURL: false) {
-            comps.queryItems = [URLQueryItem(name: "route", value: route)]
-            if let next = comps.url { url = next }
+        if var comps = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+            var items: [URLQueryItem] = []
+            if let route, !route.isEmpty {
+                items.append(URLQueryItem(name: "route", value: route))
+            }
+            items.append(contentsOf: extraQueryItems)
+            if !items.isEmpty {
+                comps.queryItems = items
+                if let next = comps.url { url = next }
+            }
         }
         watchdogURL = url
         watchdogInitStateJSON = nil
@@ -450,6 +460,12 @@ final class NativeMediaBridge: NSObject, WKScriptMessageHandler {
             }
         case "resumeReading":
             onResumeReading?()
+        case "selectTab":
+            if let tab = (payload["tab"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines), !tab.isEmpty {
+                onSetTab?(tab)
+            }
+        case "back", "close":
+            onBack?()
         case "pauseChapter":
             chapterAudio?.pause()
         case "resumeChapter":

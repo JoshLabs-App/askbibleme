@@ -87,6 +87,10 @@ class NativeMediaBridge(
     var onPlayChapter: ((String, Int, String?) -> Unit)? = null,
     var onAuthSignIn: ((String) -> Unit)? = null,
     var onAuthSignOut: (() -> Unit)? = null,
+    var onBack: (() -> Unit)? = null,
+    var onPackReadyToSwap: ((String) -> Unit)? = null,
+    var onPageStartedCallback: ((WebView) -> Unit)? = null,
+    var onPageCommitVisibleCallback: ((WebView) -> Unit)? = null,
 ) {
     companion object {
         const val HOST = "pack.askbible.local"
@@ -110,6 +114,7 @@ class NativeMediaBridge(
 
     private val readyToSwapListener: (String) -> Unit = { bundleId ->
         emitPackReadyToSwap(bundleId)
+        mainHandler.post { onPackReadyToSwap?.invoke(bundleId) }
     }
 
     private val bootstrapJS = """
@@ -207,17 +212,7 @@ class NativeMediaBridge(
             val imeBottomPx = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
             val density = v.resources.displayMetrics.density.coerceAtLeast(1f)
             val imeDp = (imeBottomPx / density).toInt()
-            v.post {
-                val js = """
-                    if (document.documentElement) {
-                      document.documentElement.style.setProperty('--askbible-ime-height', '${imeDp}px');
-                    }
-                    if (window.__askbibleEmit) {
-                      window.__askbibleEmit('shell.keyboardHeight', { heightDp: $imeDp });
-                    }
-                """.trimIndent()
-                (v as? WebView)?.evaluateJavascript(js, null)
-            }
+            v.post { emitKeyboardHeight(imeDp) }
             insets
         }
         webView.webChromeClient = object : WebChromeClient() {
@@ -246,7 +241,14 @@ class NativeMediaBridge(
             }
 
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                view?.evaluateJavascript(bootstrapJS, null)
+                val wv = view ?: return
+                wv.evaluateJavascript(bootstrapJS, null)
+                onPageStartedCallback?.invoke(wv)
+            }
+
+            override fun onPageCommitVisible(view: WebView?, url: String?) {
+                val wv = view ?: return
+                onPageCommitVisibleCallback?.invoke(wv)
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
@@ -325,6 +327,8 @@ class NativeMediaBridge(
 
     fun release() {
         cancelWatchdog()
+        AppPackStore.removeReadyToSwapListener(readyToSwapListener)
+        observedWebView = null
         bridgeJob.cancel()
     }
 
@@ -339,14 +343,32 @@ class NativeMediaBridge(
         }
     }
 
+    fun emitKeyboardHeight(heightDp: Int) {
+        val safeDp = maxOf(0, heightDp)
+        mainHandler.post {
+            val wv = observedWebView?.get() ?: return@post
+            val js = """
+                if (document.documentElement) {
+                  document.documentElement.style.setProperty('--askbible-ime-height', '${safeDp}px');
+                }
+                if (window.__askbibleEmit) {
+                  window.__askbibleEmit('shell.keyboardHeight', { heightDp: $safeDp });
+                }
+            """.trimIndent()
+            wv.evaluateJavascript(js, null)
+        }
+    }
+
     fun emitAudioState() {
         mainHandler.post {
             emit("audio.state", buildAudioStateJson())
         }
     }
 
-    fun emitTabSelected(tab: String) {
-        emit("shell.tabSelected", JSONObject().put("tab", tab))
+    fun emitTabSelected(tab: String, route: String? = null) {
+        val payload = JSONObject().put("tab", tab)
+        if (!route.isNullOrBlank()) payload.put("route", route)
+        emit("shell.tabSelected", payload)
     }
 
     fun emitBackPressed() {
@@ -373,13 +395,28 @@ class NativeMediaBridge(
             }
             "shell.setTab" -> mainHandler.post {
                 val tab = params.optString("tab", "").trim()
+                val route = params.optString("route", "").trim().ifEmpty { null }
                 if (tab.isEmpty()) {
                     resolveBridgeErr(callId, "missing_tab")
                 } else {
                     onSetTab?.invoke(tab)
-                    emitTabSelected(tab)
+                    emitTabSelected(tab, route)
                     resolveBridgeOk(callId, JSONObject().put("tab", tab))
                 }
+            }
+            "bible.openChapter", "shell.openChapter", "reader.openChapter" -> mainHandler.post {
+                val bookId = params.optString("bookId", "").trim().uppercase()
+                val chapter = maxOf(1, params.optInt("chapter", 1))
+                if (bookId.isEmpty()) {
+                    resolveBridgeErr(callId, "missing_book_id")
+                } else {
+                    onOpenChapter?.invoke(bookId, chapter)
+                    resolveBridgeOk(callId, JSONObject().put("bookId", bookId).put("chapter", chapter))
+                }
+            }
+            "shell.back", "shell.goBack" -> mainHandler.post {
+                onBack?.invoke() ?: onResumeReading?.invoke()
+                resolveBridgeOk(callId, JSONObject().put("ok", true))
             }
             "shell.setTheme" -> mainHandler.post {
                 val mode = params.optString("mode", "system").trim().lowercase()
@@ -575,6 +612,11 @@ class NativeMediaBridge(
                     }
                 }
                 "resumeReading" -> onResumeReading?.invoke()
+                "back", "close" -> onBack?.invoke() ?: onResumeReading?.invoke()
+                "selectTab" -> {
+                    val tab = payload.optString("tab", "").trim()
+                    if (tab.isNotEmpty()) onSetTab?.invoke(tab)
+                }
                 "pauseChapter" -> chapterAudio?.pause()
                 "resumeChapter" -> chapterAudio?.resume()
                 "seekChapter" -> chapterAudio?.seekTo(payload.optDouble("seconds", 0.0))

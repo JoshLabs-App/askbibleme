@@ -1,9 +1,10 @@
 import SwiftUI
 import WebKit
 
-/// 救赎全景（D-44 同源离线胶囊宿主）：
-/// 底层使用 `ParchmentBackground` 羊皮纸真材实底，上层挂载 `NativeMediaBridge` + `PackStore` 驱动的
-/// 单文件本地离线胶囊（`askbible-pack://app/index.html`），0ms 秒开，支持 SHA-256 热更与 3 秒看门狗自动回退。
+/// 救赎全景（D-47 统一静态内核优先 + D-44 单文件离线胶囊无缝回退）：
+/// 底层使用 `ParchmentBackground` 羊皮纸真材实底：
+/// - 优先检测 `AppPackStore.shared.hasAvailablePack()`，有则通过 `AppPackWebView(initialRoute: "/panorama", ...)` 渲染；
+/// - 尚无 `app-pack` 时回退 `PackStore.loadWebPackFiles()`（`web-pack.json`）或原生入口兜底。
 struct BiblePanoramaView: View {
     let locale: AppLocale
     let currentBook: String?
@@ -11,24 +12,53 @@ struct BiblePanoramaView: View {
     let locateRequest: Int
     var onResume: () -> Void
     var onRead: (String, Int) -> Void
+    var onSelectTab: ((String) -> Void)? = nil
+    var onBack: (() -> Void)? = nil
 
     @Environment(\.parchment) private var theme
 
     var body: some View {
         GeometryReader { geo in
+            let topInset = Double(geo.safeAreaInsets.top)
+            let bottomInset = Double(geo.safeAreaInsets.bottom + ShellMetrics.tabRowHeight + ShellMetrics.tabBarDockGap + 56)
+
             ZStack {
                 ParchmentBackground(theme: theme)
                     .ignoresSafeArea()
 
-                if PackStore.loadWebPackFiles() != nil {
+                if AppPackStore.shared.hasAvailablePack() {
+                    AppPackWebView(
+                        initialRoute: "/panorama",
+                        locale: locale,
+                        topInset: topInset,
+                        bottomInset: bottomInset,
+                        extraState: [
+                            "book": currentBook ?? "",
+                            "ch": max(1, currentChapter),
+                            "hasHistory": currentBook != nil,
+                            "locateRequest": locateRequest,
+                        ],
+                        onOpenChapter: onRead,
+                        onSelectTab: { tab in
+                            if let onSelectTab {
+                                onSelectTab(tab)
+                            } else if tab == "read" || tab == "home" {
+                                onResume()
+                            }
+                        },
+                        onBack: { onBack?() },
+                        onResumeReading: onResume
+                    )
+                    .ignoresSafeArea()
+                } else if PackStore.loadWebPackFiles() != nil {
                     PanoramaPackWebView(
                         locale: locale,
                         isDark: theme.isDark,
                         currentBook: currentBook,
                         currentChapter: currentChapter,
                         locateRequest: locateRequest,
-                        topInset: Double(geo.safeAreaInsets.top),
-                        bottomInset: Double(geo.safeAreaInsets.bottom + ShellMetrics.tabRowHeight + ShellMetrics.tabBarDockGap + 56),
+                        topInset: topInset,
+                        bottomInset: bottomInset,
                         onResume: onResume,
                         onRead: onRead
                     )

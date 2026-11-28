@@ -19,16 +19,21 @@
  *   node tools/build-app-pack.mjs                  # 扫描 kernel/dist-pack/ 并写入 pack-manifest.json
  *   node tools/build-app-pack.mjs --dir <path>     # 指定构建产物目录
  *   node tools/build-app-pack.mjs --check          # 校验 pack-manifest.json 一致性及首屏主 JS gzip <= 160KB
+ *   node tools/build-app-pack.mjs --sync-native    # 生成并校验 pack-manifest.json 后完整镜像复制到 iOS/Android app-pack/
  */
 
 import { createHash } from "node:crypto";
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DEFAULT_DIST_DIR = path.join(ROOT, "kernel", "dist-pack");
+const NATIVE_SYNC_TARGETS = [
+  path.join(ROOT, "apps", "askbible-ios", "AskBible", "Resources", "app-pack.bundle"),
+  path.join(ROOT, "apps", "askbible-android", "app", "src", "main", "assets", "app-pack"),
+];
 const MANIFEST_FILENAME = "pack-manifest.json";
 const ENTRY_FILE = "index.html";
 const MAX_MAIN_JS_GZIP_BYTES = 160 * 1024;
@@ -36,18 +41,20 @@ const IGNORED_FILENAMES = new Set([".DS_Store", "Thumbs.db", MANIFEST_FILENAME])
 
 function printUsage() {
   console.log(`用法:
-  node tools/build-app-pack.mjs [--dir <path>] [--bundle-id <id>] [--check]
+  node tools/build-app-pack.mjs [--dir <path>] [--bundle-id <id>] [--check] [--sync-native]
 
 选项:
   --dir <path>        指定静态构建产物目录（默认: kernel/dist-pack）
   --bundle-id <id>    指定 bundleId（默认: YYYYMMDD-<7位内容哈希>）
   --check             只读校验 pack-manifest.json 与文件 size + sha256 一致性，并校验首屏主 JS gzip <= 160KB
+  --sync-native       生成并校验 pack-manifest.json 后，将静态包完整镜像同步至 iOS/Android 内置 app-pack/
   -h, --help          显示帮助信息`);
 }
 
 function parseArgs(argv) {
   let dir = DEFAULT_DIST_DIR;
   let check = false;
+  let syncNative = false;
   let bundleId = null;
   let help = false;
 
@@ -55,6 +62,8 @@ function parseArgs(argv) {
     const arg = argv[i];
     if (arg === "--check") {
       check = true;
+    } else if (arg === "--sync-native") {
+      syncNative = true;
     } else if (arg === "-h" || arg === "--help") {
       help = true;
     } else if (arg === "--dir") {
@@ -86,7 +95,7 @@ function parseArgs(argv) {
     }
   }
 
-  return { dir, check, bundleId, help };
+  return { dir, check, syncNative, bundleId, help };
 }
 
 function sha256Hex(buffer) {
@@ -322,6 +331,36 @@ function runCheck(targetDir, filesMap) {
   );
 }
 
+function mirrorDirAtomic(sourceDir, targetDir) {
+  const parentDir = path.dirname(targetDir);
+  mkdirSync(parentDir, { recursive: true });
+  const stagingDir = path.join(parentDir, `.${path.basename(targetDir)}.staging-${process.pid}`);
+  rmSync(stagingDir, { recursive: true, force: true });
+  try {
+    cpSync(sourceDir, stagingDir, {
+      recursive: true,
+      filter: (src) => {
+        const name = path.basename(src);
+        return name !== ".DS_Store" && name !== "Thumbs.db" && name !== ".git" && !name.endsWith(".part");
+      },
+    });
+    rmSync(targetDir, { recursive: true, force: true });
+    renameSync(stagingDir, targetDir);
+  } catch (err) {
+    rmSync(stagingDir, { recursive: true, force: true });
+    throw err;
+  }
+}
+
+function syncNativeAppPacks(sourceDir) {
+  for (const targetDir of NATIVE_SYNC_TARGETS) {
+    mirrorDirAtomic(sourceDir, targetDir);
+    const targetFiles = walkStaticFiles(targetDir);
+    runCheck(targetDir, targetFiles);
+    console.log(`📦 已镜像同步至 ${path.relative(ROOT, targetDir)}/`);
+  }
+}
+
 function main() {
   let options;
   try {
@@ -351,29 +390,37 @@ function main() {
     process.exit(1);
   }
 
-  if (options.check) {
+  if (options.check && !options.syncNative) {
     runCheck(options.dir, filesMap);
     return;
   }
 
-  const manifest = buildManifest(filesMap, options.bundleId);
-  const manifestPath = path.join(options.dir, MANIFEST_FILENAME);
-  writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n", "utf8");
+  if (!options.check) {
+    const manifest = buildManifest(filesMap, options.bundleId);
+    const manifestPath = path.join(options.dir, MANIFEST_FILENAME);
+    writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n", "utf8");
 
-  const totalRawBytes = [...filesMap.values()].reduce((sum, rec) => sum + rec.size, 0);
-  const jsReport = analyzeMainJsGzip(filesMap);
-  const jsSummary =
-    jsReport.entryScripts.length > 0
-      ? `首屏主 JS gzip ${formatKb(jsReport.totalGzipBytes)} / 160.00 KB`
-      : "无外链首屏 JS";
+    const totalRawBytes = [...filesMap.values()].reduce((sum, rec) => sum + rec.size, 0);
+    const jsReport = analyzeMainJsGzip(filesMap);
+    const jsSummary =
+      jsReport.entryScripts.length > 0
+        ? `首屏主 JS gzip ${formatKb(jsReport.totalGzipBytes)} / 160.00 KB`
+        : "无外链首屏 JS";
 
-  console.log(
-    `✅ 已生成 ${path.join(displayDir, MANIFEST_FILENAME)} (bundleId=${manifest.bundleId} · ${filesMap.size} 文件 · 总计 ${formatKb(totalRawBytes)} · ${jsSummary})`,
-  );
-  if (jsReport.totalGzipBytes > MAX_MAIN_JS_GZIP_BYTES) {
-    console.warn(
-      `⚠️ 警告: 首屏主 JS gzip (${formatKb(jsReport.totalGzipBytes)}) 已超过 160.00 KB 警戒线，--check 模式将被拦截`,
+    console.log(
+      `✅ 已生成 ${path.join(displayDir, MANIFEST_FILENAME)} (bundleId=${manifest.bundleId} · ${filesMap.size} 文件 · 总计 ${formatKb(totalRawBytes)} · ${jsSummary})`,
     );
+    if (jsReport.totalGzipBytes > MAX_MAIN_JS_GZIP_BYTES) {
+      console.warn(
+        `⚠️ 警告: 首屏主 JS gzip (${formatKb(jsReport.totalGzipBytes)}) 已超过 160.00 KB 警戒线，--check 模式将被拦截`,
+      );
+    }
+  }
+
+  if (options.syncNative) {
+    const refreshedFiles = walkStaticFiles(options.dir);
+    runCheck(options.dir, refreshedFiles);
+    syncNativeAppPacks(options.dir);
   }
 }
 

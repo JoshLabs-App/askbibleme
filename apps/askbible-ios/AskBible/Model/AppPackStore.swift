@@ -14,6 +14,7 @@ final class AppPackStore: @unchecked Sendable {
     static let manifestFileName = "pack-manifest.json"
     static let activeStateFileName = "active.json"
     static let checkInterval: TimeInterval = 30 * 60
+    static let readyToSwapNotification = Notification.Name("askbible.apppack.readyToSwap")
 
     private let rootDirectory: URL
     private let builtinDirectory: URL?
@@ -37,9 +38,18 @@ final class AppPackStore: @unchecked Sendable {
     /// 供原生桥接在增量包就绪时向内核派发 `pack.readyToSwap`（绝不弹系统或壳层提示）
     var onReadyToSwap: ((String) -> Void)?
 
+    static func defaultBuiltinDirectory() -> URL? {
+        guard let res = Bundle.main.resourceURL else { return nil }
+        let bundleDir = res.appendingPathComponent("app-pack.bundle", isDirectory: true)
+        if FileManager.default.fileExists(atPath: bundleDir.path) {
+            return bundleDir
+        }
+        return res.appendingPathComponent("app-pack", isDirectory: true)
+    }
+
     init(
         rootDirectory: URL? = nil,
-        builtinDirectory: URL? = Bundle.main.resourceURL?.appendingPathComponent("app-pack", isDirectory: true),
+        builtinDirectory: URL? = AppPackStore.defaultBuiltinDirectory(),
         currentBuiltinId: String? = nil,
         manifestBaseURLs: [URL]? = nil,
         session: URLSession = .shared,
@@ -161,6 +171,25 @@ final class AppPackStore: @unchecked Sendable {
     func activeEntryPath() -> String {
         lock.lock(); defer { lock.unlock() }
         return activeManifest?.entry ?? builtinManifest?.entry ?? "index.html"
+    }
+
+    /// 本机是否存在可用的 D-47 静态内核入口（已激活热更沙盒或内置 `app-pack/`）。
+    func hasAvailablePack() -> Bool {
+        lock.lock(); defer { lock.unlock() }
+        let fm = FileManager.default
+        if let activeManifest,
+           Self.isValidSafePath(activeManifest.entry),
+           fm.fileExists(atPath: activeDir.appendingPathComponent(activeManifest.entry).path) {
+            return true
+        }
+        if let builtinDir = builtinDirectory {
+            let entry = builtinManifest?.entry ?? "index.html"
+            if Self.isValidSafePath(entry),
+               fm.fileExists(atPath: builtinDir.appendingPathComponent(entry).path) {
+                return true
+            }
+        }
+        return false
     }
 
     func status() -> Status {
@@ -288,8 +317,15 @@ final class AppPackStore: @unchecked Sendable {
     }
 
     private func notifyReadyToSwap(bundleId: String) {
-        guard let callback = onReadyToSwap else { return }
-        DispatchQueue.main.async { callback(bundleId) }
+        let callback = onReadyToSwap
+        DispatchQueue.main.async {
+            callback?(bundleId)
+            NotificationCenter.default.post(
+                name: Self.readyToSwapNotification,
+                object: self,
+                userInfo: ["bundleId": bundleId]
+            )
+        }
     }
 
     private func stageManifest(_ manifest: Manifest, baseURLs: [URL]) async throws {

@@ -7,6 +7,23 @@ import {
   type UpdaterSnapshot,
 } from "../updater/silent-updater";
 
+const REMINDER_STORAGE_KEY = "askbible-reminder-config";
+
+function loadSavedReminder(): { enabled: boolean; time: string } {
+  try {
+    const raw = localStorage.getItem(REMINDER_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as { enabled?: boolean; hour?: number; minute?: number };
+      const h = String(parsed.hour ?? 7).padStart(2, "0");
+      const m = String(parsed.minute ?? 30).padStart(2, "0");
+      return { enabled: Boolean(parsed.enabled), time: `${h}:${m}` };
+    }
+  } catch {
+    // Ignore
+  }
+  return { enabled: false, time: "07:30" };
+}
+
 export default function SettingsPage() {
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
     try {
@@ -19,8 +36,8 @@ export default function SettingsPage() {
   const [translations, setTranslations] = useState<BibleTranslationInfo[]>([]);
   const [packStatus, setPackStatus] = useState<PackStatus | null>(null);
   const [updater, setUpdater] = useState<UpdaterSnapshot | null>(null);
-  const [reminderEnabled, setReminderEnabled] = useState(false);
-  const [reminderTime, setReminderTime] = useState("07:30");
+  const [reminderEnabled, setReminderEnabled] = useState(() => loadSavedReminder().enabled);
+  const [reminderTime, setReminderTime] = useState(() => loadSavedReminder().time);
   const [feedback, setFeedback] = useState("");
 
   useEffect(() => {
@@ -36,19 +53,23 @@ export default function SettingsPage() {
     await platformBridge.call("shell.setTheme", { mode });
   }
 
-  async function toggleReminder() {
-    const next = !reminderEnabled;
-    const [h, m] = reminderTime.split(":").map(Number);
-    setReminderEnabled(next);
+  async function applyReminder(nextEnabled: boolean, nextTime: string) {
+    const [h, m] = nextTime.split(":").map(Number);
+    const hour = Number.isFinite(h) ? h : 7;
+    const minute = Number.isFinite(m) ? m : 30;
+    setReminderEnabled(nextEnabled);
+    setReminderTime(nextTime);
+    await platformBridge.call("shell.haptic", { style: "light" });
     await platformBridge.call("sys.setReminder", {
-      enabled: next,
-      hour: Number.isFinite(h) ? h : 7,
-      minute: Number.isFinite(m) ? m : 30,
+      enabled: nextEnabled,
+      hour,
+      minute,
     });
-    setFeedback(next ? `已开启每日 ${reminderTime} 安静提醒` : "已关闭每日提醒");
+    setFeedback(nextEnabled ? `已设定每日 ${nextTime} 安静提醒` : "已关闭每日提醒");
   }
 
   async function downloadTranslation(id: string) {
+    await platformBridge.call("shell.haptic", { style: "light" });
     await platformBridge.call("pack.downloadTranslation", { id });
     const list = await bibleRepo.getTranslations();
     setTranslations(list);
@@ -56,17 +77,20 @@ export default function SettingsPage() {
   }
 
   async function handleSignIn(provider: "apple" | "google" | "email") {
+    await platformBridge.call("shell.haptic", { style: "light" });
     const next = await platformBridge.call("auth.signIn", { provider });
     setSession(next);
   }
 
   async function handleSignOut() {
+    await platformBridge.call("shell.haptic", { style: "light" });
     await platformBridge.call("auth.signOut");
     setSession({ signedIn: false });
   }
 
   async function handleManualCheck() {
     setFeedback("");
+    await platformBridge.call("shell.haptic", { style: "light" });
     const snap = await manualCheckForUpdate();
     const status = await platformBridge.call("pack.status");
     setPackStatus(status);
@@ -84,7 +108,7 @@ export default function SettingsPage() {
     <div className="ab-stack">
       <div>
         <h1 className="ab-page-title">设置</h1>
-        <p className="ab-page-subtitle">外观、离线译本、每日提醒与静默内核信息。</p>
+        <p className="ab-page-subtitle">外观、账号同步、每日提醒与静默内核信息。</p>
       </div>
 
       <section className="ab-card">
@@ -102,7 +126,7 @@ export default function SettingsPage() {
               key={mode}
               type="button"
               className={themeMode === mode ? "ab-btn ab-btn-primary" : "ab-btn"}
-              onClick={() => selectTheme(mode)}
+              onClick={() => void selectTheme(mode)}
             >
               {label}
             </button>
@@ -121,16 +145,23 @@ export default function SettingsPage() {
             </div>
           </div>
           {session.signedIn ? (
-            <button type="button" className="ab-btn" onClick={handleSignOut}>
+            <button type="button" className="ab-btn" onClick={() => void handleSignOut()}>
               退出
             </button>
           ) : (
             <div className="ab-row">
-              <button type="button" className="ab-btn ab-btn-primary" onClick={() => handleSignIn("email")}>
+              <button
+                type="button"
+                className="ab-btn ab-btn-primary"
+                onClick={() => void handleSignIn("email")}
+              >
                 邮箱登录
               </button>
-              <button type="button" className="ab-btn" onClick={() => handleSignIn("apple")}>
+              <button type="button" className="ab-btn" onClick={() => void handleSignIn("apple")}>
                 Apple
+              </button>
+              <button type="button" className="ab-btn" onClick={() => void handleSignIn("google")}>
+                Google
               </button>
             </div>
           )}
@@ -150,12 +181,19 @@ export default function SettingsPage() {
               className="ab-input"
               style={{ width: 112 }}
               value={reminderTime}
-              onChange={(e) => setReminderTime(e.target.value)}
+              onChange={(e) => {
+                const nextTime = e.target.value;
+                if (reminderEnabled) {
+                  void applyReminder(true, nextTime);
+                } else {
+                  setReminderTime(nextTime);
+                }
+              }}
             />
             <button
               type="button"
               className={reminderEnabled ? "ab-btn ab-btn-ok" : "ab-btn"}
-              onClick={toggleReminder}
+              onClick={() => void applyReminder(!reminderEnabled, reminderTime)}
             >
               {reminderEnabled ? "已开启" : "开启"}
             </button>
@@ -178,7 +216,7 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   className="ab-btn"
-                  onClick={() => downloadTranslation(t.id)}
+                  onClick={() => void downloadTranslation(t.id)}
                 >
                   缓存离线
                 </button>
@@ -204,7 +242,7 @@ export default function SettingsPage() {
             type="button"
             className="ab-btn"
             disabled={Boolean(updater?.checking)}
-            onClick={handleManualCheck}
+            onClick={() => void handleManualCheck()}
           >
             {updater?.checking ? "检查中…" : "检查更新"}
           </button>

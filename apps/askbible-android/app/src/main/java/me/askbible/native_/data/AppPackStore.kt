@@ -71,6 +71,10 @@ object AppPackStore {
         readyListeners.add(WeakReference(listener))
     }
 
+    fun removeReadyToSwapListener(listener: (String) -> Unit) {
+        readyListeners.removeAll { it.get() == null || it.get() === listener }
+    }
+
     private fun notifyReadyToSwap(bundleId: String) {
         for (ref in readyListeners) {
             val cb = ref.get()
@@ -192,6 +196,18 @@ object AppPackStore {
             }
             return null
         }
+    }
+
+    /** 判断本机是否存在可用的 D-47 静态内核包（热更沙盒包或内置 `assets/app-pack/`），供调用方决定是否挂载或回退。 */
+    fun hasAvailablePack(context: Context): Boolean {
+        val appCtx = context.applicationContext
+        val snap = activeSnapshot(appCtx) ?: return false
+        if (snap.isHotPack && snap.bundleDir != null) {
+            return File(snap.bundleDir, snap.manifest.entry).isFile
+        }
+        return runCatching {
+            appCtx.assets.open("$BUILTIN_ASSET_DIR/${snap.manifest.entry}").use { true }
+        }.getOrDefault(false)
     }
 
     fun openFile(context: Context, relativePath: String): OpenedPackFile? {

@@ -23,6 +23,7 @@ final class AskBibleBridgeDispatcher {
 
     var onSetTab: ((String) -> Void)?
     var onSetTheme: ((String) -> Void)?
+    var onBack: (() -> Void)?
     var onOpenChapter: ((String, Int) -> Void)?
     var onLoadChapterAudio: ((String, Int, Bool) -> Void)?
     var onSetSleepTimer: ((Int) -> Void)?
@@ -31,7 +32,7 @@ final class AskBibleBridgeDispatcher {
 
     var cancellables: Set<AnyCancellable> = []
     var audioEmitScheduled = false
-    private var appPackObserverRegistered = false
+    private var appPackObserverToken: NSObjectProtocol?
 
     func attach(to webView: WKWebView) {
         self.webView = webView
@@ -41,6 +42,10 @@ final class AskBibleBridgeDispatcher {
 
     func detach() {
         cancellables.removeAll()
+        if let token = appPackObserverToken {
+            NotificationCenter.default.removeObserver(token)
+            appPackObserverToken = nil
+        }
         webView = nil
     }
 
@@ -124,6 +129,19 @@ final class AskBibleBridgeDispatcher {
             triggerHaptic(style: style)
             return ["ok": true, "style": style]
 
+        case "shell.back", "shell.goBack":
+            onBack?()
+            return ["ok": true]
+
+        case "bible.openChapter", "shell.openChapter", "reader.openChapter":
+            let bookId = (params["bookId"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let chapter = max(1, (params["chapter"] as? NSNumber)?.intValue ?? 1)
+            guard !bookId.isEmpty else {
+                return ["ok": false, "error": "missing_book_id"]
+            }
+            onOpenChapter?(bookId, chapter)
+            return ["ok": true, "bookId": bookId, "chapter": chapter]
+
         case "pack.status":
             var dict = AppPackStore.shared.statusDictionary()
             dict["ok"] = true
@@ -191,12 +209,14 @@ final class AskBibleBridgeDispatcher {
     }
 
     private func registerAppPackObserver() {
-        guard !appPackObserverRegistered else { return }
-        appPackObserverRegistered = true
-        let existing = AppPackStore.shared.onReadyToSwap
-        AppPackStore.shared.onReadyToSwap = { [weak self] bundleId in
-            existing?(bundleId)
-            Task { @MainActor in
+        guard appPackObserverToken == nil else { return }
+        appPackObserverToken = NotificationCenter.default.addObserver(
+            forName: AppPackStore.readyToSwapNotification,
+            object: AppPackStore.shared,
+            queue: .main
+        ) { [weak self] note in
+            guard let bundleId = note.userInfo?["bundleId"] as? String else { return }
+            Task { @MainActor [weak self] in
                 self?.emit(event: "pack.readyToSwap", payload: ["bundleId": bundleId])
             }
         }

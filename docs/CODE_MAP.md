@@ -110,31 +110,31 @@
 ### `lib/explore/years-days-eternity-content.ts`（共 1131 行）
 - `L3` — `const YEARS_DAYS_ETERNITY_ZH`
 
-### `apps/askbible-android/app/src/main/java/me/askbible/native_/ui/NativeMediaBridge.kt`（共 1086 行）
+### `apps/askbible-android/app/src/main/java/me/askbible/native_/ui/NativeMediaBridge.kt`（共 1128 行）
 - `L72` — `class NativeMediaBridge`
-- `L190` — `fun configureWebView`
-- `L261` — `fun loadInlinePack`
-- `L289` — `fun loadLocalPack`
-- `L297` — `fun beginWatchdogIfHotPack`
-- `L321` — `fun cancelWatchdog`
-- `L326` — `fun release`
-- `L333` — `fun emit`
-- `L342` — `fun emitAudioState`
-- `L348` — `fun emitTabSelected`
-- `L352` — `fun emitBackPressed`
-- `L356` — `fun emitPackReadyToSwap`
-- `L363` — `fun callBridge`
-- `L538` — `fun resolveBridgeOk`
-- `L549` — `fun resolveBridgeErr`
-- `L562` — `fun postMessage`
-- `L597` — `fun markBootHealthy`
-- `L605` — `fun handleAudioIntent`
-- `L679` — `fun buildAudioStateJson`
-- `L728` — `fun triggerHaptic`
-- `L761` — `fun readSessionJson`
-- `L782` — `fun userToJson`
-- `L791` — `fun shareImageOrText`
-- `L829` — `fun handleLocalDbRequest`
+- `L195` — `fun configureWebView`
+- `L263` — `fun loadInlinePack`
+- `L291` — `fun loadLocalPack`
+- `L299` — `fun beginWatchdogIfHotPack`
+- `L323` — `fun cancelWatchdog`
+- `L328` — `fun release`
+- `L337` — `fun emit`
+- `L346` — `fun emitKeyboardHeight`
+- `L362` — `fun emitAudioState`
+- `L368` — `fun emitTabSelected`
+- `L374` — `fun emitBackPressed`
+- `L378` — `fun emitPackReadyToSwap`
+- `L385` — `fun callBridge`
+- `L575` — `fun resolveBridgeOk`
+- `L586` — `fun resolveBridgeErr`
+- `L599` — `fun postMessage`
+- `L639` — `fun markBootHealthy`
+- `L647` — `fun handleAudioIntent`
+- `L721` — `fun buildAudioStateJson`
+- `L770` — `fun triggerHaptic`
+- `L803` — `fun readSessionJson`
+- `L824` — `fun userToJson`
+- `L833` — `fun shareImageOrText`
 
 ### `components/music/MusicHomeClient.tsx`（共 947 行）
 - `L60` — `const DEFAULT_ALBUM`
@@ -354,7 +354,7 @@
 | :--- | :--- | :--- |
 | `tools/askbible-jsx-source-plugin.mjs` | 125 | const HOST_TAGS = new Set([ |
 | `tools/book-catalog-parity.mjs` | 102 | 圣经目录三端对拍：书卷号 / id / 中文名 / 章数。 |
-| `tools/build-app-pack.mjs` | 380 | D-47 同源纯静态内核热更包清单生成器与校验门禁（pack-manifest.json） |
+| `tools/build-app-pack.mjs` | 427 | D-47 同源纯静态内核热更包清单生成器与校验门禁（pack-manifest.json） |
 | `tools/build-verse-timings-db.mjs` | 81 | 从真源 `public/verse-timings/`（cuv-v20 / cuv-simp 根级 / web-en）直接生成原生侧 SQLit |
 | `tools/build-web-pack.mjs` | 766 | D-44 同源离线 UI 胶囊生成器（web-pack.json） |
 | `tools/chapter-audio-check.mjs` | 112 | 整章朗读音源自检。 |
@@ -379,4 +379,5 @@
 | `tools/reading-plan-expect.mts` | 101 | TS 侧期望值：直接调共享库 lib/bible/reading-plans/* 与 lib/read/*（tsx + tsconfig pat |
 | `tools/reading-plan-usability-check.mjs` | 82 | 读经计划可用性：12 个计划的每一天、每一段，逐章对着四个内置译本库核对—— |
 | `tools/scripture-data-check.mjs` | 60 | 原生数据层自检：四个内置译本 + xref 库能否打开、内容是否确实不同、章数是否正确。 |
+| `tools/sync-kernel-data.mjs` | 706 | D-47 真源数据同步：从仓库唯一真源 `data/` 提取并生成轻量化、标准化的 |
 | `tools/verse-timing-check.mjs` | 104 | 跟读时间轴自检：SQLite 查询 + 由播放位置定位当前节的算法。 |

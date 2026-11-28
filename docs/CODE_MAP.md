@@ -107,31 +107,31 @@
 - `L1048` — `function ReadChapterVerseParagraph`
 - `L1169` — `function verseHasSearchKeyword`
 
-### `apps/askbible-android/app/src/main/java/me/askbible/native_/ui/NativeMediaBridge.kt`（共 1153 行）
+### `apps/askbible-android/app/src/main/java/me/askbible/native_/ui/NativeMediaBridge.kt`（共 1158 行）
 - `L72` — `class NativeMediaBridge`
 - `L195` — `fun configureWebView`
-- `L288` — `fun loadInlinePack`
-- `L316` — `fun loadLocalPack`
-- `L324` — `fun beginWatchdogIfHotPack`
-- `L348` — `fun cancelWatchdog`
-- `L353` — `fun release`
-- `L362` — `fun emit`
-- `L371` — `fun emitKeyboardHeight`
-- `L387` — `fun emitAudioState`
-- `L393` — `fun emitTabSelected`
-- `L399` — `fun emitBackPressed`
-- `L403` — `fun emitPackReadyToSwap`
-- `L410` — `fun callBridge`
-- `L600` — `fun resolveBridgeOk`
-- `L611` — `fun resolveBridgeErr`
-- `L624` — `fun postMessage`
-- `L664` — `fun markBootHealthy`
-- `L672` — `fun handleAudioIntent`
-- `L746` — `fun buildAudioStateJson`
-- `L795` — `fun triggerHaptic`
-- `L828` — `fun readSessionJson`
-- `L849` — `fun userToJson`
-- `L858` — `fun shareImageOrText`
+- `L292` — `fun loadInlinePack`
+- `L320` — `fun loadLocalPack`
+- `L329` — `fun beginWatchdogIfHotPack`
+- `L353` — `fun cancelWatchdog`
+- `L358` — `fun release`
+- `L367` — `fun emit`
+- `L376` — `fun emitKeyboardHeight`
+- `L392` — `fun emitAudioState`
+- `L398` — `fun emitTabSelected`
+- `L404` — `fun emitBackPressed`
+- `L408` — `fun emitPackReadyToSwap`
+- `L415` — `fun callBridge`
+- `L605` — `fun resolveBridgeOk`
+- `L616` — `fun resolveBridgeErr`
+- `L629` — `fun postMessage`
+- `L669` — `fun markBootHealthy`
+- `L677` — `fun handleAudioIntent`
+- `L751` — `fun buildAudioStateJson`
+- `L800` — `fun triggerHaptic`
+- `L833` — `fun readSessionJson`
+- `L854` — `fun userToJson`
+- `L863` — `fun shareImageOrText`
 
 ### `lib/explore/years-days-eternity-content.ts`（共 1131 行）
 - `L3` — `const YEARS_DAYS_ETERNITY_ZH`

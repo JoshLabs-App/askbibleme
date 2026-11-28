@@ -229,6 +229,7 @@ class NativeMediaBridge(
                 if (url.host != HOST) return null
                 val rawPath = (url.path ?: "").trim('/')
                 if (rawPath.contains("..") || rawPath.contains("\\")) {
+                    Log.w(TAG_PACK, "blocked path: $rawPath")
                     return notFound()
                 }
                 if (rawPath == "local-db" || rawPath.startsWith("local-db/")) {
@@ -237,11 +238,14 @@ class NativeMediaBridge(
                 val resolvedPath = rawPath.ifEmpty {
                     AppPackStore.activeSnapshot(appContext)?.manifest?.entry ?: "index.html"
                 }
-                return serveLocalAsset(resolvedPath)
+                val resp = serveLocalAsset(resolvedPath)
+                Log.i(TAG_PACK, "intercept ${url.path} -> status=${resp.statusCode} mime=${resp.mimeType}")
+                return resp
             }
 
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 val wv = view ?: return
+                Log.i(TAG_PACK, "onPageStarted: $url")
                 wv.evaluateJavascript(bootstrapJS, null)
                 onPageStartedCallback?.invoke(wv)
             }
@@ -253,8 +257,33 @@ class NativeMediaBridge(
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 val wv = view ?: return
+                Log.i(TAG_PACK, "onPageFinished: $url")
                 wv.evaluateJavascript(bootstrapJS, null)
                 onPageFinishedCallback?.invoke(wv)
+            }
+
+            override fun onReceivedError(
+                view: WebView?,
+                request: WebResourceRequest?,
+                error: android.webkit.WebResourceError?,
+            ) {
+                Log.e(
+                    TAG_PACK,
+                    "onReceivedError main=${request?.isForMainFrame} url=${request?.url} code=${error?.errorCode} desc=${error?.description}",
+                )
+                super.onReceivedError(view, request, error)
+            }
+
+            override fun onReceivedHttpError(
+                view: WebView?,
+                request: WebResourceRequest?,
+                errorResponse: WebResourceResponse?,
+            ) {
+                Log.w(
+                    TAG_PACK,
+                    "onReceivedHttpError url=${request?.url} status=${errorResponse?.statusCode}",
+                )
+                super.onReceivedHttpError(view, request, errorResponse)
             }
         }
     }
@@ -289,6 +318,7 @@ class NativeMediaBridge(
 
     /** 加载本地胶囊 / 静态内核 URL 并启动 3 秒防变砖看门狗（仅加载热更包时启用） */
     fun loadLocalPack(webView: WebView, url: String = "$BASE_ORIGIN/") {
+        Log.i(TAG_PACK, "loadLocalPack: $url")
         observedWebView = WeakReference(webView)
         watchdogUrl = url
         watchdogInitStateJson = null
@@ -1024,7 +1054,8 @@ class NativeMediaBridge(
 
     private fun serveLocalAsset(relativePath: String): WebResourceResponse {
         val cleanPath = AppPackManifestRules.normalizeRelativePath(relativePath) ?: return notFound()
-        val ext = cleanPath.substringAfterLast('/', "").substringAfterLast('.', "")
+        val fileName = cleanPath.substringAfterLast('/')
+        val ext = fileName.substringAfterLast('.', "")
 
         // 1. 优先读 D-47 `AppPackStore`（热更沙盒包 -> 内置 `assets/app-pack/`）
         AppPackStore.openFile(appContext, cleanPath)?.let { opened ->
@@ -1052,7 +1083,6 @@ class NativeMediaBridge(
         }
 
         // 3. 本地 SQLite 数据库直出
-        val fileName = cleanPath.substringAfterLast('/')
         val baseName = fileName.substringBeforeLast('.')
         if (ext == "sqlite") {
             val f = if (baseName == "info-edition") File(appContext.filesDir, "info-edition.sqlite")

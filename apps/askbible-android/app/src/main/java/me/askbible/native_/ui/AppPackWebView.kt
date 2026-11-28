@@ -232,21 +232,22 @@ fun AppPackWebView(
         }
     }
 
-    val webAlpha by animateFloatAsState(
-        targetValue = if (pageVisible) 1f else 0f,
+    val coverAlpha by animateFloatAsState(
+        targetValue = if (pageVisible) 0f else 1f,
         animationSpec = tween(durationMillis = 140),
-        label = "appPackWebAlpha",
+        label = "appPackCoverAlpha",
     )
     val bgColorInt = theme.canvas.argb.toInt()
 
     Box(modifier.fillMaxSize()) {
         ParchmentBackground(theme = theme)
 
+        // 严禁对 AndroidView(WebView) 本体设置 .alpha(0f)，三星 One UI 硬件图层会导致黑屏/透明图层丢失；
+        // 改为让 WebView 恒定全不透明，首帧由上方羊皮纸遮罩平稳淡出。
         AndroidView(
             modifier = Modifier
                 .fillMaxSize()
-                .imePadding()
-                .alpha(webAlpha),
+                .imePadding(),
             factory = { ctx ->
                 runCatching {
                     WebView(ctx).apply {
@@ -275,6 +276,16 @@ fun AppPackWebView(
                 }
             },
         )
+
+        if (coverAlpha > 0.01f) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(coverAlpha),
+            ) {
+                ParchmentBackground(theme = theme)
+            }
+        }
     }
 }
 

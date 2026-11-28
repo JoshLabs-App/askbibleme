@@ -110,47 +110,26 @@ fun PlanPlayScreen(
     val busy = audio.isLoading && audio.wantsPlayback
     val allReadDates = store.listenedDates + habitDates
 
-    Box(Modifier.fillMaxSize()) {
-        ParchmentBackground(theme = theme)
-        val bottom = shellTabBarBottomInset() + (ShellMetrics.tabRowHeight + ShellMetrics.tabBarDockGap + 24f).dp +
-            (if (queue.isNotEmpty()) ShellMetrics.dockContentHeight.dp else 0.dp)
-        LazyColumn(
-            Modifier.fillMaxSize().statusBarsPadding(),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 16.dp, bottom = bottom),
-        ) {
-            item {
-                // 顶栏：「今日同行」+「换计划」胶囊（与 iOS PlanPlayView 对齐）
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text(
-                            AppLocale.pick("今日同行", "Today's Walk", locale),
-                            color = ink,
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Text(
-                            "$planName · $dayMeta",
-                            color = muted,
-                            fontSize = 13.5.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(top = 3.dp),
-                        )
-                    }
-                    Row(
-                        Modifier
-                            .clip(RoundedCornerShape(999.dp))
-                            .background(theme.surface.toColor())
-                            .border(1.dp, theme.border.toColor(), RoundedCornerShape(999.dp))
-                            .clickableNoRipple(onOpenPlans)
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(AppLocale.pick("换计划", "Plans", locale), color = ink, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold)
-                    }
-                }
-                Spacer(Modifier.height(10.dp))
-            }
+    ParchmentScreenScaffold(
+        theme = theme,
+        extraBottomPadding = if (queue.isNotEmpty()) ShellMetrics.dockContentHeight.dp else 0.dp,
+    ) {
+        item {
+            // 复用全站唯一 ParchmentPageHeader + ParchmentPillButton
+            ParchmentPageHeader(
+                title = AppLocale.pick("今日同行", "Today's Walk", locale),
+                subtitle = "$planName · $dayMeta",
+                theme = theme,
+                trailing = {
+                    ParchmentPillButton(
+                        label = AppLocale.pick("换计划", "Plans", locale),
+                        onClick = onOpenPlans,
+                        theme = theme,
+                    )
+                },
+            )
+            Spacer(Modifier.height(10.dp))
+        }
             if (queue.isEmpty() && !browsingAway) {
                 item {
                     Text(locale.zh(PlanCopy.t("pages.read.todayPlanEmpty")), Modifier.fillMaxWidth().padding(top = 48.dp),
@@ -325,7 +304,6 @@ fun PlanPlayScreen(
                 }
             }
         }
-    }
 
     stageToConfirm?.let { i ->
         val seg = NtDeepRepeat.segment(i)

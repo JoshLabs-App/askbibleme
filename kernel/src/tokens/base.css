@@ -81,7 +81,8 @@ select {
 }
 
 .ab-main--native {
-  padding-bottom: 32px;
+  padding-top: calc(max(env(safe-area-inset-top, 0px), var(--askbible-top-inset, 36px)) + 12px);
+  padding-bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--askbible-bottom-inset, 84px)) + 20px);
 }
 
 .ab-page-title {

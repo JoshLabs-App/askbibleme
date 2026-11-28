@@ -331,6 +331,13 @@ private fun buildKernelSyncScript(stateJson: String, isDark: Boolean, localeTag:
               root.dataset.theme = $quotedMode;
               root.lang = $quotedLocale;
               root.style.colorScheme = $quotedMode;
+              var st = $stateJson;
+              if (typeof st.topInset === 'number') {
+                root.style.setProperty('--askbible-top-inset', st.topInset + 'px');
+              }
+              if (typeof st.bottomInset === 'number') {
+                root.style.setProperty('--askbible-bottom-inset', st.bottomInset + 'px');
+              }
             }
             if (window.localStorage) {
               window.localStorage.setItem('askbible-theme-mode', $quotedMode);

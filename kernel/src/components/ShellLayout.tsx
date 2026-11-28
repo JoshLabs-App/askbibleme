@@ -25,7 +25,6 @@ export function ShellLayout({
   isNative,
   audioState,
   onSelectTab,
-  onNavigate,
   onToggleAudioPause,
   children,
 }: ShellLayoutProps) {
@@ -34,35 +33,20 @@ export function ShellLayout({
 
   return (
     <div className="ab-shell">
-      <header className="ab-header">
-        <div className="ab-header-inner">
-          <button
-            type="button"
-            className="ab-btn-ghost ab-brand"
-            onClick={() => onSelectTab("home")}
-          >
-            <span className="ab-brand-dot" aria-hidden="true" />
-            <span>AskBible.me</span>
-          </button>
-
-          <div className="ab-row">
+      {!isNative && (
+        <header className="ab-header">
+          <div className="ab-header-inner">
             <button
               type="button"
-              className="ab-btn"
-              onClick={() => onNavigate("/figures")}
+              className="ab-btn-ghost ab-brand"
+              onClick={() => onSelectTab("home")}
             >
-              人物馆
-            </button>
-            <button
-              type="button"
-              className="ab-btn"
-              onClick={() => onNavigate("/settings")}
-            >
-              设置
+              <span className="ab-brand-dot" aria-hidden="true" />
+              <span>AskBible.me</span>
             </button>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       <main className={isNative ? "ab-main ab-main--native" : "ab-main"}>
         {children}

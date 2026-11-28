@@ -315,7 +315,7 @@ export function App() {
           <FiguresPage onOpenReader={(b, c) => openReader(b, c)} />
         )}
         {route.page === "ex-libris" && <ExLibrisPage />}
-        {route.page === "settings" && <SettingsPage />}
+        {route.page === "settings" && <SettingsPage onBack={() => navigate("/explore")} />}
       </Suspense>
     </ShellLayout>
   );

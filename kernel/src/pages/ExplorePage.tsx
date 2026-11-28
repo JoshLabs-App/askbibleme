@@ -174,6 +174,19 @@ export default function ExplorePage({
           className="ab-card ab-card-btn"
           onClick={() => {
             void platformBridge.call("shell.haptic", { style: "light" });
+            onNavigate("/settings");
+          }}
+        >
+          <span className="ab-pill">设置</span>
+          <div className="ab-card-title" style={{ marginTop: 8 }}>外观、同步与离线译本</div>
+          <div className="ab-muted">羊皮卷明暗外观、账号同步、每日提醒与按语言管理离线译本。</div>
+        </button>
+
+        <button
+          type="button"
+          className="ab-card ab-card-btn"
+          onClick={() => {
+            void platformBridge.call("shell.haptic", { style: "light" });
             onOpenReader("PSA", 23);
           }}
         >

@@ -107,34 +107,34 @@
 - `L1048` — `function ReadChapterVerseParagraph`
 - `L1169` — `function verseHasSearchKeyword`
 
-### `lib/explore/years-days-eternity-content.ts`（共 1131 行）
-- `L3` — `const YEARS_DAYS_ETERNITY_ZH`
-
-### `apps/askbible-android/app/src/main/java/me/askbible/native_/ui/NativeMediaBridge.kt`（共 1128 行）
+### `apps/askbible-android/app/src/main/java/me/askbible/native_/ui/NativeMediaBridge.kt`（共 1153 行）
 - `L72` — `class NativeMediaBridge`
 - `L195` — `fun configureWebView`
-- `L263` — `fun loadInlinePack`
-- `L291` — `fun loadLocalPack`
-- `L299` — `fun beginWatchdogIfHotPack`
-- `L323` — `fun cancelWatchdog`
-- `L328` — `fun release`
-- `L337` — `fun emit`
-- `L346` — `fun emitKeyboardHeight`
-- `L362` — `fun emitAudioState`
-- `L368` — `fun emitTabSelected`
-- `L374` — `fun emitBackPressed`
-- `L378` — `fun emitPackReadyToSwap`
-- `L385` — `fun callBridge`
-- `L575` — `fun resolveBridgeOk`
-- `L586` — `fun resolveBridgeErr`
-- `L599` — `fun postMessage`
-- `L639` — `fun markBootHealthy`
-- `L647` — `fun handleAudioIntent`
-- `L721` — `fun buildAudioStateJson`
-- `L770` — `fun triggerHaptic`
-- `L803` — `fun readSessionJson`
-- `L824` — `fun userToJson`
-- `L833` — `fun shareImageOrText`
+- `L288` — `fun loadInlinePack`
+- `L316` — `fun loadLocalPack`
+- `L324` — `fun beginWatchdogIfHotPack`
+- `L348` — `fun cancelWatchdog`
+- `L353` — `fun release`
+- `L362` — `fun emit`
+- `L371` — `fun emitKeyboardHeight`
+- `L387` — `fun emitAudioState`
+- `L393` — `fun emitTabSelected`
+- `L399` — `fun emitBackPressed`
+- `L403` — `fun emitPackReadyToSwap`
+- `L410` — `fun callBridge`
+- `L600` — `fun resolveBridgeOk`
+- `L611` — `fun resolveBridgeErr`
+- `L624` — `fun postMessage`
+- `L664` — `fun markBootHealthy`
+- `L672` — `fun handleAudioIntent`
+- `L746` — `fun buildAudioStateJson`
+- `L795` — `fun triggerHaptic`
+- `L828` — `fun readSessionJson`
+- `L849` — `fun userToJson`
+- `L858` — `fun shareImageOrText`
+
+### `lib/explore/years-days-eternity-content.ts`（共 1131 行）
+- `L3` — `const YEARS_DAYS_ETERNITY_ZH`
 
 ### `components/music/MusicHomeClient.tsx`（共 947 行）
 - `L60` — `const DEFAULT_ALBUM`
@@ -310,10 +310,11 @@
 | `/app` | `app/app/page.tsx` |
 | `/tv` | `app/tv/page.tsx` |
 
-### B. Web API 路由入口（共 42 个接口）
+### B. Web API 路由入口（共 43 个接口）
 | API 路径 | HTTP 方法 | 路由源文件 |
 | :--- | :--- | :--- |
 | `/.well-known/mcp.json` | `GET` | `app/.well-known/mcp.json/route.ts` |
+| `/.well-known/openai-apps-challenge` | `GET` | `app/.well-known/openai-apps-challenge/route.ts` |
 | `/api/app-build` | `GET` | `app/api/app-build/route.ts` |
 | `/api/golden-verses/backgrounds` | `GET` | `app/api/golden-verses/backgrounds/route.ts` |
 | `/api/golden-verses/upload-image` | `POST` | `app/api/golden-verses/upload-image/route.ts` |

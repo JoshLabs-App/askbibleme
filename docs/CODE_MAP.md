@@ -17,8 +17,8 @@
 | **账号认证（OTP / Apple / Google）& 读经云同步（D-44）** | 登录页：`app/(narrow-auth)/login/page.tsx`<br>用户态：`components/auth/AskbibleUserProvider.tsx`<br>Web 代理：`app/api/sync/[...path]/route.ts` | 同步 Worker：`workers/askbible-sync/src/index.js`<br>JWKS 直验：`workers/askbible-sync/src/jwks.js`<br>单点合并：`workers/askbible-sync/src/merge.js`<br>Web 本地同步：`lib/member-reading-sync/*` | `lib/askbible-web-auth-client.test.ts` |
 | **双端极薄原生壳 & 离线包热更（D-44 / D-46）** | Android：`apps/askbible-android/app/src/main/java/me/askbible/native_/MainActivity.kt`<br>iOS：`apps/askbible-ios/AskBible/AskBibleApp.swift` | 离线包构建：`tools/build-web-pack.mjs`<br>多域名选线：`tools/endpoints-sync.mjs`（`data/endpoints.json`）<br>CF 直发：`scripts/deploy-direct.sh` | `npm run check:native`<br>`npm run check:web-pack` |
 
-- **`components/*` 模块分布**：`components/about/`(2) · `components/achievements/`(6) · `components/app-shell/`(14) · `components/auth/`(5) · `components/bible/`(62) · `components/calm/`(1) · `components/content-correction/`(1) · `components/explore/`(28) · `components/feedback/`(1) · `components/figures/`(0) · `components/home/`(16) · `components/i18n/`(3) · `components/install/`(2) · `components/legacy/`(3) · `components/media/`(1) · `components/member/`(2) · `components/music/`(18) · `components/nature/`(17) · `components/onboarding/`(2) · `components/panorama/`(2) · `components/pwa/`(3) · `components/relax/`(1) · `components/scripture/`(2) · `components/shell/`(18) · `components/site/`(5) · `components/tv/`(0) · `components/tvscreen/`(2) · `components/ui/`(3) · `components/verse/`(7)
-- **`lib/*` 模块分布**：`lib/__tests__/`(1) · `lib/achievements/`(4) · `lib/admin/`(6) · `lib/ai/`(5) · `lib/auth/`(5) · `lib/bible/`(165) · `lib/content-corrections/`(2) · `lib/daily-verse/`(2) · `lib/devotional/`(2) · `lib/dom/`(3) · `lib/endpoints/`(3) · `lib/explore/`(93) · `lib/feedback/`(1) · `lib/figures/`(5) · `lib/generated/`(0) · `lib/golden-verses/`(2) · `lib/home/`(14) · `lib/home-listening/`(3) · `lib/home-prayer-pools/`(18) · `lib/http/`(1) · `lib/i18n/`(9) · `lib/media/`(1) · `lib/member-reading-sync/`(15) · `lib/music/`(14) · `lib/music-companion/`(11) · `lib/nature/`(25) · `lib/notifications/`(3) · `lib/onboarding/`(4) · `lib/prayer/`(1) · `lib/pwa/`(8) · `lib/read/`(76) · `lib/relax/`(3) · `lib/scripture/`(13) · `lib/shell/`(13) · `lib/ui/`(2) · `lib/verse/`(3) · `lib/widget/`(2)
+- **`components/*` 模块分布**：`components/about/`(2) · `components/achievements/`(6) · `components/app-shell/`(15) · `components/auth/`(5) · `components/bible/`(62) · `components/calm/`(1) · `components/content-correction/`(1) · `components/explore/`(28) · `components/feedback/`(1) · `components/figures/`(0) · `components/home/`(16) · `components/i18n/`(3) · `components/install/`(2) · `components/legacy/`(3) · `components/media/`(1) · `components/member/`(2) · `components/music/`(18) · `components/nature/`(17) · `components/onboarding/`(2) · `components/panorama/`(2) · `components/pwa/`(3) · `components/relax/`(1) · `components/scripture/`(2) · `components/shell/`(18) · `components/site/`(5) · `components/tv/`(0) · `components/tvscreen/`(2) · `components/ui/`(3) · `components/verse/`(7)
+- **`lib/*` 模块分布**：`lib/__tests__/`(1) · `lib/achievements/`(4) · `lib/admin/`(6) · `lib/ai/`(11) · `lib/auth/`(5) · `lib/bible/`(165) · `lib/content-corrections/`(2) · `lib/daily-verse/`(2) · `lib/devotional/`(2) · `lib/dom/`(3) · `lib/endpoints/`(3) · `lib/explore/`(93) · `lib/feedback/`(1) · `lib/figures/`(5) · `lib/generated/`(0) · `lib/golden-verses/`(2) · `lib/home/`(14) · `lib/home-listening/`(3) · `lib/home-prayer-pools/`(18) · `lib/http/`(1) · `lib/i18n/`(9) · `lib/media/`(1) · `lib/member-reading-sync/`(15) · `lib/music/`(14) · `lib/music-companion/`(11) · `lib/nature/`(25) · `lib/notifications/`(3) · `lib/onboarding/`(4) · `lib/prayer/`(1) · `lib/pwa/`(8) · `lib/read/`(76) · `lib/relax/`(3) · `lib/scripture/`(13) · `lib/shell/`(13) · `lib/ui/`(2) · `lib/verse/`(3) · `lib/widget/`(2)
 
 ---
 
@@ -237,9 +237,11 @@
 - `PATCH /v1/auth/profile` → `workers/askbible-sync/src/index.js`(L390)
 - `POST /v1/auth/logout` → `workers/askbible-sync/src/index.js`(L415)
 - `DELETE /v1/auth/account` → `workers/askbible-sync/src/index.js`(L424)
-- `ANY /v1/sync/reading` → `workers/askbible-sync/src/index.js`(L440)
-- `POST /v1/feedback` → `workers/askbible-sync/src/index.js`(L510)
-- `POST /v1/corrections` → `workers/askbible-sync/src/index.js`(L510)
+- `ANY /v1/sync/reading` → `workers/askbible-sync/src/index.js`(L441)
+- `POST /v1/feedback` → `workers/askbible-sync/src/index.js`(L511)
+- `POST /v1/corrections` → `workers/askbible-sync/src/index.js`(L511)
+- `GET /v1/mcp/summary` → `workers/askbible-sync/src/index.js`(L532)
+- `ANY /v1/mcp/proposals` → `workers/askbible-sync/src/index.js`(L580)
 - 边缘代理 Worker：`workers/site-proxy/worker.js`（白名单路径透传上游 + `/healthz.txt` 探针）
 - Web 主站 Worker 配置：`cloudflare.config.ts`（Worker 名 `askbible-web`，Service Binding `ASKBIBLE_SYNC`）
 
@@ -251,6 +253,7 @@
 | `sessions` | L21 | `token_hash` | `token_hash`, `user_id`, `email`, `device_id`, `device_name`, `platform`, `expires_at`, `created_at` 等 9 列 |
 | `reading_sync_docs` | L35 | `user_id` | `user_id`, `schema_version`, `revision`, `blobs_json`, `updated_at` |
 | `feedback_items` | L43 | `id` | `id`, `kind`, `email`, `locale`, `payload_json`, `created_at` |
+| `mcp_proposals` | L55 | `id` | `id`, `user_id`, `action`, `payload_json`, `summary`, `source_agent`, `status`, `created_at` 等 9 列 |
 
 ---
 
@@ -307,14 +310,16 @@
 | `/app` | `app/app/page.tsx` |
 | `/tv` | `app/tv/page.tsx` |
 
-### B. Web API 路由入口（共 35 个接口）
+### B. Web API 路由入口（共 42 个接口）
 | API 路径 | HTTP 方法 | 路由源文件 |
 | :--- | :--- | :--- |
+| `/.well-known/mcp.json` | `GET` | `app/.well-known/mcp.json/route.ts` |
 | `/api/app-build` | `GET` | `app/api/app-build/route.ts` |
 | `/api/golden-verses/backgrounds` | `GET` | `app/api/golden-verses/backgrounds/route.ts` |
 | `/api/golden-verses/upload-image` | `POST` | `app/api/golden-verses/upload-image/route.ts` |
 | `/api/health` | `GET` `HEAD` | `app/api/health/route.ts` |
 | `/api/home/bible-translations-catalog` | `GET` | `app/api/home/bible-translations-catalog/route.ts` |
+| `/api/mcp` | - | `app/api/mcp/route.ts` |
 | `/api/mobile/bible/translations` | `GET` | `app/api/mobile/bible/translations/route.ts` |
 | `/api/mobile/bible/youversion/books` | `GET` | `app/api/mobile/bible/youversion/books/route.ts` |
 | `/api/mobile/bible/youversion/catalog` | `GET` | `app/api/mobile/bible/youversion/catalog/route.ts` |
@@ -339,12 +344,17 @@
 | `/api/read/chapter-segments` | `GET` | `app/api/read/chapter-segments/route.ts` |
 | `/api/read/chapter` | `GET` | `app/api/read/chapter/route.ts` |
 | `/api/read/info-edition-v1` | `GET` `POST` | `app/api/read/info-edition-v1/route.ts` |
+| `/api/read/markdown` | `GET` | `app/api/read/markdown/route.ts` |
 | `/api/read/reading-plan/[planId]` | `GET` | `app/api/read/reading-plan/[planId]/route.ts` |
 | `/api/read/reading-plans/registry` | `GET` | `app/api/read/reading-plans/registry/route.ts` |
 | `/api/read/verse-snippets` | `POST` | `app/api/read/verse-snippets/route.ts` |
 | `/api/sync/[...path]` | `GET` `POST` `PATCH` `DELETE` `OPTIONS` | `app/api/sync/[...path]/route.ts` |
 | `/api/tv-report` | `POST` | `app/api/tv-report/route.ts` |
+| `/llms-full.txt` | `GET` | `app/llms-full.txt/route.ts` |
+| `/llms.txt` | `GET` | `app/llms.txt/route.ts` |
 | `/manifest.webmanifest` | `GET` | `app/manifest.webmanifest/route.ts` |
+| `/mcp` | `OPTIONS` `GET` `POST` | `app/mcp/route.ts` |
+| `/sitemap.xml` | `GET` | `app/sitemap.xml/route.ts` |
 
 ---
 
@@ -353,6 +363,7 @@
 | 脚本路径 | 行数 | 职责摘要 |
 | :--- | :--- | :--- |
 | `tools/askbible-jsx-source-plugin.mjs` | 125 | const HOST_TAGS = new Set([ |
+| `tools/askbible-mcp-stdio.mjs` | 104 | AskBible.me · Local Stdio MCP Server（供 Claude Desktop / Cursor / Codex / |
 | `tools/book-catalog-parity.mjs` | 102 | 圣经目录三端对拍：书卷号 / id / 中文名 / 章数。 |
 | `tools/build-app-pack.mjs` | 427 | D-47 同源纯静态内核热更包清单生成器与校验门禁（pack-manifest.json） |
 | `tools/build-verse-timings-db.mjs` | 81 | 从真源 `public/verse-timings/`（cuv-v20 / cuv-simp 根级 / web-en）直接生成原生侧 SQLit |

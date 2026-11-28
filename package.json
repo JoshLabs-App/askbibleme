@@ -48,6 +48,7 @@
     "build:app-pack:native": "npm run sync:kernel-data && cd kernel && npm run build && cd .. && node tools/build-app-pack.mjs --sync-native",
     "check:contracts": "node tools/check-contracts.mjs",
     "test:edge": "node --test workers/askbible-edge/test/edge.test.mjs",
+    "mcp:stdio": "node tools/askbible-mcp-stdio.mjs",
     "check:native": "npm run check:endpoints && npm run check:medals && npm run check:language-order && npm run check:book-catalog && npm run check:scripture-data && npm run check:chapter-audio && npm run check:verse-timings && npm run check:reading-plan && npm run check:explore-articles && npm run check:web-pack && npm run check:reading-plan-usability",
     "dev:vinext": "vite dev --port 3001",
     "build:vinext": "vite build && node scripts/clean-temp.mjs",

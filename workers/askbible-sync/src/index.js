@@ -429,6 +429,7 @@ export default {
         }
         const uid = auth.userRow.id;
         await env.DB.batch([
+          env.DB.prepare("DELETE FROM mcp_proposals WHERE user_id = ?").bind(uid),
           env.DB.prepare("DELETE FROM reading_sync_docs WHERE user_id = ?").bind(uid),
           env.DB.prepare("DELETE FROM sessions WHERE user_id = ?").bind(uid),
           env.DB.prepare("DELETE FROM users WHERE id = ?").bind(uid),
@@ -524,6 +525,208 @@ export default {
           .bind(id, kind, email, locale, JSON.stringify(body), now)
           .run();
         return json({ ok: true, id });
+      }
+
+      // 10. Open MCP Personal Summary & Two-Stage Write Proposal Inbox
+      // Read: Tier 1 (authenticated user only). Write: Tier 2 (pending proposal -> in-app confirm).
+      if (request.method === "GET" && path === "/v1/mcp/summary") {
+        const auth = await authenticate(request, env);
+        if (!auth) return json({ ok: false, code: "unauthorized", error: "未登录。" }, 401);
+        const uid = auth.userRow.id;
+        const docRow = await env.DB.prepare(
+          "SELECT revision, blobs_json, updated_at FROM reading_sync_docs WHERE user_id = ?"
+        )
+          .bind(uid)
+          .first();
+        const blobs = docRow ? JSON.parse(docRow.blobs_json || "{}") : {};
+        const bookmarksMap = blobs.bookmarks && typeof blobs.bookmarks === "object" ? blobs.bookmarks : {};
+        const activeBookmarks = Object.entries(bookmarksMap)
+          .filter(([, v]) => v && typeof v === "object" && v.deleted !== true)
+          .map(([key, v]) => ({
+            key,
+            bookId: v.bookId || key.split(":")[0] || "",
+            chapter: Number(v.chapter || key.split(":")[1] || 0),
+            verse: v.verse ? Number(v.verse) : null,
+            note: typeof v.note === "string" ? v.note.slice(0, 200) : "",
+            savedAt: Number(v.savedAt || 0),
+          }))
+          .sort((a, b) => b.savedAt - a.savedAt)
+          .slice(0, 10);
+
+        const pendingRes = await env.DB.prepare(
+          "SELECT COUNT(*) AS cnt FROM mcp_proposals WHERE user_id = ? AND status = 'pending'"
+        )
+          .bind(uid)
+          .first()
+          .catch(() => ({ cnt: 0 }));
+
+        const completion = blobs.chapterCompletion && typeof blobs.chapterCompletion === "object" ? blobs.chapterCompletion : {};
+        const completedCount = Object.values(completion).filter((v) => v && v.done !== false).length;
+
+        return json({
+          ok: true,
+          user: { id: uid, name: auth.userRow.display_name },
+          lastPosition: blobs.lastPosition || null,
+          readTranslation: blobs.readTranslation || "cuv-simp",
+          readingPlanPrefs: blobs.readingPlanPrefs || null,
+          todayReadingDone: blobs.todayReadingDone || null,
+          completedChaptersCount: completedCount,
+          recentBookmarks: activeBookmarks,
+          pendingProposalsCount: Number(pendingRes?.cnt || 0),
+          updatedAt: docRow ? new Date(Number(docRow.updated_at || Date.now())).toISOString() : null,
+        });
+      }
+
+      if (path === "/v1/mcp/proposals") {
+        const auth = await authenticate(request, env);
+        if (!auth) return json({ ok: false, code: "unauthorized", error: "未登录。" }, 401);
+        const uid = auth.userRow.id;
+
+        if (request.method === "GET") {
+          const statusFilter = url.searchParams.get("status") || "pending";
+          const rows =
+            statusFilter === "all"
+              ? await env.DB.prepare(
+                  "SELECT id, action, payload_json, summary, source_agent, status, created_at, resolved_at FROM mcp_proposals WHERE user_id = ? ORDER BY created_at DESC LIMIT 30"
+                )
+                  .bind(uid)
+                  .all()
+              : await env.DB.prepare(
+                  "SELECT id, action, payload_json, summary, source_agent, status, created_at, resolved_at FROM mcp_proposals WHERE user_id = ? AND status = ? ORDER BY created_at DESC LIMIT 30"
+                )
+                  .bind(uid, statusFilter)
+                  .all();
+
+          const proposals = (rows?.results || []).map((r) => ({
+            id: r.id,
+            action: r.action,
+            payload: JSON.parse(r.payload_json || "{}"),
+            summary: r.summary,
+            sourceAgent: r.source_agent,
+            status: r.status,
+            createdAt: new Date(Number(r.created_at || Date.now())).toISOString(),
+            resolvedAt: r.resolved_at ? new Date(Number(r.resolved_at)).toISOString() : null,
+          }));
+          return json({ ok: true, proposals });
+        }
+
+        if (request.method === "POST") {
+          const body = await request.json().catch(() => ({}));
+          const action = String(body.action || "").trim();
+          const allowed = new Set(["add_bookmark", "switch_reading_plan", "mark_chapter_read"]);
+          if (!allowed.has(action)) {
+            return json({ ok: false, code: "invalid_action", error: "不支持的提案动作。" }, 400);
+          }
+          const payload = body.payload && typeof body.payload === "object" ? body.payload : {};
+          const summary = String(body.summary || action).trim().slice(0, 200);
+          const sourceAgent = String(body.sourceAgent || "External AI").trim().slice(0, 48);
+          const id = crypto.randomUUID();
+          const now = Date.now();
+          await env.DB.prepare(
+            `INSERT INTO mcp_proposals (id, user_id, action, payload_json, summary, source_agent, status, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`
+          )
+            .bind(id, uid, action, JSON.stringify(payload), summary, sourceAgent, now)
+            .run();
+
+          return json({
+            ok: true,
+            proposal: {
+              id,
+              action,
+              payload,
+              summary,
+              sourceAgent,
+              status: "pending",
+              createdAt: new Date(now).toISOString(),
+            },
+          });
+        }
+      }
+
+      const proposalActionMatch = path.match(/^\/v1\/mcp\/proposals\/([a-zA-Z0-9-]+)\/(approve|reject)$/);
+      if (request.method === "POST" && proposalActionMatch) {
+        const auth = await authenticate(request, env);
+        if (!auth) return json({ ok: false, code: "unauthorized", error: "未登录。" }, 401);
+        const uid = auth.userRow.id;
+        const [, proposalId, decision] = proposalActionMatch;
+
+        const row = await env.DB.prepare(
+          "SELECT id, action, payload_json, summary, source_agent, status FROM mcp_proposals WHERE id = ? AND user_id = ?"
+        )
+          .bind(proposalId, uid)
+          .first();
+        if (!row) return json({ ok: false, code: "not_found", error: "提案不存在。" }, 404);
+        if (row.status !== "pending") {
+          return json({ ok: true, status: row.status, alreadyResolved: true });
+        }
+
+        const now = Date.now();
+        if (decision === "reject") {
+          await env.DB.prepare("UPDATE mcp_proposals SET status = 'rejected', resolved_at = ? WHERE id = ? AND user_id = ?")
+            .bind(now, proposalId, uid)
+            .run();
+          return json({ ok: true, id: proposalId, status: "rejected" });
+        }
+
+        // Approve: build minimal sync patch and merge atomically into reading_sync_docs
+        const payload = JSON.parse(row.payload_json || "{}");
+        const patchBlobs = {};
+        if (row.action === "add_bookmark" && payload.bookId && payload.chapter) {
+          const bKey = payload.verse
+            ? `${String(payload.bookId).toUpperCase()}:${Number(payload.chapter)}:${Number(payload.verse)}`
+            : `${String(payload.bookId).toUpperCase()}:${Number(payload.chapter)}`;
+          patchBlobs.bookmarks = {
+            [bKey]: {
+              bookId: String(payload.bookId).toUpperCase(),
+              chapter: Number(payload.chapter),
+              ...(payload.verse ? { verse: Number(payload.verse) } : {}),
+              ...(payload.note ? { note: String(payload.note).slice(0, 500) } : {}),
+              savedAt: now,
+              source: "mcp_proposal",
+            },
+          };
+        } else if (row.action === "mark_chapter_read" && payload.bookId && payload.chapter) {
+          const cKey = `${String(payload.bookId).toUpperCase()}:${Number(payload.chapter)}`;
+          patchBlobs.chapterCompletion = {
+            [cKey]: { done: true, completedAt: now, updatedAt: now },
+          };
+        } else if (row.action === "switch_reading_plan" && payload.planId) {
+          patchBlobs.readingPlanPrefs = {
+            activePlanId: String(payload.planId),
+            updatedAt: now,
+          };
+        }
+
+        const existing = await env.DB.prepare(
+          "SELECT schema_version, revision, blobs_json FROM reading_sync_docs WHERE user_id = ?"
+        )
+          .bind(uid)
+          .first();
+        const baseBlobs = existing ? JSON.parse(existing.blobs_json || "{}") : {};
+        const mergedBlobs = mergeSyncBlobs(baseBlobs, patchBlobs, now);
+        const revision = `${now}-${randomHex(4)}`;
+        const blobsJson = JSON.stringify(mergedBlobs);
+
+        if (existing) {
+          await env.DB.prepare(
+            "UPDATE reading_sync_docs SET revision = ?, blobs_json = ?, updated_at = ? WHERE user_id = ?"
+          )
+            .bind(revision, blobsJson, now, uid)
+            .run();
+        } else {
+          await env.DB.prepare(
+            "INSERT INTO reading_sync_docs (user_id, schema_version, revision, blobs_json, updated_at) VALUES (?, 1, ?, ?, ?)"
+          )
+            .bind(uid, revision, blobsJson, now)
+            .run();
+        }
+
+        await env.DB.prepare("UPDATE mcp_proposals SET status = 'approved', resolved_at = ? WHERE id = ? AND user_id = ?")
+          .bind(now, proposalId, uid)
+          .run();
+
+        return json({ ok: true, id: proposalId, status: "approved", revision });
       }
 
       return json({ ok: false, error: "Not Found" }, 404);

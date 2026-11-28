@@ -11,6 +11,7 @@ import "./globals.css";
 import "./(app-shell)/read/read-parchment-background.css";
 import "./(app-shell)/read/read-parchment-shell-chrome.css";
 import { AppUpdateNotifier } from "@/components/app-shell/AppUpdateNotifier";
+import { AskBibleAgentBridge } from "@/components/app-shell/AskBibleAgentBridge";
 import { CodeProbeProvider } from "@/components/app-shell/AskBibleCodeProbe";
 import { MobileModelStage } from "@/components/app-shell/MobileModelStage";
 import { TvAutoMode } from "@/components/app-shell/TvAutoMode";
@@ -33,6 +34,8 @@ import {
   logoBackgroundToCssVars,
 } from "@/lib/site-branding-colors";
 import { SITE_METADATA_DEFAULT_TITLE } from "@/lib/site-metadata-defaults";
+import { buildRouteJsonLd } from "@/lib/ai/askbible-ai-docs.mjs";
+import { PRODUCT_ORIGIN } from "@/lib/ai/askbible-ai-catalog.mjs";
 
 export async function generateMetadata(): Promise<Metadata> {
   const brandingReady = await brandingAssetsExist();
@@ -96,6 +99,7 @@ export default async function RootLayout({
   const logoBackground = await getResolvedLogoBackground();
   const appBuildId = getAppBuildId();
   const appBuiltAt = getAppBuiltAt();
+  const siteJsonLd = JSON.stringify(buildRouteJsonLd("/", PRODUCT_ORIGIN)).replace(/<\//g, "<\\/");
 
   return (
     <html
@@ -109,6 +113,14 @@ export default async function RootLayout({
       }
       suppressHydrationWarning
     >
+      <head>
+        <link rel="alternate" type="text/plain" href="/llms.txt" title="LLMs Context" />
+        <link rel="mcp-server" href="/mcp" title="AskBible.me Remote MCP" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: siteJsonLd }}
+        />
+      </head>
       <body
         className="min-h-screen font-sans text-[15px] leading-relaxed"
         data-app-build={appBuildId}
@@ -137,6 +149,7 @@ export default async function RootLayout({
                     <PwaServiceWorkerRegistration />
                     <EndpointsBoot />
                     <AppUpdateNotifier />
+                    <AskBibleAgentBridge />
                     <TvAutoMode />
                   </MediaPlaybackCoordinatorProvider>
                 </MusicShellPlaybackProvider>

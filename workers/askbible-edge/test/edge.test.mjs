@@ -197,4 +197,54 @@ describe("askbible-edge worker", () => {
     const unknownApiRes = await worker.fetch(new Request("https://askbible.me/api/unknown"), env);
     assert.equal(unknownApiRes.status, 404);
   });
+
+  it("serves AI discovery endpoints (/llms.txt, /robots.txt, /sitemap.xml, /.well-known/mcp.json) and Remote MCP", async () => {
+    const env = createMockEnv();
+
+    const llmsRes = await worker.fetch(new Request("https://askbible.me/llms.txt"), env);
+    assert.equal(llmsRes.status, 200);
+    assert.match(await llmsRes.text(), /AskBible\.me/);
+
+    const robotsRes = await worker.fetch(new Request("https://askbible.me/robots.txt"), env);
+    assert.equal(robotsRes.status, 200);
+    assert.match(await robotsRes.text(), /Sitemap: https:\/\/askbible\.me\/sitemap\.xml/);
+
+    const sitemapRes = await worker.fetch(new Request("https://askbible.me/sitemap.xml"), env);
+    assert.equal(sitemapRes.status, 200);
+    assert.match(await sitemapRes.text(), /<urlset/);
+
+    const wellKnownRes = await worker.fetch(new Request("https://askbible.me/.well-known/mcp.json"), env);
+    assert.equal(wellKnownRes.status, 200);
+    const meta = await wellKnownRes.json();
+    assert.equal(meta.endpoint, "https://askbible.me/mcp");
+
+    const mcpRes = await worker.fetch(
+      new Request("https://askbible.me/mcp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize" }),
+      }),
+      env,
+    );
+    assert.equal(mcpRes.status, 200);
+    const rpc = await mcpRes.json();
+    assert.equal(rpc.result.serverInfo.name, "AskBible.me");
+
+    const quietRes = await worker.fetch(
+      new Request("https://askbible.me/mcp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 2,
+          method: "tools/call",
+          params: { name: "find_quiet_entry", arguments: { mood: "焦虑失眠" } },
+        }),
+      }),
+      env,
+    );
+    assert.equal(quietRes.status, 200);
+    const quietRpc = await quietRes.json();
+    assert.equal(quietRpc.result.structuredContent.audioMood, "quiet");
+  });
 });

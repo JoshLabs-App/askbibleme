@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import type { AudioStateSnapshot, ShellTabId } from "./bridge/contracts";
 import { isNativeShell, platformBridge } from "./bridge/platform-adapter";
+import { registerKernelAgentBridge } from "./bridge/agent-bridge";
 import { ShellLayout } from "./components/ShellLayout";
 import {
   consumeRestoredViewState,
@@ -195,6 +196,21 @@ export function App() {
       translationId,
     }));
   }, [routePath, route, lastRead.bookId, lastRead.chapter, translationId]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const tParam = new URLSearchParams(window.location.search).get("t");
+      if (tParam && tParam.trim()) {
+        setTranslationId(tParam.trim());
+      }
+    }
+    return registerKernelAgentBridge({
+      getRoutePath: () => routePathRef.current,
+      getTranslationId: () => translationId,
+      navigate: (path) => commitRoute(path, true),
+      setTranslationId,
+    });
+  }, [commitRoute, translationId]);
 
   useEffect(() => {
     const syncFromBrowser = () => {

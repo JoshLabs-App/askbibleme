@@ -5,6 +5,8 @@ workers_dev = true
 preview_urls = false
 
 routes = [
+  { pattern = "sync.askbible.me", custom_domain = true },
+  # 旧域：已装 App 在拉到新候选表前仍先连它，留到旧版本淘汰（docs/OPEN-ITEMS.md）
   { pattern = "askbible-sync.joshlabs.app", custom_domain = true }
 ]
 

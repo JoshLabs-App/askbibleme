@@ -24,7 +24,7 @@ const SECTIONS_ZH: Section[] = [
       "财务信息：收入、支出、税额、发票金额及 T2125/GST 相关导出数据。",
       "照片：你拍摄或从相册选择的收据、发票附件。",
       "可选账号（Apple / Google 登录）：用户 ID、电子邮件、显示名称，用于可选的云备份与多设备同步。",
-      "可选云备份：若你开启，备份数据会传输至我们使用的云服务商（如 Supabase、iCloud 或 Google Drive，取决于你的选择）。",
+      "可选云备份：若你开启，备份数据会传输至我们使用的云服务商（如 Cloudflare、iCloud 或 Google Drive，取决于你的选择）。",
     ],
   },
   {
@@ -70,7 +70,7 @@ const SECTIONS_ZH: Section[] = [
   {
     title: "删除账号与数据",
     paragraphs: [
-      `若你曾使用 Apple 或 Google 登录并开启云同步，请发邮件至 ${CONTACT_EMAIL}，主题为「JoshMoney 删除账号」，并注明登录邮箱。我们会在约 30 天内删除 Supabase 中的账号资料与已同步的营业信息备份。`,
+      `若你曾使用 Apple 或 Google 登录并开启云同步，请发邮件至 ${CONTACT_EMAIL}，主题为「JoshMoney 删除账号」，并注明登录邮箱。我们会在约 30 天内删除云端账号资料与已同步的营业信息备份。`,
       "设备上的本地记账数据不会上传至我们的服务器；卸载 App 即可清除。iCloud / Google Drive 中的收据备份请在你选择的云服务中自行删除。",
     ],
   },
@@ -100,7 +100,7 @@ const SECTIONS_EN: Section[] = [
       "Financial information: income, expenses, tax amounts, invoice totals, and T2125/GST export data.",
       "Photos: receipt or invoice images you capture or pick from your photo library.",
       "Optional account (Sign in with Apple / Google): user ID, email, and display name when you choose cloud backup or sync.",
-      "Optional cloud backup: if enabled, backup data is sent to cloud providers you choose (e.g. Supabase, iCloud, or Google Drive).",
+      "Optional cloud backup: if enabled, backup data is sent to cloud providers you choose (e.g. Cloudflare, iCloud, or Google Drive).",
     ],
   },
   {
@@ -146,7 +146,7 @@ const SECTIONS_EN: Section[] = [
   {
     title: "Account & data deletion",
     paragraphs: [
-      `If you signed in with Apple or Google and enabled cloud sync, email ${CONTACT_EMAIL} with subject line "JoshMoney account deletion" and the email on your account. We delete your Supabase profile and synced business backup within about 30 days.`,
+      `If you signed in with Apple or Google and enabled cloud sync, email ${CONTACT_EMAIL} with subject line "JoshMoney account deletion" and the email on your account. We delete your cloud profile and synced business backup within about 30 days.`,
       "Local bookkeeping data on your device is not stored on our servers; uninstall the app to remove it. Receipt backups in iCloud or Google Drive are managed in those services.",
     ],
   },

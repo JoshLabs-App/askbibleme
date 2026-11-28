@@ -1,7 +1,7 @@
 # AskBible.me — AI 交接开发文档
 
 **用途**：AI / Agent 接手本仓库时的**唯一启动地图**。先读本文，再按需下钻；不要通读全库。  
-**基线更新**：2026-11-24（对齐 D-44~D-46；一期治理标配 `1823761c`/`44f14bd8` 落地 `AskBible-TEMP` 外置、`CODE_MAP.md` 自动门禁、单一色彩总表与底栏版本/探针/手机模型；二期 `5bbc3aad` 完成首批超千行巨石拆分与野色收编并已上线 `askbible-web`）  
+**基线更新**：2026-11-27（已定案 **D-47**：10% 原生骨架触感壳 + 90% 纯 Vite 静态内核 + 文件级 SHA-256 无感热更 + 去 Next.js + 清退 Studio，多线程并行契约见 `docs/UNIFIED-KERNEL-PARALLEL-PLAN.md`；前期基线 `5bbc3aad` 线上运行中）  
 **仓库**：`/Users/joshua/Desktop/APP/圣经项目/01AskBible`（重缓存软链外置至 `/Users/joshua/Desktop/APP/TEMP/AskBible-TEMP/`）  
 **对外名称**：**AskBible.me**（域名 `askbible.me`）。内部名 `selah-*`、包名 `me.askbible` **不得**出现在用户界面。
 
@@ -28,7 +28,7 @@
 - **云端单栈（零 Vercel / 零 Supabase / 零 Render）**：
   - **Web 主站 Worker**：`askbible-web`（`vinext` + Cloudflare Workers，配置见 `cloudflare.config.ts`，通过 Service Binding 内网直连 `ASKBIBLE_SYNC`）。
   - **认证与同步 Worker**：`workers/askbible-sync`（纯 JS + Cloudflare D1；6 位邮箱 OTP + Apple/Google 原生 ID Token JWKS 公钥直验；服务端单点执行同步合并）。
-  - **媒体与离线包**：Cloudflare R2 `askbible-media`（自定义域 `askbible-media.joshlabs.app` + 永久兼容旧公开域 `pub-f30fb48025d841f09c37bb9b52df5354.r2.dev`）。
+  - **媒体与离线包**：Cloudflare R2 `askbible-media`（自定义域 `media.askbible.me` + 永久兼容旧公开域 `pub-f30fb48025d841f09c37bb9b52df5354.r2.dev`）。
   - **离线包热更与自动升级（D-46）**：`PackStore` 校验 `v2/catalog.json` 的 `SHA-256` 与 SQLite 100 字节页头静默原子热更；侧边抽屉内置「检查更新」与客户端版本自检。
 - **Studio**：本机产品大脑（`/studio`，仅 `npm run dev` 本地使用，线上生产环境默认 `404`）。
 

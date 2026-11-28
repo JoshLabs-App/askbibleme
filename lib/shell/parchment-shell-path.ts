@@ -13,7 +13,6 @@ export function isParchmentShellExcludedPath(pathname: string): boolean {
   if (p === "/scenes" || p.startsWith("/scenes/")) return true;
   if (p === "/music" || p.startsWith("/music/")) return true;
   if (p === "/admin" || p.startsWith("/admin/")) return true;
-  if (p === "/studio" || p.startsWith("/studio/")) return true;
   return false;
 }
 

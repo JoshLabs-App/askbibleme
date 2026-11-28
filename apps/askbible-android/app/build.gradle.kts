@@ -50,7 +50,7 @@ android {
             buildConfigField("boolean", "SELF_UPDATE", "false")
         }
         /**
-         * 下载页（askbible-media.joshlabs.app/download.html）分发的包。
+         * 下载页（media.askbible.me/download.html）分发的包。
          * 和 release 一样的 applicationId 和签名（所以能覆盖升级老的网页版），
          * 唯一区别是开了 SELF_UPDATE：进 App 查 version.json，有新版就弹窗下载安装。
          * deploy_android.py 走的就是这个变体（.android-deploy.json 的 gradle_task）。

@@ -51,3 +51,18 @@ CREATE TABLE IF NOT EXISTS feedback_items (
 
 CREATE INDEX IF NOT EXISTS idx_feedback_items_kind_created
   ON feedback_items(kind, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS mcp_proposals (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  action TEXT NOT NULL,
+  payload_json TEXT NOT NULL,
+  summary TEXT NOT NULL,
+  source_agent TEXT NOT NULL DEFAULT 'External AI',
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at INTEGER NOT NULL,
+  resolved_at INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS idx_mcp_proposals_user_status
+  ON mcp_proposals(user_id, status, created_at DESC);

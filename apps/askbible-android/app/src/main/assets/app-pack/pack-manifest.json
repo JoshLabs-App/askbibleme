@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "bundleId": "20261128-46056ca",
+  "builtAt": "2026-11-28T06:32:25Z",
+  "entry": "index.html",
+  "files": {
+    "assets/books-C24EMWtL.js": {
+      "size": 6802,
+      "sha256": "9d8537edc7d5d0e965f6e814141443c9b15c8d97fe1c74b601997a9430388298"
+    },
+    "assets/content-repo-BCE_9Fxv.js": {
+      "size": 36485,
+      "sha256": "bf97620811974f654f27cc6be142e10660b0a739927b035b44494f12bbccd3fa"
+    },
+    "assets/ExLibrisPage-BSPK7Tz9.js": {
+      "size": 3435,
+      "sha256": "6a73b2ad4f642db81252483fee3f1c0f601db2fa1e9291f176a257c4ec2bfcb0"
+    },
+    "assets/ExplorePage-DyK7NGkF.js": {
+      "size": 9181,
+      "sha256": "7affff606d176506f2ed439f8b3f171948a893512b1886d4d3fe3115c4fbe605"
+    },
+    "assets/FiguresPage-CLW5Chfy.js": {
+      "size": 3226,
+      "sha256": "ad84fbc5c221877ef488d90d7c6316660bd6e205b9ddd86ebae7001fd5eda043"
+    },
+    "assets/HomePage-C_O9J3RQ.js": {
+      "size": 3997,
+      "sha256": "50bcc73488d4aa2896886a9c5cde2019b040a5d88ae3206082bd274f8511333a"
+    },
+    "assets/index-CFcmMl3j.js": {
+      "size": 29297,
+      "sha256": "8f0e265422af2526f24bd949627771f7f3b6ef12e9e3f8d62c0a86821495ebf9"
+    },
+    "assets/index-nJPCpzLf.css": {
+      "size": 10658,
+      "sha256": "6165566dba8573651ca4acfab36f6809dee5a98a6ab8ba6e030c90a27bbff8e9"
+    },
+    "assets/PanoramaPage-D-2M4Qb_.js": {
+      "size": 3677,
+      "sha256": "0ead3708563b30cd9201cc3e5951c8fa8f89567c605b27f6cec43399e1a717f3"
+    },
+    "assets/PlanPage-BUVYX2yx.js": {
+      "size": 4278,
+      "sha256": "0c08820085cdccc465683aeec6bf1c76fa16a8be6cac38634869777a68f18422"
+    },
+    "assets/ReaderPage-CaakG8yd.js": {
+      "size": 5220,
+      "sha256": "4920258cafea7aef17805e7b78fc9e5e46c1bfd5977b44b351dfcd34cd6c92dd"
+    },
+    "assets/SettingsPage-BDA71mjg.js": {
+      "size": 8716,
+      "sha256": "10914b9216bf4e52e7cecacbfc4b66de38af3240a0c6d1a4177ed2a217b0fb3c"
+    },
+    "assets/vendor-react-CEfoZQ0_.js": {
+      "size": 223046,
+      "sha256": "0e87f983eaa60a0d1f983ddc576c0f858452a4aa63f866c789f845a3f610f383"
+    },
+    "data/explore.json": {
+      "size": 62018,
+      "sha256": "40749ac64b16d43c1a65d6759f127c81834ddfd81e22679ea73f1f39fbb46be7"
+    },
+    "data/figures.json": {
+      "size": 90238,
+      "sha256": "87d604667d81c32546c0658f7f1ea4c586be221e355ad20199cb5232c0ecb79a"
+    },
+    "data/medals.json": {
+      "size": 6798,
+      "sha256": "1c201f7407f2dfe69805b0cb1ed8fc1761c4641cec60a151c7084385e5ee364e"
+    },
+    "data/panorama.json": {
+      "size": 17558,
+      "sha256": "cd4ae253a0de5cf12f47f76423abe4b7925a3a8d4890384ce6b331ea0a117573"
+    },
+    "data/plans.json": {
+      "size": 7226,
+      "sha256": "e2d46b642d190ff17e2ed2f0f4263a5a7725cc728c487c954bada0612e9267d6"
+    },
+    "data/sibling-apps.json": {
+      "size": 1370,
+      "sha256": "fbadaf553b21814e748cbea49e8e5ee4e5117c39c9d19d4a88261ca8b9c21ab0"
+    },
+    "icons/icon-192.png": {
+      "size": 1910,
+      "sha256": "dd73a621a51301ee0f7720f5b77b646e7f9bd39191c3aac1d16643acd8c4d36c"
+    },
+    "icons/icon-512.png": {
+      "size": 8536,
+      "sha256": "67fc6c707b313328647b5cd45e9a455b5365a2a61612d511d5f1e496c268286e"
+    },
+    "index.html": {
+      "size": 1276,
+      "sha256": "d089120a89de1211864d22435f7f7a60772283ec40ba108d7fd31ef0996185c4"
+    },
+    "manifest.webmanifest": {
+      "size": 568,
+      "sha256": "2c8439743e14eef1101aad25b7f509987d0f55df2b4f33d61d94506ee4a64660"
+    },
+    "sw.js": {
+      "size": 4624,
+      "sha256": "ba4803161712bfacf545b273bdba580ffc0e32e0e1a741a36f3d797f7a086a25"
+    }
+  }
+}

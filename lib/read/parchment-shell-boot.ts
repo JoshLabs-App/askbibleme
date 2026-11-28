@@ -23,7 +23,6 @@ export const PARCHMENT_SHELL_BOOT_SCRIPT = `
     if (path === "/scenes" || path.indexOf("/scenes/") === 0) return true;
     if (path === "/music" || path.indexOf("/music/") === 0) return true;
     if (path === "/admin" || path.indexOf("/admin/") === 0) return true;
-    if (path === "/studio" || path.indexOf("/studio/") === 0) return true;
     return false;
   }
 

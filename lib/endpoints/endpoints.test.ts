@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const R2 = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/";
-const CUSTOM = "https://askbible-media.joshlabs.app/";
-const SYNC_PRIMARY = "https://askbible-sync.joshlabs.app/";
+const CUSTOM = "https://media.askbible.me/";
+const SYNC_PRIMARY = "https://sync.askbible.me/";
 const SYNC_BACKUP = "https://askbible.me/api/sync/";
 
 function fakeBrowser(blocked: string[], remoteList?: unknown) {
@@ -72,7 +72,7 @@ describe("防封换线：网页端候选域（D-44 去 Supabase）", () => {
     expect(again.endpointBase("media")).toBe(CUSTOM.slice(0, -1));
   });
 
-  it("askbible-sync.joshlabs.app 连不上时 api 角色自动切到主站同域 /api/sync 备线，media 不受牵连", async () => {
+  it("sync.askbible.me 连不上时 api 角色自动切到主站同域 /api/sync 备线，media 不受牵连", async () => {
     fakeBrowser([SYNC_PRIMARY]);
     const m = await load();
     await m.refreshEndpoints(true);

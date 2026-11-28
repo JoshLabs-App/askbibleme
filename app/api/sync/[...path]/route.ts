@@ -1,4 +1,4 @@
-const UPSTREAM_ORIGIN = "https://askbible-sync.joshlabs.app";
+const UPSTREAM_ORIGIN = "https://sync.askbible.me";
 
 type SyncFetcher = {
   fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;

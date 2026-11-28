@@ -1645,3 +1645,24 @@ Play 要求**所有轨道**（正式 / 测试）上的包都不能再声明 `USE
      - iOS（`NavDrawer.swift`）、Android（`NavDrawer.kt`）、Web（`ShellNavDrawerContent.tsx`，替换原先只弹固定 `window.alert` 的假占位项）统一提供「检查更新 / 檢查更新 / Check for updates」行，并支持点按抽屉底部版本号直接触发。
      - 手动触发时强制绕过 6 小时静默节流与已跳过版本抑制（`force = true`），同时检查客户端新版本与离线内容包更新：有新客户端版本则直接拉起升级流程；内容包有更新则立即热更并刷新当前章；已是最新则在行内与羊皮轻提示回显当前最新版本号。
 - **日期**：2026-11-20
+
+## D-47 极简同一内核与全自动无感更新终极架构定案：10% 原生骨架触感壳 + 90% 纯 Vite 静态内核 + 去 Next.js + 清退 Studio（2026-11-27）
+
+- **决定了什么**（JOSHUA 2026-11-27 完整正反推演后拍板「全部记下，然后一次性可以多线程开发出来」）：
+  1. **黄金切分：骨架与触感归 10% 原生轻壳，血肉与版面归 90% 唯一静态内核**：
+     - **10% 原生轻壳（iOS Swift / Android Kotlin，极少改动、几乎不发版）**：保留并守牢顶底原生骨架与物理触感——**底部 5 图标导航栏 + 贴底音频播放坞**、三路音频引擎与锁屏线控、原生线性马达触觉反馈（Haptic）、软键盘/安全区托底与边缘返回手势、系统控件（时间选择器 / Apple & Google 登录 / 原生分享 / 桌面每日金句 Widget）、`PackStore` 离线包引擎与本地 SQLite 直查桥。
+     - **90% 唯一静态内核（`kernel/`，纯 Vite + React/TS 静态构建，五端共用同一份产物）**：承载全部业务页面与排版美化——首页内容、圣经全景、经文双语正文（含高亮/串珠/分享卡）、读经计划、探索、人物馆、藏书票、设置；其中经文阅读器与首页视频联动在收口最后阶段做真机手感盲测兜底。
+  2. **升级为文件级 SHA-256 全自动无感热更（零弹窗、零横幅、不丢状态）**：
+     - 废除 64KB 单文件 `web-pack.json` 上限，升级为 **`pack-manifest.json`**（单文件 `size + SHA-256`、`bundleId`、`builtAt`）；iOS（`WKURLSchemeHandler`）与 Android（`WebViewAssetLoader`）启动 `0ms` 直读本地包，未改动文件本地复用（0 流量），仅增量下载变化文件至 `staging` 校验后原子切换 `active.json`（带 `installedOnBuiltinId` 淘汰旧沙盒包）。
+     - **严禁弹任何更新提示或横幅**（仅设置页深处保留手动「检查更新 + 短哈希」兜底）；在切入后台隐藏（`document.hidden`）或桌面窗口失焦闲置满 15 秒且无输入/无弹窗时静默原子切新，并用 `sessionStorage` 原地恢复当前路由、书卷章号与滚动位置。
+  3. **本地经文数据统一抽象（`bibleRepo`）**：
+     - 前端内核统一调 `bibleRepo.getChapter()` / `bibleRepo.search()`；在 App 轻壳内走本地协议直查原生 SQLite（0ms、零 WASM 内存占用），在 Web / 桌面 PWA 内走 R2 静态分片 + IndexedDB 自动缓存。
+  4. **Web 主站去 Next.js / `vinext` 化**：
+     - 彻底卸载 Next.js + `vinext` 双层 SSR 构建税，改为纯 Vite 静态内核直发 Cloudflare 静态托管（与 App 吃完全同一份 `app-pack`），搭配 `manifest.webmanifest`（独立桌面窗口）与内容寻址 `sw.js`。
+     - SEO 与社交分享卡片由极薄 Cloudflare Worker（`workers/askbible-edge`）承接：**对所有请求统一在 HTML `<head>` 注入人机一致的 `<title>` / `og:*` 与简短静态摘要**（严禁按 UA 区分吐不同内容，规避 Cloaking 降权风险）。
+  5. **彻底清退不用的 `Studio`**：
+     - 归档并从主仓删除 `app/studio/`、`/api/studio`、`/api/ai`、`studio/` 及对应生产环境 404 中间件拦截；`docs/` 下的全部产品原则文档原样保留在 Git 中。
+  6. **多线程并行开发契约先行**：
+     - 全部跨端接口（`pack-manifest.json`、`NativeBridge` 5 组协议、`bibleRepo`、边缘路由）与 6 条零文件冲突的并行开发轨道写入 `docs/UNIFIED-KERNEL-PARALLEL-PLAN.md`，按契约先行、并行开发、门禁合流推进。
+- **为什么**：此前 Web（Next.js + vinext）、iOS（SwiftUI）、Android（Compose）三端各自手写业务界面，加一个 64KB 局部胶囊，既无法做到五端同一内核无感更新，又背负沉重 SSR 构建与三端对齐胶水；将底栏/播放坞/触感留在 10% 原生轻壳、将全部业务版面收口到唯一纯静态内核并清退无用的 Studio，同时守住原生手感、极致排版美学与五端全自动无感更新。
+- **日期**：2026-11-27

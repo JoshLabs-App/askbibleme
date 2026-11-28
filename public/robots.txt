@@ -1,6 +1,51 @@
-# 刷量的爬虫：Parallel 的 ShapBot（2026-10-14 一天把同账号的 tovcore.com 刷了十几万次）
+# AskBible.me robots.txt — AI & Search Friendly
+# 拦截恶意刷量爬虫 ShapBot（2026-10-14 历史事件保留）
 User-agent: ShapBot
 Disallow: /
 
+# 显式欢迎主流搜索引擎与 AI 检索代理收录公开经文、计划与人物馆
+User-agent: GPTBot
+Allow: /
+Disallow: /api/sync/
+Disallow: /api/auth/
+Disallow: /admin/
+Disallow: /studio/
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /api/sync/
+Disallow: /api/auth/
+Disallow: /admin/
+Disallow: /studio/
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /api/sync/
+Disallow: /api/auth/
+Disallow: /admin/
+Disallow: /studio/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /api/sync/
+Disallow: /api/auth/
+Disallow: /admin/
+Disallow: /studio/
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /api/sync/
+Disallow: /api/auth/
+Disallow: /admin/
+Disallow: /studio/
+
 User-agent: *
 Allow: /
+Disallow: /api/sync/
+Disallow: /api/auth/
+Disallow: /admin/
+Disallow: /studio/
+
+Sitemap: https://askbible.me/sitemap.xml
+# LLMs context: https://askbible.me/llms.txt
+# Remote MCP endpoint: https://askbible.me/mcp

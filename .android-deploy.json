@@ -4,6 +4,8 @@
   "version": "1.0.60",
   "apk_prefix": "AskBible",
   "bucket": "askbible-media",
+  "public_base": "https://media.askbible.me",
+  "download_page": "https://askbible.me/app",
   "android_dir": "apps/askbible-android",
   "tagline": "安静地，回到经文。",
   "icon_bg": "#FFB103",

@@ -1,29 +1,28 @@
 {
   "version": 2,
-  "updated": "2026-11-20",
+  "updated": "2026-11-26",
   "note": "防封换线的候选域表（docs/anti-block-endpoints.md、DECISIONS D-20 / D-44）。三端各内置一份同样的默认值，启动后并发探测 candidates，取列表里最靠前那条通的并缓存；同时拉这个文件更新候选表。加新域只改这里再跑 npm run endpoints:push，不用发版。",
   "roles": {
     "media": {
-      "note": "R2 桶 askbible-media。两条线是同一个桶。r2.dev 排第一保持老版本一致。",
+      "note": "R2 桶 askbible-media。两条线是同一个桶：r2.dev 排第一保持老版本一致，自定义域 media.askbible.me（2026-11-26 替换已失效的 askbible-media.joshlabs.app）。",
       "probe": "healthz.txt",
       "candidates": [
         "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/",
-        "https://askbible-media.joshlabs.app/"
+        "https://media.askbible.me/"
       ]
     },
     "site": {
-      "note": "主站（Cloudflare Worker askbible-web）与备线域名。",
+      "note": "主站（Cloudflare Worker askbible-web）。2026-11-26 迁出 joshlabs.app，旧备线 askbible-site.joshlabs.app 已失效移除。",
       "probe": "healthz.txt",
       "candidates": [
-        "https://askbible.me/",
-        "https://askbible-site.joshlabs.app/"
+        "https://askbible.me/"
       ]
     },
     "api": {
-      "note": "AskBible Sync（Cloudflare Worker + D1，D-44 去 Supabase）。主线走 askbible-sync.joshlabs.app，备线走主站 /api/sync/ 同域转发。",
+      "note": "AskBible Sync（Cloudflare Worker + D1，D-44 去 Supabase）。主线 sync.askbible.me，备线走主站 /api/sync/ 同域转发。",
       "probe": "healthz.txt",
       "candidates": [
-        "https://askbible-sync.joshlabs.app/",
+        "https://sync.askbible.me/",
         "https://askbible.me/api/sync/"
       ]
     }

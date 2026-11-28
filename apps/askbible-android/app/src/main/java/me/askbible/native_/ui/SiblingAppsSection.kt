@@ -68,7 +68,7 @@ class SiblingAppsCatalog(val page: Map<String, Map<String, String>>, val apps: L
 
     companion object {
         const val SELF_ID = "askbible"
-        private const val REMOTE = "https://askbible-media.joshlabs.app/sibling-apps/apps.json"
+        private const val REMOTE = "https://media.askbible.me/sibling-apps/apps.json"
 
         fun pick(m: Map<String, String>?, locale: AppLocale): String =
             m?.get(locale.tag) ?: m?.get("zh-CN") ?: m?.get("en") ?: m?.values?.firstOrNull() ?: ""

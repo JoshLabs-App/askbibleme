@@ -26,7 +26,7 @@ EPISODES = range(1, 10)
 # 2026-10-01 Josh：同一集发简 / 繁 / 英三支怕被 YouTube 当重复上传，「只保留一支英文的」——每集只做英文一支（D-5）
 VARIANTS = [("en", "dual")]
 R2_ACCOUNT = "652050e08d4a384c7cbe975ea02fb52c"
-R2_BUCKET, R2_PUBLIC = "askbible-media", "https://askbible-media.joshlabs.app"
+R2_BUCKET, R2_PUBLIC = "askbible-media", "https://media.askbible.me"
 PART = 90 * 1024 * 1024  # Cloudflare API 单次请求约 100 MB 上限：分段传，页面里按顺序拼回
 SCENE_NAMES = {  # 与渲染脚本 SCENES 顺序一致
     "9a090c2be6a34caa9536861005726781": ("雪山湖", "Mountain Lake"),

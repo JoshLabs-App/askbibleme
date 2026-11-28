@@ -118,7 +118,6 @@ scripts/sync-tv-content.mjs
 /.claude/
 /tmp/
 /audio/
-/supabase/.temp/
 
 # info-edition sqlite 由 data/bible/info-edition-v1-published.json 生成
 # （npm run build:info-edition-sqlite），真源已入库，产物 25MB 不必再存一份。
@@ -156,3 +155,4 @@ apps/askbible-android/.gradle
 /public/data/bible-reading-plans/
 /public/data/static-bundles/
 /public/data/resource-packs/
+/kernel/dist-pack/

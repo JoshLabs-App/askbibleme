@@ -1,9 +1,7 @@
 import SwiftUI
-import WebKit
 
-/// 救赎全景（D-44 同源离线胶囊宿主）：
-/// 底层使用 `ParchmentBackground` 羊皮纸真材实底，上层挂载 `NativeMediaBridge` + `PackStore` 驱动的
-/// 单文件本地离线胶囊（`askbible-pack://app/index.html`），0ms 秒开，支持 SHA-256 热更与 3 秒看门狗自动回退。
+/// 圣经全景（iOS）—— 严格复用与「今日同行」(PlanPlayView) 完全一致的羊皮卷实底、字体、页头与纸面卡片体系，
+/// 彻底移除独立 WebView 第二套版面，确保全站除首页场景图外锁定唯一羊皮卷风格。
 struct BiblePanoramaView: View {
     let locale: AppLocale
     let currentBook: String?
@@ -11,168 +9,201 @@ struct BiblePanoramaView: View {
     let locateRequest: Int
     var onResume: () -> Void
     var onRead: (String, Int) -> Void
+    var onSelectTab: ((String) -> Void)? = nil
+    var onBack: (() -> Void)? = nil
 
     @Environment(\.parchment) private var theme
+    @State private var expandedActIndex: Int = 0
+    @State private var query: String = ""
+
+    private var currentLocation: (Int, PanoramaSection)? {
+        guard let book = currentBook else { return nil }
+        return BiblePanorama.shared.location(book, max(1, currentChapter))
+    }
+
+    private var subtitleText: String {
+        if let bookId = currentBook,
+           let book = BibleCatalog.book(bookId),
+           let loc = currentLocation,
+           BiblePanorama.shared.acts.indices.contains(loc.0) {
+            let act = BiblePanorama.shared.acts[loc.0]
+            let actName = locale.isZh ? locale.zh(act.zh) : act.en
+            let bookName = book.name(locale)
+            return locale.isZh
+                ? "当前位置：\(actName) · \(bookName) 第 \(currentChapter) 章"
+                : "You are here: \(actName) · \(bookName) \(currentChapter)"
+        }
+        return AppLocale.pick("六幕救赎历史 · 全本 66 卷脉络", "Six acts of Scripture · All 66 books", locale)
+    }
 
     var body: some View {
-        GeometryReader { geo in
-            ZStack {
-                ParchmentBackground(theme: theme)
-                    .ignoresSafeArea()
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                // 顶栏：与 PlanPlayView 完全同一套 28pt Bold 标题 + 副标题 + 右侧圆角白底胶囊
+                HStack(alignment: .center, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(AppLocale.pick("圣经全景", "Bible Panorama", locale))
+                            .askFont(size: 28, weight: .bold)
+                            .foregroundStyle(theme.ink)
+                        Text(subtitleText)
+                            .askFont(size: 13.5, weight: .regular)
+                            .foregroundStyle(theme.muted)
+                            .lineLimit(1)
+                    }
+                    Spacer()
+                    Button(action: onResume) {
+                        Text(AppLocale.pick("回经文", "Read", locale))
+                            .askFont(size: 12.5, weight: .semibold)
+                            .foregroundStyle(theme.ink)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Capsule().fill(theme.surface))
+                            .overlay(Capsule().stroke(theme.border, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                }
 
-                if PackStore.loadWebPackFiles() != nil {
-                    PanoramaPackWebView(
-                        locale: locale,
-                        isDark: theme.isDark,
-                        currentBook: currentBook,
-                        currentChapter: currentChapter,
-                        locateRequest: locateRequest,
-                        topInset: Double(geo.safeAreaInsets.top),
-                        bottomInset: Double(geo.safeAreaInsets.bottom + ShellMetrics.tabRowHeight + ShellMetrics.tabBarDockGap + 56),
-                        onResume: onResume,
-                        onRead: onRead
+                // 统一羊皮纸检索框
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(theme.muted)
+                    TextField(
+                        AppLocale.pick("检索 66 卷书名或主题…", "Search all 66 books…", locale),
+                        text: $query
                     )
-                    .ignoresSafeArea()
-                } else {
-                    fallbackView
+                    .askFont(size: 14, weight: .regular)
+                    .foregroundStyle(theme.ink)
+                    if !query.isEmpty {
+                        Button(AppLocale.pick("清除", "Clear", locale)) {
+                            query = ""
+                        }
+                        .askFont(size: 12.5, weight: .medium)
+                        .foregroundStyle(theme.muted)
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 11)
+                .background(RoundedRectangle(cornerRadius: 16).fill(theme.surface.opacity(0.78)))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(theme.border, lineWidth: 0.75))
+
+                HStack {
+                    Text(AppLocale.pick("六幕故事", "Six Acts", locale))
+                        .askFont(size: 18, weight: .bold)
+                        .foregroundStyle(theme.ink)
+                    Spacer()
+                    Text(AppLocale.pick("点选书卷进入阅读", "Tap a book to read", locale))
+                        .askFont(size: 12.5, weight: .regular)
+                        .foregroundStyle(theme.muted)
+                }
+                .padding(.top, 2)
+
+                ForEach(Array(BiblePanorama.shared.acts.enumerated()), id: \.offset) { index, act in
+                    let isExpanded = expandedActIndex == index || !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    let isCurrentAct = currentLocation?.0 == index
+                    let actTitle = locale.isZh ? locale.zh(act.zh) : act.en
+                    let actSub = locale.isZh ? locale.zh(act.subtitleZh) : act.subtitleEn
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.18)) {
+                                expandedActIndex = expandedActIndex == index ? -1 : index
+                            }
+                        } label: {
+                            HStack(spacing: 12) {
+                                Text(String(format: "%02d", index + 1))
+                                    .askFont(size: 14, weight: .bold)
+                                    .foregroundStyle(isExpanded || isCurrentAct ? theme.accentOt : theme.faint)
+                                    .frame(width: 26, alignment: .leading)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(actTitle)
+                                        .askFont(size: 17, weight: .bold)
+                                        .foregroundStyle(theme.ink)
+                                    Text(actSub)
+                                        .askFont(size: 13, weight: .regular)
+                                        .foregroundStyle(theme.muted)
+                                        .lineLimit(1)
+                                }
+                                Spacer()
+                                Text(AppLocale.pick(isExpanded ? "收起" : "展开", isExpanded ? "Hide" : "Open", locale))
+                                    .askFont(size: 12, weight: .semibold)
+                                    .foregroundStyle(isExpanded ? theme.accentOt : theme.muted)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 4)
+                                    .background(Capsule().fill(isExpanded ? theme.accentOt.opacity(0.12) : theme.border.opacity(0.35)))
+                            }
+                        }
+                        .buttonStyle(.plain)
+
+                        if isExpanded {
+                            VStack(alignment: .leading, spacing: 10) {
+                                ForEach(act.sections) { section in
+                                    let secTitle = locale.isZh ? locale.zh(section.zh) : section.en
+                                    let secSummary = locale.isZh ? locale.zh(section.summaryZh) : section.summaryEn
+                                    let filteredSpans = section.spans.filter { span in
+                                        let q = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                                        guard !q.isEmpty else { return true }
+                                        guard let b = BibleCatalog.book(span.bookId) else { return false }
+                                        return b.name(locale).lowercased().contains(q)
+                                            || b.id.lowercased().contains(q)
+                                            || secTitle.lowercased().contains(q)
+                                    }
+                                    if !filteredSpans.isEmpty {
+                                        VStack(alignment: .leading, spacing: 6) {
+                                            Text(secTitle)
+                                                .askFont(size: 14.5, weight: .semibold)
+                                                .foregroundStyle(theme.ink)
+                                            Text(secSummary)
+                                                .askFont(size: 12.5, weight: .regular)
+                                                .foregroundStyle(theme.muted)
+                                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 92), spacing: 6)], alignment: .leading, spacing: 6) {
+                                                ForEach(Array(filteredSpans.enumerated()), id: \.offset) { _, span in
+                                                    if let b = BibleCatalog.book(span.bookId) {
+                                                        let isHere = b.id == currentBook && (span.first...span.last).contains(currentChapter)
+                                                        Button {
+                                                            onRead(b.id, span.first)
+                                                        } label: {
+                                                            Text(b.name(locale))
+                                                                .askFont(size: 12.5, weight: isHere ? .semibold : .medium)
+                                                                .foregroundStyle(isHere ? Color(hex: 0xFFFBF4) : theme.ink)
+                                                                .padding(.horizontal, 10)
+                                                                .padding(.vertical, 5)
+                                                                .background(Capsule().fill(isHere ? theme.accentOt : theme.surface))
+                                                                .overlay(Capsule().stroke(isHere ? theme.accentOt : theme.border, lineWidth: 0.75))
+                                                        }
+                                                        .buttonStyle(.plain)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        .padding(12)
+                                        .background(RoundedRectangle(cornerRadius: 12).fill(theme.canvas.opacity(theme.isDark ? 0.38 : 0.48)))
+                                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(theme.border.opacity(0.7), lineWidth: 0.75))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .background(RoundedRectangle(cornerRadius: 16).fill(isExpanded || isCurrentAct ? theme.surface : theme.surface.opacity(0.62)))
+                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(isCurrentAct ? theme.accentOt.opacity(0.55) : theme.border, lineWidth: isExpanded || isCurrentAct ? 1 : 0.75))
                 }
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            .padding(.bottom, ShellMetrics.tabRowHeight + ShellMetrics.tabBarDockGap + 64)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private var fallbackView: some View {
-        VStack(spacing: 14) {
-            Text(AppLocale.pick("救赎全景", "Redemption Story", locale))
-                .askFont(size: 24, weight: .bold)
-                .foregroundStyle(theme.ink)
-            Button {
-                if currentBook != nil {
-                    onResume()
-                } else {
-                    onRead("GEN", 1)
-                }
-            } label: {
-                Text(currentBook != nil
-                    ? AppLocale.pick("继续阅读", "Continue Reading", locale)
-                    : AppLocale.pick("从创世记第 1 章开始", "Begin from Genesis 1", locale))
-                    .askFont(size: 14, weight: .semibold)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 18)
-                    .padding(.vertical, 10)
-                    .background(Capsule().fill(theme.accentOt))
+        .background(ParchmentBackground(theme: theme).ignoresSafeArea())
+        .onAppear {
+            if let loc = currentLocation {
+                expandedActIndex = loc.0
             }
-            .buttonStyle(.plain)
         }
-        .padding(24)
-    }
-}
-
-private struct PanoramaPackWebView: UIViewRepresentable {
-    let locale: AppLocale
-    let isDark: Bool
-    let currentBook: String?
-    let currentChapter: Int
-    let locateRequest: Int
-    let topInset: Double
-    let bottomInset: Double
-    let onResume: () -> Void
-    let onRead: (String, Int) -> Void
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(onResume: onResume, onRead: onRead)
-    }
-
-    func makeUIView(context: Context) -> WKWebView {
-        let coord = context.coordinator
-        let webView = WKWebView(frame: .zero, configuration: coord.bridge.makeWebViewConfiguration())
-        NativeMediaBridge.hardenWebView(webView)
-        webView.navigationDelegate = coord
-        coord.webView = webView
-
-        let initialJSON = encodeStateJSON()
-        coord.lastStateJSON = initialJSON
-        coord.bridge.loadInlinePack(in: webView, initialStateJSON: initialJSON)
-        return webView
-    }
-
-    func updateUIView(_ webView: WKWebView, context: Context) {
-        let coord = context.coordinator
-        coord.onResume = onResume
-        coord.onRead = onRead
-
-        let stateJSON = encodeStateJSON()
-        guard stateJSON != coord.lastStateJSON else { return }
-        coord.lastStateJSON = stateJSON
-        if coord.didFinishInitialLoad {
-            webView.evaluateJavaScript("window.askbibleUpdateState && window.askbibleUpdateState(\(stateJSON));")
-        }
-    }
-
-    static func dismantleUIView(_ webView: WKWebView, coordinator: Coordinator) {
-        coordinator.bridge.cancelWatchdog()
-        webView.navigationDelegate = nil
-        webView.configuration.userContentController.removeScriptMessageHandler(forName: NativeMediaBridge.handlerName)
-    }
-
-    private func makeInitialURL() -> URL? {
-        var comps = URLComponents(string: "\(LocalPackURLSchemeHandler.baseOrigin)/index.html")
-        comps?.queryItems = [
-            URLQueryItem(name: "route", value: "panorama"),
-            URLQueryItem(name: "locale", value: locale.rawValue),
-            URLQueryItem(name: "dark", value: isDark ? "1" : "0"),
-            URLQueryItem(name: "scale", value: "1"),
-            URLQueryItem(name: "book", value: currentBook ?? ""),
-            URLQueryItem(name: "ch", value: "\(max(1, currentChapter))"),
-            URLQueryItem(name: "hasHistory", value: currentBook != nil ? "1" : "0"),
-            URLQueryItem(name: "locateRequest", value: "\(locateRequest)"),
-            URLQueryItem(name: "topInset", value: "\(Int(topInset.rounded()))"),
-            URLQueryItem(name: "bottomInset", value: "\(Int(bottomInset.rounded()))"),
-            URLQueryItem(name: "embedded", value: "1"),
-        ]
-        return comps?.url
-    }
-
-    private func encodeStateJSON() -> String {
-        let dict: [String: Any] = [
-            "locale": locale.rawValue,
-            "dark": isDark,
-            "scale": 1,
-            "book": currentBook ?? "",
-            "ch": max(1, currentChapter),
-            "hasHistory": currentBook != nil,
-            "locateRequest": locateRequest,
-            "topInset": Int(topInset.rounded()),
-            "bottomInset": Int(bottomInset.rounded()),
-        ]
-        guard let data = try? JSONSerialization.data(withJSONObject: dict),
-              let json = String(data: data, encoding: .utf8) else {
-            return "{}"
-        }
-        return json
-    }
-
-    @MainActor
-    final class Coordinator: NSObject, WKNavigationDelegate {
-        let bridge = NativeMediaBridge()
-        weak var webView: WKWebView?
-        var onResume: () -> Void
-        var onRead: (String, Int) -> Void
-        var lastStateJSON = ""
-        var didFinishInitialLoad = false
-
-        init(onResume: @escaping () -> Void, onRead: @escaping (String, Int) -> Void) {
-            self.onResume = onResume
-            self.onRead = onRead
-            super.init()
-            bridge.onResumeReading = { [weak self] in self?.onResume() }
-            bridge.onOpenChapter = { [weak self] bookId, chapter in self?.onRead(bookId, chapter) }
-        }
-
-        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            didFinishInitialLoad = true
-            if !lastStateJSON.isEmpty {
-                webView.evaluateJavaScript("window.askbibleUpdateState && window.askbibleUpdateState(\(lastStateJSON));")
+        .onChange(of: locateRequest) { _, _ in
+            if let loc = currentLocation {
+                expandedActIndex = loc.0
             }
         }
     }

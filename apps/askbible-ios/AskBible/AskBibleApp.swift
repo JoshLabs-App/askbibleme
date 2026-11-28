@@ -577,6 +577,7 @@ struct RootView: View {
                     if voice, music?.isPlaying == true { music?.pause() }
                 }
                 music.restorePlaybackIfNeeded()
+                AppPackStore.shared.startPeriodicChecks()
             }
     }
 

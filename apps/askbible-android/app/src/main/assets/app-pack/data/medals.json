@@ -1,0 +1,211 @@
+{
+  "medals": [
+    {
+      "id": "m01_first_play",
+      "name": "初次翻开",
+      "nameEn": "First Page",
+      "category": "onboarding",
+      "description": "打开任意一章经文",
+      "descriptionEn": "Open any chapter",
+      "requirement": "chaptersOpened >= 1"
+    },
+    {
+      "id": "m02_first_lesson",
+      "name": "读完一章",
+      "nameEn": "First Chapter",
+      "category": "onboarding",
+      "description": "完整读完第一章",
+      "descriptionEn": "Finish reading your first chapter",
+      "requirement": "chaptersRead >= 1"
+    },
+    {
+      "id": "m03_daily_goal",
+      "name": "今日读经",
+      "nameEn": "Today's Reading",
+      "category": "onboarding",
+      "description": "完成一天的读经",
+      "descriptionEn": "Read on a day",
+      "requirement": "readingDays >= 1"
+    },
+    {
+      "id": "m08_first_favorite",
+      "name": "珍藏经文",
+      "nameEn": "Treasured Verses",
+      "category": "onboarding",
+      "description": "收藏 1/10/50 节经文",
+      "descriptionEn": "Save 1/10/50 verses",
+      "requirement": "favorites >= 1/10/50 (节)"
+    },
+    {
+      "id": "m07_auto_next",
+      "name": "一路读下去",
+      "nameEn": "Read On",
+      "category": "onboarding",
+      "description": "同一卷里连着读完两章",
+      "descriptionEn": "Finish two chapters in a row in one book",
+      "requirement": "sameBookStreak >= 2"
+    },
+    {
+      "id": "m13_ten_lessons",
+      "name": "累计章数",
+      "nameEn": "Chapters Read",
+      "category": "chapter",
+      "description": "累计读完 5/10/25/50/100 章",
+      "descriptionEn": "Finish 5/10/25/50/100 chapters",
+      "requirement": "chaptersRead >= 5/10/25/50/100 (章)"
+    },
+    {
+      "id": "m16_hundred_lessons",
+      "name": "千章之程",
+      "nameEn": "The Long Road",
+      "category": "chapter",
+      "description": "累计读完 200/500/1189 章（全本共 1189 章）",
+      "descriptionEn": "Finish 200/500/1189 chapters (1189 in all)",
+      "requirement": "chaptersRead >= 200/500/1189 (章)"
+    },
+    {
+      "id": "m06_one_hour",
+      "name": "第一小时",
+      "nameEn": "First Hour",
+      "category": "time",
+      "description": "累计听读满 1 小时",
+      "descriptionEn": "Listen for one hour in total",
+      "requirement": "listenHours >= 1"
+    },
+    {
+      "id": "m18_ten_hours",
+      "name": "累计听读",
+      "nameEn": "Listening Time",
+      "category": "time",
+      "description": "累计听读 3/10/25/50 小时",
+      "descriptionEn": "Listen for 3/10/25/50 hours in total",
+      "requirement": "listenHours >= 3/10/25/50 (小时)"
+    },
+    {
+      "id": "m38_monthly_hours",
+      "name": "月度丰收",
+      "nameEn": "A Full Month",
+      "category": "time",
+      "description": "本月听读满 10 小时",
+      "descriptionEn": "Listen for 10 hours this month",
+      "requirement": "listenHoursThisMonth >= 10"
+    },
+    {
+      "id": "m04_two_days",
+      "name": "两日同行",
+      "nameEn": "Two Days",
+      "category": "streak",
+      "description": "连续读经 2 天",
+      "descriptionEn": "Read two days in a row",
+      "requirement": "streakDays >= 2"
+    },
+    {
+      "id": "m05_three_days",
+      "name": "三日坚持",
+      "nameEn": "Three Days",
+      "category": "streak",
+      "description": "连续读经 3 天",
+      "descriptionEn": "Read three days in a row",
+      "requirement": "streakDays >= 3"
+    },
+    {
+      "id": "m21_seven_days",
+      "name": "连续读经",
+      "nameEn": "Reading Streak",
+      "category": "streak",
+      "description": "连续读经 7/14/30 天",
+      "descriptionEn": "Read 7/14/30 days in a row",
+      "requirement": "streakDays >= 7/14/30 (天)"
+    },
+    {
+      "id": "m24_sixty_days",
+      "name": "长久同行",
+      "nameEn": "Long Companion",
+      "category": "streak",
+      "description": "连续读经 60/100/365 天",
+      "descriptionEn": "Read 60/100/365 days in a row",
+      "requirement": "streakDays >= 60/100/365 (天)"
+    },
+    {
+      "id": "m40_faithful_listener",
+      "name": "忠心同行",
+      "nameEn": "Faithful",
+      "category": "streak",
+      "description": "累计读经 30/100/300 天",
+      "descriptionEn": "Read on 30/100/300 days in total",
+      "requirement": "readingDays >= 30/100/300 (天)"
+    },
+    {
+      "id": "m37_weekly_goal",
+      "name": "一周圆满",
+      "nameEn": "A Full Week",
+      "category": "streak",
+      "description": "整整一周每天都读经 ×1/4/12",
+      "descriptionEn": "Read every day of a week, 1/4/12 time(s)",
+      "requirement": "fullWeeks >= 1/4/12 (周)"
+    },
+    {
+      "id": "m09_morning",
+      "name": "晨光",
+      "nameEn": "Morning Light",
+      "category": "rhythm",
+      "description": "清晨 5–9 点读经 1/7/30 天",
+      "descriptionEn": "Read between 5–9am on 1/7/30 days",
+      "requirement": "morningDays >= 1/7/30 (天)"
+    },
+    {
+      "id": "m10_night",
+      "name": "夜灯",
+      "nameEn": "Night Lamp",
+      "category": "rhythm",
+      "description": "夜里 21–2 点读经 1/7/30 天",
+      "descriptionEn": "Read between 9pm–2am on 1/7/30 days",
+      "requirement": "nightDays >= 1/7/30 (天)"
+    },
+    {
+      "id": "m28_first_book",
+      "name": "读完整卷",
+      "nameEn": "Books Finished",
+      "category": "book",
+      "description": "读完 1/3/5/10/20 卷书",
+      "descriptionEn": "Finish 1/3/5/10/20 books",
+      "requirement": "booksCompleted >= 1/3/5/10/20 (卷)"
+    },
+    {
+      "id": "m32_old_testament",
+      "name": "旧约之路",
+      "nameEn": "Old Testament",
+      "category": "book",
+      "description": "读完 5/10/39 卷旧约（共 39 卷）",
+      "descriptionEn": "Finish 5/10/39 Old Testament books (39 in all)",
+      "requirement": "otBooksCompleted >= 5/10/39 (卷)"
+    },
+    {
+      "id": "m33_new_testament",
+      "name": "新约之路",
+      "nameEn": "New Testament",
+      "category": "book",
+      "description": "读完 5/10/27 卷新约（共 27 卷）",
+      "descriptionEn": "Finish 5/10/27 New Testament books (27 in all)",
+      "requirement": "ntBooksCompleted >= 5/10/27 (卷)"
+    },
+    {
+      "id": "m34_both_testaments",
+      "name": "两约相连",
+      "nameEn": "Both Testaments",
+      "category": "book",
+      "description": "新旧约各读完 5 卷",
+      "descriptionEn": "Finish five books in each testament",
+      "requirement": "bothTestaments >= 5"
+    },
+    {
+      "id": "m25_first_series",
+      "name": "跟随计划",
+      "nameEn": "On Plan",
+      "category": "plan",
+      "description": "完成读经计划 7/30/100 天",
+      "descriptionEn": "Complete 7/30/100 plan days",
+      "requirement": "planDays >= 7/30/100 (天)"
+    }
+  ]
+}

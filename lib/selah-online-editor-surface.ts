@@ -1,9 +1,6 @@
 /**
- * 是否允许通过当前部署环境访问「可编辑产品文档 / 管理」相关界面与 API
- *（`/admin`、`/api/admin`、`/studio`、`/api/studio`、`/api/ai`）。
- *
- * `/api/ai` 须一并保护：`/chat` 曾接受任意 `baseUrl`（SSRF / 盗用服务端 API Key）、
- * `/local-models` 可对任意地址发起服务端请求、`/preset` 可能把环境变量中的网关密钥返回给匿名调用方。
+ * 是否允许通过当前部署环境访问管理相关界面与 API
+ *（`/admin`、`/api/admin` 与线上批量运维入口）。
  *
  * - `NODE_ENV === "development"`（`npm run dev`）：默认允许。
  * - 任意生产环境（`NODE_ENV === "production"`，含 Cloudflare Workers 与本机 `next start`）：默认不允许，除非显式设 `SELAH_ALLOW_ADMIN_IN_PRODUCTION=1`。

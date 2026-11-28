@@ -1,7 +1,7 @@
 # AskBible.me — AI 交接开发文档
 
 **用途**：AI / Agent 接手本仓库时的**唯一启动地图**。先读本文，再按需下钻；不要通读全库。  
-**基线更新**：2026-11-24（对齐 D-44~D-46；一期治理标配 `1823761c`/`44f14bd8` 落地 `AskBible-TEMP` 外置、`CODE_MAP.md` 自动门禁、单一色彩总表与底栏版本/探针/手机模型；二期 `5bbc3aad` 完成首批超千行巨石拆分与野色收编并已上线 `askbible-web`）  
+**基线更新**：2026-11-27（已定案 **D-47**：10% 原生骨架触感壳 + 90% 纯 Vite 静态内核 + 文件级 SHA-256 无感热更 + 去 Next.js + 清退 Studio，多线程并行契约见 `docs/UNIFIED-KERNEL-PARALLEL-PLAN.md`；前期基线 `5bbc3aad` 线上运行中）  
 **仓库**：`/Users/joshua/Desktop/APP/圣经项目/01AskBible`（重缓存软链外置至 `/Users/joshua/Desktop/APP/TEMP/AskBible-TEMP/`）  
 **对外名称**：**AskBible.me**（域名 `askbible.me`）。内部名 `selah-*`、包名 `me.askbible` **不得**出现在用户界面。
 

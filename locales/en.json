@@ -98,7 +98,7 @@
     "errorOAuthGoogle": "Google sign-in failed. Try again.",
     "errorOAuthGoogleNotConfigured": "Google sign-in is not set up yet. Please try again later.",
     "errorOAuthApple": "Apple sign-in failed. Try again.",
-    "errorOAuthAppleNotConfigured": "Apple sign-in is not set up yet. The app bundle ID must be registered in Supabase (me.askbible).",
+    "errorOAuthAppleNotConfigured": "Apple sign-in is not set up yet. Please ensure the app bundle ID (me.askbible) is registered in the sign-in service.",
     "drawerAccount": "Account",
     "drawerLogin": "Sign in",
     "drawerRegister": "Create account",

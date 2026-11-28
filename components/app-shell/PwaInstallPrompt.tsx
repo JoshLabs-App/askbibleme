@@ -16,7 +16,7 @@ const SHOW_DELAY_MS = 2_500;
 
 function shouldOfferOnPath(pathname: string): boolean {
   const p = pathname || "/";
-  if (p.startsWith("/admin") || p.startsWith("/studio") || p.startsWith("/api")) return false;
+  if (p.startsWith("/admin") || p.startsWith("/api")) return false;
   if (p === "/install" || p.startsWith("/install/")) return false;
   return true;
 }

@@ -337,12 +337,16 @@ enum PackStore {
     /// 启动/回前台后台静默检查热更，或用户点「检查更新」时强制同步（`force = true`）。
     @discardableResult
     static func refreshInstalledPacksIfNeeded(force: Bool = false, defaults: UserDefaults = .standard) async -> RefreshOutcome {
+        async let appPackOutcome = AppPackStore.shared.refreshIfNeeded(force: force)
         let now = Date().timeIntervalSince1970
         if !force, now - defaults.double(forKey: lastCheckKey) < checkInterval {
+            _ = await appPackOutcome
             return RefreshOutcome(catalogReachable: true, updatedCount: 0)
         }
         guard let catalog = await fetchCatalog() else {
-            return RefreshOutcome(catalogReachable: false, updatedCount: 0)
+            let packOutcome = await appPackOutcome
+            let stagedCount: Int = if case .readyToSwap = packOutcome { 1 } else { 0 }
+            return RefreshOutcome(catalogReachable: packOutcome != .unreachable, updatedCount: stagedCount)
         }
         defaults.set(now, forKey: lastCheckKey)
 
@@ -412,6 +416,7 @@ enum PackStore {
                         expectedSizeBytes: pack.sizeBytes
                     )
                     defaults.set(pack.sha256.lowercased(), forKey: shaKey)
+                    LocalDBRouter.shared.invalidate(translationId: localKey)
                     updated += 1
                     break
                 } catch {
@@ -419,6 +424,25 @@ enum PackStore {
                 }
             }
         }
+        if case .readyToSwap = await appPackOutcome {
+            updated += 1
+        }
         return RefreshOutcome(catalogReachable: true, updatedCount: updated)
+    }
+
+    // MARK: - D-47 静态内核增量包协调入口
+
+    @discardableResult
+    static func refreshAppPackIfNeeded(force: Bool = false) async -> AppPackStore.CheckOutcome {
+        await AppPackStore.shared.refreshIfNeeded(force: force)
+    }
+
+    @discardableResult
+    static func commitPendingAppPackSwap() -> AppPackStore.SwapResult {
+        AppPackStore.shared.commitPendingSwap()
+    }
+
+    static func appPackStatus() -> AppPackStore.Status {
+        AppPackStore.shared.status()
     }
 }

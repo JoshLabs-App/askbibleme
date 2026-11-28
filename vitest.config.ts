@@ -20,6 +20,8 @@ export default defineConfig({
       "**/.claude/worktrees/**",
       "**/ios/**",
       "**/android/**",
+      "workers/**",
+      "kernel/**",
     ],
   },
 });

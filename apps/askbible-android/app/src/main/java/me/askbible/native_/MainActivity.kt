@@ -155,6 +155,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         // 防封换线：先同步读出上次探通的线路，后面拼地址才不会打到已经不通的域
         EndpointsStore.attach(this)
+        // D-47：重装新版原生壳时淘汰旧沙盒热更包，并启动每 30 分钟后台静默巡检
+        PackStore.ensureBuiltinFreshness(this)
+        PackStore.startPeriodicAppPackPolling(this)
         // 全量在线译本目录先读盘：记住的远端译本要在 TranslationPrefs 解析之前就认得
         me.askbible.native_.data.RemoteTranslations.attach(cacheDir)
         VerseDeepLinkBus.deliver(intent?.dataString)

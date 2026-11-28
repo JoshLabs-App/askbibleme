@@ -1,0 +1,23 @@
+# AskBible.me · 边缘薄 SEO 与静态托管 Worker（D-47 轨道 T6）
+# 部署：cd workers/askbible-edge && npx wrangler deploy
+
+name = "askbible-edge"
+main = "src/index.js"
+compatibility_date = "2026-11-10"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+preview_urls = true
+
+# 第三批合流切换主站时启用（当前由 askbible-web 占用 askbible.me）：
+# routes = [{ pattern = "askbible.me", custom_domain = true }]
+
+[assets]
+directory = "../../kernel/dist-pack"
+binding = "ASSETS"
+html_handling = "none"
+not_found_handling = "none"
+run_worker_first = true
+
+[[services]]
+binding = "ASKBIBLE_SYNC"
+service = "askbible-sync"

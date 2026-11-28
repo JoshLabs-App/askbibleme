@@ -236,9 +236,22 @@ object PackStore {
     fun refreshInstalledPacksInBackground(context: Context, force: Boolean = false) {
         val appContext = context.applicationContext
         thread(name = "packstore-refresh", isDaemon = true) {
+            runCatching { AppPackStore.refreshSync(appContext, force) }
             runCatching { refreshInstalledPacksSync(appContext, force) }
         }
     }
+
+    /** D-47 文件级 `pack-manifest.json` 增量热更委托入口（与 `AppPackStore` 同源） */
+    fun ensureBuiltinFreshness(context: Context): Boolean = AppPackStore.ensureBuiltinFreshness(context)
+    fun startPeriodicAppPackPolling(context: Context) = AppPackStore.startPeriodicPolling(context)
+    fun stopPeriodicAppPackPolling() = AppPackStore.stopPeriodicPolling()
+    fun refreshAppPackInBackground(context: Context, force: Boolean = false) = AppPackStore.refreshInBackground(context, force)
+    fun refreshAppPackSync(context: Context, force: Boolean = false): AppPackStore.RefreshResult = AppPackStore.refreshSync(context, force)
+    fun commitPendingSwap(context: Context): String? = AppPackStore.commitPendingSwap(context)
+    fun activeAppPackSnapshot(context: Context): AppPackStore.AppPackSnapshot? = AppPackStore.activeSnapshot(context)
+    fun openAppPackFile(context: Context, relativePath: String): AppPackStore.OpenedPackFile? = AppPackStore.openFile(context, relativePath)
+    fun appPackStatusJson(context: Context): JSONObject = AppPackStore.statusJson(context)
+    fun rollbackHotAppPack(context: Context) = AppPackStore.rollbackHotAppPack(context)
 
     fun refreshInstalledPacksSync(context: Context, force: Boolean = false): RefreshOutcome {
         val sp = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)

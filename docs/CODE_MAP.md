@@ -15,36 +15,35 @@
 | **自然首页 · 金句轮播 · 羊皮卷五栏壳层（D-45）** | 首页/自然页：`components/nature/NatureVideoExperience.tsx`<br>首页仪表盘：`components/home/HomeDashboard.tsx`<br>金句轮播：`components/home/HomeVerseRotator.tsx` | 场景生成：`tools/gen-nature-scenes.mjs`<br>金句池：`lib/daily-verse/*` · `lib/golden-verses/*` | `npm run check:endpoints` |
 | **探索 · 人物馆 · 历史信经 · 去游戏化藏书票** | 探索入口：`app/(app-shell)/explore/page.tsx`<br>人物馆：`app/(app-shell)/explore/figures/page.tsx`<br>藏书票：`app/(app-shell)/explore/achievements/page.tsx` | 人物数据：`lib/figures/*` · `lib/legacy-figure-preview.ts`<br>信经链接：`lib/explore/historical-creeds-scripture-links.mjs`<br>藏书票生成：`tools/gen-medals.mjs` | `npm run check:medals`<br>`npm run check:explore-articles` |
 | **账号认证（OTP / Apple / Google）& 读经云同步（D-44）** | 登录页：`app/(narrow-auth)/login/page.tsx`<br>用户态：`components/auth/AskbibleUserProvider.tsx`<br>Web 代理：`app/api/sync/[...path]/route.ts` | 同步 Worker：`workers/askbible-sync/src/index.js`<br>JWKS 直验：`workers/askbible-sync/src/jwks.js`<br>单点合并：`workers/askbible-sync/src/merge.js`<br>Web 本地同步：`lib/member-reading-sync/*` | `lib/askbible-web-auth-client.test.ts` |
-| **Studio 产品大脑（仅本机 `npm run dev`，线上 404）** | 工作台：`app/studio/studio-workspace.tsx`<br>AI 讨论区：`app/studio/studio-ai-discussion-panel.tsx` | 反思生成：`app/studio/generate-ai-reflection.ts`<br>上下文组装：`lib/studio-ai-context.ts`<br>生产门禁：`middleware.ts` · `lib/selah-online-editor-surface.ts` | `npm test` |
 | **双端极薄原生壳 & 离线包热更（D-44 / D-46）** | Android：`apps/askbible-android/app/src/main/java/me/askbible/native_/MainActivity.kt`<br>iOS：`apps/askbible-ios/AskBible/AskBibleApp.swift` | 离线包构建：`tools/build-web-pack.mjs`<br>多域名选线：`tools/endpoints-sync.mjs`（`data/endpoints.json`）<br>CF 直发：`scripts/deploy-direct.sh` | `npm run check:native`<br>`npm run check:web-pack` |
 
 - **`components/*` 模块分布**：`components/about/`(2) · `components/achievements/`(6) · `components/app-shell/`(14) · `components/auth/`(5) · `components/bible/`(62) · `components/calm/`(1) · `components/content-correction/`(1) · `components/explore/`(28) · `components/feedback/`(1) · `components/figures/`(0) · `components/home/`(16) · `components/i18n/`(3) · `components/install/`(2) · `components/legacy/`(3) · `components/media/`(1) · `components/member/`(2) · `components/music/`(18) · `components/nature/`(17) · `components/onboarding/`(2) · `components/panorama/`(2) · `components/pwa/`(3) · `components/relax/`(1) · `components/scripture/`(2) · `components/shell/`(18) · `components/site/`(5) · `components/tv/`(0) · `components/tvscreen/`(2) · `components/ui/`(3) · `components/verse/`(7)
-- **`lib/*` 模块分布**：`lib/__tests__/`(1) · `lib/achievements/`(4) · `lib/admin/`(6) · `lib/ai/`(15) · `lib/auth/`(5) · `lib/bible/`(165) · `lib/content-corrections/`(2) · `lib/daily-verse/`(2) · `lib/devotional/`(2) · `lib/dom/`(3) · `lib/endpoints/`(3) · `lib/explore/`(93) · `lib/feedback/`(1) · `lib/figures/`(5) · `lib/generated/`(0) · `lib/golden-verses/`(2) · `lib/home/`(14) · `lib/home-listening/`(3) · `lib/home-prayer-pools/`(18) · `lib/http/`(1) · `lib/i18n/`(9) · `lib/media/`(1) · `lib/member-reading-sync/`(15) · `lib/music/`(14) · `lib/music-companion/`(11) · `lib/nature/`(25) · `lib/notifications/`(3) · `lib/onboarding/`(4) · `lib/prayer/`(1) · `lib/pwa/`(8) · `lib/read/`(76) · `lib/relax/`(3) · `lib/scripture/`(13) · `lib/shell/`(13) · `lib/studio/`(1) · `lib/ui/`(2) · `lib/verse/`(3) · `lib/widget/`(2)
+- **`lib/*` 模块分布**：`lib/__tests__/`(1) · `lib/achievements/`(4) · `lib/admin/`(6) · `lib/ai/`(5) · `lib/auth/`(5) · `lib/bible/`(165) · `lib/content-corrections/`(2) · `lib/daily-verse/`(2) · `lib/devotional/`(2) · `lib/dom/`(3) · `lib/endpoints/`(3) · `lib/explore/`(93) · `lib/feedback/`(1) · `lib/figures/`(5) · `lib/generated/`(0) · `lib/golden-verses/`(2) · `lib/home/`(14) · `lib/home-listening/`(3) · `lib/home-prayer-pools/`(18) · `lib/http/`(1) · `lib/i18n/`(9) · `lib/media/`(1) · `lib/member-reading-sync/`(15) · `lib/music/`(14) · `lib/music-companion/`(11) · `lib/nature/`(25) · `lib/notifications/`(3) · `lib/onboarding/`(4) · `lib/prayer/`(1) · `lib/pwa/`(8) · `lib/read/`(76) · `lib/relax/`(3) · `lib/scripture/`(13) · `lib/shell/`(13) · `lib/ui/`(2) · `lib/verse/`(3) · `lib/widget/`(2)
 
 ---
 
 ## 2. >800 行源码文件精确行号目录（严禁整读，按 `L<N>` 直达）
 
-### `apps/askbible-android/app/src/main/java/me/askbible/native_/MainActivity.kt`（共 1468 行）
+### `apps/askbible-android/app/src/main/java/me/askbible/native_/MainActivity.kt`（共 1471 行）
 - `L142` — `object VerseDeepLinkBus`
 - `L144` — `fun deliver`
 - `L152` — `class MainActivity`
 - `L153` — `fun onCreate`
-- `L177` — `fun onStart`
-- `L185` — `fun onNewIntent`
-- `L192` — `fun hostActivity`
-- `L213` — `fun RootScreen`
-- `L420` — `fun loadChapterAudioNow`
-- `L442` — `fun openPlanChapter`
-- `L452` — `fun listenPlanChapter`
-- `L722` — `fun markPlanListened`
-- `L728` — `fun planPlay`
-- `L739` — `fun planRead`
-- `L750` — `fun planTogglePlay`
-- `L755` — `fun planNext`
-- `L1465` — `fun copyText`
+- `L180` — `fun onStart`
+- `L188` — `fun onNewIntent`
+- `L195` — `fun hostActivity`
+- `L216` — `fun RootScreen`
+- `L423` — `fun loadChapterAudioNow`
+- `L445` — `fun openPlanChapter`
+- `L455` — `fun listenPlanChapter`
+- `L725` — `fun markPlanListened`
+- `L731` — `fun planPlay`
+- `L742` — `fun planRead`
+- `L753` — `fun planTogglePlay`
+- `L758` — `fun planNext`
+- `L1468` — `fun copyText`
 
-### `apps/askbible-ios/AskBible/AskBibleApp.swift`（共 1251 行）
+### `apps/askbible-ios/AskBible/AskBibleApp.swift`（共 1252 行）
 - `L4` — `struct AskBibleApp`
 - `L17` — `struct RootView`
 - `L68` — `func openSupportMail`
@@ -67,8 +66,8 @@
 - `L416` — `func planTogglePlay`
 - `L422` — `func planNext`
 - `L427` — `func startPlanFlow`
-- `L593` — `func bookLabel`
-- `L877` — `func checkUpdatesManually`
+- `L594` — `func bookLabel`
+- `L878` — `func checkUpdatesManually`
 
 ### `components/nature/NatureVideoExperience.tsx`（共 1197 行）
 - `L72` — `const NATURE_SCENE_DWELL_MS`
@@ -110,6 +109,32 @@
 
 ### `lib/explore/years-days-eternity-content.ts`（共 1131 行）
 - `L3` — `const YEARS_DAYS_ETERNITY_ZH`
+
+### `apps/askbible-android/app/src/main/java/me/askbible/native_/ui/NativeMediaBridge.kt`（共 1086 行）
+- `L72` — `class NativeMediaBridge`
+- `L190` — `fun configureWebView`
+- `L261` — `fun loadInlinePack`
+- `L289` — `fun loadLocalPack`
+- `L297` — `fun beginWatchdogIfHotPack`
+- `L321` — `fun cancelWatchdog`
+- `L326` — `fun release`
+- `L333` — `fun emit`
+- `L342` — `fun emitAudioState`
+- `L348` — `fun emitTabSelected`
+- `L352` — `fun emitBackPressed`
+- `L356` — `fun emitPackReadyToSwap`
+- `L363` — `fun callBridge`
+- `L538` — `fun resolveBridgeOk`
+- `L549` — `fun resolveBridgeErr`
+- `L562` — `fun postMessage`
+- `L597` — `fun markBootHealthy`
+- `L605` — `fun handleAudioIntent`
+- `L679` — `fun buildAudioStateJson`
+- `L728` — `fun triggerHaptic`
+- `L761` — `fun readSessionJson`
+- `L782` — `fun userToJson`
+- `L791` — `fun shareImageOrText`
+- `L829` — `fun handleLocalDbRequest`
 
 ### `components/music/MusicHomeClient.tsx`（共 947 行）
 - `L60` — `const DEFAULT_ALBUM`
@@ -231,7 +256,7 @@
 
 ## 4. Next.js / vinext 页面路由与 API 路由全表
 
-### A. App Router 页面入口（共 48 个页面）
+### A. App Router 页面入口（共 47 个页面）
 | URL 路径（含路由组） | 页面源文件 |
 | :--- | :--- |
 | `/about` (app-shell) | `app/(app-shell)/(narrow-parchment)/about/page.tsx` |
@@ -280,15 +305,11 @@
 | `/login` (narrow-auth) | `app/(narrow-auth)/login/page.tsx` |
 | `/` (site) | `app/(site)/page.tsx` |
 | `/app` | `app/app/page.tsx` |
-| `/studio` | `app/studio/page.tsx` |
 | `/tv` | `app/tv/page.tsx` |
 
-### B. Web API 路由入口（共 42 个接口）
+### B. Web API 路由入口（共 35 个接口）
 | API 路径 | HTTP 方法 | 路由源文件 |
 | :--- | :--- | :--- |
-| `/api/ai/chat` | `POST` | `app/api/ai/chat/route.ts` |
-| `/api/ai/local-models` | `GET` | `app/api/ai/local-models/route.ts` |
-| `/api/ai/preset` | `GET` | `app/api/ai/preset/route.ts` |
 | `/api/app-build` | `GET` | `app/api/app-build/route.ts` |
 | `/api/golden-verses/backgrounds` | `GET` | `app/api/golden-verses/backgrounds/route.ts` |
 | `/api/golden-verses/upload-image` | `POST` | `app/api/golden-verses/upload-image/route.ts` |
@@ -321,10 +342,6 @@
 | `/api/read/reading-plan/[planId]` | `GET` | `app/api/read/reading-plan/[planId]/route.ts` |
 | `/api/read/reading-plans/registry` | `GET` | `app/api/read/reading-plans/registry/route.ts` |
 | `/api/read/verse-snippets` | `POST` | `app/api/read/verse-snippets/route.ts` |
-| `/api/studio/assemble-ai-context` | `POST` | `app/api/studio/assemble-ai-context/route.ts` |
-| `/api/studio/discussion` | `GET` `POST` | `app/api/studio/discussion/route.ts` |
-| `/api/studio/product-memory` | `GET` `POST` | `app/api/studio/product-memory/route.ts` |
-| `/api/studio/save-docs` | `POST` | `app/api/studio/save-docs/route.ts` |
 | `/api/sync/[...path]` | `GET` `POST` `PATCH` `DELETE` `OPTIONS` | `app/api/sync/[...path]/route.ts` |
 | `/api/tv-report` | `POST` | `app/api/tv-report/route.ts` |
 | `/manifest.webmanifest` | `GET` | `app/manifest.webmanifest/route.ts` |
@@ -337,9 +354,11 @@
 | :--- | :--- | :--- |
 | `tools/askbible-jsx-source-plugin.mjs` | 125 | const HOST_TAGS = new Set([ |
 | `tools/book-catalog-parity.mjs` | 102 | 圣经目录三端对拍：书卷号 / id / 中文名 / 章数。 |
+| `tools/build-app-pack.mjs` | 380 | D-47 同源纯静态内核热更包清单生成器与校验门禁（pack-manifest.json） |
 | `tools/build-verse-timings-db.mjs` | 81 | 从真源 `public/verse-timings/`（cuv-v20 / cuv-simp 根级 / web-en）直接生成原生侧 SQLit |
 | `tools/build-web-pack.mjs` | 766 | D-44 同源离线 UI 胶囊生成器（web-pack.json） |
 | `tools/chapter-audio-check.mjs` | 112 | 整章朗读音源自检。 |
+| `tools/check-contracts.mjs` | 372 | D-47 三端 NativeBridge 双向契约与热更协议静态门禁（tools/check-contracts.mjs） |
 | `tools/endpoints-live-check.mjs` | 58 | 防封换线的联网自检（docs/anti-block-endpoints.md）。要联网，所以不进 check:native。 |
 | `tools/endpoints-sync.mjs` | 91 | 防封换线的候选域表（docs/anti-block-endpoints.md、DECISIONS D-20）。 |
 | `tools/gen-achievement-sfx.py` | 89 | AskBible 成就音效合成。 |

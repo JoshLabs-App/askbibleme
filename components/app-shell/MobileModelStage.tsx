@@ -112,7 +112,6 @@ export function useMobileModel(): MobileModelContextValue {
 
 function isExcludedDesktopToolPath(pathname: string): boolean {
   return (
-    pathname.startsWith("/studio") ||
     pathname.startsWith("/admin") ||
     pathname === "/tv" ||
     pathname.startsWith("/tv/")

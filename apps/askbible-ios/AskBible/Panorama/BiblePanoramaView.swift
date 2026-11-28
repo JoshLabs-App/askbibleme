@@ -110,9 +110,8 @@ private struct PanoramaPackWebView: UIViewRepresentable {
     }
 
     static func dismantleUIView(_ webView: WKWebView, coordinator: Coordinator) {
-        coordinator.bridge.cancelWatchdog()
+        coordinator.bridge.detach(from: webView)
         webView.navigationDelegate = nil
-        webView.configuration.userContentController.removeScriptMessageHandler(forName: NativeMediaBridge.handlerName)
     }
 
     private func makeInitialURL() -> URL? {

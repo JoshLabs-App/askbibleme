@@ -1,0 +1,23 @@
+{
+  "name": "askbible-kernel",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 4173",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --outDir dist-pack --port 4173",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.2",
+    "vite": "^6.2.0"
+  }
+}

@@ -156,3 +156,4 @@ apps/askbible-android/.gradle
 /public/data/bible-reading-plans/
 /public/data/static-bundles/
 /public/data/resource-packs/
+/kernel/dist-pack/

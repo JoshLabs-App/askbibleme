@@ -7,11 +7,7 @@ function isPrivilegedEditorPath(pathname: string): boolean {
   return (
     pathname === "/admin" ||
     pathname.startsWith("/admin/") ||
-    pathname === "/studio" ||
-    pathname.startsWith("/studio/") ||
-    pathname.startsWith("/api/admin") ||
-    pathname.startsWith("/api/studio") ||
-    pathname.startsWith("/api/ai")
+    pathname.startsWith("/api/admin")
   );
 }
 
@@ -33,9 +29,6 @@ export const config = {
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|api/health|api/sync|health|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|mp3|mp4|webm|json|css|js)).*)",
     "/admin/:path*",
-    "/studio/:path*",
     "/api/admin/:path*",
-    "/api/studio/:path*",
-    "/api/ai/:path*",
   ],
 };
